@@ -1,12 +1,15 @@
 package com.tallerwebi.infraestructura;
 
 
+import com.tallerwebi.dominio.Entity.Conductor;
+import com.tallerwebi.dominio.Entity.Ubicacion;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Repository
 public class ViajeRepositoryImpl implements ViajeRepository {
@@ -18,9 +21,9 @@ public class ViajeRepositoryImpl implements ViajeRepository {
     }
 
     @Override
-    public Viaje findById (Long id) {
+    public Viaje findById(Long id) {
 
-        return this.baseDeDatos.stream().filter(v-> v.getId().equals(id)).findFirst().get();
+        return this.baseDeDatos.stream().filter(v -> v.getId().equals(id)).findFirst().get();
 
     }
 
@@ -46,10 +49,19 @@ public class ViajeRepositoryImpl implements ViajeRepository {
     @Override
     public void borrarViaje(Long id) {
 
-        for (Viaje viaje : this.baseDeDatos ) {
+        for (Viaje viaje : this.baseDeDatos) {
             if (viaje.getId().equals(id)) {
                 this.baseDeDatos.remove(viaje);
             }
         }
     }
+
+    @Override
+    public List<Viaje> findByOrigenYDestinoYConductor(Ubicacion origen, Ubicacion destino, Conductor conductor) {
+        return baseDeDatos.stream().filter(v -> v.getConductor().equals(conductor)
+                && v.getOrigen().equals(origen)
+                && v.getDestino().equals(destino)).collect(Collectors.toList());
+    }
+
+
 }
