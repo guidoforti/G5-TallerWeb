@@ -19,15 +19,16 @@ public class Ubicacion {
    /* private String ciudad;
     private String provincia;
     private String pais;*/
-    private Double latitud;
-    private Double longitud;
-    private Long id;
+    private float latitud;
+    private float longitud;
 
-    public Ubicacion(Long id, Double latitud, Double longitud, String direccion) {
-        this.id = id;
+    public Ubicacion(float latitud, float longitud, String direccion) {
+        this.direccion = direccion;
         this.latitud = latitud;
         this.longitud = longitud;
-        this.direccion = direccion;
+        
     }
+
+
 
 }

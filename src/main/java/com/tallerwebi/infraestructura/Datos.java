@@ -1,7 +1,5 @@
 package com.tallerwebi.infraestructura;
 
-import com.tallerwebi.dominio.Entity.Conductor;
-import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.*;
 import com.tallerwebi.dominio.Enums.*;
 
@@ -63,10 +61,17 @@ public  class Datos {
     );
 
     private static final List<Viaje> viajes = Arrays.asList(viaje1, viaje2, viaje3);
+    private static final List<Ubicacion> ubicaciones = Arrays.asList(
+        origen1, destino1, origen2, destino2, origen3, destino3
+    );
 
     // ==== Método público ====
     public static List<Viaje> obtenerViajes() {
         return viajes;
+    }
+    
+    public static List<Ubicacion> obtenerUbicaciones() {
+        return ubicaciones;
     }
 
 
