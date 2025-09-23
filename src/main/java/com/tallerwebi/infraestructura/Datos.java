@@ -63,11 +63,13 @@ public  class Datos {
     );
 
     private static final List<Viaje> viajes = Arrays.asList(viaje1, viaje2, viaje3);
+    private static final List<Conductor> conductores = Arrays.asList(c1,c2,c3);
 
     // ==== Método público ====
     public static List<Viaje> obtenerViajes() {
         return viajes;
     }
+    public static List<Conductor> obtenerConductores() { return conductores; }
 
 
 }

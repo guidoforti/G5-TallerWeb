@@ -15,8 +15,8 @@ import java.util.List;
 @NoArgsConstructor
 public class ConductorDTO {
 
-    private List<Viaje> viajes;
     private String nombre;
     private String email;
     private LocalDate fechaDeVencimientoLicencia;
+    private List<Viaje> viajes;
 }
