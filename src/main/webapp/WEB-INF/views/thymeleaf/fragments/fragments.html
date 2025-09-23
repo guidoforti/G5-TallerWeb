@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title th:text="${title}">Título por defecto</title>
+
+    <!-- Bootstrap core css -->
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.2.0/css/bootstrap.min.css}"/>
+
+    <!-- custom style -->
+    <link rel="stylesheet" th:href="@{/css/new-main.css}"/>
+
+    <!-- Bloque extra opcional -->
+    <th:block th:replace="~{::extra}"></th:block>
+</head>
+
+<body>
+<!-- Navbar -->
+<nav th:fragment="navbar" class="navbar navbar-expand-md navbar-unrumbo fixed-top">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold text-dark" href="#">
+            <img th:src="@{/img/unrumbo-logo.png}" alt="UnRumbo" width="40" class="me-2">
+            UnRumbo
+        </a>
+    </div>
+</nav>
+</body>
+</html>
