@@ -1,6 +1,4 @@
-package com.tallerwebi.dominio.IRepository;
-
-import com.tallerwebi.dominio.Entity.Usuario;
+package com.tallerwebi.dominio;
 
 public interface RepositorioUsuario {
 
