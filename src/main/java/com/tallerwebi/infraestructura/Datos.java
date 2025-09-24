@@ -69,15 +69,15 @@ public class Datos {
 
     // ==== Método público ====
     public static List<Viaje> obtenerViajes() {
-        return viajes;
+        return new ArrayList<>(viajes);
     }
 
     public static List<Conductor> obtenerConductores() {
-        return conductores;
+        return new ArrayList<>(conductores);
     }
 
     public static List<Vehiculo> obtenerVehiculos() {
-        return vehiculos;
+        return new ArrayList<>(vehiculos); // Crea una copia mutable
     }
 
 }

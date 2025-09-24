@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Registrar Vehículo</title>
+</head>
+<body>
+<h2>Registrar Vehículo</h2>
+
+<!-- Mostrar mensaje de error si existe -->
+<div th:if="${error}" th:text="${error}" style="color:red;"></div>
+
+<form th:action="@{/vehiculos/registrar}" th:object="${vehiculoInputDTO}" method="post">
+    <!-- Modelo -->
+    <div>
+        <label for="modelo">Modelo:</label>
+        <input type="text" id="modelo" th:field="*{Modelo}" required>
+    </div>
+
+    <!-- Año -->
+    <div>
+        <label for="anio">Año:</label>
+        <input type="text" id="anio" th:field="*{anio}" required>
+    </div>
+
+    <!-- Patente -->
+    <div>
+        <label for="patente">Patente:</label>
+        <input type="text" id="patente" th:field="*{patente}" required>
+    </div>
+
+    <!-- Cantidad de asientos -->
+    <div>
+        <label for="asientosTotales">Asientos:</label>
+        <select id="asientosTotales" th:field="*{asientosTotales}" required>
+            <option value="">Seleccione...</option>
+            <option th:each="i : ${#numbers.sequence(2, 10)}"
+                    th:value="${i}"
+                    th:text="${i}"></option>
+        </select>
+    </div>
+
+    <!-- Estado de verificación (oculto) -->
+    <input type="hidden" th:field="*{estadoVerificacion}" value="PENDIENTE">
+
+    <div>
+        <button type="submit">Registrar</button>
+        <a th:href="@{/home}">Cancelar</a>
+    </div>
+</form>
+</body>
+</html>

@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface ServicioVehiculo {
 
 
-    VehiculoOutputDTO getById(Long Id);
+    VehiculoOutputDTO getById(Long Id) throws NotFoundException;
     List<VehiculoOutputDTO> obtenerVehiculosParaConductor(Long conductorId);
     VehiculoOutputDTO obtenerVehiculoConPatente(String patente) throws NotFoundException;
     VehiculoOutputDTO guardarVehiculo(VehiculoInputDTO vehiculoInputDTO, Long idConductor) throws PatenteDuplicadaException, NotFoundException;

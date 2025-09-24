@@ -4,8 +4,10 @@ import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.IRepository.RepositorioVehiculo;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 public class RepositorioVehiculoImpl implements RepositorioVehiculo {
@@ -14,17 +16,18 @@ public class RepositorioVehiculoImpl implements RepositorioVehiculo {
 
 
     public RepositorioVehiculoImpl() {
-        this.baseDeDatos = Datos.obtenerVehiculos();
+
+         this.baseDeDatos = new ArrayList<>(Datos.obtenerVehiculos());
     }
 
     @Override
     public Vehiculo findById(Long id) {
-        return null;
+        return this.baseDeDatos.stream().filter(v-> v.getId().equals(id)).findFirst().orElse(null);
     }
 
     @Override
     public List<Vehiculo> obtenerVehiculosParaConductor(Long conductorId) {
-        return List.of();
+        return this.baseDeDatos.stream().filter(v-> v.getConductor().getId().equals(conductorId)).collect(Collectors.toList());
 
     }
 

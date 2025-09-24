@@ -34,15 +34,29 @@ public class ServicioVehiculoImpl implements ServicioVehiculo {
     }
 
     @Override
-    public VehiculoOutputDTO getById(Long Id) {
-        return null;
+    public VehiculoOutputDTO getById(Long id) throws NotFoundException {
+
+
+        Vehiculo vehiculo = repositorioVehiculo.findById(id);
+        if (vehiculo == null) {
+            throw new NotFoundException("No se encontró un vehículo con el ID: " + id);
+        }
+
+        return manualModelMapper.toVehiculoOutputDTO(vehiculo);
     }
 
     @Override
     public List<VehiculoOutputDTO> obtenerVehiculosParaConductor(Long conductorId) {
-        return List.of();
-    }
+        if (conductorId == null) {
+            throw new IllegalArgumentException("El ID del conductor no puede ser nulo");
+        }
 
+        List<Vehiculo> vehiculos = repositorioVehiculo.obtenerVehiculosParaConductor(conductorId);
+
+        return vehiculos.stream()
+                .map(manualModelMapper::toVehiculoOutputDTO)
+                .collect(java.util.stream.Collectors.toList());
+    }
     @Override
     public VehiculoOutputDTO obtenerVehiculoConPatente(String patente) throws NotFoundException {
         Vehiculo vehiculo = repositorioVehiculo.encontrarVehiculoConPatente(patente);
