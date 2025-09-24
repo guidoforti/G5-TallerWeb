@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.Objects;
 
 //@Embeddable
 @Getter
@@ -21,4 +22,16 @@ public class Ubicacion {
     private String pais;*/
     private Float latitud;
     private Float longitud;
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Ubicacion ubicacion = (Ubicacion) o;
+        return Objects.equals(latitud, ubicacion.latitud) && Objects.equals(longitud, ubicacion.longitud);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(latitud, longitud);
+    }
 }
