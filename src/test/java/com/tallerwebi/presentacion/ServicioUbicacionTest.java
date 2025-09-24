@@ -12,6 +12,8 @@ import com.tallerwebi.dominio.Entity.Ubicacion;
 import com.tallerwebi.dominio.IRepository.RepositorioUbicacion;
 import com.tallerwebi.dominio.IServicio.ServicioUbicacion;
 import com.tallerwebi.dominio.ServiceImpl.ServicioUbicacionImpl;
+import com.tallerwebi.infraestructura.Datos;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
@@ -20,56 +22,55 @@ public class ServicioUbicacionTest {
   @Test
     public void queSeListanTodasLasUbicaciones() {
 
-        RepositorioUbicacion repositorioMock = mock(RepositorioUbicacion.class);
+    RepositorioUbicacion repositorioMock = mock(RepositorioUbicacion.class);
+    ServicioUbicacion servicio = new ServicioUbicacionImpl(repositorioMock);
 
-        List<Ubicacion> ubicacionesDePrueba = Arrays.asList(
-            new Ubicacion(), new Ubicacion(), new Ubicacion()
-        );
+    List<Ubicacion> ubicacionesDePrueba = Datos.obtenerUbicaciones();
+    when(repositorioMock.findAll()).thenReturn(ubicacionesDePrueba);
 
-        when(repositorioMock.findAll()).thenReturn(ubicacionesDePrueba);
-        ServicioUbicacion servicio = new ServicioUbicacionImpl(repositorioMock);
+    List<Ubicacion> ubicaciones = servicio.listarTodas();
 
-
-        List<Ubicacion> ubicaciones = servicio.listarTodas();
-
-        assertThat(ubicaciones.size(), is(3));
+    assertThat(ubicaciones.size(), is(ubicacionesDePrueba.size()));
         
     }
 
 
 @Test
 public void queLasUbicacionesNoSeanNulas() {
-    // Instanciar repositorio
-    // Verificar que ninguna ubicación en el listado es null    
+   
 
-       RepositorioUbicacion repositorioMock = mock(RepositorioUbicacion.class);
+    RepositorioUbicacion repositorioMock = mock(RepositorioUbicacion.class);
+    ServicioUbicacion servicio = new ServicioUbicacionImpl(repositorioMock);
 
-        
-        List<Ubicacion> ubicacionesDePrueba = Arrays.asList(
-            new Ubicacion(), new Ubicacion(), new Ubicacion()
-        );
+    when(repositorioMock.findAll()).thenReturn(Datos.obtenerUbicaciones());
 
-        when(repositorioMock.findAll()).thenReturn(ubicacionesDePrueba);
+    List<Ubicacion> ubicaciones = servicio.listarTodas();
 
-        ServicioUbicacion servicio = new ServicioUbicacionImpl(repositorioMock);
+    assertThat(ubicaciones, everyItem(notNullValue()));
 
-
-        List<Ubicacion> ubicaciones = servicio.listarTodas();
-
-        assertThat(ubicaciones, everyItem(notNullValue()));
     }
 
 
-/* 
+
 @Test
 public void queCadaUbicacionTengaDireccionValida() {
-    // Listar ubicaciones
-    // Verificar que todas tienen un campo direccion no vacío
+    
+   RepositorioUbicacion repositorioMock = mock(RepositorioUbicacion.class);
+    ServicioUbicacion servicio = new ServicioUbicacionImpl(repositorioMock);
+    
+    List<Ubicacion> ubicacionesDePrueba = Datos.obtenerUbicaciones();
 
-      
+    when(repositorioMock.findAll()).thenReturn(ubicacionesDePrueba);
+
+    List<Ubicacion> ubicaciones = servicio.listarTodas();
+
+    for (Ubicacion ubicacion : ubicaciones) {
+        assertThat(ubicacion.getDireccion(), allOf(notNullValue(), not(isEmptyString())));
+    }
+
 
 }
 
-*/
+
 
 }
