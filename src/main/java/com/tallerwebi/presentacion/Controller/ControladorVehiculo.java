@@ -33,10 +33,11 @@ public class ControladorVehiculo {
     @GetMapping("/registrar")
     public ModelAndView mostrarFormularioDeRegistroVehiculo(HttpSession session) throws UsuarioNoAutorizadoException {
         ModelMap model = new ModelMap();
-        if (session == null || !session.getAttribute("rol").equals("CONDUCTOR")) {
+        Object rol = (session != null) ? session.getAttribute("rol") : null;
+        if (rol == null || !rol.equals("CONDUCTOR")) {
             Exception e = new UsuarioNoAutorizadoException("no tienes permisos para acceder a este recurso");
             model.put("error", e.getMessage());
-            return new ModelAndView("usuarioNoAutorizado" , model);
+            return new ModelAndView("usuarioNoAutorizado", model);
         }
 
         model.put("vehiculoInputDTO", new VehiculoInputDTO());
@@ -44,22 +45,21 @@ public class ControladorVehiculo {
     }
 
     @PostMapping("/registrar")
-    public  ModelAndView registrarVehiculo(@ModelAttribute("vehiculoInputDTO") VehiculoInputDTO vehiculoInputDTO , HttpSession session) {
+    public ModelAndView registrarVehiculo(@ModelAttribute("vehiculoInputDTO") VehiculoInputDTO vehiculoInputDTO, HttpSession session) {
         ModelMap model = new ModelMap();
-        if (session == null || !session.getAttribute("rol").equals("CONDUCTOR")) {
+        Object rol = (session != null) ? session.getAttribute("rol") : null;
+        if (rol == null || !rol.equals("CONDUCTOR")) {
             Exception e = new UsuarioNoAutorizadoException("no tienes permisos para acceder a este recurso");
             model.put("error", e.getMessage());
-            return new ModelAndView("usuarioNoAutorizado" , model);
+            return new ModelAndView("usuarioNoAutorizado", model);
         }
         try {
-           VehiculoOutputDTO vehiculoOutPutDTO = servicioVehiculo.guardarVehiculo(vehiculoInputDTO , (Long) session.getAttribute("usuarioId"));
-           model.put("vehiculoOutPutDTO" , vehiculoOutPutDTO);
+            VehiculoOutputDTO vehiculoOutPutDTO = servicioVehiculo.guardarVehiculo(vehiculoInputDTO, (Long) session.getAttribute("usuarioId"));
+            model.put("vehiculoOutPutDTO", vehiculoOutPutDTO);
             return new ModelAndView("redirect:/home", model);
-
-        }catch (PatenteDuplicadaException | NotFoundException e) {
+        } catch (PatenteDuplicadaException | NotFoundException e) {
             model.put("error", e.getMessage());
-            return new ModelAndView("registrarVehiculo" , model);
+            return new ModelAndView("registrarVehiculo", model);
         }
-
     }
 }
