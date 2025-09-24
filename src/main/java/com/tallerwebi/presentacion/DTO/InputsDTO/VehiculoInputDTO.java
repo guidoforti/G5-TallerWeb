@@ -14,7 +14,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class VehiculoInputDTO {
 
-    private Long idConductor;
+
     private String Modelo;
     private String anio;
     private String patente;

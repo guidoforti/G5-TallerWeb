@@ -29,13 +29,16 @@ public class RepositorioVehiculoImpl implements RepositorioVehiculo {
     }
 
     @Override
-    public Optional<Vehiculo> encontrarVehiculoConPatente(String patente) {
-        return this.baseDeDatos.stream().filter(v-> v.getPatente().equals(patente)).findFirst();
+    public Vehiculo encontrarVehiculoConPatente(String patente) {
+        return this.baseDeDatos.stream().filter(v-> v.getPatente().equals(patente)).findFirst().orElse(null);
     }
 
     @Override
     public Vehiculo guardarVehiculo(Vehiculo vehiculo) {
+        Long idSiguiente = (long) (baseDeDatos.size() + 1);
+        vehiculo.setId(idSiguiente);;
         this.baseDeDatos.add(vehiculo);
+
         return vehiculo;
     }
 }

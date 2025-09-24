@@ -1,9 +1,9 @@
 package com.tallerwebi.dominio.IServicio;
 
-import com.mysql.cj.log.Log;
-import com.tallerwebi.dominio.Entity.Vehiculo;
+import com.tallerwebi.dominio.excepcion.NotFoundException;
+import com.tallerwebi.dominio.excepcion.PatenteDuplicadaException;
 import com.tallerwebi.presentacion.DTO.InputsDTO.VehiculoInputDTO;
-import com.tallerwebi.presentacion.DTO.VehiculoDTO;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.VehiculoOutputDTO;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,8 +11,8 @@ import java.util.Optional;
 public interface ServicioVehiculo {
 
 
-    VehiculoDTO getById(Long Id);
-    List<VehiculoDTO> obtenerVehiculosParaConductor(Long conductorId);
-    Optional<VehiculoDTO> obtenerVehiculoConPatente(String patente);
-    VehiculoDTO guardarVehiculo(VehiculoInputDTO vehiculoInputDTO);
+    VehiculoOutputDTO getById(Long Id);
+    List<VehiculoOutputDTO> obtenerVehiculosParaConductor(Long conductorId);
+    VehiculoOutputDTO obtenerVehiculoConPatente(String patente) throws NotFoundException;
+    VehiculoOutputDTO guardarVehiculo(VehiculoInputDTO vehiculoInputDTO, Long idConductor) throws PatenteDuplicadaException, NotFoundException;
 }

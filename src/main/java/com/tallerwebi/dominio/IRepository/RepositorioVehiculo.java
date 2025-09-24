@@ -9,6 +9,6 @@ public interface RepositorioVehiculo {
 
     Vehiculo findById(Long id);
     List<Vehiculo> obtenerVehiculosParaConductor(Long conductorId);
-    Optional<Vehiculo> encontrarVehiculoConPatente(String patente);
+    Vehiculo encontrarVehiculoConPatente(String patente);
     Vehiculo guardarVehiculo(Vehiculo vehiculo);
 }

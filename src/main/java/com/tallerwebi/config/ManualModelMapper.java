@@ -6,9 +6,7 @@ import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeOutputDTO;
 import com.tallerwebi.presentacion.DTO.ViajeroDTO;
 import com.tallerwebi.presentacion.DTO.UbicacionDTO;
-import com.tallerwebi.presentacion.DTO.VehiculoDTO;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.VehiculoOutputDTO;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -51,7 +49,7 @@ public class ManualModelMapper {
         dto.setAsientosDisponibles(viaje.getAsientosDisponibles());
         dto.setAsientosTotales(viaje.getAsientosTotales());
         dto.setFechaDeCreacion(viaje.getFechaDeCreacion());
-        dto.setVehiculo(toVehiculoDTO(viaje.getVehiculo()));
+        dto.setVehiculo(toVehiculoOutputDTO(viaje.getVehiculo()));
         dto.setNombreConductor(viaje.getConductor() != null ? viaje.getConductor().getNombre() : null);
         
 
@@ -132,9 +130,9 @@ public class ManualModelMapper {
     // VEHICULO
     // -----------------------------
 
-    public VehiculoDTO toVehiculoDTO(Vehiculo v) {
+    public VehiculoOutputDTO toVehiculoOutputDTO(Vehiculo v) {
         if (v == null) return null;
-        VehiculoDTO dto = new VehiculoDTO();
+        VehiculoOutputDTO dto = new VehiculoOutputDTO();
         dto.setModelo(v.getModelo());
         dto.setAnio(v.getAnio());
         dto.setPatente(v.getPatente());
