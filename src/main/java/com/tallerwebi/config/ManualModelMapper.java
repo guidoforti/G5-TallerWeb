@@ -1,12 +1,9 @@
 package com.tallerwebi.config;
 import com.tallerwebi.dominio.Entity.*;
-import com.tallerwebi.presentacion.DTO.ConductorDTO;
+import com.tallerwebi.presentacion.DTO.*;
 import com.tallerwebi.presentacion.DTO.InputsDTO.VehiculoInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeOutputDTO;
-import com.tallerwebi.presentacion.DTO.ViajeroDTO;
-import com.tallerwebi.presentacion.DTO.UbicacionDTO;
-import com.tallerwebi.presentacion.DTO.VehiculoDTO;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
@@ -17,6 +14,7 @@ import java.util.stream.Collectors;
 
 @Component
 public class ManualModelMapper {
+
 
     // -----------------------------
     // VIAJE
@@ -88,13 +86,42 @@ public class ManualModelMapper {
     // CONDUCTOR
     // -----------------------------
 
-    public ConductorDTO toConductorDTO(Conductor conductor) {
-        if (conductor == null) return null;
-        ConductorDTO dto = new ConductorDTO();
-        dto.setNombre(conductor.getNombre());
-        dto.setEmail(conductor.getEmail());
+    public Conductor toConductor(ConductorLoginDTO dto) {
+        if (dto == null) return null;
 
-        return dto;
+        Conductor conductor = new Conductor();
+        conductor.setEmail(dto.getEmail());
+        conductor.setContrasenia(dto.getContrasenia());
+
+        return conductor;
+    }
+
+    public Conductor toConductor(ConductorDTO dto) {
+        if (dto == null) return null;
+
+        Conductor conductor = new Conductor();
+        conductor.setId(dto.getId());
+        conductor.setEmail(dto.getEmail());
+        conductor.setContrasenia(dto.getContrasenia());
+        conductor.setNombre(dto.getNombre());
+        conductor.setFechaDeVencimientoLicencia(dto.getFechaDeVencimientoLicencia());
+        conductor.setViajes(dto.getViajes());
+
+        return conductor;
+    }
+
+    public ConductorDTO toConductorDTO(Conductor entity) {
+        if (entity == null) return null;
+
+        ConductorDTO conductor = new ConductorDTO();
+        conductor.setId(entity.getId());
+        conductor.setNombre(entity.getNombre());
+        conductor.setEmail(entity.getEmail());
+        conductor.setContrasenia(entity.getContrasenia());
+        conductor.setViajes(entity.getViajes());
+        conductor.setFechaDeVencimientoLicencia(entity.getFechaDeVencimientoLicencia());
+
+        return conductor;
     }
     // -----------------------------
     // UBICACION
