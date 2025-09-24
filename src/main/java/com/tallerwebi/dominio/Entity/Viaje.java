@@ -28,7 +28,12 @@ public class Viaje {
             joinColumns = @JoinColumn(name = "viaje_id"), // Columna que referencia a Viaje
             inverseJoinColumns = @JoinColumn(name = "viajero_id") // Columna que referencia a Viajero
     ) */
-    private List<Viajero> viajeros;
+    private List<Viajero> viajeros; /* @ManyToMany
+    @JoinTable(
+            name = "viaje_viajero", // Nombre de la tabla intermedia
+            joinColumns = @JoinColumn(name = "viaje_id"), // Columna que referencia a Viaje
+            inverseJoinColumns = @JoinColumn(name = "viajero_id") // Columna que referencia a Viajero
+    ) */
 
    /* @Embedded
     @AttributeOverrides({

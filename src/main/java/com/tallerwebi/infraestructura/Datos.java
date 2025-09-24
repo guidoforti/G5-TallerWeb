@@ -34,9 +34,10 @@ public  class Datos {
     private static final Ubicacion destino3 = new Ubicacion("San Juan Capital", -31.5375f, -68.5364f);
 
     // ==== Viajeros ====
-    private static final Viajero viajero1 = new Viajero(1L, new ArrayList<>());
-    private static final Viajero viajero2 = new Viajero(2L, new ArrayList<>());
-    private static final Viajero viajero3 = new Viajero(3L, new ArrayList<>());
+    private static final Viajero viajero1 = new Viajero(1L, "Juan Pérez", 25, new ArrayList<>());
+    private static final Viajero viajero2 = new Viajero(2L, "María García", 30, new ArrayList<>());
+    private static final Viajero viajero3 = new Viajero(3L, "Carlos López", 28, new ArrayList<>());
+
 
     // ==== Viajes ====
     private static final Viaje viaje1 = new Viaje(
@@ -61,18 +62,24 @@ public  class Datos {
     );
 
     private static final List<Viaje> viajes = Arrays.asList(viaje1, viaje2, viaje3);
+
     private static final List<Ubicacion> ubicaciones = Arrays.asList(
         origen1, destino1, origen2, destino2, origen3, destino3
     );
+
+    private static final List<Conductor> conductores = Arrays.asList(c1,c2,c3);
+
 
     // ==== Método público ====
     public static List<Viaje> obtenerViajes() {
         return viajes;
     }
+
     
     public static List<Ubicacion> obtenerUbicaciones() {
         return ubicaciones;
     }
 
+    public static List<Conductor> obtenerConductores() { return conductores; }
 
 }
