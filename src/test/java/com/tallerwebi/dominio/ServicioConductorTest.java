@@ -1,5 +1,6 @@
 package com.tallerwebi.dominio;
 
+import com.tallerwebi.config.ManualModelMapper;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.IRepository.RepositorioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
@@ -7,6 +8,7 @@ import com.tallerwebi.dominio.ServiceImpl.ServicioConductorImpl;
 import com.tallerwebi.dominio.excepcion.CredencialesInvalidas;
 import com.tallerwebi.dominio.excepcion.FechaDeVencimientoDeLicenciaInvalida;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
+import com.tallerwebi.presentacion.DTO.ConductorDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -23,40 +25,44 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class ServicioConductorTest {
 
     private RepositorioConductor repositorioMock;
+    private ManualModelMapper manualModelMapperMock;
     private ServicioConductor servicio;
 
     @BeforeEach
     void setUp() {
         repositorioMock = Mockito.mock(RepositorioConductor.class);
-        servicio = new ServicioConductorImpl(repositorioMock);
+        manualModelMapperMock = new ManualModelMapper();
+        servicio = new ServicioConductorImpl(repositorioMock, manualModelMapperMock);
     }
 
     @Test
     void deberiaValidarLoginCorrecto() throws CredencialesInvalidas {
         Conductor c = new Conductor(1L, null, "Pedro", "pedro@mail.com", "pass", LocalDate.now());
 
-        when(repositorioMock.buscarPorEmailYContrasenia("pedro@mail.com", "pass"))
+        when(repositorioMock.buscarPorEmailYContrasenia(c.getEmail(), c.getContrasenia()))
                 .thenReturn(Optional.of(c));
 
-        Conductor resultado = servicio.login("pedro@mail.com", "pass");
+        ConductorDTO resultado = servicio.login(c.getEmail(), c.getContrasenia());
 
-        assertThat(resultado.getNombre(), equalTo("Pedro"));
+        assertThat(resultado.getNombre(), equalTo(c.getNombre()));
     }
 
     @Test
     void noDeberiaValidarLoginSiCredencialesInvalidas() {
-        when(repositorioMock.buscarPorEmailYContrasenia("pedro@mail.com", "mal"))
+        Conductor c = new Conductor(1L, null, "Pedro", "pedro@mail.com", "pass", LocalDate.now());
+
+        when(repositorioMock.buscarPorEmailYContrasenia(c.getEmail(), c.getContrasenia()))
                 .thenReturn(Optional.empty());
 
         assertThrows(CredencialesInvalidas.class,
-                () -> servicio.login("pedro@mail.com", "mal"));
+                () -> servicio.login(c.getEmail(), c.getContrasenia()));
     }
 
     @Test
     void deberiaRegistrarConductorSiNoExiste() throws UsuarioExistente, FechaDeVencimientoDeLicenciaInvalida {
         Conductor nuevo = new Conductor(null, null, "Ana", "ana@mail.com", "123", LocalDate.now());
 
-        when(repositorioMock.buscarPorEmail("ana@mail.com"))
+        when(repositorioMock.buscarPorEmail(nuevo.getEmail()))
                 .thenReturn(Optional.empty()); // no existe todavía
 
         servicio.registrar(nuevo);
@@ -69,7 +75,7 @@ class ServicioConductorTest {
     void noDeberiaRegistrarSiUsuarioYaExiste() {
         Conductor existente = new Conductor(1L, null, "Ana", "ana@mail.com", "123", LocalDate.now());
 
-        when(repositorioMock.buscarPorEmail("ana@mail.com"))
+        when(repositorioMock.buscarPorEmail(existente.getEmail()))
                 .thenReturn(Optional.of(existente)); // ya existe
 
         Conductor nuevo = new Conductor(null, null, "Ana", "ana@mail.com", "123", LocalDate.now());
