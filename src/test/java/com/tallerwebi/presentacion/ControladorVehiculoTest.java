@@ -51,7 +51,7 @@ public class ControladorVehiculoTest {
         ModelAndView modelAndView = controladorVehiculo.registrarVehiculo(vehiculoInputDTO, sessionMock);
 
         // then
-        assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/home"));
+        assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/conductor/home"));
         verify(servicioVehiculoMock, times(1)).guardarVehiculo(any(VehiculoInputDTO.class), eq(1L));
     }
 

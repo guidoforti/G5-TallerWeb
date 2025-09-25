@@ -56,7 +56,7 @@ public class ControladorVehiculo {
         try {
             VehiculoOutputDTO vehiculoOutPutDTO = servicioVehiculo.guardarVehiculo(vehiculoInputDTO, (Long) session.getAttribute("usuarioId"));
             model.put("vehiculoOutPutDTO", vehiculoOutPutDTO);
-            return new ModelAndView("redirect:/home", model);
+            return new ModelAndView("redirect:/conductor/home", model);
         } catch (PatenteDuplicadaException | NotFoundException e) {
             model.put("error", e.getMessage());
             return new ModelAndView("registrarVehiculo", model);
