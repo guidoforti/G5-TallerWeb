@@ -57,7 +57,7 @@ public class ControladorConductorTest {
         ModelAndView modelAndView = controladorConductor.validarLogin(loginDTO, sessionMock);
 
         // validación
-        assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/home"));
+        assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/conductor/home"));
         verify(sessionMock, times(1)).setAttribute("usuarioId", conductorDTOMock.getId());
         verify(sessionMock, times(1)).setAttribute("rol", "CONDUCTOR");
     }
@@ -87,7 +87,7 @@ public class ControladorConductorTest {
         ModelAndView mav = controladorConductor.irALogin(sessionMock);
 
         // then
-        assertThat(mav.getViewName(), equalTo("redirect:/home"));
+        assertThat(mav.getViewName(), equalTo("redirect:/conductor/home"));
         verify(sessionMock, times(1)).getAttribute("usuarioId");
     }
 
@@ -125,7 +125,7 @@ public class ControladorConductorTest {
         ModelAndView mav = controladorConductor.registrar(nuevoConductorDTO, sessionMock);
 
         // validación
-        assertThat(mav.getViewName(), equalTo("redirect:/home"));
+        assertThat(mav.getViewName(), equalTo("redirect:/conductor/home"));
         verify(sessionMock, times(1)).setAttribute("usuarioId", nuevoConductor.getId());
         verify(sessionMock, times(1)).setAttribute("rol", "CONDUCTOR");
     }
