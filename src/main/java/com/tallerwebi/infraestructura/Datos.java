@@ -1,7 +1,5 @@
 package com.tallerwebi.infraestructura;
 
-import com.tallerwebi.dominio.Entity.Conductor;
-import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.*;
 import com.tallerwebi.dominio.Enums.*;
 
@@ -12,7 +10,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public  class Datos {
+public class Datos {
 
 
     // ==== Conductores ====
@@ -64,13 +62,29 @@ public  class Datos {
     );
 
     private static final List<Viaje> viajes = Arrays.asList(viaje1, viaje2, viaje3);
+
+    private static final List<Ubicacion> ubicaciones = Arrays.asList(
+        origen1, destino1, origen2, destino2, origen3, destino3
+    );
+
     private static final List<Conductor> conductores = Arrays.asList(c1,c2,c3);
+    private static final List<Vehiculo> vehiculos = Arrays.asList(v1, v2, v3);
 
     // ==== Método público ====
     public static List<Viaje> obtenerViajes() {
-        return viajes;
+        return new ArrayList<>(viajes);
     }
-    public static List<Conductor> obtenerConductores() { return conductores; }
 
+    public static List<Ubicacion> obtenerUbicaciones() {
+        return ubicaciones;
+    }
+
+    public static List<Conductor> obtenerConductores() {
+        return new ArrayList<>(conductores);
+    }
+
+    public static List<Vehiculo> obtenerVehiculos() {
+        return new ArrayList<>(vehiculos); // Crea una copia mutable
+    }
 
 }

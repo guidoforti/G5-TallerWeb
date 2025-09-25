@@ -28,6 +28,7 @@ public class ServicioViajeImpl implements ServicioViaje {
         this.repositorioViaje = repositorioViaje;
         this.repositorioConductor = repositorioConductor;
         this.manualModelMapper = manualModelMapper;
+        this.servicioConductor = servicioConductor;
     }
 
     @Override

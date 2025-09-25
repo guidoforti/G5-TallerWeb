@@ -36,7 +36,7 @@ public class ControladorConductor {
     @GetMapping("/login")
     public ModelAndView irALogin(HttpSession session) {
         if (session != null && session.getAttribute("usuarioId") != null) {
-            return new ModelAndView("redirect:/home");
+            return new ModelAndView("redirect:/conductor/home");
         }
         ModelMap model = new ModelMap();
         model.put("datosLogin", new ConductorLoginDTO());
