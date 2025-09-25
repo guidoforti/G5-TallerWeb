@@ -1,0 +1,15 @@
+body {
+    background-color: #FBEFE6; /* fondo neutro */
+    color: #333333; /* texto oscuro para contraste */
+}
+.navbar-unrumbo {
+    background-color: #ffffff;
+    border-bottom: 2px solid #E16A3D;
+}
+.btn-unrumbo {
+    background-color: #E16A3D;
+    border: none;
+}
+.btn-unrumbo:hover {
+    background-color: #cf5930;
+}

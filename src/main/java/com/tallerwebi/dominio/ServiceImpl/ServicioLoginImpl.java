@@ -1,8 +1,8 @@
-package com.tallerwebi.dominio;
+package com.tallerwebi.dominio.ServiceImpl;
 
-import com.tallerwebi.dominio.RepositorioUsuario;
-import com.tallerwebi.dominio.ServicioLogin;
-import com.tallerwebi.dominio.Usuario;
+import com.tallerwebi.dominio.Entity.Usuario;
+import com.tallerwebi.dominio.IRepository.RepositorioUsuario;
+import com.tallerwebi.dominio.IServicio.ServicioLogin;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ public class ServicioLoginImpl implements ServicioLogin {
     public void registrar(Usuario usuario) throws UsuarioExistente {
         Usuario usuarioEncontrado = repositorioUsuario.buscarUsuario(usuario.getEmail(), usuario.getPassword());
         if(usuarioEncontrado != null){
-            throw new UsuarioExistente();
+            throw new UsuarioExistente("Ya existe un usuario con ese email");
         }
         repositorioUsuario.guardar(usuario);
     }
