@@ -20,8 +20,10 @@ public class Ubicacion {
    /* private String ciudad;
     private String provincia;
     private String pais;*/
-    private Float latitud;
-    private Float longitud;
+    private float latitud;
+    private float longitud;
+
+
 
     @Override
     public boolean equals(Object o) {
@@ -34,4 +36,5 @@ public class Ubicacion {
     public int hashCode() {
         return Objects.hash(latitud, longitud);
     }
+
 }
