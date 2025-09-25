@@ -26,6 +26,7 @@ public class ServicioViajeImpl implements ServicioViaje {
     public ServicioViajeImpl(ViajeRepository viajeRepository ,ServicioConductor servicioConductor ,ManualModelMapper manualModelMapper) {
         this.viajeRepository = viajeRepository;
         this.manualModelMapper = manualModelMapper;
+        this.servicioConductor = servicioConductor;
     }
 
 

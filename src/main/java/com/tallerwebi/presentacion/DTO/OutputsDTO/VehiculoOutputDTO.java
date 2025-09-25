@@ -1,4 +1,4 @@
-package com.tallerwebi.presentacion.DTO;
+package com.tallerwebi.presentacion.DTO.OutputsDTO;
 
 import com.tallerwebi.dominio.Enums.EstadoVerificacion;
 import lombok.AllArgsConstructor;
@@ -10,7 +10,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class VehiculoDTO {
+public class VehiculoOutputDTO {
     private String modelo;
     private String anio;
     private String patente;
