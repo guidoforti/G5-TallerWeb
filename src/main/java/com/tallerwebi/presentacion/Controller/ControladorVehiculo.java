@@ -1,9 +1,13 @@
 package com.tallerwebi.presentacion.Controller;
 
 
+import com.tallerwebi.dominio.Entity.Conductor;
+import com.tallerwebi.dominio.Entity.Vehiculo;
+import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.excepcion.NotFoundException;
 import com.tallerwebi.dominio.excepcion.PatenteDuplicadaException;
+import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
 import com.tallerwebi.presentacion.DTO.InputsDTO.VehiculoInputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.VehiculoOutputDTO;
@@ -23,10 +27,12 @@ import javax.servlet.http.HttpSession;
 public class ControladorVehiculo {
 
     private ServicioVehiculo servicioVehiculo;
+    private ServicioConductor servicioConductor;
 
     @Autowired
-    public ControladorVehiculo(ServicioVehiculo servicioVehiculo) {
+    public ControladorVehiculo(ServicioVehiculo servicioVehiculo , ServicioConductor servicioConductor) {
         this.servicioVehiculo = servicioVehiculo;
+        this.servicioConductor = servicioConductor;
     }
 
 
@@ -54,10 +60,13 @@ public class ControladorVehiculo {
             return new ModelAndView("usuarioNoAutorizado", model);
         }
         try {
-            VehiculoOutputDTO vehiculoOutPutDTO = servicioVehiculo.guardarVehiculo(vehiculoInputDTO, (Long) session.getAttribute("usuarioId"));
-            model.put("vehiculoOutPutDTO", vehiculoOutPutDTO);
+            Conductor conductor = servicioConductor.obtenerConductor((Long) session.getAttribute("usuarioId"));
+
+            Vehiculo vehiculo = servicioVehiculo.guardarVehiculo(vehiculoInputDTO.toEntity(conductor));
+            VehiculoOutputDTO vehiculoOutputDTO = new VehiculoOutputDTO(vehiculo);
+            model.put("vehiculoOutPutDTO", vehiculoOutputDTO);
             return new ModelAndView("redirect:/conductor/home", model);
-        } catch (PatenteDuplicadaException | NotFoundException e) {
+        } catch (PatenteDuplicadaException | UsuarioInexistente | NotFoundException e) {
             model.put("error", e.getMessage());
             return new ModelAndView("registrarVehiculo", model);
         }

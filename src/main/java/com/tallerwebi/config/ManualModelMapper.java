@@ -1,14 +1,13 @@
 package com.tallerwebi.config;
 import com.tallerwebi.dominio.Entity.*;
 import com.tallerwebi.presentacion.DTO.*;
+import com.tallerwebi.presentacion.DTO.InputsDTO.ConductorDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.VehiculoInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeOutputDTO;
 import com.tallerwebi.presentacion.DTO.ViajeroDTO;
 import com.tallerwebi.presentacion.DTO.UbicacionDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.VehiculoOutputDTO;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;

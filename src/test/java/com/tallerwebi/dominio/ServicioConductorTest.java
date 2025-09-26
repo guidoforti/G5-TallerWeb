@@ -8,7 +8,7 @@ import com.tallerwebi.dominio.ServiceImpl.ServicioConductorImpl;
 import com.tallerwebi.dominio.excepcion.CredencialesInvalidas;
 import com.tallerwebi.dominio.excepcion.FechaDeVencimientoDeLicenciaInvalida;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
-import com.tallerwebi.presentacion.DTO.ConductorDTO;
+import com.tallerwebi.presentacion.DTO.InputsDTO.ConductorDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

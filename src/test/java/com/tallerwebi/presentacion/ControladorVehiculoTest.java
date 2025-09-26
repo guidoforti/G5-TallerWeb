@@ -1,6 +1,7 @@
 package com.tallerwebi.presentacion;
 
 import com.tallerwebi.config.ManualModelMapper;
+import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.excepcion.NotFoundException;
 import com.tallerwebi.dominio.excepcion.PatenteDuplicadaException;
@@ -24,6 +25,7 @@ public class ControladorVehiculoTest {
 
     private ControladorVehiculo controladorVehiculo;
     private ServicioVehiculo servicioVehiculoMock;
+    private ServicioConductor servicioConductor;
     private HttpSession sessionMock;
     private VehiculoInputDTO vehiculoInputDTO;
     private VehiculoOutputDTO vehiculoOutputDTO;
@@ -31,7 +33,8 @@ public class ControladorVehiculoTest {
     @BeforeEach
     public void init() {
         servicioVehiculoMock = mock(ServicioVehiculo.class);
-        controladorVehiculo = new ControladorVehiculo(servicioVehiculoMock);
+        servicioConductor = mock(ServicioConductor.class);
+        controladorVehiculo = new ControladorVehiculo(servicioVehiculoMock , servicioConductor);
         sessionMock = mock(HttpSession.class);
         vehiculoInputDTO = new VehiculoInputDTO();
         vehiculoOutputDTO = new VehiculoOutputDTO();
