@@ -15,7 +15,7 @@ import java.util.Objects;
 @AllArgsConstructor
 public class Ubicacion {
 
-
+    private Long id;
     private String direccion;
    /* private String ciudad;
     private String provincia;

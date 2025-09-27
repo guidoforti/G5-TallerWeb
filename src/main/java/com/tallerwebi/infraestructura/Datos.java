@@ -24,14 +24,14 @@ public class Datos {
     private static final Vehiculo v3 = new Vehiculo(3L, c3, "Chevrolet Spin", "2020", "LMN456", 6, EstadoVerificacion.VERIFICADO);
 
     // ==== Ubicaciones ====
-    private static final Ubicacion origen1 = new Ubicacion("Av. Siempre Viva 123, CABA", -34.6037f, -58.3816f);
-    private static final Ubicacion destino1 = new Ubicacion("La Plata, Buenos Aires", -34.9214f, -57.9544f);
+    private static final Ubicacion origen1 = new Ubicacion(1L, "Av. Siempre Viva 123, CABA", -34.6037f, -58.3816f);
+    private static final Ubicacion destino1 = new Ubicacion(2L, "La Plata, Buenos Aires", -34.9214f, -57.9544f);
 
-    private static final Ubicacion origen2 = new Ubicacion("Rosario, Santa Fe", -32.9587f, -60.6939f);
-    private static final Ubicacion destino2 = new Ubicacion("Córdoba Capital", -31.4201f, -64.1888f);
+    private static final Ubicacion origen2 = new Ubicacion(3L, "Rosario, Santa Fe", -32.9587f, -60.6939f);
+    private static final Ubicacion destino2 = new Ubicacion(4L, "Córdoba Capital", -31.4201f, -64.1888f);
 
-    private static final Ubicacion origen3 = new Ubicacion("Mendoza Capital", -32.8895f, -68.8458f);
-    private static final Ubicacion destino3 = new Ubicacion("San Juan Capital", -31.5375f, -68.5364f);
+    private static final Ubicacion origen3 = new Ubicacion(5L, "Mendoza Capital", -32.8895f, -68.8458f);
+    private static final Ubicacion destino3 = new Ubicacion(6L, "San Juan Capital", -31.5375f, -68.5364f);
 
     // ==== Viajeros ====
     private static final Viajero viajero1 = new Viajero(1L, "Juan Pérez", 25, new ArrayList<>());

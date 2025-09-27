@@ -3,8 +3,10 @@ package com.tallerwebi.dominio.IServicio;
 
 import java.util.List;
 
-import com.tallerwebi.dominio.Entity.Ubicacion;
+import com.tallerwebi.dominio.excepcion.NotFoundException;
+import com.tallerwebi.presentacion.DTO.UbicacionDTO;
 
 public interface ServicioUbicacion {
-    List<Ubicacion> listarTodas();
+    List<UbicacionDTO> listarTodas();
+    UbicacionDTO obtenerUbicacion(Long id) throws NotFoundException;
 }

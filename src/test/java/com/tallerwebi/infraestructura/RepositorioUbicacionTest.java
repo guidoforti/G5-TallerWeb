@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -40,5 +41,21 @@ public class RepositorioUbicacionTest {
 
         assertThat(ubicacion.getLatitud(), is(notNullValue()));
         assertThat(ubicacion.getLongitud(), is(notNullValue()));
+    }
+
+    @Test
+    void deberiaBuscarPorId() {
+        Long ubicacionId = 1L;
+        Optional<Ubicacion> encontrada = repositorio.buscarPorId(ubicacionId);
+
+        assertThat(encontrada.isPresent(), is(true));
+        assertThat(encontrada.get().getId(), equalTo(ubicacionId));
+    }
+
+    @Test
+    void noDeberiaEncontrarSiIdNoExiste() {
+        Optional<Ubicacion> encontrada = repositorio.buscarPorId(999L);
+
+        assertThat(encontrada.isPresent(), is(false));
     }
 }

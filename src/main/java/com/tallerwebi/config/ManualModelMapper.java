@@ -190,4 +190,18 @@ public class ManualModelMapper {
 
         return vehiculo;
     }
+
+    public Vehiculo toVehiculo(VehiculoOutputDTO dto, Conductor conductor) {
+        if (dto == null) return null;
+
+        Vehiculo vehiculo = new Vehiculo();
+        vehiculo.setConductor(conductor);
+        vehiculo.setModelo(dto.getModelo());
+        vehiculo.setAnio(dto.getAnio());
+        vehiculo.setPatente(dto.getPatente());
+        vehiculo.setAsientosTotales(dto.getAsientosTotales());
+        vehiculo.setEstadoVerificacion(dto.getEstadoVerificacion());
+
+        return vehiculo;
+    }
 }

@@ -2,6 +2,7 @@ package com.tallerwebi.infraestructura;
 
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
 
@@ -20,5 +21,10 @@ public class RepositorioUbicacionImpl implements RepositorioUbicacion {
     @Override
     public List<Ubicacion> findAll() {
         return ubicaciones;
+    }
+
+    @Override
+    public Optional<Ubicacion> buscarPorId(Long id) {
+        return this.ubicaciones.stream().filter(u -> u.getId().equals(id)).findFirst();
     }
 }
