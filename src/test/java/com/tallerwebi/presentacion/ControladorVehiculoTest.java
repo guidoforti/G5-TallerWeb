@@ -1,14 +1,15 @@
 package com.tallerwebi.presentacion;
 
-import com.tallerwebi.config.ManualModelMapper;
+import com.tallerwebi.dominio.Entity.Conductor;
+import com.tallerwebi.dominio.Entity.Vehiculo;
+import com.tallerwebi.dominio.Enums.EstadoVerificacion;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.excepcion.NotFoundException;
 import com.tallerwebi.dominio.excepcion.PatenteDuplicadaException;
-import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
+import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.presentacion.Controller.ControladorVehiculo;
 import com.tallerwebi.presentacion.DTO.InputsDTO.VehiculoInputDTO;
-import com.tallerwebi.presentacion.DTO.OutputsDTO.VehiculoOutputDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.ModelAndView;
@@ -20,81 +21,72 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.equalToIgnoringCase;
 import static org.mockito.Mockito.*;
 
-
 public class ControladorVehiculoTest {
 
     private ControladorVehiculo controladorVehiculo;
     private ServicioVehiculo servicioVehiculoMock;
-    private ServicioConductor servicioConductor;
+    private ServicioConductor servicioConductorMock;
     private HttpSession sessionMock;
     private VehiculoInputDTO vehiculoInputDTO;
-    private VehiculoOutputDTO vehiculoOutputDTO;
+    private Conductor conductorMock;
+    private Vehiculo vehiculoMock;
 
     @BeforeEach
     public void init() {
         servicioVehiculoMock = mock(ServicioVehiculo.class);
-        servicioConductor = mock(ServicioConductor.class);
-        controladorVehiculo = new ControladorVehiculo(servicioVehiculoMock , servicioConductor);
+        servicioConductorMock = mock(ServicioConductor.class);
+        controladorVehiculo = new ControladorVehiculo(servicioVehiculoMock, servicioConductorMock);
         sessionMock = mock(HttpSession.class);
-        vehiculoInputDTO = new VehiculoInputDTO();
-        vehiculoOutputDTO = new VehiculoOutputDTO();
+        vehiculoInputDTO = new VehiculoInputDTO("Toyota", "2020", "ABC123", 4, EstadoVerificacion.PENDIENTE);
+        conductorMock = new Conductor();
+        conductorMock.setId(1L);
+        vehiculoMock = new Vehiculo(1L, conductorMock, "Toyota", "2020", "ABC123", 4, EstadoVerificacion.PENDIENTE);
 
-        // Configuración común para la sesión
+        // Sesión válida
         when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
         when(sessionMock.getAttribute("usuarioId")).thenReturn(1L);
     }
 
     @Test
     public void registrarVehiculo_conDatosValidos_deberiaRedirigirAlHome() throws Exception {
-        // given
-        when(servicioVehiculoMock.guardarVehiculo(any(VehiculoInputDTO.class), anyLong()))
-                .thenReturn(vehiculoOutputDTO);
+        when(servicioConductorMock.obtenerConductor(1L)).thenReturn(conductorMock);
+        when(servicioVehiculoMock.guardarVehiculo(any(Vehiculo.class))).thenReturn(vehiculoMock);
 
-        // when
         ModelAndView modelAndView = controladorVehiculo.registrarVehiculo(vehiculoInputDTO, sessionMock);
 
-        // then
         assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/conductor/home"));
-        verify(servicioVehiculoMock, times(1)).guardarVehiculo(any(VehiculoInputDTO.class), eq(1L));
+        verify(servicioVehiculoMock, times(1)).guardarVehiculo(any(Vehiculo.class));
     }
 
     @Test
     public void registrarVehiculo_conPatenteDuplicada_deberiaMostrarError() throws Exception {
-        // given
-        String mensajeError = "La patente ya está registrada";
-        when(servicioVehiculoMock.guardarVehiculo(any(VehiculoInputDTO.class), anyLong()))
-                .thenThrow(new PatenteDuplicadaException(mensajeError));
+        when(servicioConductorMock.obtenerConductor(1L)).thenReturn(conductorMock);
+        when(servicioVehiculoMock.guardarVehiculo(any(Vehiculo.class)))
+                .thenThrow(new PatenteDuplicadaException("La patente ya está registrada"));
 
-        // when
         ModelAndView modelAndView = controladorVehiculo.registrarVehiculo(vehiculoInputDTO, sessionMock);
 
-        // then
         assertThat(modelAndView.getViewName(), equalToIgnoringCase("registrarVehiculo"));
-        assertThat(modelAndView.getModel().get("error"), equalTo(mensajeError));
+        assertThat(modelAndView.getModel().get("error"), equalTo("La patente ya está registrada"));
     }
 
     @Test
-    public void registrarVehiculo_conUsuarioNoAutorizado_deberiaMostrarError() {
-        // given
-        when(sessionMock.getAttribute("rol")).thenReturn("USUARIO"); // No es CONDUCTOR
+    public void registrarVehiculo_conUsuarioNoAutorizado_deberiaMostrarError() throws PatenteDuplicadaException, NotFoundException {
+        when(sessionMock.getAttribute("rol")).thenReturn("USUARIO"); // no es CONDUCTOR
 
-        // when
         ModelAndView modelAndView = controladorVehiculo.registrarVehiculo(vehiculoInputDTO, sessionMock);
 
-        // then
         assertThat(modelAndView.getViewName(), equalToIgnoringCase("usuarioNoAutorizado"));
         assertThat(modelAndView.getModel().get("error"), equalTo("no tienes permisos para acceder a este recurso"));
+        verify(servicioVehiculoMock, never()).guardarVehiculo(any());
     }
 
     @Test
     public void mostrarFormularioDeRegistroVehiculo_conUsuarioNoAutorizado_deberiaMostrarError() throws Exception {
-        // given
-        when(sessionMock.getAttribute("rol")).thenReturn("USUARIO"); // No es CONDUCTOR
+        when(sessionMock.getAttribute("rol")).thenReturn("USUARIO"); // no es CONDUCTOR
 
-        // when
         ModelAndView modelAndView = controladorVehiculo.mostrarFormularioDeRegistroVehiculo(sessionMock);
 
-        // then
         assertThat(modelAndView.getViewName(), equalToIgnoringCase("usuarioNoAutorizado"));
         assertThat(modelAndView.getModel().get("error"), equalTo("no tienes permisos para acceder a este recurso"));
     }

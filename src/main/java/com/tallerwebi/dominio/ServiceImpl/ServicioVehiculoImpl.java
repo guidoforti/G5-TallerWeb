@@ -25,7 +25,7 @@ public class ServicioVehiculoImpl implements ServicioVehiculo {
     RepositorioConductor repositorioConductor;
 
     @Autowired
-    public ServicioVehiculoImpl(RepositorioVehiculo repositorioVehiculor, RepositorioConductor repositorioConductor) {
+    public ServicioVehiculoImpl(RepositorioVehiculo repositorioVehiculo, RepositorioConductor repositorioConductor) {
         this.repositorioVehiculo = repositorioVehiculo;
 
         this.repositorioConductor = repositorioConductor;

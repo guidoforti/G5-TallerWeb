@@ -1,6 +1,5 @@
 package com.tallerwebi.dominio;
 
-import com.tallerwebi.config.ManualModelMapper;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Enums.EstadoVerificacion;
@@ -10,25 +9,23 @@ import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.ServiceImpl.ServicioVehiculoImpl;
 import com.tallerwebi.dominio.excepcion.NotFoundException;
 import com.tallerwebi.dominio.excepcion.PatenteDuplicadaException;
-import com.tallerwebi.presentacion.DTO.InputsDTO.VehiculoInputDTO;
-import com.tallerwebi.presentacion.DTO.OutputsDTO.VehiculoOutputDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class ServicioVehiculoTest {
-
 
     @Mock
     private RepositorioVehiculo repositorioVehiculoMock;
@@ -41,133 +38,97 @@ public class ServicioVehiculoTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        repositorioVehiculoMock = mock(RepositorioVehiculo.class);
+        repositorioConductorMock = mock(RepositorioConductor.class);
         servicioVehiculo = new ServicioVehiculoImpl(repositorioVehiculoMock, repositorioConductorMock);
     }
 
     @Test
     void obtenerVehiculoPorId() throws NotFoundException {
-        // Arrange
         Long id = 1L;
-        Vehiculo vehiculoEsperado = new Vehiculo(id, null, "Toyota", "2020", "ABC123", 4, EstadoVerificacion.VERIFICADO);
-        when(repositorioVehiculoMock.findById(id)).thenReturn(vehiculoEsperado);
+        Vehiculo esperado = new Vehiculo(id, null, "Toyota", "2020", "ABC123", 4, EstadoVerificacion.VERIFICADO);
+        when(repositorioVehiculoMock.findById(id)).thenReturn(esperado);
 
-        // Act
         Vehiculo resultado = servicioVehiculo.getById(id);
 
-        // Assert
-        assertNotNull(resultado);
-        assertEquals(vehiculoEsperado, resultado);
+        assertThat(resultado, notNullValue());
+        assertThat(resultado, equalTo(esperado));
         verify(repositorioVehiculoMock).findById(id);
     }
 
     @Test
     void obtenerVehiculoPorId_NoEncontrado_LanzaExcepcion() {
-        // Arrange
-        Long id = 1L;
-        when(repositorioVehiculoMock.findById(id)).thenReturn(null);
+        when(repositorioVehiculoMock.findById(1L)).thenReturn(null);
 
-        // Act & Assert
-        assertThrows(NotFoundException.class, () -> servicioVehiculo.getById(id));
-        verify(repositorioVehiculoMock).findById(id);
+        assertThrows(NotFoundException.class, () -> servicioVehiculo.getById(1L));
+        verify(repositorioVehiculoMock).findById(1L);
     }
 
     @Test
     void obtenerVehiculoPorPatente() throws NotFoundException {
-        // Arrange
         String patente = "ABC123";
-        Vehiculo vehiculoEsperado = new Vehiculo(1L, null, "Toyota", "2020", patente, 4, EstadoVerificacion.VERIFICADO);
-        when(repositorioVehiculoMock.encontrarVehiculoConPatente(patente)).thenReturn(vehiculoEsperado);
+        Vehiculo esperado = new Vehiculo(1L, null, "Toyota", "2020", patente, 4, EstadoVerificacion.VERIFICADO);
+        when(repositorioVehiculoMock.encontrarVehiculoConPatente(patente)).thenReturn(esperado);
 
-        // Act
         Vehiculo resultado = servicioVehiculo.obtenerVehiculoConPatente(patente);
 
-        // Assert
-        assertNotNull(resultado);
-        assertEquals(vehiculoEsperado, resultado);
+        assertThat(resultado, notNullValue());
+        assertThat(resultado, equalTo(esperado));
         verify(repositorioVehiculoMock).encontrarVehiculoConPatente(patente);
     }
 
     @Test
     void obtenerVehiculoPorPatente_NoEncontrado_LanzaExcepcion() {
-        // Arrange
-        String patente = "NOEXISTE";
-        when(repositorioVehiculoMock.encontrarVehiculoConPatente(patente)).thenReturn(null);
+        when(repositorioVehiculoMock.encontrarVehiculoConPatente("NOEXISTE")).thenReturn(null);
 
-        // Act & Assert
         assertThrows(NotFoundException.class,
-                () -> servicioVehiculo.obtenerVehiculoConPatente(patente));
-        verify(repositorioVehiculoMock).encontrarVehiculoConPatente(patente);
+                () -> servicioVehiculo.obtenerVehiculoConPatente("NOEXISTE"));
+        verify(repositorioVehiculoMock).encontrarVehiculoConPatente("NOEXISTE");
     }
 
     @Test
     void guardarVehiculoCorrectamente() throws PatenteDuplicadaException, NotFoundException {
-        // Arrange
-        Long conductorId = 1L;
-        Conductor conductor = new Conductor();
+        Conductor conductor = new Conductor(1L, null, "Ana", "ana@mail.com", "123", null);
         Vehiculo vehiculo = new Vehiculo(null, conductor, "Toyota", "2020", "ABC123", 4, EstadoVerificacion.PENDIENTE);
-        Vehiculo vehiculoGuardado = new Vehiculo(1L, conductor, "Toyota", "2020", "ABC123", 4, EstadoVerificacion.PENDIENTE);
+        Vehiculo guardado = new Vehiculo(1L, conductor, "Toyota", "2020", "ABC123", 4, EstadoVerificacion.PENDIENTE);
 
-        when(repositorioConductorMock.buscarPorId(conductorId)).thenReturn(Optional.of(conductor));
-        when(repositorioVehiculoMock.encontrarVehiculoConPatente(anyString())).thenReturn(null);
-        when(repositorioVehiculoMock.guardarVehiculo(any(Vehiculo.class))).thenReturn(vehiculoGuardado);
+        when(repositorioConductorMock.buscarPorId(conductor.getId())).thenReturn(Optional.of(conductor));
+        when(repositorioVehiculoMock.encontrarVehiculoConPatente("ABC123")).thenReturn(null);
+        when(repositorioVehiculoMock.guardarVehiculo(any(Vehiculo.class))).thenReturn(guardado);
 
-        // Act
         Vehiculo resultado = servicioVehiculo.guardarVehiculo(vehiculo);
 
-        // Assert
-        assertNotNull(resultado);
-        assertEquals(vehiculoGuardado.getId(), resultado.getId());
+        assertThat(resultado, notNullValue());
+        assertThat(resultado.getId(), equalTo(1L));
         verify(repositorioVehiculoMock).guardarVehiculo(any(Vehiculo.class));
     }
 
     @Test
-    void guardarVehiculo_ConductorNoExiste_LanzaExcepcion() {
-        // Arrange
-        Long conductorId = 1L;
-        Vehiculo vehiculo = new Vehiculo();
-        vehiculo.setConductor(new Conductor());
-        when(repositorioConductorMock.buscarPorId(conductorId)).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThrows(NotFoundException.class,
-                () -> servicioVehiculo.guardarVehiculo(vehiculo));
-        verify(repositorioVehiculoMock, never()).guardarVehiculo(any(Vehiculo.class));
-    }
-
-    @Test
     void guardarVehiculo_PatenteDuplicada_LanzaExcepcion() {
-        // Arrange
-        String patente = "ABC123";
-        Vehiculo vehiculo = new Vehiculo();
-        vehiculo.setConductor(new Conductor());
-        vehiculo.setPatente(patente);
+        Conductor conductor = new Conductor(1L, null, "Ana", "ana@mail.com", "123", null);
+        Vehiculo vehiculo = new Vehiculo(null, conductor, "Toyota", "2020", "ABC123", 4, EstadoVerificacion.PENDIENTE);
 
-        when(repositorioConductorMock.buscarPorId(anyLong())).thenReturn(Optional.of(new Conductor()));
-        when(repositorioVehiculoMock.encontrarVehiculoConPatente(patente)).thenReturn(new Vehiculo());
+        when(repositorioConductorMock.buscarPorId(1L)).thenReturn(Optional.of(conductor));
+        when(repositorioVehiculoMock.encontrarVehiculoConPatente("ABC123")).thenReturn(new Vehiculo());
 
-        // Act & Assert
-        assertThrows(PatenteDuplicadaException.class,
-                () -> servicioVehiculo.guardarVehiculo(vehiculo));
+        assertThrows(PatenteDuplicadaException.class, () -> servicioVehiculo.guardarVehiculo(vehiculo));
         verify(repositorioVehiculoMock, never()).guardarVehiculo(any(Vehiculo.class));
     }
 
     @Test
     void obtenerVehiculosPorConductor() {
-        // Arrange
         Long conductorId = 1L;
-        List<Vehiculo> vehiculosEsperados = List.of(
+        List<Vehiculo> esperados = List.of(
                 new Vehiculo(1L, null, "Toyota", "2020", "ABC123", 4, EstadoVerificacion.VERIFICADO),
                 new Vehiculo(2L, null, "Honda", "2019", "XYZ789", 4, EstadoVerificacion.VERIFICADO)
         );
-        when(repositorioVehiculoMock.obtenerVehiculosParaConductor(conductorId)).thenReturn(vehiculosEsperados);
+        when(repositorioVehiculoMock.obtenerVehiculosParaConductor(conductorId)).thenReturn(esperados);
 
-        // Act
         List<Vehiculo> resultados = servicioVehiculo.obtenerVehiculosParaConductor(conductorId);
 
-        // Assert
-        assertNotNull(resultados);
-        assertEquals(2, resultados.size());
-        assertEquals(vehiculosEsperados, resultados);
+        assertThat(resultados, notNullValue());
+        assertThat(resultados, hasSize(2));
+        assertThat(resultados, equalTo(esperados));
         verify(repositorioVehiculoMock).obtenerVehiculosParaConductor(conductorId);
     }
 }

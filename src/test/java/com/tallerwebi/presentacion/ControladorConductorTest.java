@@ -1,4 +1,5 @@
 package com.tallerwebi.presentacion;
+
 import com.tallerwebi.config.ManualModelMapper;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
@@ -7,14 +8,13 @@ import com.tallerwebi.dominio.excepcion.FechaDeVencimientoDeLicenciaInvalida;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.presentacion.Controller.ControladorConductor;
-import com.tallerwebi.presentacion.DTO.InputsDTO.ConductorRegistroInputDTO;
 import com.tallerwebi.presentacion.DTO.ConductorLoginDTO;
+import com.tallerwebi.presentacion.DTO.InputsDTO.ConductorRegistroInputDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpSession;
-
 import java.time.LocalDate;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -30,7 +30,6 @@ public class ControladorConductorTest {
     private ConductorLoginDTO loginDTO;
     private HttpSession sessionMock;
     private Conductor conductorMock;
-    private ConductorRegistroInputDTO conductorRegistroInputDTOMock;
 
     @BeforeEach
     public void init() {
@@ -40,25 +39,23 @@ public class ControladorConductorTest {
         loginDTO = new ConductorLoginDTO("conductor@mail.com", "1234");
         sessionMock = mock(HttpSession.class);
         conductorMock = mock(Conductor.class);
-        conductorRegistroInputDTOMock = mock(ConductorRegistroInputDTO.class);
 
         when(conductorMock.getId()).thenReturn(1L);
-        when(conductorRegistroInputDTOMock.getId()).thenReturn(1L);
-        when(conductorRegistroInputDTOMock.getNombre()).thenReturn("Pepe");
+        when(conductorMock.getNombre()).thenReturn("Pepe");
     }
 
     @Test
     public void loginConCredencialesCorrectasDeberiaRedirigirAHomeYSetearSesion() throws CredencialesInvalidas {
         // preparación
         when(servicioConductorMock.login(loginDTO.getEmail(), loginDTO.getContrasenia()))
-                .thenReturn(conductorRegistroInputDTOMock);
+                .thenReturn(conductorMock);
 
         // ejecución
         ModelAndView modelAndView = controladorConductor.validarLogin(loginDTO, sessionMock);
 
         // validación
         assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/conductor/home"));
-        verify(sessionMock, times(1)).setAttribute("usuarioId", conductorRegistroInputDTOMock.getId());
+        verify(sessionMock, times(1)).setAttribute("usuarioId", conductorMock.getId());
         verify(sessionMock, times(1)).setAttribute("rol", "CONDUCTOR");
     }
 
@@ -77,54 +74,45 @@ public class ControladorConductorTest {
         verify(sessionMock, times(0)).setAttribute(eq("usuarioId"), any());
     }
 
-
     @Test
     void siUsuarioYaEstaLogueadoDeberiaRedirigirAHome() {
-        // given
         when(sessionMock.getAttribute("usuarioId")).thenReturn(1L);
 
-        // when
         ModelAndView mav = controladorConductor.irALogin(sessionMock);
 
-        // then
         assertThat(mav.getViewName(), equalTo("redirect:/conductor/home"));
         verify(sessionMock, times(1)).getAttribute("usuarioId");
     }
 
     @Test
     void siUsuarioNoEstaLogueadoDeberiaMostrarLogin() {
-        // given
         when(sessionMock.getAttribute("usuarioId")).thenReturn(null);
 
-        // when
         ModelAndView mav = controladorConductor.irALogin(sessionMock);
 
-        // then
         assertThat(mav.getViewName(), equalTo("loginConductor"));
         assertThat(mav.getModel().containsKey("datosLogin"), equalTo(true));
     }
 
     @Test
     public void irARegistroDeberiaMostrarFormulario() {
-        // when
         ModelAndView mav = controladorConductor.irARegistro();
 
-        // then
         assertThat(mav.getViewName(), equalTo("registroConductor"));
         assertThat(mav.getModel().containsKey("datosConductor"), equalTo(true));
     }
 
     @Test
     public void registroCorrectoDeberiaRedirigirAHomeYSetearSesion() throws UsuarioExistente, FechaDeVencimientoDeLicenciaInvalida {
-        // preparación
         Conductor nuevoConductor = new Conductor(null, null, "Ana", "ana@mail.com", "123", LocalDate.now());
-        ConductorRegistroInputDTO nuevoConductorRegistroInputDTO = manualModelMapperMock.toConductorDTO(nuevoConductor);
-        when(servicioConductorMock.registrar(nuevoConductor)).thenReturn(nuevoConductorRegistroInputDTO);
+        ConductorRegistroInputDTO inputDTO = new ConductorRegistroInputDTO(
+                null, "Ana", "ana@mail.com", "123", LocalDate.now(), null
+        );
 
-        // ejecución
-        ModelAndView mav = controladorConductor.registrar(nuevoConductorRegistroInputDTO, sessionMock);
+        when(servicioConductorMock.registrar(any(Conductor.class))).thenReturn(nuevoConductor);
 
-        // validación
+        ModelAndView mav = controladorConductor.registrar(inputDTO, sessionMock);
+
         assertThat(mav.getViewName(), equalTo("redirect:/conductor/home"));
         verify(sessionMock, times(1)).setAttribute("usuarioId", nuevoConductor.getId());
         verify(sessionMock, times(1)).setAttribute("rol", "CONDUCTOR");
@@ -132,16 +120,15 @@ public class ControladorConductorTest {
 
     @Test
     public void registroConEmailExistenteDeberiaVolverAFormularioConError() throws UsuarioExistente, FechaDeVencimientoDeLicenciaInvalida {
-        // preparación
-        Conductor nuevoConductor = new Conductor(null, null, "Ana", "ana@mail.com", "123", LocalDate.now());
-        ConductorRegistroInputDTO nuevoConductorRegistroInputDTO = manualModelMapperMock.toConductorDTO(nuevoConductor);
+        ConductorRegistroInputDTO inputDTO = new ConductorRegistroInputDTO(
+                null, "Ana", "ana@mail.com", "123", LocalDate.now(), null
+        );
+
         doThrow(new UsuarioExistente("Ya existe un usuario con ese email"))
-                .when(servicioConductorMock).registrar(nuevoConductor);
+                .when(servicioConductorMock).registrar(any(Conductor.class));
 
-        // ejecución
-        ModelAndView mav = controladorConductor.registrar(nuevoConductorRegistroInputDTO, sessionMock);
+        ModelAndView mav = controladorConductor.registrar(inputDTO, sessionMock);
 
-        // validación
         assertThat(mav.getViewName(), equalTo("registroConductor"));
         assertThat(mav.getModel().get("error").toString(),
                 equalToIgnoringCase("Ya existe un usuario con ese email"));
@@ -150,39 +137,30 @@ public class ControladorConductorTest {
 
     @Test
     void siUsuarioNoEstaEnSesionEnHomeDeberiaRedirigirALogin() {
-        // given
         when(sessionMock.getAttribute("usuarioId")).thenReturn(null);
 
-        // when
         ModelAndView mav = controladorConductor.irAHome(sessionMock);
 
-        // then
         assertThat(mav.getViewName(), equalTo("redirect:/conductor/login"));
         verify(sessionMock, times(1)).getAttribute("usuarioId");
     }
 
     @Test
     void siUsuarioEstaEnSesionEnHomeDeberiaMostrarHomeConNombre() throws UsuarioInexistente {
-        // given
         when(sessionMock.getAttribute("usuarioId")).thenReturn(1L);
-        when(servicioConductorMock.obtenerConductor(conductorRegistroInputDTOMock.getId())).thenReturn(conductorRegistroInputDTOMock);
+        when(servicioConductorMock.obtenerConductor(1L)).thenReturn(conductorMock);
 
-        // when
         ModelAndView mav = controladorConductor.irAHome(sessionMock);
 
-        // then
         assertThat(mav.getViewName(), equalTo("homeConductor"));
-        assertThat(mav.getModel().get("nombreConductor").toString(), equalTo(conductorRegistroInputDTOMock.getNombre()));
+        assertThat(mav.getModel().get("nombreConductor").toString(), equalTo(conductorMock.getNombre()));
     }
 
     @Test
     void logoutDeberiaInvalidarSesionYRedirigirALogin() {
-        // when
         ModelAndView mav = controladorConductor.logout(sessionMock);
 
-        // then
         assertThat(mav.getViewName(), equalTo("redirect:/conductor/login"));
         verify(sessionMock, times(1)).invalidate();
     }
-
 }
