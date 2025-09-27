@@ -15,7 +15,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class ConductorDTO {
+public class ConductorRegistroInputDTO {
 
     private Long id;
     private String nombre;
@@ -24,16 +24,6 @@ public class ConductorDTO {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate fechaDeVencimientoLicencia;
     private List<Viaje> viajes;
-
-    public ConductorDTO (Conductor conductor) {
-        this.id = conductor.getId();
-        this.nombre = conductor.getNombre();
-        this.email = conductor.getEmail();
-        // para evitar esto tenemos que crear si o si un input output dto
-        this.contrasenia = conductor.getContrasenia();
-        this.fechaDeVencimientoLicencia = conductor.getFechaDeVencimientoLicencia();
-        this.viajes = conductor.getViajes();
-    }
 
 
     public Conductor toEntity () {

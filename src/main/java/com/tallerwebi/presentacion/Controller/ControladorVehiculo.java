@@ -63,10 +63,11 @@ public class ControladorVehiculo {
             Conductor conductor = servicioConductor.obtenerConductor((Long) session.getAttribute("usuarioId"));
 
             Vehiculo vehiculo = servicioVehiculo.guardarVehiculo(vehiculoInputDTO.toEntity(conductor));
+
             VehiculoOutputDTO vehiculoOutputDTO = new VehiculoOutputDTO(vehiculo);
             model.put("vehiculoOutPutDTO", vehiculoOutputDTO);
             return new ModelAndView("redirect:/conductor/home", model);
-        } catch (PatenteDuplicadaException | UsuarioInexistente | NotFoundException e) {
+        } catch (PatenteDuplicadaException | UsuarioInexistente | NotFoundException  e) {
             model.put("error", e.getMessage());
             return new ModelAndView("registrarVehiculo", model);
         }

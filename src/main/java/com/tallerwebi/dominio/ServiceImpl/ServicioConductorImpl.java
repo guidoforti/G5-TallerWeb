@@ -7,7 +7,6 @@ import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.excepcion.CredencialesInvalidas;
 import com.tallerwebi.dominio.excepcion.FechaDeVencimientoDeLicenciaInvalida;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
-import com.tallerwebi.presentacion.DTO.InputsDTO.ConductorDTO;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,12 +17,12 @@ import java.time.LocalDate;
 public class ServicioConductorImpl implements ServicioConductor {
 
     private final RepositorioConductor repositorioConductor;
-    private final ManualModelMapper manualModelMapper;
+
 
     @Autowired
     public ServicioConductorImpl(RepositorioConductor repositorioConductor, ManualModelMapper manualModelMapper) {
         this.repositorioConductor = repositorioConductor;
-        this.manualModelMapper = manualModelMapper;
+
     }
 
 

@@ -4,7 +4,6 @@ import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.excepcion.CredencialesInvalidas;
 import com.tallerwebi.dominio.excepcion.FechaDeVencimientoDeLicenciaInvalida;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
-import com.tallerwebi.presentacion.DTO.InputsDTO.ConductorDTO;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 
 public interface ServicioConductor {

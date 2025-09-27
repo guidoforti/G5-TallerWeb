@@ -5,7 +5,7 @@ import com.tallerwebi.dominio.Entity.Vehiculo;
 import java.util.List;
 import java.util.Optional;
 
-public interface RepositorioVehiculo {
+public interface RepositorioVehiculo  {
 
     Vehiculo findById(Long id);
     List<Vehiculo> obtenerVehiculosParaConductor(Long conductorId);

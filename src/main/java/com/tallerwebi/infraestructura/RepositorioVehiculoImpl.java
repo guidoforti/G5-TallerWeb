@@ -33,7 +33,9 @@ public class RepositorioVehiculoImpl implements RepositorioVehiculo {
 
     @Override
     public Vehiculo encontrarVehiculoConPatente(String patente) {
-        return this.baseDeDatos.stream().filter(v-> v.getPatente().equals(patente)).findFirst().orElse(null);
+
+      return this.baseDeDatos.stream().filter(v -> v.getPatente().equals(patente)).findFirst().orElse(null);
+
     }
 
     @Override

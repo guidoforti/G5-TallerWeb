@@ -21,13 +21,13 @@ import java.util.Optional;
 public class ServicioVehiculoImpl implements ServicioVehiculo {
 
     RepositorioVehiculo repositorioVehiculo;
-    ManualModelMapper manualModelMapper;
+
     RepositorioConductor repositorioConductor;
 
     @Autowired
-    public ServicioVehiculoImpl(RepositorioVehiculo repositorioVehiculo, ManualModelMapper manualModelMapper, RepositorioConductor repositorioConductor) {
+    public ServicioVehiculoImpl(RepositorioVehiculo repositorioVehiculor, RepositorioConductor repositorioConductor) {
         this.repositorioVehiculo = repositorioVehiculo;
-        this.manualModelMapper = manualModelMapper;
+
         this.repositorioConductor = repositorioConductor;
     }
 

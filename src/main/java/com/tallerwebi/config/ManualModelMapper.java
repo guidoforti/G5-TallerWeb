@@ -1,7 +1,7 @@
 package com.tallerwebi.config;
 import com.tallerwebi.dominio.Entity.*;
 import com.tallerwebi.presentacion.DTO.*;
-import com.tallerwebi.presentacion.DTO.InputsDTO.ConductorDTO;
+import com.tallerwebi.presentacion.DTO.InputsDTO.ConductorRegistroInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.VehiculoInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeOutputDTO;
@@ -98,7 +98,7 @@ public class ManualModelMapper {
         return conductor;
     }
 
-    public Conductor toConductor(ConductorDTO dto) {
+    public Conductor toConductor(ConductorRegistroInputDTO dto) {
         if (dto == null) return null;
 
         Conductor conductor = new Conductor();
@@ -112,10 +112,10 @@ public class ManualModelMapper {
         return conductor;
     }
 
-    public ConductorDTO toConductorDTO(Conductor entity) {
+    public ConductorRegistroInputDTO toConductorDTO(Conductor entity) {
         if (entity == null) return null;
 
-        ConductorDTO conductor = new ConductorDTO();
+        ConductorRegistroInputDTO conductor = new ConductorRegistroInputDTO();
         conductor.setId(entity.getId());
         conductor.setNombre(entity.getNombre());
         conductor.setEmail(entity.getEmail());
