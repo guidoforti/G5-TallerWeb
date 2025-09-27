@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -34,7 +35,7 @@ class ServicioConductorTest {
 
     @Test
     void deberiaValidarLoginCorrecto() throws CredencialesInvalidas {
-        Conductor c = new Conductor(1L, null, "Pedro", "pedro@mail.com", "pass", LocalDate.now());
+        Conductor c = new Conductor(1L, null, "Pedro", "pedro@mail.com", "pass", LocalDate.now() ,new ArrayList<>());
 
         when(repositorioMock.buscarPorEmailYContrasenia(c.getEmail(), c.getContrasenia()))
                 .thenReturn(Optional.of(c));
@@ -55,7 +56,7 @@ class ServicioConductorTest {
 
     @Test
     void deberiaRegistrarConductorSiNoExiste() throws UsuarioExistente, FechaDeVencimientoDeLicenciaInvalida {
-        Conductor nuevo = new Conductor(null, null, "Ana", "ana@mail.com", "123", LocalDate.now().plusDays(10));
+        Conductor nuevo = new Conductor(null, null, "Ana", "ana@mail.com", "123", LocalDate.now().plusDays(10) , new ArrayList<>());
 
         when(repositorioMock.buscarPorEmail(nuevo.getEmail()))
                 .thenReturn(Optional.empty());
@@ -67,12 +68,12 @@ class ServicioConductorTest {
 
     @Test
     void noDeberiaRegistrarSiUsuarioYaExiste() {
-        Conductor existente = new Conductor(1L, null, "Ana", "ana@mail.com", "123", LocalDate.now());
+        Conductor existente = new Conductor(1L, null, "Ana", "ana@mail.com", "123", LocalDate.now() ,new ArrayList<>());
 
         when(repositorioMock.buscarPorEmail(existente.getEmail()))
                 .thenReturn(Optional.of(existente));
 
-        Conductor nuevo = new Conductor(null, null, "Ana", "ana@mail.com", "123", LocalDate.now());
+        Conductor nuevo = new Conductor(null, null, "Ana", "ana@mail.com", "123", LocalDate.now(), new ArrayList<>());
 
         assertThrows(UsuarioExistente.class,
                 () -> servicio.registrar(nuevo));
@@ -86,7 +87,7 @@ class ServicioConductorTest {
                 null, null,
                 "Carlos", "carlos@mail.com",
                 "1234",
-                LocalDate.now().minusDays(1)
+                LocalDate.now().minusDays(1) , new ArrayList<>()
         );
 
         FechaDeVencimientoDeLicenciaInvalida exception = assertThrows(
@@ -102,7 +103,7 @@ class ServicioConductorTest {
     void obtenerConductor_existente_deberiaRetornarConductor() throws UsuarioInexistente {
         // given
         Long id = 1L;
-        Conductor esperado = new Conductor(id, null, "Pedro", "pedro@mail.com", "pass", LocalDate.now());
+        Conductor esperado = new Conductor(id, null, "Pedro", "pedro@mail.com", "pass", LocalDate.now(), new ArrayList<>());
         when(repositorioMock.buscarPorId(id)).thenReturn(Optional.of(esperado));
 
         // when

@@ -32,7 +32,6 @@ public class ManualModelMapper {
         viaje.setFechaHoraDeSalida(dto.getFechaHoraDeSalida());
         viaje.setPrecio(dto.getPrecio());
         viaje.setAsientosDisponibles(dto.getAsientosDisponibles());
-        viaje.setAsientosTotales(vehiculo.getAsientosTotales());
         viaje.setVehiculo(vehiculo);
         viaje.setFechaDeCreacion(LocalDateTime.now());
 
@@ -49,7 +48,6 @@ public class ManualModelMapper {
         dto.setFechaHoraDeSalida(viaje.getFechaHoraDeSalida());
         dto.setPrecio(viaje.getPrecio());
         dto.setAsientosDisponibles(viaje.getAsientosDisponibles());
-        dto.setAsientosTotales(viaje.getAsientosTotales());
         dto.setFechaDeCreacion(viaje.getFechaDeCreacion());
         dto.setVehiculo(toVehiculoOutputDTO(viaje.getVehiculo()));
         dto.setNombreConductor(viaje.getConductor() != null ? viaje.getConductor().getNombre() : null);

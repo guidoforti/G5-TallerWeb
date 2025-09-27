@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -22,7 +23,7 @@ public class RepositorioConductorTest {
 
     @Test
     void deberiaGuardarConductorNuevo() {
-        Conductor conductor = new Conductor(null, null, "Juan Perez", "juan@mail.com", "1234", LocalDate.now());
+        Conductor conductor = new Conductor(null, null, "Juan Perez", "juan@mail.com", "1234", LocalDate.now(), new ArrayList<>());
 
         boolean guardado = this.repositorio.guardar(conductor);
 
@@ -33,8 +34,8 @@ public class RepositorioConductorTest {
 
     @Test
     void noDeberiaGuardarConductorConEmailRepetido() {
-        Conductor c1 = new Conductor(null, null, "Ana", "ana@mail.com", "pass", LocalDate.now());
-        Conductor c2 = new Conductor(null, null, "Pedro", "ana@mail.com", "otra", LocalDate.now());
+        Conductor c1 = new Conductor(null, null, "Ana", "ana@mail.com", "pass", LocalDate.now(), new ArrayList<>());
+        Conductor c2 = new Conductor(null, null, "Pedro", "ana@mail.com", "otra", LocalDate.now(), new ArrayList<>());
 
         assertThat(repositorio.guardar(c1), is(true));
         assertThat(repositorio.guardar(c2), is(false));
@@ -43,7 +44,7 @@ public class RepositorioConductorTest {
 
     @Test
     void deberiaBuscarPorEmailYContrasenia() {
-        Conductor c = new Conductor(null, null, "Ana", "ana@mail.com", "pass", LocalDate.now());
+        Conductor c = new Conductor(null, null, "Ana", "ana@mail.com", "pass", LocalDate.now(), new ArrayList<>());
         repositorio.guardar(c);
 
         Optional<Conductor> encontrado = repositorio.buscarPorEmailYContrasenia("ana@mail.com", "pass");
@@ -54,7 +55,7 @@ public class RepositorioConductorTest {
 
     @Test
     void noDeberiaEncontrarSiContraseniaIncorrecta() {
-        Conductor c = new Conductor(null,null, "Ana", "ana@mail.com", "pass", LocalDate.now());
+        Conductor c = new Conductor(null,null, "Ana", "ana@mail.com", "pass", LocalDate.now(), new ArrayList<>());
         repositorio.guardar(c);
 
         Optional<Conductor> encontrado = repositorio.buscarPorEmailYContrasenia("ana@mail.com", "mal");
@@ -64,7 +65,7 @@ public class RepositorioConductorTest {
 
     @Test
     void deberiaBuscarPorId() {
-        Conductor c = new Conductor(null, null, "Juan", "juan@mail.com", "1234", LocalDate.now());
+        Conductor c = new Conductor(null, null, "Juan", "juan@mail.com", "1234", LocalDate.now(), new ArrayList<>());
         repositorio.guardar(c);
 
         Optional<Conductor> encontrado = repositorio.buscarPorId(c.getId());

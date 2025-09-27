@@ -14,9 +14,9 @@ public class Datos {
 
 
     // ==== Conductores ====
-    private static final Conductor c1 = new Conductor(1L, new ArrayList<>(), "Juan Pérez", "juan.perez@example.com", "passJuan123", LocalDate.of(2027, 5, 20));
-    private static final Conductor c2 = new Conductor(2L, new ArrayList<>(), "María Gómez", "maria.gomez@example.com", "passMaria456", LocalDate.of(2026, 8, 10));
-    private static final Conductor c3 = new Conductor(3L, new ArrayList<>(), "Carlos Díaz", "carlos.diaz@example.com", "passCarlos789", LocalDate.of(2028, 1, 15));
+    private static final Conductor c1 = new Conductor(1L, new ArrayList<>(), "Juan Pérez", "juan.perez@example.com", "passJuan123", LocalDate.of(2027, 5, 20), new ArrayList<>());
+    private static final Conductor c2 = new Conductor(2L, new ArrayList<>(), "María Gómez", "maria.gomez@example.com", "passMaria456", LocalDate.of(2026, 8, 10), new ArrayList<>());
+    private static final Conductor c3 = new Conductor(3L, new ArrayList<>(), "Carlos Díaz", "carlos.diaz@example.com", "passCarlos789", LocalDate.of(2028, 1, 15), new ArrayList<>());
 
     // ==== Vehículos ====
     private static final Vehiculo v1 = new Vehiculo(1L, c1, "Toyota Corolla", "2015", "ABC123", 4, EstadoVerificacion.VERIFICADO);
@@ -44,30 +44,30 @@ public class Datos {
             1L, c1, Arrays.asList(viajero1, viajero2),
             origen1, destino1, Collections.emptyList(),
             LocalDateTime.of(2025, 10, 5, 9, 30),
-            1500.0, 4, 2, LocalDateTime.now(), v1
+            1500.0, 2, LocalDateTime.now(), v1
     );
 
     private static final Viaje viaje2 = new Viaje(
             2L, c2, Collections.singletonList(viajero3),
             origen2, destino2, Collections.singletonList(origen1),
             LocalDateTime.of(2025, 11, 12, 14, 0),
-            5000.0, 4, 3, LocalDateTime.now(), v2
+            5000.0, 3, LocalDateTime.now(), v2
     );
 
     private static final Viaje viaje3 = new Viaje(
             3L, c3, Arrays.asList(viajero1, viajero2, viajero3),
             origen3, destino3, Arrays.asList(destino1, destino2),
             LocalDateTime.of(2025, 12, 1, 7, 0),
-            3000.0, 6, 3, LocalDateTime.now(), v3
+            3000.0, 3, LocalDateTime.now(), v3
     );
 
     private static final List<Viaje> viajes = Arrays.asList(viaje1, viaje2, viaje3);
 
     private static final List<Ubicacion> ubicaciones = Arrays.asList(
-        origen1, destino1, origen2, destino2, origen3, destino3
+            origen1, destino1, origen2, destino2, origen3, destino3
     );
 
-    private static final List<Conductor> conductores = Arrays.asList(c1,c2,c3);
+    private static final List<Conductor> conductores = Arrays.asList(c1, c2, c3);
     private static final List<Vehiculo> vehiculos = Arrays.asList(v1, v2, v3);
 
     // ==== Método público ====

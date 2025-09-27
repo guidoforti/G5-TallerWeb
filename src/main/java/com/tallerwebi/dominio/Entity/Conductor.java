@@ -29,6 +29,7 @@ public class Conductor {
     //ESTO PUEDE CONVERTIRSE EN UNA ENTITY LICENCIA A FUTURO
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate fechaDeVencimientoLicencia;
+    private List<Vehiculo> vehiculos;
 
     @Override
     public boolean equals(Object o) {

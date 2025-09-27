@@ -43,7 +43,7 @@ public class RepositorioVehiculoTest {
     @Test
     public void deberiaGuardarVehiculoCorrectamente() {
         // Arrange
-        Conductor conductor = new Conductor(4L, new ArrayList<>(), "Nuevo Conductor", "nuevo@example.com", "password123", LocalDate.now());
+        Conductor conductor = new Conductor(4L, new ArrayList<>(), "Nuevo Conductor", "nuevo@example.com", "password123", LocalDate.now(), new ArrayList<>());
         Vehiculo nuevoVehiculo = new Vehiculo(null, conductor, "Toyota Hilux", "2022", "RRLL", 5, EstadoVerificacion.PENDIENTE);
 
         // Act

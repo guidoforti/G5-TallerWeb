@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -88,7 +89,7 @@ public class ServicioVehiculoTest {
 
     @Test
     void guardarVehiculoCorrectamente() throws PatenteDuplicadaException, NotFoundException {
-        Conductor conductor = new Conductor(1L, null, "Ana", "ana@mail.com", "123", null);
+        Conductor conductor = new Conductor(1L, null, "Ana", "ana@mail.com", "123", null, new ArrayList<>());
         Vehiculo vehiculo = new Vehiculo(null, conductor, "Toyota", "2020", "ABC123", 4, EstadoVerificacion.PENDIENTE);
         Vehiculo guardado = new Vehiculo(1L, conductor, "Toyota", "2020", "ABC123", 4, EstadoVerificacion.PENDIENTE);
 
@@ -105,7 +106,7 @@ public class ServicioVehiculoTest {
 
     @Test
     void guardarVehiculo_PatenteDuplicada_LanzaExcepcion() {
-        Conductor conductor = new Conductor(1L, null, "Ana", "ana@mail.com", "123", null);
+        Conductor conductor = new Conductor(1L, null, "Ana", "ana@mail.com", "123", null, new ArrayList<>());
         Vehiculo vehiculo = new Vehiculo(null, conductor, "Toyota", "2020", "ABC123", 4, EstadoVerificacion.PENDIENTE);
 
         when(repositorioConductorMock.buscarPorId(1L)).thenReturn(Optional.of(conductor));

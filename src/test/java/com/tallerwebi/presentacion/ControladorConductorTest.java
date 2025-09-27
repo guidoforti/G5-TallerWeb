@@ -16,6 +16,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpSession;
 import java.time.LocalDate;
+import java.util.ArrayList;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -104,7 +105,7 @@ public class ControladorConductorTest {
 
     @Test
     public void registroCorrectoDeberiaRedirigirAHomeYSetearSesion() throws UsuarioExistente, FechaDeVencimientoDeLicenciaInvalida {
-        Conductor nuevoConductor = new Conductor(null, null, "Ana", "ana@mail.com", "123", LocalDate.now());
+        Conductor nuevoConductor = new Conductor(null, null, "Ana", "ana@mail.com", "123", LocalDate.now(), new ArrayList<>());
         ConductorRegistroInputDTO inputDTO = new ConductorRegistroInputDTO(
                 null, "Ana", "ana@mail.com", "123", LocalDate.now(), null
         );
