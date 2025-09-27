@@ -61,7 +61,6 @@ public class Viaje {
     private List<Ubicacion> paradas;
     private LocalDateTime fechaHoraDeSalida;
     private Double precio;
-    private Integer asientosTotales;
     private Integer asientosDisponibles;
     private LocalDateTime fechaDeCreacion;
     private Vehiculo vehiculo;

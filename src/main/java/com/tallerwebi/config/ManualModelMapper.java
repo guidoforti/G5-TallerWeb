@@ -1,14 +1,13 @@
 package com.tallerwebi.config;
 import com.tallerwebi.dominio.Entity.*;
 import com.tallerwebi.presentacion.DTO.*;
+import com.tallerwebi.presentacion.DTO.InputsDTO.ConductorRegistroInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.VehiculoInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeOutputDTO;
 import com.tallerwebi.presentacion.DTO.ViajeroDTO;
 import com.tallerwebi.presentacion.DTO.UbicacionDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.VehiculoOutputDTO;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -33,7 +32,6 @@ public class ManualModelMapper {
         viaje.setFechaHoraDeSalida(dto.getFechaHoraDeSalida());
         viaje.setPrecio(dto.getPrecio());
         viaje.setAsientosDisponibles(dto.getAsientosDisponibles());
-        viaje.setAsientosTotales(vehiculo.getAsientosTotales());
         viaje.setVehiculo(vehiculo);
         viaje.setFechaDeCreacion(LocalDateTime.now());
 
@@ -50,7 +48,6 @@ public class ManualModelMapper {
         dto.setFechaHoraDeSalida(viaje.getFechaHoraDeSalida());
         dto.setPrecio(viaje.getPrecio());
         dto.setAsientosDisponibles(viaje.getAsientosDisponibles());
-        dto.setAsientosTotales(viaje.getAsientosTotales());
         dto.setFechaDeCreacion(viaje.getFechaDeCreacion());
         dto.setVehiculo(toVehiculoOutputDTO(viaje.getVehiculo()));
         dto.setNombreConductor(viaje.getConductor() != null ? viaje.getConductor().getNombre() : null);
@@ -99,7 +96,7 @@ public class ManualModelMapper {
         return conductor;
     }
 
-    public Conductor toConductor(ConductorDTO dto) {
+    public Conductor toConductor(ConductorRegistroInputDTO dto) {
         if (dto == null) return null;
 
         Conductor conductor = new Conductor();
@@ -113,10 +110,10 @@ public class ManualModelMapper {
         return conductor;
     }
 
-    public ConductorDTO toConductorDTO(Conductor entity) {
+    public ConductorRegistroInputDTO toConductorDTO(Conductor entity) {
         if (entity == null) return null;
 
-        ConductorDTO conductor = new ConductorDTO();
+        ConductorRegistroInputDTO conductor = new ConductorRegistroInputDTO();
         conductor.setId(entity.getId());
         conductor.setNombre(entity.getNombre());
         conductor.setEmail(entity.getEmail());
