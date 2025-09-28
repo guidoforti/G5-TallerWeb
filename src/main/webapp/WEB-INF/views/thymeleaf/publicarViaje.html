@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/fragments :: head('Mapa de Viajes')">
+    <th:block th:fragment="extra">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    </th:block>
+</head>
+<body>
+<nav th:replace="fragments/fragments :: navbar"></nav>
+
+<div class="container" style="margin-top: 100px;">
+    <h3>Selecciona origen y destino</h3>
+
+    <div id="map" style="height: 500px;"></div>
+
+    <form action="#" method="post" class="mt-3">
+        <input type="text" id="origen" name="origen" placeholder="Origen" readonly class="form-control mb-2">
+        <input type="hidden" id="origenLat" name="origenLat">
+        <input type="hidden" id="origenLon" name="origenLon">
+
+        <input type="text" id="destino" name="destino" placeholder="Destino" readonly class="form-control mb-2">
+        <input type="hidden" id="destinoLat" name="destinoLat">
+        <input type="hidden" id="destinoLon" name="destinoLon">
+
+        <button type="submit" class="btn btn-primary mt-2">Confirmar viaje</button>
+    </form>
+</div>
+
+<script th:src="@{/js/mapa.js}"></script>
+</body>
+</html>
