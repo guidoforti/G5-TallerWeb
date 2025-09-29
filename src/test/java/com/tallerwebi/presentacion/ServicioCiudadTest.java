@@ -24,7 +24,7 @@ public class ServicioCiudadTest {
     RepositorioCiudad repositorioMock = mock(RepositorioCiudad.class);
     ServicioCiudad servicio = new ServicioCiudadImpl(repositorioMock);
 
-    List<Ciudad> ubicacionesDePrueba = Datos.obtenerUbicaciones();
+    List<Ciudad> ubicacionesDePrueba = Datos.obtenerCiudades();
     when(repositorioMock.findAll()).thenReturn(ubicacionesDePrueba);
 
     List<Ciudad> ubicaciones = servicio.listarTodas();
@@ -41,7 +41,7 @@ public void queLasUbicacionesNoSeanNulas() {
     RepositorioCiudad repositorioMock = mock(RepositorioCiudad.class);
     ServicioCiudad servicio = new ServicioCiudadImpl(repositorioMock);
 
-    when(repositorioMock.findAll()).thenReturn(Datos.obtenerUbicaciones());
+    when(repositorioMock.findAll()).thenReturn(Datos.obtenerCiudades());
 
     List<Ciudad> ubicaciones = servicio.listarTodas();
 
@@ -57,14 +57,14 @@ public void queCadaUbicacionTengaDireccionValida() {
    RepositorioCiudad repositorioMock = mock(RepositorioCiudad.class);
     ServicioCiudad servicio = new ServicioCiudadImpl(repositorioMock);
     
-    List<Ciudad> ubicacionesDePrueba = Datos.obtenerUbicaciones();
+    List<Ciudad> ubicacionesDePrueba = Datos.obtenerCiudades();
 
     when(repositorioMock.findAll()).thenReturn(ubicacionesDePrueba);
 
     List<Ciudad> ubicaciones = servicio.listarTodas();
 
     for (Ciudad ciudad : ubicaciones) {
-        assertThat(ciudad.getDireccion(), allOf(notNullValue(), not(isEmptyString())));
+        assertThat(ciudad.getNombre(), allOf(notNullValue(), not(isEmptyString())));
     }
 
 

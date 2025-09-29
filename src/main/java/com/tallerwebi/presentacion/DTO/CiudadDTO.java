@@ -10,15 +10,15 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UbicacionDTO {
+public class CiudadDTO {
 
-    private String direccion;
+    private String nombre;
     private Float latitud;
     private Float longitud;
 
 
-    public UbicacionDTO (Ciudad ciudad) {
-        this.direccion = ciudad.getDireccion();
+    public CiudadDTO(Ciudad ciudad) {
+        this.nombre = ciudad.getNombre();
         this.latitud = ciudad.getLatitud();
         this.longitud = ciudad.getLongitud();
     }
@@ -26,7 +26,7 @@ public class UbicacionDTO {
 
     public Ciudad toEntity () {
         Ciudad ciudad = new Ciudad();
-        ciudad.setDireccion(this.getDireccion());
+        ciudad.setNombre(this.getNombre());
         ciudad.setLongitud(this.getLongitud());
         ciudad.setLatitud(this.getLatitud());
         return ciudad;

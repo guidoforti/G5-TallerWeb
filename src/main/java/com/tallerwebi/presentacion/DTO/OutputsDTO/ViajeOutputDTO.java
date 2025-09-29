@@ -1,6 +1,6 @@
 package com.tallerwebi.presentacion.DTO.OutputsDTO;
 
-import com.tallerwebi.presentacion.DTO.UbicacionDTO;
+import com.tallerwebi.presentacion.DTO.CiudadDTO;
 import com.tallerwebi.presentacion.DTO.ViajeroDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,9 +15,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ViajeOutputDTO {
-    private UbicacionDTO origen;
-    private UbicacionDTO destino;
-    private List<UbicacionDTO> paradas;
+    private CiudadDTO origen;
+    private CiudadDTO destino;
+    private List<CiudadDTO> paradas;
     private LocalDateTime fechaHoraDeSalida;
     private Double precio;
     private Integer asientosDisponibles;

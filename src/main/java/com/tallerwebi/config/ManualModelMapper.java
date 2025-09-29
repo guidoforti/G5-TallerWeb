@@ -6,7 +6,7 @@ import com.tallerwebi.presentacion.DTO.InputsDTO.VehiculoInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeOutputDTO;
 import com.tallerwebi.presentacion.DTO.ViajeroDTO;
-import com.tallerwebi.presentacion.DTO.UbicacionDTO;
+import com.tallerwebi.presentacion.DTO.CiudadDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.VehiculoOutputDTO;
 import org.springframework.stereotype.Component;
 
@@ -127,29 +127,29 @@ public class ManualModelMapper {
     // UBICACION
     // -----------------------------
 
-    public Ciudad toUbicacion(UbicacionDTO dto) {
+    public Ciudad toUbicacion(CiudadDTO dto) {
         if (dto == null) return null;
         Ciudad u = new Ciudad();
-        u.setDireccion(dto.getDireccion());
+        u.setNombre(dto.getNombre());
         u.setLatitud(dto.getLatitud());
         u.setLongitud(dto.getLongitud());
         return u;
     }
 
-    private List<Ciudad> toUbicacionList(List<UbicacionDTO> dtos) {
+    private List<Ciudad> toUbicacionList(List<CiudadDTO> dtos) {
         return dtos == null ? null :
                 dtos.stream().map(this::toUbicacion).collect(Collectors.toList());
     }
 
-    private List<UbicacionDTO> toUbicacionDTOList(List<Ciudad> entities) {
+    private List<CiudadDTO> toUbicacionDTOList(List<Ciudad> entities) {
         return entities == null ? null :
                 entities.stream().map(this::toUbicacionDTO).collect(Collectors.toList());
     }
 
-    public UbicacionDTO toUbicacionDTO(Ciudad u) {
+    public CiudadDTO toUbicacionDTO(Ciudad u) {
         if (u == null) return null;
-        UbicacionDTO dto = new UbicacionDTO();
-        dto.setDireccion(u.getDireccion());
+        CiudadDTO dto = new CiudadDTO();
+        dto.setNombre(u.getNombre());
         dto.setLatitud(u.getLatitud());
         dto.setLongitud(u.getLongitud());
         return dto;
