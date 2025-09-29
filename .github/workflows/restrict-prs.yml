@@ -1,0 +1,30 @@
+name: Restrict PRs
+
+on:
+  pull_request:
+    branches:
+      - main   # Solo se dispara cuando alguien abre un PR hacia main
+
+jobs:
+  check-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validar rama origen
+        run: |
+          echo "Pull request desde: ${{ github.head_ref }}"
+
+          # Permitir si viene de develop
+          if [ "${{ github.head_ref }}" = "develop" ]; then
+            echo "✅ PR válido: desde develop"
+            exit 0
+          fi
+
+          # Permitir si viene de una rama hotfix/*
+          if [[ "${{ github.head_ref }}" == hotfix/* ]]; then
+            echo "✅ PR válido: desde hotfix"
+            exit 0
+          fi
+
+          # Bloquear en cualquier otro caso
+          echo "❌ Solo se permiten PRs desde 'develop' o 'hotfix/*' hacia 'main'."
+          exit 1
