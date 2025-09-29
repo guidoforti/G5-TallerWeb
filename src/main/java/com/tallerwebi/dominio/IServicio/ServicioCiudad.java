@@ -10,6 +10,6 @@ public interface ServicioCiudad {
     List<Ciudad> listarTodas();
     Ciudad buscarPorId(Long id) throws NotFoundException;
     Ciudad guardarCiudad(Ciudad ciudad);
-    Ciudad eliminarCiudad(Long id);
-    Ciudad actualizarCiudad(Ciudad ciudad);
+    void eliminarCiudad(Long id) throws NotFoundException;
+    Ciudad actualizarCiudad(Ciudad ciudad) throws NotFoundException;
 }

@@ -36,17 +36,25 @@ public class ServicioCiudadImpl implements ServicioCiudad {
 
     @Override
     public Ciudad guardarCiudad(Ciudad ciudad) {
-        return null;
+        return repositorioCiudad.guardarCiudad(ciudad);
+
     }
 
     @Override
-    public Ciudad eliminarCiudad(Long id) {
-        return null;
+    public void eliminarCiudad(Long id) throws NotFoundException {
+        if (repositorioCiudad.buscarPorId(id) == null) {
+            throw new NotFoundException("no se encontro una ciudad con ese id");
+        }
+        repositorioCiudad.eliminarCiudad(id);
     }
 
     @Override
-    public Ciudad actualizarCiudad(Ciudad ciudad) {
-        return null;
+    public Ciudad actualizarCiudad(Ciudad ciudad) throws NotFoundException {
+        Ciudad ciudadADevoler = repositorioCiudad.actualizarCiudad(ciudad);
+        if (ciudadADevoler == null) {
+            throw new NotFoundException("no se encontro una ciudad con ese id");
+        }
+        return ciudadADevoler;
     }
 
 

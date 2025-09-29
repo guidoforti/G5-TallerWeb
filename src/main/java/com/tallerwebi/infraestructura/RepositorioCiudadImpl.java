@@ -3,6 +3,7 @@ package com.tallerwebi.infraestructura;
 
 import java.util.List;
 
+import com.tallerwebi.dominio.excepcion.NotFoundException;
 import org.springframework.stereotype.Repository;
 
 import com.tallerwebi.dominio.Entity.Ciudad;
@@ -44,11 +45,10 @@ public class RepositorioCiudadImpl implements RepositorioCiudad {
     }
 
     @Override
-    public Ciudad actualizarCiudad(Ciudad ciudad) {
+    public Ciudad actualizarCiudad(Ciudad ciudad){
         Ciudad ciudadExistente = this.ciudades.stream()
                 .filter(c -> c.getId().equals(ciudad.getId()))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Ciudad no encontrada con ID: " + ciudad.getId()));
+                .findFirst().orElse(null);
 
 
         int indice = this.ciudades.indexOf(ciudadExistente);

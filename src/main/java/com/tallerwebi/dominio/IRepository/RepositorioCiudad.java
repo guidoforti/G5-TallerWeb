@@ -2,6 +2,7 @@ package com.tallerwebi.dominio.IRepository;
 
 import java.util.List;
 import com.tallerwebi.dominio.Entity.Ciudad;
+import com.tallerwebi.dominio.excepcion.NotFoundException;
 
 public interface RepositorioCiudad {
     List<Ciudad> findAll();
