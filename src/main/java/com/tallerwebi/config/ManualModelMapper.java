@@ -22,7 +22,7 @@ public class ManualModelMapper {
     // VIAJE
     // -----------------------------
 
-    public Viaje toViaje(ViajeInputDTO dto, Conductor conductor, Vehiculo vehiculo , Ubicacion origen , Ubicacion destino) {
+    public Viaje toViaje(ViajeInputDTO dto, Conductor conductor, Vehiculo vehiculo , Ciudad origen , Ciudad destino) {
         if (dto == null) return null;
 
         Viaje viaje = new Viaje();
@@ -127,26 +127,26 @@ public class ManualModelMapper {
     // UBICACION
     // -----------------------------
 
-    public Ubicacion toUbicacion(UbicacionDTO dto) {
+    public Ciudad toUbicacion(UbicacionDTO dto) {
         if (dto == null) return null;
-        Ubicacion u = new Ubicacion();
+        Ciudad u = new Ciudad();
         u.setDireccion(dto.getDireccion());
         u.setLatitud(dto.getLatitud());
         u.setLongitud(dto.getLongitud());
         return u;
     }
 
-    private List<Ubicacion> toUbicacionList(List<UbicacionDTO> dtos) {
+    private List<Ciudad> toUbicacionList(List<UbicacionDTO> dtos) {
         return dtos == null ? null :
                 dtos.stream().map(this::toUbicacion).collect(Collectors.toList());
     }
 
-    private List<UbicacionDTO> toUbicacionDTOList(List<Ubicacion> entities) {
+    private List<UbicacionDTO> toUbicacionDTOList(List<Ciudad> entities) {
         return entities == null ? null :
                 entities.stream().map(this::toUbicacionDTO).collect(Collectors.toList());
     }
 
-    public UbicacionDTO toUbicacionDTO(Ubicacion u) {
+    public UbicacionDTO toUbicacionDTO(Ciudad u) {
         if (u == null) return null;
         UbicacionDTO dto = new UbicacionDTO();
         dto.setDireccion(u.getDireccion());

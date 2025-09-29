@@ -1,6 +1,6 @@
 package com.tallerwebi.presentacion.DTO;
 
-import com.tallerwebi.dominio.Entity.Ubicacion;
+import com.tallerwebi.dominio.Entity.Ciudad;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,18 +17,18 @@ public class UbicacionDTO {
     private Float longitud;
 
 
-    public UbicacionDTO (Ubicacion ubicacion) {
-        this.direccion = ubicacion.getDireccion();
-        this.latitud = ubicacion.getLatitud();
-        this.longitud = ubicacion.getLongitud();
+    public UbicacionDTO (Ciudad ciudad) {
+        this.direccion = ciudad.getDireccion();
+        this.latitud = ciudad.getLatitud();
+        this.longitud = ciudad.getLongitud();
     }
 
 
-    public  Ubicacion toEntity () {
-        Ubicacion ubicacion = new Ubicacion();
-        ubicacion.setDireccion(this.getDireccion());
-        ubicacion.setLongitud(this.getLongitud());
-        ubicacion.setLatitud(this.getLatitud());
-        return  ubicacion;
+    public Ciudad toEntity () {
+        Ciudad ciudad = new Ciudad();
+        ciudad.setDireccion(this.getDireccion());
+        ciudad.setLongitud(this.getLongitud());
+        ciudad.setLatitud(this.getLatitud());
+        return ciudad;
     }
 }

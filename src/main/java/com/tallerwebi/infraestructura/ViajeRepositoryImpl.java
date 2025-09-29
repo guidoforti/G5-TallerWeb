@@ -2,7 +2,7 @@ package com.tallerwebi.infraestructura;
 
 
 import com.tallerwebi.dominio.Entity.Conductor;
-import com.tallerwebi.dominio.Entity.Ubicacion;
+import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import org.springframework.stereotype.Repository;
@@ -57,7 +57,7 @@ public class ViajeRepositoryImpl implements ViajeRepository {
     }
 
     @Override
-    public List<Viaje> findByOrigenYDestinoYConductor(Ubicacion origen, Ubicacion destino, Conductor conductor) {
+    public List<Viaje> findByOrigenYDestinoYConductor(Ciudad origen, Ciudad destino, Conductor conductor) {
         return baseDeDatos.stream().filter(v -> v.getConductor().equals(conductor)
                 && v.getOrigen().equals(origen)
                 && v.getDestino().equals(destino)).collect(Collectors.toList());
