@@ -20,6 +20,8 @@ public class Viajero {
     private Long id;
     private String nombre;
     private Integer edad;
+    private String email;
+    private String contrasenia;
     // Relación muchos a muchos con Viaje
     //@ManyToMany(mappedBy = "viajeros")
     private List<Viaje> viajes;
