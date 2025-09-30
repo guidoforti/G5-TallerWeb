@@ -2,8 +2,11 @@ package com.tallerwebi.infraestructura;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,4 +44,66 @@ public class RepositorioViajeroTest {
          assertThat(repositorioViajero.guardar(viajeroTres), is(false));
     }
 
+    @Test
+    public void buscoViajeroPorEmailYContraseniaYLoEncuentro(){
+        Viajero viajero = new Viajero(null, "Juan", 21, "Juan@gmail.com", "asfsnak3", new ArrayList<>());
+        repositorioViajero.guardar(viajero);
+
+        Optional<Viajero> viajeroEncontrado = repositorioViajero.buscarPorEmailYContrasenia("Juan@gmail.com", "asfsnak3");
+
+        assertThat(viajeroEncontrado.isPresent(), is(true));
+        assertThat(viajeroEncontrado.get().getNombre(), is("Juan"));
+    }
+
+    @Test
+    public void siLaContraseniaEsIncorrectaNoDevuelveAlViajero(){
+        Viajero viajero = new Viajero(null, "Mario", 30, "Mario@gmail.com", "jgfs2", new ArrayList<>());
+        repositorioViajero.guardar(viajero);
+
+        Optional<Viajero> viajeroEncontrado = repositorioViajero.buscarPorEmailYContrasenia("Mario@gmail.com", "kfsvc1");
+
+        assertThat(viajeroEncontrado.isPresent(), is(false));
+    }
+
+    @Test
+    public void buscoViajeroPorEmailYLoEncuentro(){
+        Viajero viajero = new Viajero(null, "Pepe", 27, "Pepe@gmail.com", "sfsa88", new ArrayList<>());
+        repositorioViajero.guardar(viajero);
+
+        Optional<Viajero> viajeroPorMailEncontrado = repositorioViajero.buscarPorEmail("Pepe@gmail.com");
+
+        assertThat(viajeroPorMailEncontrado.isPresent(), is(true));
+        assertThat(viajeroPorMailEncontrado.get().getEmail(), is("Pepe@gmail.com"));
+    }
+
+    @Test
+    public void buscoViajeroPorEmailYNoLoEncuentro(){
+        Viajero viajero = new Viajero(null, "Pepe", 27, "Pepe@gmail.com", "sfsa88", new ArrayList<>());
+        repositorioViajero.guardar(viajero);
+
+        Optional<Viajero> viajeroPorMailEncontrado = repositorioViajero.buscarPorEmail("Juan@gmail.com");
+
+        assertFalse(viajeroPorMailEncontrado.isPresent());
+    }
+
+    @Test
+    public void buscoViajeroPorIdYLoEncuentro(){
+        Viajero viajero = new Viajero(null, "Ramon", 35, "Ramon@gmail.com", "SAJasfn2", new ArrayList<>());
+        repositorioViajero.guardar(viajero);
+
+        Optional<Viajero> viajeroPorIDEncontrado = repositorioViajero.buscarPorId(viajero.getId());
+
+        assertThat(viajeroPorIDEncontrado.get().getId(), is(4L));
+        assertThat(viajeroPorIDEncontrado.get().getEmail(), is("Ramon@gmail.com"));
+    }
+    
+    @Test
+    public void buscoViajeroPorIdYNoLoEncuentro(){
+        Viajero viajero = new Viajero(null, "Ramon", 35, "Ramon@gmail.com", "SAJasfn2", new ArrayList<>());
+        repositorioViajero.guardar(viajero);
+
+         Optional<Viajero> viajeroPorIDEncontrado = repositorioViajero.buscarPorId(5L);
+
+         assertThat(viajeroPorIDEncontrado.isPresent(), is(false));
+    }
 }

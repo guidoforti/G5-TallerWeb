@@ -12,7 +12,7 @@ import com.tallerwebi.dominio.IRepository.RepositorioViajero;
 @Repository
 public class RepositorioViajeroImpl implements RepositorioViajero{
 
-    private Map<Long, Viajero> viajeros = new HashMap();
+    private Map<Long, Viajero> viajeros = new HashMap<>();
     private Long proximoId = 1L;
 
     public RepositorioViajeroImpl(){
@@ -24,19 +24,17 @@ public class RepositorioViajeroImpl implements RepositorioViajero{
 
     @Override
     public Optional<Viajero> buscarPorEmailYContrasenia(String email, String contrasenia) {
-        return null;
+        return viajeros.values().stream().filter(v -> v.getEmail().equals(email) && v.getContrasenia().equals(contrasenia)).findFirst();
     }
 
     @Override
     public Optional<Viajero> buscarPorEmail(String email) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'buscarPorEmail'");
+        return viajeros.values().stream().filter(v -> v.getEmail().equals(email)).findFirst();
     }
 
     @Override
     public Optional<Viajero> buscarPorId(Long id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'buscarPorId'");
+        return Optional.ofNullable(viajeros.get(id));
     }
 
     @Override
