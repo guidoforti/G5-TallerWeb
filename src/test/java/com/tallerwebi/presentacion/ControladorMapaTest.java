@@ -1,7 +1,7 @@
 package com.tallerwebi.presentacion;
 
 import com.tallerwebi.presentacion.Controller.ControladorMapa;
-import com.tallerwebi.dominio.IServicio.ServicioUbicacion;
+import com.tallerwebi.dominio.IServicio.ServicioCiudad;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.ModelAndView;
@@ -13,12 +13,12 @@ import static org.mockito.Mockito.*;
 public class ControladorMapaTest {
 
     private ControladorMapa ControladorMapa;
-    private ServicioUbicacion servicioUbicacionMock;
+    private ServicioCiudad servicioCiudadMock;
 
     @BeforeEach
     public void init() {
-        servicioUbicacionMock = mock(ServicioUbicacion.class);
-        ControladorMapa = new ControladorMapa(servicioUbicacionMock);
+        servicioCiudadMock = mock(ServicioCiudad.class);
+        ControladorMapa = new ControladorMapa(servicioCiudadMock);
     }
 
     @Test
@@ -26,6 +26,6 @@ public class ControladorMapaTest {
         ModelAndView mav = ControladorMapa.mostrarMapa();
 
         assertThat(mav.getViewName(), equalTo("publicarViaje"));
-        verify(servicioUbicacionMock, times(1)).listarTodas();
+        verify(servicioCiudadMock, times(1)).listarTodas();
     }
 }

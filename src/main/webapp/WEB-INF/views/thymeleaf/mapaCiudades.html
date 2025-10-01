@@ -15,16 +15,21 @@
 
     <div id="map" style="height: 500px;"></div>
 
-    <form action="#" method="post" class="mt-3">
-        <input type="text" id="origen" name="origen" placeholder="Origen" readonly class="form-control mb-2">
+    <form action="/guardar-origen-destino" method="post">
+        <label>Origen:</label>
+        <input type="text" id="origen" name="origenNombre" readonly>
         <input type="hidden" id="origenLat" name="origenLat">
         <input type="hidden" id="origenLon" name="origenLon">
 
-        <input type="text" id="destino" name="destino" placeholder="Destino" readonly class="form-control mb-2">
+        <br>
+
+        <label>Destino:</label>
+        <input type="text" id="destino" name="destinoNombre" readonly>
         <input type="hidden" id="destinoLat" name="destinoLat">
         <input type="hidden" id="destinoLon" name="destinoLon">
 
-        <button type="submit" class="btn btn-primary mt-2">Confirmar viaje</button>
+        <br>
+        <button type="submit">Guardar</button>
     </form>
 </div>
 
