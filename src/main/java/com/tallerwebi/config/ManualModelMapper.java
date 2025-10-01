@@ -6,7 +6,7 @@ import com.tallerwebi.presentacion.DTO.InputsDTO.VehiculoInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeOutputDTO;
 import com.tallerwebi.presentacion.DTO.ViajeroDTO;
-import com.tallerwebi.presentacion.DTO.UbicacionDTO;
+import com.tallerwebi.presentacion.DTO.CiudadDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.VehiculoOutputDTO;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +22,7 @@ public class ManualModelMapper {
     // VIAJE
     // -----------------------------
 
-    public Viaje toViaje(ViajeInputDTO dto, Conductor conductor, Vehiculo vehiculo , Ubicacion origen , Ubicacion destino) {
+    public Viaje toViaje(ViajeInputDTO dto, Conductor conductor, Vehiculo vehiculo , Ciudad origen , Ciudad destino) {
         if (dto == null) return null;
 
         Viaje viaje = new Viaje();
@@ -127,29 +127,29 @@ public class ManualModelMapper {
     // UBICACION
     // -----------------------------
 
-    public Ubicacion toUbicacion(UbicacionDTO dto) {
+    public Ciudad toUbicacion(CiudadDTO dto) {
         if (dto == null) return null;
-        Ubicacion u = new Ubicacion();
-        u.setDireccion(dto.getDireccion());
+        Ciudad u = new Ciudad();
+        u.setNombre(dto.getNombre());
         u.setLatitud(dto.getLatitud());
         u.setLongitud(dto.getLongitud());
         return u;
     }
 
-    private List<Ubicacion> toUbicacionList(List<UbicacionDTO> dtos) {
+    private List<Ciudad> toUbicacionList(List<CiudadDTO> dtos) {
         return dtos == null ? null :
                 dtos.stream().map(this::toUbicacion).collect(Collectors.toList());
     }
 
-    private List<UbicacionDTO> toUbicacionDTOList(List<Ubicacion> entities) {
+    private List<CiudadDTO> toUbicacionDTOList(List<Ciudad> entities) {
         return entities == null ? null :
                 entities.stream().map(this::toUbicacionDTO).collect(Collectors.toList());
     }
 
-    public UbicacionDTO toUbicacionDTO(Ubicacion u) {
+    public CiudadDTO toUbicacionDTO(Ciudad u) {
         if (u == null) return null;
-        UbicacionDTO dto = new UbicacionDTO();
-        dto.setDireccion(u.getDireccion());
+        CiudadDTO dto = new CiudadDTO();
+        dto.setNombre(u.getNombre());
         dto.setLatitud(u.getLatitud());
         dto.setLongitud(u.getLongitud());
         return dto;

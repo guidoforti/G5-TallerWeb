@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,12 +21,12 @@ public class Viaje {
 
     @ManyToOne */
     private Conductor conductor;
-   /* @ManyToMany
-    @JoinTable(
-            name = "viaje_viajero", // Nombre de la tabla intermedia
-            joinColumns = @JoinColumn(name = "viaje_id"), // Columna que referencia a Viaje
-            inverseJoinColumns = @JoinColumn(name = "viajero_id") // Columna que referencia a Viajero
-    ) */
+    /* @ManyToMany
+     @JoinTable(
+             name = "viaje_viajero", // Nombre de la tabla intermedia
+             joinColumns = @JoinColumn(name = "viaje_id"), // Columna que referencia a Viaje
+             inverseJoinColumns = @JoinColumn(name = "viajero_id") // Columna que referencia a Viajero
+     ) */
     private List<Viajero> viajeros; /* @ManyToMany
     @JoinTable(
             name = "viaje_viajero", // Nombre de la tabla intermedia
@@ -35,30 +34,14 @@ public class Viaje {
             inverseJoinColumns = @JoinColumn(name = "viajero_id") // Columna que referencia a Viajero
     ) */
 
-   /* @Embedded
-    @AttributeOverrides({
-            @AttributeOverride(name = "direccion", column = @Column(name = "origen_direccion")),
-            @AttributeOverride(name = "ciudad", column = @Column(name = "origen_ciudad")),
-            @AttributeOverride(name = "provincia", column = @Column(name = "origen_provincia")),
-            @AttributeOverride(name = "pais", column = @Column(name = "origen_pais")),
-            @AttributeOverride(name = "latitud", column = @Column(name = "origen_latitud")),
-            @AttributeOverride(name = "longitud", column = @Column(name = "origen_longitud"))
-    }) */
-    private Ubicacion origen;
-
-   /* @Embedded
-    @AttributeOverrides({
-            @AttributeOverride(name = "direccion", column = @Column(name = "destino_direccion")),
-            @AttributeOverride(name = "ciudad", column = @Column(name = "destino_ciudad")),
-            @AttributeOverride(name = "provincia", column = @Column(name = "destino_provincia")),
-            @AttributeOverride(name = "pais", column = @Column(name = "destino_pais")),
-            @AttributeOverride(name = "latitud", column = @Column(name = "destino_latitud")),
-            @AttributeOverride(name = "longitud", column = @Column(name = "destino_longitud"))
-    })*/
-    private Ubicacion destino;
+    // agregar anotaciones para origen y destino
+    private Ciudad origen;
 
 
-    private List<Ubicacion> paradas;
+    private Ciudad destino;
+
+
+    private List<Ciudad> paradas;
     private LocalDateTime fechaHoraDeSalida;
     private Double precio;
     private Integer asientosDisponibles;

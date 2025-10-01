@@ -2,14 +2,10 @@ package com.tallerwebi.dominio.ServiceImpl;
 
 
 import com.tallerwebi.config.ManualModelMapper;
-import com.tallerwebi.dominio.Entity.Ubicacion;
-import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Entity.Viaje;
-import com.tallerwebi.dominio.IRepository.RepositorioConductor;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
-import com.tallerwebi.presentacion.DTO.InputsDTO.VehiculoInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
