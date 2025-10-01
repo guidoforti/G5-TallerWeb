@@ -11,6 +11,6 @@ import lombok.Setter;
 @Setter
 public class ViajeroLoginInputDTO {
     
-    private String usuario;
+    private String email;
     private String contrasenia;
 }
