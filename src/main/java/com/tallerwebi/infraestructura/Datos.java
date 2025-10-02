@@ -44,21 +44,21 @@ public class Datos {
             1L, c1, Arrays.asList(viajero1, viajero2),
             origen1, destino1, Collections.emptyList(),
             LocalDateTime.of(2025, 10, 5, 9, 30),
-            1500.0, 2, LocalDateTime.now(), v1
+            1500.0, 2, LocalDateTime.now(), v1 , EstadoDeViaje.DISPONIBLE
     );
 
     private static final Viaje viaje2 = new Viaje(
             2L, c2, Collections.singletonList(viajero3),
             origen2, destino2, Collections.singletonList(origen1),
             LocalDateTime.of(2025, 11, 12, 14, 0),
-            5000.0, 3, LocalDateTime.now(), v2
+            5000.0, 3, LocalDateTime.now(), v2 ,EstadoDeViaje.DISPONIBLE
     );
 
     private static final Viaje viaje3 = new Viaje(
             3L, c3, Arrays.asList(viajero1, viajero2, viajero3),
             origen3, destino3, Arrays.asList(destino1, destino2),
             LocalDateTime.of(2025, 12, 1, 7, 0),
-            3000.0, 3, LocalDateTime.now(), v3
+            3000.0, 3, LocalDateTime.now(), v3 ,EstadoDeViaje.DISPONIBLE
     );
 
     private static final List<Viaje> viajes = Arrays.asList(viaje1, viaje2, viaje3);

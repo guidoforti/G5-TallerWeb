@@ -1,5 +1,6 @@
 package com.tallerwebi.dominio.Entity;
 
+import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -47,6 +48,7 @@ public class Viaje {
     private Integer asientosDisponibles;
     private LocalDateTime fechaDeCreacion;
     private Vehiculo vehiculo;
+    private EstadoDeViaje estado;
 
 
 }
