@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+    <head th:replace="fragments/fragments :: head('UnRumbo - Login Viajero')">
+        <th:block th:fragment="extra">                          |
+            <!-- Aca podemos agregar mas cosas al head de ser necesario, como link y script -->
+    |   </th:block>
+    </head>
+
+    <body>
+        <nav th:replace="fragments/fragments :: navbar"></nav>
+
+        <main role="main" class="container" style="margin-top: 120px;">
+
+            <div class="row justify-content-center">
+                <div class="col-md-6 col-lg-5">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <div class="text-center mb-4">
+                                <h4 class="fw-bold text-dark">Login Viajero</h4>
+                                <p class="text-muted">Ingresá tus credenciales para continuar</p>
+                            </div>
+
+                            <form th:action="@{/viajero/validar-login}" method="POST" th:object="${datosLogin}">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input th:field="*{email}" id="email" type="email" class="form-control" placeholder="ejemplo@mail.com" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="contrasenia" class="form-label">Contraseña</label>
+                                    <input th:field="*{contrasenia}" id="contrasenia" type="password" class="form-control" placeholder="********" required>
+                                </div>
+
+                                <button type="submit" class="btn btn-unrumbo w-100 text-white fw-bold">Iniciar sesión</button>
+
+                                <p th:if="${error != null}" class="alert alert-danger mt-3" th:text="${error}"></p>
+                            </form>
+
+                            <div class="text-center mt-3">
+                                <a th:href="@{/viajero/registrar}" class="text-decoration-none text-unrumbo fw-bold" style="color:#E16A3D;">
+                                    ¿No tenés cuenta? Registrate
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Bootstrap core js -->
+        <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+    </body>
+</html>
