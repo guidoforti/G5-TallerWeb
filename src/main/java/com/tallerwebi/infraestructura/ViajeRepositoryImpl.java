@@ -34,7 +34,7 @@ public class ViajeRepositoryImpl implements ViajeRepository {
     }
 
     @Override
-    public void modificarViajer(Viaje viaje) {
+    public void modificarViaje(Viaje viaje) {
 
         for (int i = 0; i < baseDeDatos.size(); i++) {
             if (baseDeDatos.get(i).getId().equals(viaje.getId())) {

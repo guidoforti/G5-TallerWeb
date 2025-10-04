@@ -11,8 +11,9 @@ public interface ViajeRepository {
 
     Viaje findById(Long id);
     void guardarViaje(Viaje viaje);
-    void modificarViajer(Viaje viaje);
+    void modificarViaje(Viaje viaje);
     void borrarViaje(Long id);
+
 
     List<Viaje> findByOrigenYDestinoYConductor(Ciudad origen, Ciudad destino , Conductor conductor);
 }

@@ -2,6 +2,7 @@ package com.tallerwebi.dominio.ServiceImpl;
 
 
 import com.tallerwebi.config.ManualModelMapper;
+import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
@@ -34,5 +35,11 @@ public class ServicioViajeImpl implements ServicioViaje {
     @Override
     public void publicarViaje(ViajeInputDTO viajeInputDTO) {
 
+    }
+
+
+    @Override
+    public void cancelarViaje(Long id, Usuario usuarioEnSesion) {
+        
     }
 }
