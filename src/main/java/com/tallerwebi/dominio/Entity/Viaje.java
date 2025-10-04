@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -30,15 +31,18 @@ public class Viaje {
     private Vehiculo vehiculo;
 
     @ManyToMany
-     @JoinTable(
-             name = "viaje_viajero", // Nombre de la tabla intermedia
-             joinColumns = @JoinColumn(name = "viaje_id"), // Columna que referencia a Viaje
-             inverseJoinColumns = @JoinColumn(name = "viajero_id") // Columna que referencia a Viajero
-     )
+    @JoinTable(
+            name = "viaje_viajero", // Nombre de la tabla intermedia
+            joinColumns = @JoinColumn(name = "viaje_id"), // Columna que referencia a Viaje
+            inverseJoinColumns = @JoinColumn(name = "viajero_id") // Columna que referencia a Viajero
+    )
     private List<Viajero> viajeros;
 
-    @OneToMany(mappedBy = "viaje",  cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Ciudad> paradas;
+
+    // Lista de paradas
+    @OneToMany(mappedBy = "viaje", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("orden ASC")
+    private List<Parada> paradas;
 
     @ManyToOne
     @JoinColumn(name = "origen_id")
@@ -53,7 +57,6 @@ public class Viaje {
     private Double precio;
     private Integer asientosDisponibles;
     private LocalDateTime fechaDeCreacion;
-
 
 
 }
