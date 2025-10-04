@@ -16,23 +16,24 @@
     <div id="map" style="height: 500px;"></div>
 
     <form action="/guardar-origen-destino" method="post">
-        <label>Origen:</label>
-        <input type="text" id="origen" name="origenNombre" readonly>
-        <input type="hidden" id="origenLat" name="origenLat">
-        <input type="hidden" id="origenLon" name="origenLon">
+        <div class="mb-3">
+            <label for="origen" class="form-label">Origen:</label>
+            <input type="text" class="form-control autocomplete" id="origen" name="origenNombre" placeholder="Escribe la ciudad de origen">
+            <input type="hidden" id="origenLat" name="origenLat">
+            <input type="hidden" id="origenLon" name="origenLon">
+        </div>
 
-        <br>
+        <div class="mb-3">
+            <label for="destino" class="form-label">Destino:</label>
+            <input type="text" class="form-control autocomplete" id="destino" name="destinoNombre" placeholder="Escribe la ciudad de destino">
+            <input type="hidden" id="destinoLat" name="destinoLat">
+            <input type="hidden" id="destinoLon" name="destinoLon">
+        </div>
 
-        <label>Destino:</label>
-        <input type="text" id="destino" name="destinoNombre" readonly>
-        <input type="hidden" id="destinoLat" name="destinoLat">
-        <input type="hidden" id="destinoLon" name="destinoLon">
-
-        <br>
-        <button type="submit">Guardar</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
     </form>
 </div>
 
-<script th:src="@{/js/mapa.js}"></script>
+<script th:src="@{/js/autocomplete.js}"></script>
 </body>
 </html>

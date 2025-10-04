@@ -14,7 +14,7 @@ import org.springframework.web.servlet.ModelAndView;
 @RequestMapping("/viajes")
 public class ControladorMapa {
 
-    private ServicioCiudad  servicioCiudad;
+    private final ServicioCiudad  servicioCiudad;
     @Autowired
     public ControladorMapa(ServicioCiudad servicioCiudad){
         this.servicioCiudad  = servicioCiudad;
@@ -22,7 +22,7 @@ public class ControladorMapa {
 
     @GetMapping("/mapaCiudades")
     public ModelAndView mostrarMapa() {
-        ModelAndView mav = new ModelAndView("publicarViaje");
+        ModelAndView mav = new ModelAndView("mapaCiudades");
         mav.addObject("ubicaciones", servicioCiudad.listarTodas());
 
         return mav;

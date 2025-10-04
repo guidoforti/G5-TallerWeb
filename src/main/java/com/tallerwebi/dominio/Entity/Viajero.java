@@ -8,20 +8,22 @@ import lombok.Setter;
 import javax.persistence.*;
 import java.util.List;
 
-//@Entity
+@Entity
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "viajero")
 public class Viajero {
 
-   /* @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) */
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String nombre;
     private Integer edad;
     // Relación muchos a muchos con Viaje
-    //@ManyToMany(mappedBy = "viajeros")
+    @ManyToMany(mappedBy = "viajeros")
     private List<Viaje> viajes;
 
 }

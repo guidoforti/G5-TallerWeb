@@ -4,16 +4,16 @@ import com.tallerwebi.dominio.IServicio.ServicioCiudad;
 import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.presentacion.DTO.CiudadDTO;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 import java.util.stream.Collectors;
 
 import java.util.List;
 
-@RestController
+@Controller
 @RequestMapping("/ciudades")
 
 public class ControladorCiudad {
