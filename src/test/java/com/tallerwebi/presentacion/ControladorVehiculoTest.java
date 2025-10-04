@@ -40,9 +40,10 @@ public class ControladorVehiculoTest {
         vehiculoInputDTO = new VehiculoInputDTO("Toyota", "2020", "ABC123", 4, EstadoVerificacion.PENDIENTE);
         conductorMock = new Conductor();
         conductorMock.setId(1L);
-        vehiculoMock = new Vehiculo(1L, conductorMock, "Toyota", "2020", "ABC123", 4, EstadoVerificacion.PENDIENTE);
+        vehiculoMock = new Vehiculo(1L, "ABC123", "Toyota", "2020", 4, EstadoVerificacion.PENDIENTE, conductorMock);
 
-        // Sesión válida
+
+                // Sesión válida
         when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
         when(sessionMock.getAttribute("usuarioId")).thenReturn(1L);
     }

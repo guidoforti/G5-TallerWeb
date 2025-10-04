@@ -25,7 +25,7 @@ public class ControladorMapaTest {
     public void mostrarMapaDeberiaDevolverVistaMapa() {
         ModelAndView mav = ControladorMapa.mostrarMapa();
 
-        assertThat(mav.getViewName(), equalTo("publicarViaje"));
+        assertThat(mav.getViewName(), equalTo("mapaCiudades"));
         verify(servicioCiudadMock, times(1)).listarTodas();
     }
 }

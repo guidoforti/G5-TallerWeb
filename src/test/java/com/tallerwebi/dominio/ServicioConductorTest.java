@@ -35,7 +35,7 @@ class ServicioConductorTest {
 
     @Test
     void deberiaValidarLoginCorrecto() throws CredencialesInvalidas {
-        Conductor c = new Conductor(1L, null, "Pedro", "pedro@mail.com", "pass", LocalDate.now() ,new ArrayList<>());
+        Conductor c = new Conductor(1L,  "Pedro", "pedro@mail.com", "pass", LocalDate.now() ,new ArrayList<>(), new ArrayList<>()  );
 
         when(repositorioMock.buscarPorEmailYContrasenia(c.getEmail(), c.getContrasenia()))
                 .thenReturn(Optional.of(c));
@@ -56,7 +56,7 @@ class ServicioConductorTest {
 
     @Test
     void deberiaRegistrarConductorSiNoExiste() throws UsuarioExistente, FechaDeVencimientoDeLicenciaInvalida {
-        Conductor nuevo = new Conductor(null, null, "Ana", "ana@mail.com", "123", LocalDate.now().plusDays(10) , new ArrayList<>());
+        Conductor nuevo = new Conductor(null, "Ana", "ana@mail.com", "123", LocalDate.now().plusDays(10) , new ArrayList<>(),new ArrayList<>());
 
         when(repositorioMock.buscarPorEmail(nuevo.getEmail()))
                 .thenReturn(Optional.empty());
@@ -68,12 +68,12 @@ class ServicioConductorTest {
 
     @Test
     void noDeberiaRegistrarSiUsuarioYaExiste() {
-        Conductor existente = new Conductor(1L, null, "Ana", "ana@mail.com", "123", LocalDate.now() ,new ArrayList<>());
+        Conductor existente = new Conductor(1L,  "Ana", "ana@mail.com", "123", LocalDate.now() ,new ArrayList<>(),new ArrayList<>());
 
         when(repositorioMock.buscarPorEmail(existente.getEmail()))
                 .thenReturn(Optional.of(existente));
 
-        Conductor nuevo = new Conductor(null, null, "Ana", "ana@mail.com", "123", LocalDate.now(), new ArrayList<>());
+        Conductor nuevo = new Conductor(null,  "Ana", "ana@mail.com", "123", LocalDate.now(), new ArrayList<>(),new ArrayList<>());
 
         assertThrows(UsuarioExistente.class,
                 () -> servicio.registrar(nuevo));
@@ -84,10 +84,10 @@ class ServicioConductorTest {
     @Test
     void noDeberiaRegistrarConductorSiLicenciaEstaVencida() {
         Conductor vencido = new Conductor(
-                null, null,
+                null,
                 "Carlos", "carlos@mail.com",
                 "1234",
-                LocalDate.now().minusDays(1) , new ArrayList<>()
+                LocalDate.now().minusDays(1) , new ArrayList<>() ,new ArrayList<>()
         );
 
         FechaDeVencimientoDeLicenciaInvalida exception = assertThrows(
@@ -103,7 +103,7 @@ class ServicioConductorTest {
     void obtenerConductor_existente_deberiaRetornarConductor() throws UsuarioInexistente {
         // given
         Long id = 1L;
-        Conductor esperado = new Conductor(id, null, "Pedro", "pedro@mail.com", "pass", LocalDate.now(), new ArrayList<>());
+        Conductor esperado = new Conductor(id,  "Pedro", "pedro@mail.com", "pass", LocalDate.now(), new ArrayList<>(),new ArrayList<>());
         when(repositorioMock.buscarPorId(id)).thenReturn(Optional.of(esperado));
 
         // when

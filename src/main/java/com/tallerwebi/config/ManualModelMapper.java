@@ -44,7 +44,6 @@ public class ManualModelMapper {
         ViajeOutputDTO dto = new ViajeOutputDTO();
         dto.setOrigen(toUbicacionDTO(viaje.getOrigen()));
         dto.setDestino(toUbicacionDTO(viaje.getDestino()));
-        dto.setParadas(toUbicacionDTOList(viaje.getParadas()));
         dto.setFechaHoraDeSalida(viaje.getFechaHoraDeSalida());
         dto.setPrecio(viaje.getPrecio());
         dto.setAsientosDisponibles(viaje.getAsientosDisponibles());
