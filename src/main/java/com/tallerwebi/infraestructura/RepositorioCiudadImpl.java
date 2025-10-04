@@ -4,6 +4,8 @@ package com.tallerwebi.infraestructura;
 import java.util.List;
 
 import com.tallerwebi.dominio.excepcion.NotFoundException;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.tallerwebi.dominio.Entity.Ciudad;
@@ -12,50 +14,48 @@ import com.tallerwebi.dominio.IRepository.RepositorioCiudad;
 
 @Repository
 public class RepositorioCiudadImpl implements RepositorioCiudad {
-    private List<Ciudad> ciudades;
 
-    public RepositorioCiudadImpl() {
-        this.ciudades = Datos.obtenerCiudades();
+    SessionFactory sessionFactory;
+
+    @Autowired
+    public RepositorioCiudadImpl( SessionFactory sessionFactory) {
+     this.sessionFactory = sessionFactory;
     }
 
     @Override
     public List<Ciudad> findAll() {
-        return ciudades;
+
+        String hql = "SELECT c FROM Ciudad c";
+        return this.sessionFactory.getCurrentSession().createQuery(hql, Ciudad.class).getResultList();
+
     }
 
     @Override
     public Ciudad buscarPorId(Long id) {
-        return this.ciudades.stream().filter(c-> c.getId().equals(id)).findFirst().orElse(null);
+        String hql = "SELECT c FROM Ciudad c WHERE c.id = :id";
+        return this.sessionFactory.getCurrentSession().createQuery(hql, Ciudad.class).setParameter("id", id).getSingleResult();
     }
 
     @Override
     public Ciudad guardarCiudad(Ciudad ciudad) {
-        Long idSiguiente = (long) this.ciudades.size();
-        idSiguiente+= 1;
-        ciudad.setId(idSiguiente);
-        this.ciudades.add(ciudad);
+
+        this.sessionFactory.getCurrentSession().save(ciudad);
         return  ciudad;
     }
 
     @Override
     public void eliminarCiudad(Long id) {
-        Ciudad ciudad = this.ciudades.stream().filter(c-> c.getId().equals(id)).findFirst().orElse(null);
-        this.ciudades.remove(ciudad);
-
+        String hql = "SELECT c FROM Ciudad c WHERE c.id = :id";
+        Ciudad ciudad = this.sessionFactory.getCurrentSession()
+                .createQuery(hql, Ciudad.class)
+                .setParameter("id", id)
+                .getSingleResult();
+        this.sessionFactory.getCurrentSession().delete(ciudad);
     }
 
     @Override
     public Ciudad actualizarCiudad(Ciudad ciudad){
-        Ciudad ciudadExistente = this.ciudades.stream()
-                .filter(c -> c.getId().equals(ciudad.getId()))
-                .findFirst().orElse(null);
-
-
-        int indice = this.ciudades.indexOf(ciudadExistente);
-        if (indice != -1) {
-            this.ciudades.set(indice, ciudad);
-        }
-
+        this.sessionFactory.getCurrentSession().update(ciudad);
         return ciudad;
     }
 }

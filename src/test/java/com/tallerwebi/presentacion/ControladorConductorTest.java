@@ -1,6 +1,5 @@
 package com.tallerwebi.presentacion;
 
-import com.tallerwebi.config.ManualModelMapper;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.excepcion.CredencialesInvalidas;
@@ -27,7 +26,6 @@ public class ControladorConductorTest {
 
     private ControladorConductor controladorConductor;
     private ServicioConductor servicioConductorMock;
-    private ManualModelMapper manualModelMapperMock;
     private ConductorLoginDTO loginDTO;
     private HttpSession sessionMock;
     private Conductor conductorMock;
@@ -35,8 +33,7 @@ public class ControladorConductorTest {
     @BeforeEach
     public void init() {
         servicioConductorMock = mock(ServicioConductor.class);
-        manualModelMapperMock = new ManualModelMapper();
-        controladorConductor = new ControladorConductor(servicioConductorMock, manualModelMapperMock);
+        controladorConductor = new ControladorConductor(servicioConductorMock);
         loginDTO = new ConductorLoginDTO("conductor@mail.com", "1234");
         sessionMock = mock(HttpSession.class);
         conductorMock = mock(Conductor.class);

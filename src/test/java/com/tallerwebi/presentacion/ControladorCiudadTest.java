@@ -1,10 +1,8 @@
 package com.tallerwebi.presentacion;
 
-import com.tallerwebi.config.ManualModelMapper;
 import com.tallerwebi.dominio.Entity.Ciudad;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.IServicio.ServicioCiudad;
 import com.tallerwebi.presentacion.Controller.ControladorCiudad;
 import com.tallerwebi.presentacion.DTO.CiudadDTO;

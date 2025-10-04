@@ -1,21 +1,16 @@
 package com.tallerwebi.dominio.ServiceImpl;
 
 
-import com.tallerwebi.config.ManualModelMapper;
-import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.IRepository.RepositorioConductor;
 import com.tallerwebi.dominio.IRepository.RepositorioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.excepcion.NotFoundException;
 import com.tallerwebi.dominio.excepcion.PatenteDuplicadaException;
-import com.tallerwebi.presentacion.DTO.InputsDTO.VehiculoInputDTO;
-import com.tallerwebi.presentacion.DTO.OutputsDTO.VehiculoOutputDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ServicioVehiculoImpl implements ServicioVehiculo {

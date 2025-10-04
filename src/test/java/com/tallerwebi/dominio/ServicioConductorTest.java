@@ -1,6 +1,5 @@
 package com.tallerwebi.dominio;
 
-import com.tallerwebi.config.ManualModelMapper;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.IRepository.RepositorioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
@@ -30,7 +29,7 @@ class ServicioConductorTest {
     @BeforeEach
     void setUp() {
         repositorioMock = Mockito.mock(RepositorioConductor.class);
-        servicio = new ServicioConductorImpl(repositorioMock, new ManualModelMapper());
+        servicio = new ServicioConductorImpl(repositorioMock);
     }
 
     @Test

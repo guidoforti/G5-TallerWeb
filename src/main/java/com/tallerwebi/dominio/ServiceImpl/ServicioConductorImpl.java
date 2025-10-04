@@ -1,6 +1,5 @@
 package com.tallerwebi.dominio.ServiceImpl;
 
-import com.tallerwebi.config.ManualModelMapper;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.IRepository.RepositorioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
@@ -20,7 +19,7 @@ public class ServicioConductorImpl implements ServicioConductor {
 
 
     @Autowired
-    public ServicioConductorImpl(RepositorioConductor repositorioConductor, ManualModelMapper manualModelMapper) {
+    public ServicioConductorImpl(RepositorioConductor repositorioConductor) {
         this.repositorioConductor = repositorioConductor;
 
     }

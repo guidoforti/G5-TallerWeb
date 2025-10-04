@@ -1,6 +1,5 @@
 package com.tallerwebi.presentacion.Controller;
 
-import com.tallerwebi.config.ManualModelMapper;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.excepcion.CredencialesInvalidas;
@@ -28,7 +27,7 @@ public class ControladorConductor {
 
 
     @Autowired
-    public ControladorConductor(ServicioConductor servicioConductor, ManualModelMapper manualModelMapper) {
+    public ControladorConductor(ServicioConductor servicioConductor) {
         this.servicioConductor = servicioConductor;
 
     }
