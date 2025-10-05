@@ -5,6 +5,7 @@ import com.tallerwebi.dominio.IRepository.RepositorioCiudad;
 import com.tallerwebi.integracion.config.DataBaseTestInitilizationConfig;
 import com.tallerwebi.integracion.config.HibernateTestConfig;
 import com.tallerwebi.integracion.config.SpringWebTestConfig;
+import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,18 +24,24 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {HibernateTestConfig.class , DataBaseTestInitilizationConfig.class,  SpringWebTestConfig.class})
-@WebAppConfiguration
+@ContextConfiguration(classes = {HibernateTestConfig.class, DataBaseTestInitilizationConfig.class})
 @Transactional
 public class RepositorioCiudadTest {
 
     @Autowired
-    private  RepositorioCiudad repositorioCiudad;
+    private SessionFactory sessionFactory;
 
+    private RepositorioCiudad repositorioCiudad;
+
+
+    @BeforeEach
+    void setUp() {
+       this.repositorioCiudad = new RepositorioCiudadImpl(this.sessionFactory);
+
+    }
 
     @Test
     public void testBuscarCiudadPorId() {
-        // Dado que dataTest.sql inserta ciudades con IDs 1, 2, 3
         Ciudad ciudad = repositorioCiudad.buscarPorId(1L);
 
         // Verificaciones
