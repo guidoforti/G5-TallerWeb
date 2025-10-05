@@ -38,7 +38,7 @@ public class RepositorioConductorTest {
     void deberiaGuardarConductorNuevo() {
         // Arrange
         Conductor nuevo = new Conductor();
-        nuevo.setNombre("Pedro Ramírez");
+        nuevo.setNombre("Pedro Ramirez");
         nuevo.setEmail("pedro@correo.com");
         nuevo.setContrasenia("clave123");
 
@@ -50,7 +50,7 @@ public class RepositorioConductorTest {
 
         Optional<Conductor>  recuperado = repositorio.buscarPorId(nuevo.getId());
         assertNotNull(recuperado, "Debería poder recuperarse el conductor guardado");
-        assertEquals("Pedro Ramírez", recuperado.get().getNombre());
+        assertEquals("Pedro Ramirez", recuperado.get().getNombre());
         assertEquals("pedro@correo.com", recuperado.get().getEmail());
     }
 
@@ -62,7 +62,7 @@ public class RepositorioConductorTest {
 
         // Assert
         assertNotNull(conductor, "El conductor debería encontrarse");
-        assertEquals("María López", conductor.get().getNombre());
+        assertEquals("Maria Lopez", conductor.get().getNombre());
         assertEquals("maria@correo.com", conductor.get().getEmail());
     }
 
@@ -82,7 +82,7 @@ public class RepositorioConductorTest {
 
         // Assert
         assertNotNull(conductor);
-        assertEquals("Carlos Pérez", conductor.get().getNombre());
+        assertEquals("Carlos Perez", conductor.get().getNombre());
         assertEquals("carlos@correo.com", conductor.get().getEmail());
     }
 }

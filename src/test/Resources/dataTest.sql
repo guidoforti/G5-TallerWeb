@@ -5,14 +5,14 @@
 -- 1️⃣ CIUDADES
 INSERT INTO ciudad (id, nombre, latitud, longitud)
 VALUES (1, 'Buenos Aires', -34.6037, -58.3816),
-       (2, 'Córdoba', -31.4201, -64.1888),
+       (2, 'Cordoba', -31.4201, -64.1888),
        (3, 'Rosario', -32.9587, -60.6930);
 
 -- 2️⃣ CONDUCTORES
 INSERT INTO conductor (id, nombre, email, contrasenia, fechaDeVencimientoLicencia)
-VALUES (1, 'Carlos Pérez', 'carlos@correo.com', '1234', '2027-05-10'),
-       (2, 'María López', 'maria@correo.com', 'abcd', '2026-11-20'),
-       (3, 'Juan García', 'juan@correo.com', 'pass', '2028-03-15');
+VALUES (1, 'Carlos Perez', 'carlos@correo.com', '1234', '2027-05-10'),
+       (2, 'Maria Lopez', 'maria@correo.com', 'abcd', '2026-11-20'),
+       (3, 'Juan Garcia', 'juan@correo.com', 'pass', '2028-03-15');
 
 -- 3️⃣ VEHÍCULOS
 INSERT INTO vehiculo (id, Modelo, anio, asientosTotales, estadoVerificacion, patente, conductor_id)
@@ -22,9 +22,9 @@ VALUES (1, 'Toyota Corolla', '2014', 5, 1, 'AB123CD', 1),
 
 -- 4️⃣ VIAJEROS
 INSERT INTO viajero (id, nombre, edad)
-VALUES (1, 'Sofía Torres', 25),
-       (2, 'Martín Díaz', 30),
-       (3, 'Lucía Fernández', 22);
+VALUES (1, 'Sofia Torres', 25),
+       (2, 'Martin Diaz', 30),
+       (3, 'Lucia Fernandez', 22);
 
 -- 5️⃣ VIAJES
 INSERT INTO Viaje (id, asientosDisponibles, fechaDeCreacion, fechaHoraDeSalida, precio, conductor_id, origen_id,

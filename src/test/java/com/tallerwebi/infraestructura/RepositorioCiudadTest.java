@@ -59,7 +59,7 @@ public class RepositorioCiudadTest {
 
         // Verificar que están ordenadas (asumiendo orden por ID)
         assertEquals("Buenos Aires", ciudades.get(0).getNombre());
-        assertEquals("Córdoba", ciudades.get(1).getNombre());
+        assertEquals("Cordoba", ciudades.get(1).getNombre());
         assertEquals("Rosario", ciudades.get(2).getNombre());
     }
 
