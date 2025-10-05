@@ -16,12 +16,14 @@ import java.util.List;
 @Table(name = "viajero")
 public class Viajero {
 
-    @Id
+     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String nombre;
     private Integer edad;
+    private String email;
+    private String contrasenia;
     // Relación muchos a muchos con Viaje
     @ManyToMany(mappedBy = "viajeros")
     private List<Viaje> viajes;

@@ -1,5 +1,6 @@
 package com.tallerwebi.presentacion.DTO.InputsDTO;
 
+import com.tallerwebi.presentacion.DTO.CiudadDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,11 +13,14 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ViajeInputDTO {
+
     private Long conductorId;
-    private Long idOrigen;
-    private Long idDestino;
+    private CiudadDTO ciudadOrigen;
+    private CiudadDTO ciudadDestino;
     private LocalDateTime fechaHoraDeSalida;
     private Double precio;
     private Integer asientosDisponibles;
     private Long idVehiculo;
+
+
 }

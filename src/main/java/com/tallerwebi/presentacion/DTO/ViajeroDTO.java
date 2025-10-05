@@ -11,6 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class ViajeroDTO {
     private Long id;
+    private String email;
     private String nombre;
     private Integer edad;
     // No incluimos la lista de viajes para evitar referencias circulares

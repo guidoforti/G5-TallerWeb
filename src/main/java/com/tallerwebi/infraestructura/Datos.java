@@ -36,9 +36,10 @@ public class Datos {
 
 
     // ==== Viajeros ====
-    private static final Viajero viajero1 = new Viajero(1L, "Juan Pérez", 25, new ArrayList<>());
-    private static final Viajero viajero2 = new Viajero(2L, "María García", 30, new ArrayList<>());
-    private static final Viajero viajero3 = new Viajero(3L, "Carlos López", 28, new ArrayList<>());
+    private static final Viajero viajero1 = new Viajero(1L, "Juan Pérez", 25, "juan@gmail.com", "passJuan123", new ArrayList<>());
+    private static final Viajero viajero2 = new Viajero(2L, "María García", 30, "mariag@gmail.com", "passMariag123", new ArrayList<>());
+    private static final Viajero viajero3 = new Viajero(3L, "Carlos López", 28, "carlitos@gmail.com", "carlitosL123", new ArrayList<>());
+
 
 
 
@@ -49,6 +50,7 @@ public class Datos {
 
     private static final List<Conductor> conductores = Arrays.asList(c1, c2, c3);
     private static final List<Vehiculo> vehiculos = Arrays.asList(v1, v2, v3);
+    private static final List<Viajero> viajeros = Arrays.asList(viajero1, viajero2, viajero3);
 
 
 
@@ -63,4 +65,9 @@ public class Datos {
     public static List<Vehiculo> obtenerVehiculos() {
         return new ArrayList<>(vehiculos);
     }
+
+    public static List<Viajero> obtenerViajeros() {
+        return viajeros;
+    }
+
 }
