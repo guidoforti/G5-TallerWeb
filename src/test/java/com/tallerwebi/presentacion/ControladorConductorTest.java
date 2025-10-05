@@ -43,7 +43,7 @@ public class ControladorConductorTest {
     }
 
     @Test
-    public void loginConCredencialesCorrectasDeberiaRedirigirAHomeYSetearSesion() throws CredencialesInvalidas {
+    public void loginConCredencialesCorrectasDeberiaRedirigirAHomeYSetearSesion() throws Exception {
         // preparación
         when(servicioConductorMock.login(loginDTO.getEmail(), loginDTO.getContrasenia()))
                 .thenReturn(conductorMock);
@@ -58,7 +58,7 @@ public class ControladorConductorTest {
     }
 
     @Test
-    public void loginConCredencialesInvalidasDeberiaVolverALoginConError() throws CredencialesInvalidas {
+    public void loginConCredencialesInvalidasDeberiaVolverALoginConError() throws Exception {
         // preparación
         when(servicioConductorMock.login(loginDTO.getEmail(), loginDTO.getContrasenia()))
                 .thenThrow(new CredencialesInvalidas("Email o contraseña inválidos"));

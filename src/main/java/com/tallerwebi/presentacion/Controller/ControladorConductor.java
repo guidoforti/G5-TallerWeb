@@ -53,6 +53,8 @@ public class ControladorConductor {
         } catch (CredencialesInvalidas e) {
             model.addAttribute("error", e.getMessage());
             return new ModelAndView("loginConductor", model);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

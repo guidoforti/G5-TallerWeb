@@ -33,7 +33,10 @@ public class RepositorioCiudadImpl implements RepositorioCiudad {
     @Override
     public Ciudad buscarPorId(Long id) {
         String hql = "SELECT c FROM Ciudad c WHERE c.id = :id";
-        return this.sessionFactory.getCurrentSession().createQuery(hql, Ciudad.class).setParameter("id", id).getSingleResult();
+        return this.sessionFactory.getCurrentSession()
+                .createQuery(hql, Ciudad.class)
+                .setParameter("id", id)
+                .getSingleResult();
     }
 
     @Override

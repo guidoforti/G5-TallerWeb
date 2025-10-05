@@ -33,7 +33,7 @@ class ServicioConductorTest {
     }
 
     @Test
-    void deberiaValidarLoginCorrecto() throws CredencialesInvalidas {
+    void deberiaValidarLoginCorrecto() throws Exception {
         Conductor c = new Conductor(1L,  "Pedro", "pedro@mail.com", "pass", LocalDate.now() ,new ArrayList<>(), new ArrayList<>()  );
 
         when(repositorioMock.buscarPorEmailYContrasenia(c.getEmail(), c.getContrasenia()))
@@ -45,7 +45,7 @@ class ServicioConductorTest {
     }
 
     @Test
-    void noDeberiaValidarLoginSiCredencialesInvalidas() {
+    void noDeberiaValidarLoginSiCredencialesInvalidas() throws Exception {
         when(repositorioMock.buscarPorEmailYContrasenia("pedro@mail.com", "pass"))
                 .thenReturn(Optional.empty());
 
