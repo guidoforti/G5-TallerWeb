@@ -4,7 +4,7 @@ function setupAutocomplete(inputId, latId, lonId) {
             try {
                 const res = await fetch(`/ciudades/buscar?nombre=${encodeURIComponent(request.term)}`);
                 const data = await res.json();
-                
+
                 // Devuelve un array con label y value para jQuery UI
                 const results = data.map(ciudad => ({
                     label: ciudad.nombre,

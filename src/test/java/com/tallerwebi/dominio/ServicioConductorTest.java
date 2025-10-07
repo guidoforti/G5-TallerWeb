@@ -4,10 +4,7 @@ import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.IRepository.RepositorioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.ServiceImpl.ServicioConductorImpl;
-import com.tallerwebi.dominio.excepcion.CredencialesInvalidas;
-import com.tallerwebi.dominio.excepcion.FechaDeVencimientoDeLicenciaInvalida;
-import com.tallerwebi.dominio.excepcion.UsuarioExistente;
-import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
+import com.tallerwebi.dominio.excepcion.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -123,4 +120,29 @@ class ServicioConductorTest {
         assertThrows(UsuarioInexistente.class, () -> servicio.obtenerConductor(id));
         verify(repositorioMock).buscarPorId(id);
     }
+
+    @Test
+    void guardarConductor_ErrorAlGuardar_DeberiaLanzarExcepcion() {
+        Conductor c = new Conductor(null, "Luis", "luis@gmail.com", "1234", LocalDate.now().plusDays(10), new ArrayList<>(), new ArrayList<>());
+
+        // Forzamos que el repositorio lance una excepción
+        doThrow(new RuntimeException("DB error")).when(repositorioMock).guardar(c);
+
+        ErrorAlGuardarConductorException exception = assertThrows(
+                ErrorAlGuardarConductorException.class,
+                () -> servicio.guardarConductor(c)
+        );
+
+        assertThat(exception.getMessage(), equalTo("Error al guardar el conductor en la base de datos: DB error"));
+    }
+
+    @Test
+    void guardarConductorCorrectamenteDeberiaRetornarConductor() throws ErrorAlGuardarConductorException {
+        Conductor c = new Conductor(null, "Luis", "luis@gmail.com", "1234", LocalDate.now().plusDays(10), new ArrayList<>(), new ArrayList<>());
+        //devuelve el mismo conductor
+        servicio.guardarConductor(c);
+        verify(repositorioMock, times(1)).guardar(c);
+    }
+
+
 }

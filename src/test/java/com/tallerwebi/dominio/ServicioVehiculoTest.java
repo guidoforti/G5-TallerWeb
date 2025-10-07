@@ -172,4 +172,28 @@ public class ServicioVehiculoTest {
         verify(repositorioVehiculoMock).obtenerVehiculosParaConductor(conductorId);
     }
 
+    @Test
+    void obtenerVehiculoPorIdNoExisteLanzaExcepcion() {
+        Long id = 99L;
+        when(repositorioVehiculoMock.findById(id)).thenReturn(null);
+
+        assertThrows(NotFoundException.class, () -> servicioVehiculo.getById(id));
+
+        verify(repositorioVehiculoMock).findById(id);
+    }
+
+    @Test
+    void obtenerVehiculosParaConductor_IdNulo_LanzaExcepcion() {
+        assertThrows(IllegalArgumentException.class, () -> servicioVehiculo.obtenerVehiculosParaConductor(null));
+        verifyNoInteractions(repositorioVehiculoMock);
+    }
+
+    @Test
+    void obtenerVehiculoConPatente_NoExiste_LanzaExcepcion() {
+        String patente = ".......";
+        when(repositorioVehiculoMock.encontrarVehiculoConPatente(patente)).thenReturn(null);
+        assertThrows(NotFoundException.class, () -> servicioVehiculo.obtenerVehiculoConPatente(patente));
+        verify(repositorioVehiculoMock).encontrarVehiculoConPatente(patente);
+    }
+
 }
