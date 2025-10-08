@@ -1,6 +1,5 @@
 package com.tallerwebi.dominio;
 
-import com.tallerwebi.config.ManualModelMapper;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Viaje;
@@ -45,7 +44,7 @@ public class ServicioViajeTest {
         repositorioViajeMock = mock(ViajeRepository.class);
         servicioConductorMock = mock(ServicioConductor.class);
         //deje el modelMapper en null ya que no lo estamos utilizando
-        servicio = new ServicioViajeImpl(repositorioViajeMock, servicioConductorMock, null);
+        servicio = new ServicioViajeImpl(repositorioViajeMock, servicioConductorMock);
     }
 
     @Test
