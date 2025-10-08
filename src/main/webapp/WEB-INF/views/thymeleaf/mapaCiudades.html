@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/fragments :: head('Mapa de Viajes')">
+    <th:block th:fragment="extra">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    </th:block>
+</head>
+<body>
+<nav th:replace="fragments/fragments :: navbar"></nav>
+
+<div class="container" style="margin-top: 100px;">
+    <h3>Selecciona origen y destino</h3>
+
+    <div id="map" style="height: 500px;"></div>
+
+    <form action="/guardar-origen-destino" method="post">
+        <div class="mb-3">
+            <label for="origen" class="form-label">Origen:</label>
+            <input type="text" class="form-control autocomplete" id="origen" name="origenNombre" placeholder="Escribe la ciudad de origen">
+            <input type="hidden" id="origenLat" name="origenLat">
+            <input type="hidden" id="origenLon" name="origenLon">
+        </div>
+
+        <div class="mb-3">
+            <label for="destino" class="form-label">Destino:</label>
+            <input type="text" class="form-control autocomplete" id="destino" name="destinoNombre" placeholder="Escribe la ciudad de destino">
+            <input type="hidden" id="destinoLat" name="destinoLat">
+            <input type="hidden" id="destinoLon" name="destinoLon">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Guardar</button>
+    </form>
+</div>
+
+<script th:src="@{/js/autocomplete.js}"></script>
+</body>
+</html>

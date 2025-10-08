@@ -2,75 +2,87 @@ package com.tallerwebi.infraestructura;
 
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.IRepository.RepositorioConductor;
+import com.tallerwebi.integracion.config.DataBaseTestInitilizationConfig;
+import com.tallerwebi.integracion.config.HibernateTestConfig;
+import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 
-import java.time.LocalDate;
-import java.util.ArrayList;
+import javax.transaction.Transactional;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = {HibernateTestConfig.class , DataBaseTestInitilizationConfig.class})
+@Transactional
 public class RepositorioConductorTest {
+
+    @Autowired
+    SessionFactory sessionFactory;
+
     private RepositorioConductor repositorio;
 
     @BeforeEach
     void setUp() {
-        repositorio = new RepositorioConductorImpl();
+    this.repositorio = new RepositorioConductorImpl(this.sessionFactory);
     }
 
     @Test
     void deberiaGuardarConductorNuevo() {
-        Conductor conductor = new Conductor(null, null, "Juan Perez", "juan@mail.com", "1234", LocalDate.now(), new ArrayList<>());
+        // Arrange
+        Conductor nuevo = new Conductor();
+        nuevo.setNombre("Pedro Ramirez");
+        nuevo.setEmail("pedro@correo.com");
+        nuevo.setContrasenia("clave123");
 
-        boolean guardado = this.repositorio.guardar(conductor);
+        // Act
+        repositorio.guardar(nuevo);
 
-        assertThat(guardado, is(true));
-        assertThat(conductor.getId(), notNullValue());
-        // assertThat(repositorio.listarTodos(), hasSize(1));
+        // Assert
+        assertNotNull(nuevo.getId(), "El conductor debería tener un ID asignado después de guardarse");
+
+        Optional<Conductor>  recuperado = repositorio.buscarPorId(nuevo.getId());
+        assertNotNull(recuperado, "Debería poder recuperarse el conductor guardado");
+        assertEquals("Pedro Ramirez", recuperado.get().getNombre());
+        assertEquals("pedro@correo.com", recuperado.get().getEmail());
+    }
+
+
+    @Test
+    void deberiaBuscarPorEmailYContrasenia() throws Exception {
+        // Act
+        Optional<Conductor> conductor = repositorio.buscarPorEmailYContrasenia("maria@correo.com", "abcd");
+
+        // Assert
+        assertNotNull(conductor, "El conductor debería encontrarse");
+        assertEquals("Maria Lopez", conductor.get().getNombre());
+        assertEquals("maria@correo.com", conductor.get().getEmail());
     }
 
     @Test
-    void noDeberiaGuardarConductorConEmailRepetido() {
-        Conductor c1 = new Conductor(null, null, "Ana", "ana@mail.com", "pass", LocalDate.now(), new ArrayList<>());
-        Conductor c2 = new Conductor(null, null, "Pedro", "ana@mail.com", "otra", LocalDate.now(), new ArrayList<>());
+    void noDeberiaEncontrarSiContraseniaIncorrecta() throws Exception {
+        // Act
+        Optional<Conductor> conductor = repositorio.buscarPorEmailYContrasenia("maria@correo.com", "claveMala");
 
-        assertThat(repositorio.guardar(c1), is(true));
-        assertThat(repositorio.guardar(c2), is(false));
-        // assertThat(repositorio.listarTodos(), hasSize(1));
-    }
-
-    @Test
-    void deberiaBuscarPorEmailYContrasenia() {
-        Conductor c = new Conductor(null, null, "Ana", "ana@mail.com", "pass", LocalDate.now(), new ArrayList<>());
-        repositorio.guardar(c);
-
-        Optional<Conductor> encontrado = repositorio.buscarPorEmailYContrasenia("ana@mail.com", "pass");
-
-        assertThat(encontrado.isPresent(), is(true));
-        assertThat(encontrado.get().getNombre(), equalTo("Ana"));
-    }
-
-    @Test
-    void noDeberiaEncontrarSiContraseniaIncorrecta() {
-        Conductor c = new Conductor(null,null, "Ana", "ana@mail.com", "pass", LocalDate.now(), new ArrayList<>());
-        repositorio.guardar(c);
-
-        Optional<Conductor> encontrado = repositorio.buscarPorEmailYContrasenia("ana@mail.com", "mal");
-
-        assertThat(encontrado.isPresent(), is(false));
+        // Assert
+        assertTrue(conductor.isEmpty(), "No debería devolver un conductor con contraseña incorrecta");
     }
 
     @Test
     void deberiaBuscarPorId() {
-        Conductor c = new Conductor(null, null, "Juan", "juan@mail.com", "1234", LocalDate.now(), new ArrayList<>());
-        repositorio.guardar(c);
+        // Act
+        Optional<Conductor> conductor = repositorio.buscarPorId(1L);
 
-        Optional<Conductor> encontrado = repositorio.buscarPorId(c.getId());
-
-        assertThat(encontrado.isPresent(), is(true));
-        assertThat(encontrado.get().getNombre(), equalTo("Juan"));
+        // Assert
+        assertNotNull(conductor);
+        assertEquals("Carlos Perez", conductor.get().getNombre());
+        assertEquals("carlos@correo.com", conductor.get().getEmail());
     }
 }

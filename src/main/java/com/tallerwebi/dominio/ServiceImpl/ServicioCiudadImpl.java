@@ -50,10 +50,12 @@ public class ServicioCiudadImpl implements ServicioCiudad {
 
     @Override
     public Ciudad actualizarCiudad(Ciudad ciudad) throws NotFoundException {
-        Ciudad ciudadADevoler = repositorioCiudad.actualizarCiudad(ciudad);
-        if (ciudadADevoler == null) {
+        Ciudad ciudadExistente = repositorioCiudad.buscarPorId(ciudad.getId());
+        if (ciudadExistente == null) {
             throw new NotFoundException("no se encontro una ciudad con ese id");
         }
+        Ciudad ciudadADevoler = repositorioCiudad.actualizarCiudad(ciudad);
+
         return ciudadADevoler;
     }
 

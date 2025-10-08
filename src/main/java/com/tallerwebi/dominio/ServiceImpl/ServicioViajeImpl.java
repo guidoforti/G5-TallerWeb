@@ -1,7 +1,5 @@
 package com.tallerwebi.dominio.ServiceImpl;
 
-
-import com.tallerwebi.config.ManualModelMapper;
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
@@ -20,13 +18,12 @@ public class ServicioViajeImpl implements ServicioViaje {
 
 
     private ViajeRepository viajeRepository;
-    private ManualModelMapper manualModelMapper;
+
     private ServicioConductor servicioConductor;
 
     @Autowired
-    public ServicioViajeImpl(ViajeRepository viajeRepository ,ServicioConductor servicioConductor ,ManualModelMapper manualModelMapper) {
+    public ServicioViajeImpl(ViajeRepository viajeRepository, ServicioConductor servicioConductor) {
         this.viajeRepository = viajeRepository;
-        this.manualModelMapper = manualModelMapper;
         this.servicioConductor = servicioConductor;
     }
 
