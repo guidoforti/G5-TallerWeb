@@ -1,13 +1,12 @@
 package com.tallerwebi.dominio.IServicio;
 
 import com.tallerwebi.dominio.Entity.Conductor;
-import com.tallerwebi.dominio.excepcion.CredencialesInvalidas;
-import com.tallerwebi.dominio.excepcion.FechaDeVencimientoDeLicenciaInvalida;
-import com.tallerwebi.dominio.excepcion.UsuarioExistente;
-import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
+import com.tallerwebi.dominio.excepcion.*;
 
 public interface ServicioConductor {
-    Conductor login(String usuario, String contrasenia) throws CredencialesInvalidas;
+    Conductor login(String usuario, String contrasenia) throws Exception;
     Conductor registrar(Conductor nuevoConductor) throws UsuarioExistente, FechaDeVencimientoDeLicenciaInvalida;
     Conductor obtenerConductor(Long conductorId) throws UsuarioInexistente;
+
+    Conductor guardarConductor(Conductor conductor) throws ErrorAlGuardarConductorException;
 }

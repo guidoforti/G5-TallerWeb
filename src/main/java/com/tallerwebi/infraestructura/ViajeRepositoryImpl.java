@@ -17,7 +17,7 @@ public class ViajeRepositoryImpl implements ViajeRepository {
     List<Viaje> baseDeDatos = new ArrayList<>();
 
     public ViajeRepositoryImpl() {
-        this.baseDeDatos = Datos.obtenerViajes();
+
     }
 
     @Override
