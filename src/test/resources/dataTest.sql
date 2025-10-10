@@ -27,11 +27,11 @@ VALUES (1, 'Sofia Torres', 25),
        (3, 'Lucia Fernandez', 22);
 
 -- 5️⃣ VIAJES
-INSERT INTO Viaje (id, asientosDisponibles, fechaDeCreacion, fechaHoraDeSalida, precio, conductor_id, origen_id,
+INSERT INTO Viaje (id, asientosDisponibles, estado, fechaDeCreacion, fechaHoraDeSalida, precio, conductor_id, origen_id,
                    destino_id, vehiculo_id)
-VALUES (1, 3, '2025-10-01 10:00:00', '2025-10-05 08:00:00', 15000, 1, 1, 2, 1),
-       (2, 2, '2025-09-20 14:00:00', '2025-09-25 07:30:00', 12000, 2, 2, 3, 2),
-       (3, 4, '2025-08-10 09:30:00', '2025-08-15 06:45:00', 18000, 3, 3, 1, 3);
+VALUES (1, 3, 0, '2025-10-01 10:00:00', '2025-10-05 08:00:00', 15000, 1, 1, 2, 1),
+       (2, 2, 0, '2025-09-20 14:00:00', '2025-09-25 07:30:00', 12000, 2, 2, 3, 2),
+       (3, 4, 0, '2025-08-10 09:30:00', '2025-08-15 06:45:00', 18000, 3, 3, 1, 3);
 
 -- 6️⃣ PARADAS
 INSERT INTO parada (id, orden, ciudad_id, viaje_id)
