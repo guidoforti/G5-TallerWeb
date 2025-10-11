@@ -49,7 +49,7 @@ public class RepositorioViajeTest {
         this.repositorioViaje = new RepositorioViajeImpl(this.sessionFactory);
     }
 
-/* @Test
+/*@Test
     void deberiaModificarViajeExistente() {
         Viaje viaje = new Viaje();
         viaje.setId(300L);
@@ -119,7 +119,7 @@ public class RepositorioViajeTest {
 
         assertThat(resultados, empty());
     }*/
-    
+
 @Test
     void deberiaGuardarViajeNuevo() {
         // Arrange - Usar conductor y vehiculo existentes de dataTest.sql
