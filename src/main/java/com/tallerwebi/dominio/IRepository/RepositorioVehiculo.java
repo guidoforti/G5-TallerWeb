@@ -8,7 +8,7 @@ import java.util.Optional;
 public interface RepositorioVehiculo  {
 
     Optional<Vehiculo> findById(Long id);
-    Optional<Vehiculo> obtenerVehiculosParaConductor(Long conductorId);
+    List<Vehiculo> obtenerVehiculosParaConductor(Long conductorId);//Una lista vacia representa ausencia de resultados, lo mismo que el optional
     Optional<Vehiculo> encontrarVehiculoConPatente(String patente);
-    void guardarVehiculo(Vehiculo vehiculo);
+    Vehiculo guardarVehiculo(Vehiculo vehiculo);
 }

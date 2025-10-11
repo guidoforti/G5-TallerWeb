@@ -12,7 +12,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import javax.transaction.Transactional;
+
 @Service
+@Transactional
 public class ServicioVehiculoImpl implements ServicioVehiculo {
 
     RepositorioVehiculo repositorioVehiculo;
@@ -22,20 +25,13 @@ public class ServicioVehiculoImpl implements ServicioVehiculo {
     @Autowired
     public ServicioVehiculoImpl(RepositorioVehiculo repositorioVehiculo, RepositorioConductor repositorioConductor) {
         this.repositorioVehiculo = repositorioVehiculo;
-
         this.repositorioConductor = repositorioConductor;
     }
 
     @Override
     public Vehiculo getById(Long id) throws NotFoundException {
-
-
-        Vehiculo vehiculo = repositorioVehiculo.findById(id);
-        if (vehiculo == null) {
-            throw new NotFoundException("No se encontró un vehículo con el ID: " + id);
-        }
-
-        return  vehiculo;
+        return repositorioVehiculo.findById(id)
+        .orElseThrow(() -> new NotFoundException("No se encontro un vehiculo"));
     }
 
     @Override
@@ -43,33 +39,20 @@ public class ServicioVehiculoImpl implements ServicioVehiculo {
         if (conductorId == null) {
             throw new IllegalArgumentException("El ID del conductor no puede ser nulo");
         }
-
-        List<Vehiculo> vehiculos = repositorioVehiculo.obtenerVehiculosParaConductor(conductorId);
-
-        return  vehiculos;
+        return repositorioVehiculo.obtenerVehiculosParaConductor(conductorId);
     }
+
     @Override
     public Vehiculo obtenerVehiculoConPatente(String patente) throws NotFoundException {
-        Vehiculo vehiculo = repositorioVehiculo.encontrarVehiculoConPatente(patente);
-        if (vehiculo == null) {
-            throw new NotFoundException("no se encontro un vehiculo con esa patente");
-        }
-
-        return vehiculo;
+        return repositorioVehiculo.encontrarVehiculoConPatente(patente)
+        .orElseThrow(() -> new NotFoundException("No se encontro un vehiculo con esta patente"));
     }
 
     @Override
     public Vehiculo guardarVehiculo(Vehiculo vehiculo) throws PatenteDuplicadaException {
-
-
-        if (repositorioVehiculo.encontrarVehiculoConPatente(vehiculo.getPatente()) != null) {
+        if(repositorioVehiculo.encontrarVehiculoConPatente(vehiculo.getPatente()).isPresent()){
             throw new PatenteDuplicadaException("La patente cargada ya existe");
         }
-
-
-        Vehiculo vehiculoSaved = repositorioVehiculo.guardarVehiculo(vehiculo);
-
-        return vehiculoSaved;
-
+        return repositorioVehiculo.guardarVehiculo(vehiculo);
     }
 }

@@ -38,7 +38,7 @@ public class RepositorioVehiculoTest {
 
         // --- Simulando la persistencia inicial ---
         Conductor conductor = new Conductor(10L, "Test Conductor", "test@mail.com", "pass", LocalDate.now(), new ArrayList<>(), new ArrayList<>());
-        Vehiculo vehiculoExistente = new Vehiculo(null, "XYZ123", "Ford Fiesta", "2015", 5, EstadoVerificacion.APROBADO, conductor);
+        Vehiculo vehiculoExistente = new Vehiculo(null, "XYZ123", "Ford Fiesta", "2015", 5, EstadoVerificacion.VERIFICADO, conductor);
         repositorioVehiculo.guardarVehiculo(vehiculoExistente);
         // -----------------------------------------
 
