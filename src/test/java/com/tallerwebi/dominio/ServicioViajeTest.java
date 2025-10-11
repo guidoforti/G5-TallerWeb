@@ -43,7 +43,6 @@ public class ServicioViajeTest {
     void setUp() {
         repositorioViajeMock = mock(ViajeRepository.class);
         servicioConductorMock = mock(ServicioConductor.class);
-        //deje el modelMapper en null ya que no lo estamos utilizando
         servicio = new ServicioViajeImpl(repositorioViajeMock, servicioConductorMock);
     }
 
