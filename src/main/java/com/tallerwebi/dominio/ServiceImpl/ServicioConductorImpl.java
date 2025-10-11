@@ -7,9 +7,11 @@ import com.tallerwebi.dominio.excepcion.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.time.LocalDate;
 
 @Service("servicioConductor")
+@Transactional
 public class ServicioConductorImpl implements ServicioConductor {
 
     private final RepositorioConductor repositorioConductor;

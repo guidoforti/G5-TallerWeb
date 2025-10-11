@@ -6,10 +6,13 @@ import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
 import com.tallerwebi.dominio.excepcion.ViajeNoCancelableException;
 import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
+import com.tallerwebi.dominio.excepcion.*;
 
 public interface ServicioViaje {
 
-    Viaje obtenerViajePorId (Long id);
-    void publicarViaje (ViajeInputDTO viajeInputDTO);
+    Viaje obtenerViajePorId(Long id);
+
+    void publicarViaje(Viaje viaje, Long conductorId, Long vehiculoId) throws UsuarioInexistente, NotFoundException,
+            UsuarioNoAutorizadoException, AsientosDisponiblesMayorQueTotalesDelVehiculoException, DatoObligatorioException;
     void cancelarViaje (Long id, Usuario usuarioEnSesion) throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeNoCancelableException;
 }
