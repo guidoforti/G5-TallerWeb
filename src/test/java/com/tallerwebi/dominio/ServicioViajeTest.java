@@ -7,6 +7,7 @@ import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.IRepository.RepositorioConductor;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
+import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.ServiceImpl.ServicioConductorImpl;
 import com.tallerwebi.dominio.ServiceImpl.ServicioViajeImpl;
@@ -38,13 +39,14 @@ public class ServicioViajeTest {
     private ViajeRepository repositorioViajeMock;
     private ServicioViaje servicio;
     private ServicioConductor servicioConductorMock;
+    private ServicioVehiculo servicioVehiculoMock;
 
     @BeforeEach
     void setUp() {
         repositorioViajeMock = mock(ViajeRepository.class);
         servicioConductorMock = mock(ServicioConductor.class);
-        //deje el modelMapper en null ya que no lo estamos utilizando
-        servicio = new ServicioViajeImpl(repositorioViajeMock, servicioConductorMock);
+        servicioVehiculoMock = mock (ServicioVehiculo.class);
+        servicio = new ServicioViajeImpl(repositorioViajeMock, servicioConductorMock, servicioVehiculoMock);
     }
 
     @Test
