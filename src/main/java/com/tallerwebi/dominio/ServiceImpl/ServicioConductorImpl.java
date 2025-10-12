@@ -1,33 +1,31 @@
 package com.tallerwebi.dominio.ServiceImpl;
 
-import com.tallerwebi.config.ManualModelMapper;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.IRepository.RepositorioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
-import com.tallerwebi.dominio.excepcion.CredencialesInvalidas;
-import com.tallerwebi.dominio.excepcion.FechaDeVencimientoDeLicenciaInvalida;
-import com.tallerwebi.dominio.excepcion.UsuarioExistente;
-import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
+import com.tallerwebi.dominio.excepcion.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.time.LocalDate;
 
 @Service("servicioConductor")
+@Transactional
 public class ServicioConductorImpl implements ServicioConductor {
 
     private final RepositorioConductor repositorioConductor;
 
 
     @Autowired
-    public ServicioConductorImpl(RepositorioConductor repositorioConductor, ManualModelMapper manualModelMapper) {
+    public ServicioConductorImpl(RepositorioConductor repositorioConductor) {
         this.repositorioConductor = repositorioConductor;
 
     }
 
 
     @Override
-    public Conductor login(String usuario, String contrasenia) throws CredencialesInvalidas {
+    public Conductor login(String usuario, String contrasenia) throws Exception {
         Conductor conductorEncontrado = this.repositorioConductor.buscarPorEmailYContrasenia(usuario, contrasenia)
                 .orElseThrow(() -> new CredencialesInvalidas("Email o contraseña inválidos"));
 
@@ -58,5 +56,16 @@ public class ServicioConductorImpl implements ServicioConductor {
                 .orElseThrow(() -> new UsuarioInexistente("No existe un usuario para su sesion. Por favor inicie sesion nuevamente."));
 
         return conductor;
+    }
+
+    @Override
+    public Conductor guardarConductor(Conductor nuevoConductor) throws ErrorAlGuardarConductorException {
+        try {
+            repositorioConductor.guardar(nuevoConductor);
+        } catch (Exception e) {
+            throw new ErrorAlGuardarConductorException ("Error al guardar el conductor en la base de datos: " + e.getMessage());
+        }
+
+        return nuevoConductor;
     }
 }

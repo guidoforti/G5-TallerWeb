@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/fragments :: head('UnRumbo - Publicar Viaje')">
+    <th:block th:fragment="extra">
+        <!-- Extra en el head si es necesario -->
+    </th:block>
+</head>
+
+<body>
+<nav th:replace="fragments/fragments :: navbar"></nav>
+
+<main role="main" class="container" style="margin-top: 120px;">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h4 class="fw-bold text-dark">Publicar Viaje</h4>
+                        <p class="text-muted">Completá los datos de tu viaje</p>
+                    </div>
+
+                    <!-- Mensaje de error -->
+                    <div th:if="${error}" class="alert alert-danger" role="alert">
+                        <span th:text="${error}"></span>
+                    </div>
+
+                    <form th:action="@{/viaje/publicar}" th:object="${viaje}" method="post">
+                        <!-- Campo oculto para conductorId -->
+                        <input type="hidden" th:field="*{conductorId}">
+
+                        <!-- Selección de vehículo -->
+                        <div class="mb-3">
+                            <label for="idVehiculo" class="form-label">Vehículo</label>
+                            <select id="idVehiculo" th:field="*{idVehiculo}" class="form-select" required>
+                                <option value="">Seleccioná un vehículo...</option>
+                                <option th:each="vehiculo : ${vehiculos}"
+                                        th:value="${vehiculo.id}"
+                                        th:text="${vehiculo.Modelo + ' - ' + vehiculo.patente + ' (' + vehiculo.asientosTotales + ' asientos)'}">
+                                </option>
+                            </select>
+                            <small class="form-text text-muted">Elegí el vehículo con el que vas a realizar el viaje</small>
+                        </div>
+
+                        <!-- Fecha y hora de salida -->
+                        <div class="mb-3">
+                            <label for="fechaHoraDeSalida" class="form-label">Fecha y Hora de Salida</label>
+                            <input type="datetime-local"
+                                   id="fechaHoraDeSalida"
+                                   th:field="*{fechaHoraDeSalida}"
+                                   class="form-control"
+                                   required>
+                            <small class="form-text text-muted">¿Cuándo sale el viaje?</small>
+                        </div>
+
+                        <!-- Precio -->
+                        <div class="mb-3">
+                            <label for="precio" class="form-label">Precio por pasajero ($)</label>
+                            <input type="number"
+                                   id="precio"
+                                   th:field="*{precio}"
+                                   class="form-control"
+                                   placeholder="Ej: 1500"
+                                   min="1"
+                                   step="0.01"
+                                   required>
+                            <small class="form-text text-muted">¿Cuánto va a costar el viaje por persona?</small>
+                        </div>
+
+                        <!-- Asientos disponibles -->
+                        <div class="mb-3">
+                            <label for="asientosDisponibles" class="form-label">Asientos Disponibles</label>
+                            <input type="number"
+                                   id="asientosDisponibles"
+                                   th:field="*{asientosDisponibles}"
+                                   class="form-control"
+                                   placeholder="Ej: 3"
+                                   min="1"
+                                   required>
+                            <small class="form-text text-muted">
+                                ¿Cuántos asientos ofrecés? (tu asiento no cuenta)
+                            </small>
+                        </div>
+
+                        <!-- Botones -->
+                        <button type="submit" class="btn btn-unrumbo w-100 text-white fw-bold mt-3">
+                            Publicar Viaje
+                        </button>
+
+                        <div class="text-center mt-3">
+                            <a th:href="@{/conductor/home}"
+                               class="text-decoration-none text-unrumbo fw-bold"
+                               style="color:#E16A3D;">
+                                Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Bootstrap core js -->
+<script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
