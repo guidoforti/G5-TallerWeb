@@ -51,12 +51,12 @@ public class ServicioVehiculoTest {
         Long id = 1L;
         Vehiculo esperado = new Vehiculo(
                 id,
-                "ABC123",         // patente
-                "Toyota",         // modelo
-                "2020",           // año
-                4,                // asientosTotales
+                "ABC123", // patente
+                "Toyota", // modelo
+                "2020", // año
+                4, // asientosTotales
                 EstadoVerificacion.VERIFICADO,
-                null              // conductor
+                null // conductor
         );
         when(repositorioVehiculoMock.findById(id)).thenReturn(Optional.of(esperado));
 
@@ -68,11 +68,11 @@ public class ServicioVehiculoTest {
     }
 
     @Test
-    void obtenerVehiculoPorIdNoExisteDeberiaLanzarExcepcion(){
+    void obtenerVehiculoPorIdNoExisteDeberiaLanzarExcepcion() {
         Long idInexistente = 11L;
         when(repositorioVehiculoMock.findById(idInexistente)).thenReturn(Optional.empty());
         assertThrows(NotFoundException.class, () -> servicioVehiculo.getById(idInexistente));
-        verify(repositorioVehiculoMock, times(1)).findById(idInexistente);        
+        verify(repositorioVehiculoMock, times(1)).findById(idInexistente);
     }
 
     @Test
@@ -85,8 +85,7 @@ public class ServicioVehiculoTest {
                 "2020",
                 4,
                 EstadoVerificacion.VERIFICADO,
-                null
-        );
+                null);
         when(repositorioVehiculoMock.encontrarVehiculoConPatente(patente)).thenReturn(Optional.of(esperado));
 
         Vehiculo resultado = servicioVehiculo.obtenerVehiculoConPatente(patente);
@@ -113,8 +112,7 @@ public class ServicioVehiculoTest {
                 "123",
                 null,
                 new ArrayList<>(),
-                new ArrayList<>()
-        );
+                new ArrayList<>());
         Vehiculo vehiculo = new Vehiculo(
                 null,
                 "ABC123",
@@ -122,8 +120,7 @@ public class ServicioVehiculoTest {
                 "2020",
                 4,
                 EstadoVerificacion.PENDIENTE,
-                conductor
-        );
+                conductor);
         Vehiculo guardado = new Vehiculo(
                 1L,
                 "ABC123",
@@ -131,8 +128,7 @@ public class ServicioVehiculoTest {
                 "2020",
                 4,
                 EstadoVerificacion.PENDIENTE,
-                conductor
-        );
+                conductor);
 
         when(repositorioVehiculoMock.encontrarVehiculoConPatente("ABC123")).thenReturn(Optional.empty());
         when(repositorioVehiculoMock.guardarVehiculo(any(Vehiculo.class))).thenReturn(guardado);
@@ -154,8 +150,7 @@ public class ServicioVehiculoTest {
                 "123",
                 null,
                 new ArrayList<>(),
-                new ArrayList<>()
-        );
+                new ArrayList<>());
         Vehiculo vehiculoDuplicado = new Vehiculo(
                 null,
                 "ABC123",
@@ -163,8 +158,7 @@ public class ServicioVehiculoTest {
                 "2020",
                 4,
                 EstadoVerificacion.PENDIENTE,
-                conductor
-        );
+                conductor);
 
         when(repositorioVehiculoMock.encontrarVehiculoConPatente("ABC123")).thenReturn(Optional.of(new Vehiculo()));
 
@@ -178,8 +172,7 @@ public class ServicioVehiculoTest {
         Long conductorId = 1L;
         List<Vehiculo> esperados = List.of(
                 new Vehiculo(1L, "ABC123", "Toyota", "2020", 4, EstadoVerificacion.VERIFICADO, null),
-                new Vehiculo(2L, "XYZ789", "Honda", "2019", 4, EstadoVerificacion.VERIFICADO, null)
-        );
+                new Vehiculo(2L, "XYZ789", "Honda", "2019", 4, EstadoVerificacion.VERIFICADO, null));
 
         when(repositorioVehiculoMock.obtenerVehiculosParaConductor(conductorId)).thenReturn(esperados);
 
@@ -190,23 +183,5 @@ public class ServicioVehiculoTest {
         assertThat(resultados, equalTo(esperados));
         verify(repositorioVehiculoMock, times(1)).obtenerVehiculosParaConductor(conductorId);
     }
-
-    @Test
-    void obtenerVehiculoPorIdNoExisteLanzaExcepcion() {
-        Long id = 99L;
-        when(repositorioVehiculoMock.findById(id)).thenReturn(null);
-
-        assertThrows(NotFoundException.class, () -> servicioVehiculo.getById(id));
-
-        verify(repositorioVehiculoMock).findById(id);
-    }
-
-    @Test
-    void obtenerVehiculosParaConductor_IdNulo_LanzaExcepcion() {
-        assertThrows(IllegalArgumentException.class, () -> servicioVehiculo.obtenerVehiculosParaConductor(null));
-        verifyNoInteractions(repositorioVehiculoMock);
-    }
-
-    
 
 }

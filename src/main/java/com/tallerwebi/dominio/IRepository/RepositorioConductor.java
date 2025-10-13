@@ -5,8 +5,8 @@ import com.tallerwebi.dominio.Entity.Conductor;
 import java.util.Optional;
 
 public interface RepositorioConductor {
-    Optional<Conductor> buscarPorEmailYContrasenia(String email, String contrasenia) throws Exception;
+    Optional<Conductor> buscarPorEmailYContrasenia(String email, String contrasenia);
     Optional<Conductor> buscarPorEmail(String email);
     Optional<Conductor> buscarPorId(Long id);
-    void guardar(Conductor conductor);
+    Conductor guardarConductor(Conductor conductor);
 }

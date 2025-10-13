@@ -12,12 +12,12 @@ import java.util.Optional;
 @Repository
 public class RepositorioVehiculoImpl implements RepositorioVehiculo {
     SessionFactory sessionFactory;
-    //List<Vehiculo> baseDeDatos;
+    // List<Vehiculo> baseDeDatos;
 
     @Autowired
     public RepositorioVehiculoImpl(SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
-         //this.baseDeDatos = new ArrayList<>(Datos.obtenerVehiculos());
+        // this.baseDeDatos = new ArrayList<>(Datos.obtenerVehiculos());
     }
 
     @Override
@@ -28,17 +28,17 @@ public class RepositorioVehiculoImpl implements RepositorioVehiculo {
 
     @Override
     public List<Vehiculo> obtenerVehiculosParaConductor(Long conductorId) {
-        String hql = "SELECT v FROM Vehiculo v WHERE v.conductor.id = :conductor.id";
+        String hql = "SELECT v FROM Vehiculo v WHERE v.conductor.id = :conductorId";
         return sessionFactory.getCurrentSession().createQuery(hql, Vehiculo.class)
-            .setParameter("conductorId", conductorId)
-            .getResultList();
+                .setParameter("conductorId", conductorId)
+                .getResultList();
     }
 
     @Override
     public Optional<Vehiculo> encontrarVehiculoConPatente(String patente) {
         String hql = "SELECT v FROM Vehiculo v WHERE v.patente = :patente";
         Query<Vehiculo> query = sessionFactory.getCurrentSession().createQuery(hql, Vehiculo.class)
-            .setParameter("patente", patente);
+                .setParameter("patente", patente);
         return query.uniqueResultOptional();
     }
 

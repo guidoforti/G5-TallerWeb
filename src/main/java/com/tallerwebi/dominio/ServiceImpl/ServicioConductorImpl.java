@@ -42,7 +42,7 @@ public class ServicioConductorImpl implements ServicioConductor {
             throw new FechaDeVencimientoDeLicenciaInvalida("La fecha de vencimiento de la licencia debe ser mayor a la actual");
         }
 
-        repositorioConductor.guardar(nuevoConductor);
+        repositorioConductor.guardarConductor(nuevoConductor);
 
         return nuevoConductor;
 
@@ -59,7 +59,7 @@ public class ServicioConductorImpl implements ServicioConductor {
     @Override
     public Conductor guardarConductor(Conductor nuevoConductor) throws ErrorAlGuardarConductorException {
         try {
-            repositorioConductor.guardar(nuevoConductor);
+            repositorioConductor.guardarConductor(nuevoConductor);
         } catch (Exception e) {
             throw new ErrorAlGuardarConductorException ("Error al guardar el conductor en la base de datos: " + e.getMessage());
         }

@@ -14,6 +14,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 
 import javax.transaction.Transactional;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -28,14 +30,27 @@ public class RepositorioConductorTest {
     SessionFactory sessionFactory;
 
     private RepositorioConductor repositorio;
+    private Conductor conductorBase;
 
     @BeforeEach
     void setUp() {
-    this.repositorio = new RepositorioConductorImpl(this.sessionFactory);
+        this.repositorio = new RepositorioConductorImpl(this.sessionFactory);
+
+        // --- 1. PERSISTIR DATOS NECESARIOS (EN LUGAR DE ASUMIR QUE EXISTEN) ---
+
+        // Conductor para pruebas de éxito (ID y credenciales)
+        conductorBase = new Conductor(null, "Maria Lopez", "maria@correo.com", "abcd",
+                LocalDate.now(), new ArrayList<>(), new ArrayList<>());
+
+        repositorio.guardarConductor(conductorBase);
+
+        // Limpiar para asegurar que las búsquedas siguientes lean de la DB
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
     }
 
     @Test
-    void deberiaGuardarConductorNuevo() {
+    void deberiaGuardarConductorConductorNuevo() {
         // Arrange
         Conductor nuevo = new Conductor();
         nuevo.setNombre("Pedro Ramirez");
@@ -43,31 +58,31 @@ public class RepositorioConductorTest {
         nuevo.setContrasenia("clave123");
 
         // Act
-        repositorio.guardar(nuevo);
+        Conductor guardado = repositorio.guardarConductor(nuevo);
 
         // Assert
         assertNotNull(nuevo.getId(), "El conductor debería tener un ID asignado después de guardarse");
 
-        Optional<Conductor>  recuperado = repositorio.buscarPorId(nuevo.getId());
-        assertNotNull(recuperado, "Debería poder recuperarse el conductor guardado");
+        Optional<Conductor>  recuperado = repositorio.buscarPorId(guardado.getId());
+        assertTrue(recuperado.isPresent(), "Debería poder recuperarse el conductor guardado");
         assertEquals("Pedro Ramirez", recuperado.get().getNombre());
         assertEquals("pedro@correo.com", recuperado.get().getEmail());
     }
 
 
     @Test
-    void deberiaBuscarPorEmailYContrasenia() throws Exception {
+    void deberiaBuscarPorEmailYContrasenia() {
         // Act
         Optional<Conductor> conductor = repositorio.buscarPorEmailYContrasenia("maria@correo.com", "abcd");
 
         // Assert
-        assertNotNull(conductor, "El conductor debería encontrarse");
-        assertEquals("Maria Lopez", conductor.get().getNombre());
+        assertTrue(conductor.isPresent(), "El conductor debería encontrarse con credenciales correctas");
+        assertEquals(conductorBase.getNombre(), conductor.get().getNombre());
         assertEquals("maria@correo.com", conductor.get().getEmail());
     }
 
     @Test
-    void noDeberiaEncontrarSiContraseniaIncorrecta() throws Exception {
+    void noDeberiaEncontrarSiContraseniaIncorrecta() {
         // Act
         Optional<Conductor> conductor = repositorio.buscarPorEmailYContrasenia("maria@correo.com", "claveMala");
 

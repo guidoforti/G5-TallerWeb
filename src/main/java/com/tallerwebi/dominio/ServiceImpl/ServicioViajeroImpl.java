@@ -53,7 +53,7 @@ public class ServicioViajeroImpl implements ServicioViajero{
             throw new EdadInvalidaException("La edad ingresada no es válida.");
         }
 
-        repositorioViajero.guardar(nuevoViajero);
+        repositorioViajero.guardarViajero(nuevoViajero);
 
         return nuevoViajero;
     }

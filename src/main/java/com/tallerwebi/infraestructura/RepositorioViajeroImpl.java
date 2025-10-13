@@ -1,54 +1,54 @@
 package com.tallerwebi.infraestructura;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
 import org.springframework.stereotype.Repository;
 
-import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.IRepository.RepositorioViajero;
+import com.tallerwebi.dominio.Entity.Viajero;
+import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Optional;
 
 @Repository
-public class RepositorioViajeroImpl implements RepositorioViajero{
+public class RepositorioViajeroImpl implements RepositorioViajero {
 
-    private Map<Long, Viajero> viajeros = new HashMap<>();
-    private Long proximoId = 1L;
+    private final SessionFactory sessionFactory;
 
-    public RepositorioViajeroImpl(){
-        for(Viajero v : Datos.obtenerViajeros()){
-            v.setId(this.proximoId++);
-            viajeros.put(v.getId(), v);
-        }
+    @Autowired
+    public RepositorioViajeroImpl(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
     }
 
     @Override
     public Optional<Viajero> buscarPorEmailYContrasenia(String email, String contrasenia) {
-        return viajeros.values().stream().filter(v -> v.getEmail().equals(email) && v.getContrasenia().equals(contrasenia)).findFirst();
+        String hql = "SELECT V FROM Viajero V WHERE V.email = :email AND contrasenia = :contrasenia";
+        Query<Viajero> query = sessionFactory.getCurrentSession().createQuery(hql, Viajero.class)
+                .setParameter("email", email)
+                .setParameter("contrasenia", contrasenia);
+
+        return query.uniqueResultOptional();
     }
 
     @Override
     public Optional<Viajero> buscarPorEmail(String email) {
-        return viajeros.values().stream().filter(v -> v.getEmail().equals(email)).findFirst();
+        String hql = "SELECT V FROM Viajero V WHERE V.email = :email";
+        Query<Viajero> query = sessionFactory.getCurrentSession().createQuery(hql, Viajero.class)
+                .setParameter("email", email);
+
+        return query.uniqueResultOptional();
     }
 
     @Override
     public Optional<Viajero> buscarPorId(Long id) {
-        return Optional.ofNullable(viajeros.get(id));
+        Viajero viajero = sessionFactory.getCurrentSession().get(Viajero.class, id);
+        return Optional.ofNullable(viajero);
     }
 
     @Override
-    public boolean guardar(Viajero viajero) {
-        // Chequeo que exista
-        Boolean viajeroExistente = this.viajeros.values().stream().anyMatch(v -> v.getEmail().equals(viajero.getEmail()));
-        if(viajeroExistente == true){
-            return false;
-        } 
-        
-        // Si no existe, asigno ID previo a guardarlo
-        viajero.setId(proximoId++);
-        viajeros.put(viajero.getId(), viajero);
-        return true;
+    public Viajero guardarViajero(Viajero viajero) {
+        sessionFactory.getCurrentSession().save(viajero);
+        return viajero;
     }
-    
+
 }

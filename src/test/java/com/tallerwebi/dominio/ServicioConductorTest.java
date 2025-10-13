@@ -59,7 +59,7 @@ class ServicioConductorTest {
 
         servicio.registrar(nuevo);
 
-        verify(repositorioMock, times(1)).guardar(nuevo);
+        verify(repositorioMock, times(1)).guardarConductor(nuevo);
     }
 
     @Test
@@ -74,7 +74,7 @@ class ServicioConductorTest {
         assertThrows(UsuarioExistente.class,
                 () -> servicio.registrar(nuevo));
 
-        verify(repositorioMock, never()).guardar(any(Conductor.class));
+        verify(repositorioMock, never()).guardarConductor(any(Conductor.class));
     }
 
     @Test
@@ -92,7 +92,7 @@ class ServicioConductorTest {
         );
 
         assertThat(exception.getMessage(), equalTo("La fecha de vencimiento de la licencia debe ser mayor a la actual"));
-        verify(repositorioMock, times(0)).guardar(any());
+        verify(repositorioMock, times(0)).guardarConductor(any());
     }
 
     @Test
@@ -126,7 +126,7 @@ class ServicioConductorTest {
         Conductor c = new Conductor(null, "Luis", "luis@gmail.com", "1234", LocalDate.now().plusDays(10), new ArrayList<>(), new ArrayList<>());
 
         // Forzamos que el repositorio lance una excepción
-        doThrow(new RuntimeException("DB error")).when(repositorioMock).guardar(c);
+        doThrow(new RuntimeException("DB error")).when(repositorioMock).guardarConductor(c);
 
         ErrorAlGuardarConductorException exception = assertThrows(
                 ErrorAlGuardarConductorException.class,
@@ -141,7 +141,7 @@ class ServicioConductorTest {
         Conductor c = new Conductor(null, "Luis", "luis@gmail.com", "1234", LocalDate.now().plusDays(10), new ArrayList<>(), new ArrayList<>());
         //devuelve el mismo conductor
         servicio.guardarConductor(c);
-        verify(repositorioMock, times(1)).guardar(c);
+        verify(repositorioMock, times(1)).guardarConductor(c);
     }
 
 
