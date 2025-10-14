@@ -1,5 +1,4 @@
 package com.tallerwebi.infraestructura;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
@@ -21,6 +20,7 @@ import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
+import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Entity.Viaje;
@@ -39,6 +39,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 
 
@@ -306,4 +308,89 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
     assertEquals(2, resultados.size(), "Debería encontrar 2 viajes para el conductor");
     assertTrue(resultados.stream().allMatch(v -> v.getConductor().getId().equals(conductor.getId())));
 }
+    @Test
+    void deberiaEncontrarViajesEnEstadosDisponibleYCompleto() {
+        // Arrange - Usar datos de dataTest.sql
+        // Viaje 1: Buenos Aires -> Cordoba, conductor 1, estado DISPONIBLE (0)
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad cordoba = sessionFactory.getCurrentSession().get(Ciudad.class, 2L);
+
+        List<EstadoDeViaje> estadosProhibidos = Arrays.asList(EstadoDeViaje.DISPONIBLE, EstadoDeViaje.COMPLETO);
+
+        // Act
+        List<Viaje> viajesEncontrados = repositorioViaje.findByOrigenYDestinoYConductorYEstadoIn(
+            buenosAires,
+            cordoba,
+            conductor,
+            estadosProhibidos
+        );
+
+        // Assert
+        assertNotNull(viajesEncontrados);
+        assertEquals(1, viajesEncontrados.size(), "Debería encontrar el viaje existente en estado DISPONIBLE");
+        assertEquals(1L, viajesEncontrados.get(0).getId());
+        assertEquals(EstadoDeViaje.DISPONIBLE, viajesEncontrados.get(0).getEstado());
+    }
+
+    @Test
+    void noDeberiaEncontrarViajesEnEstadosFinalizadoOCancelado() {
+        // Arrange - Crear viaje en estado FINALIZADO
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+        Vehiculo vehiculo = sessionFactory.getCurrentSession().get(Vehiculo.class, 1L);
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad rosario = sessionFactory.getCurrentSession().get(Ciudad.class, 3L);
+
+        Viaje viajeFinalizadoForTest = new Viaje();
+        viajeFinalizadoForTest.setOrigen(buenosAires);
+        viajeFinalizadoForTest.setDestino(rosario);
+        viajeFinalizadoForTest.setConductor(conductor);
+        viajeFinalizadoForTest.setVehiculo(vehiculo);
+        viajeFinalizadoForTest.setEstado(EstadoDeViaje.FINALIZADO);
+        viajeFinalizadoForTest.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
+        viajeFinalizadoForTest.setPrecio(10000.0);
+        viajeFinalizadoForTest.setAsientosDisponibles(2);
+        viajeFinalizadoForTest.setFechaDeCreacion(LocalDateTime.now());
+        viajeFinalizadoForTest.setViajeros(new ArrayList<>());
+        viajeFinalizadoForTest.setParadas(new ArrayList<>());
+
+        repositorioViaje.guardarViaje(viajeFinalizadoForTest);
+        sessionFactory.getCurrentSession().flush();
+
+        List<EstadoDeViaje> estadosProhibidos = Arrays.asList(EstadoDeViaje.DISPONIBLE, EstadoDeViaje.COMPLETO);
+
+        // Act
+        List<Viaje> viajesEncontrados = repositorioViaje.findByOrigenYDestinoYConductorYEstadoIn(
+            buenosAires,
+            rosario,
+            conductor,
+            estadosProhibidos
+        );
+
+        // Assert
+        assertNotNull(viajesEncontrados);
+        assertEquals(0, viajesEncontrados.size(), "No debería encontrar viajes en estado FINALIZADO");
+    }
+
+    @Test
+    void deberiaRetornarListaVaciaCuandoNoHayViajesConEsosEstados() {
+        // Arrange
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 2L);
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad rosario = sessionFactory.getCurrentSession().get(Ciudad.class, 3L);
+
+        List<EstadoDeViaje> estadosProhibidos = Arrays.asList(EstadoDeViaje.DISPONIBLE, EstadoDeViaje.COMPLETO);
+
+        // Act - Buscar viaje que no existe (conductor 2 nunca viajó de Buenos Aires a Rosario)
+        List<Viaje> viajesEncontrados = repositorioViaje.findByOrigenYDestinoYConductorYEstadoIn(
+            buenosAires,
+            rosario,
+            conductor,
+            estadosProhibidos
+        );
+
+        // Assert
+        assertNotNull(viajesEncontrados);
+        assertEquals(0, viajesEncontrados.size(), "Debería retornar lista vacía");
+    }
 }

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -43,7 +44,7 @@ public Viaje obtenerViajePorId(Long id) {
 
     @Override
     public void publicarViaje(Viaje viaje, Long conductorId, Long vehiculoId) throws UsuarioInexistente, NotFoundException,
-            UsuarioNoAutorizadoException, AsientosDisponiblesMayorQueTotalesDelVehiculoException, DatoObligatorioException {
+            UsuarioNoAutorizadoException, AsientosDisponiblesMayorQueTotalesDelVehiculoException, DatoObligatorioException, ViajeDuplicadoException {
 
         // Validar datos obligatorios
         validarDatosObligatorios(viaje, conductorId, vehiculoId);
@@ -65,6 +66,22 @@ public Viaje obtenerViajePorId(Long id) {
             throw new AsientosDisponiblesMayorQueTotalesDelVehiculoException(
                 "Los asientos disponibles no pueden ser mayores a " + asientosMaximos +
                 " (total del vehículo menos el asiento del conductor)"
+            );
+        }
+
+        // Validar que no exista un viaje duplicado en estado DISPONIBLE o COMPLETO
+        List<EstadoDeViaje> estadosProhibidos = Arrays.asList(EstadoDeViaje.DISPONIBLE, EstadoDeViaje.COMPLETO);
+        List<Viaje> viajesDuplicados = viajeRepository.findByOrigenYDestinoYConductorYEstadoIn(
+            viaje.getOrigen(),
+            viaje.getDestino(),
+            conductor,
+            estadosProhibidos
+        );
+
+        if (!viajesDuplicados.isEmpty()) {
+            throw new ViajeDuplicadoException(
+                "Ya tenés un viaje publicado con el mismo origen y destino. " +
+                "Por favor, cancelá o finalizá el viaje existente antes de crear uno nuevo."
             );
         }
 
@@ -94,6 +111,17 @@ public Viaje obtenerViajePorId(Long id) {
         }
         if (viaje.getAsientosDisponibles() == null || viaje.getAsientosDisponibles() <= 0) {
             throw new DatoObligatorioException("Los asientos disponibles deben ser mayor a 0");
+        }
+
+        // Validar ciudades (origen y destino)
+        if (viaje.getOrigen() == null) {
+            throw new DatoObligatorioException("La ciudad de origen es obligatoria");
+        }
+        if (viaje.getDestino() == null) {
+            throw new DatoObligatorioException("La ciudad de destino es obligatoria");
+        }
+        if (viaje.getOrigen().equals(viaje.getDestino())) {
+            throw new DatoObligatorioException("La ciudad de origen y destino deben ser diferentes");
         }
     }
 

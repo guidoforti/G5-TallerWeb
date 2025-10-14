@@ -8,9 +8,10 @@ import java.util.List;
 public interface ServicioViaje {
 
     Viaje obtenerViajePorId(Long id) throws ViajeNoEncontradoException, UsuarioNoAutorizadoException;
-    void publicarViaje(Viaje viaje, Long conductorId, Long vehiculoId) throws UsuarioInexistente, NotFoundException,
-            UsuarioNoAutorizadoException, AsientosDisponiblesMayorQueTotalesDelVehiculoException, DatoObligatorioException;
-            
+    void publicarViaje(Viaje viaje, Long conductorId, Long vehiculoId) throws UsuarioInexistente, NotFoundException, UsuarioNoAutorizadoException, AsientosDisponiblesMayorQueTotalesDelVehiculoException, DatoObligatorioException, ViajeDuplicadoException;
     void cancelarViaje (Long id, Usuario usuarioEnSesion) throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeNoCancelableException;
     List<Viaje> listarViajesPorConductor(Usuario usuarioEnSesion) throws UsuarioNoAutorizadoException;
 }
+
+           
+
