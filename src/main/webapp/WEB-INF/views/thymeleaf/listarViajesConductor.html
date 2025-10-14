@@ -43,12 +43,13 @@
                                     <td th:text="${viaje.estado}"></td>
                                     <td>
                                         <a th:if="${viaje.estado == 'DISPONIBLE'}"
-                                           th:href="@{'/viaje/editar/' + ${viaje.id}}"
+                                           th:href="@{'/viaje/editar/' + ${viaje.id}}" 
                                            class="btn btn-sm btn-outline-primary me-1">Editar viaje</a>
 
                                         <a th:if="${viaje.estado == 'DISPONIBLE' or viaje.estado == 'COMPLETO'}"
-                                           th:href="@{'/viaje/cancelar/' + ${viaje.id}}"
+                                           th:href="@{'/viaje/cancelarViaje/' + ${viaje.id}}" 
                                            class="btn btn-sm btn-outline-danger">Cancelar viaje</a>
+
                                     </td>
                                 </tr>
                             </tbody>

@@ -108,64 +108,23 @@ public class ControladorViaje {
         }
     }
 
-    @PostMapping("/cancelar")
-    public ModelAndView cancelarViaje(@RequestParam Long id, HttpSession session) {
-    ModelMap model = new ModelMap();
+    @GetMapping("/listar")
+    public ModelAndView listarViajes(HttpSession session) {
+        ModelMap model = new ModelMap();
 
-    // primer valido sesion y rol
-    Object usuarioId = session.getAttribute("usuarioId");
-    Object rol = session.getAttribute("rol");
+        Object usuarioId = session.getAttribute("usuarioId");
+        Object rol = session.getAttribute("rol");
 
-    if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
-        return new ModelAndView("redirect:/conductor/login");
-    }
-
-    // creo usuarioEnSesion y seteo id y rol
-    Usuario usuarioEnSesion = new Usuario();
-    usuarioEnSesion.setId((Long) usuarioId);
-    usuarioEnSesion.setRol((String) rol);
-
-    try {
-        // cancelo viaje y en caso de que no funcione se accede a los catch de excpecion
-        servicioViaje.cancelarViaje(id, usuarioEnSesion);
-
-        // si fue exitoso, se devuelve a la home con mensaje de exito
-        model.put("exito", "El viaje fue cancelado exitosamente.");
-        return new ModelAndView("redirect:/conductor/home", model);
-
-        // se utilizan las excecpiones en caso de error
-    } catch (ViajeNoEncontradoException e) {
-        model.put("error", "No se encontró el viaje especificado.");
-    } catch (UsuarioNoAutorizadoException e) {
-        model.put("error", "No tiene permisos para cancelar este viaje.");
-    } catch (ViajeNoCancelableException e) {
-        model.put("error", "El viaje no se puede cancelar en este estado.");
-    } catch (Exception e) {
-        model.put("error", "Ocurrió un error al intentar cancelar el viaje.");
-    }
-
-    // mensaje de error y vuelta a la vista correspondiente
-    return new ModelAndView("errorCancelarViaje", model);
-}
-
-
-@GetMapping("/listar")
-public ModelAndView listarViajes(HttpSession session) {
-    ModelMap model = new ModelMap();
-
-    Object usuarioId = session.getAttribute("usuarioId");
-    Object rol = session.getAttribute("rol");
-
-    if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
+        if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
         model.put("error", "Debés iniciar sesión como conductor");
         return new ModelAndView("errorAcceso", model);
     }
 
-    Usuario usuarioEnSesion = new Usuario();
-    usuarioEnSesion.setId((Long) usuarioId);
-    usuarioEnSesion.setRol((String) rol);
+        Usuario usuarioEnSesion = new Usuario();
+        usuarioEnSesion.setId((Long) usuarioId);
+        usuarioEnSesion.setRol((String) rol);
 
-    try {
+        try {
         List<Viaje> listaViajes = servicioViaje.listarViajesPorConductor(usuarioEnSesion);
 
         //dtos para la vista
@@ -176,10 +135,74 @@ public ModelAndView listarViajes(HttpSession session) {
         model.put("listaViajes", listaViajesDTO);
         return new ModelAndView("listarViajesConductor", model);
 
-    } catch (UsuarioNoAutorizadoException e) {
+        } catch (UsuarioNoAutorizadoException e) {
         model.put("error", "No tenés permisos para ver los viajes");
         return new ModelAndView("errorAcceso", model);
     }
 }
 
+    @GetMapping("/cancelarViaje/{id}")
+    public ModelAndView irACancelarViaje(@PathVariable Long id, HttpSession session) {
+        ModelMap model = new ModelMap();
+
+        Object usuarioId = session.getAttribute("usuarioId");
+        Object rol = session.getAttribute("rol");
+
+        // Validación de sesión
+        if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
+            return new ModelAndView("redirect:/conductor/login");
+        }
+
+        Usuario usuarioEnSesion = new Usuario();
+        usuarioEnSesion.setId((Long) usuarioId);
+        usuarioEnSesion.setRol((String) rol);
+
+        try {
+        Viaje viaje = servicioViaje.obtenerViajePorId(id);
+        ViajeVistaDTO viajeDTO = new ViajeVistaDTO(viaje);
+
+        model.put("viaje", viajeDTO);
+        return new ModelAndView("cancelarViaje", model);
+    
+    } catch (ViajeNoEncontradoException e) {
+        model.put("error", "No se encontró el viaje especificado.");
+        return new ModelAndView("errorCancelarViaje", model);
+    } catch (UsuarioNoAutorizadoException e) {
+        model.put("error", "No tiene permisos para acceder a este viaje.");
+        return new ModelAndView("errorCancelarViaje", model);
+    }
+}
+
+    @PostMapping("/cancelarViaje")
+    public ModelAndView cancelarViaje(@RequestParam Long id, HttpSession session) {
+        ModelMap model = new ModelMap();
+
+        Object usuarioId = session.getAttribute("usuarioId");
+        Object rol = session.getAttribute("rol");
+
+        if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
+        return new ModelAndView("redirect:/conductor/login");
+        }
+
+        Usuario usuarioEnSesion = new Usuario();
+        usuarioEnSesion.setId((Long) usuarioId);
+        usuarioEnSesion.setRol((String) rol);
+
+        try {
+        servicioViaje.cancelarViaje(id, usuarioEnSesion);
+        model.put("exito", "El viaje fue cancelado exitosamente.");
+        return new ModelAndView("redirect:/viaje/listar");
+
+    } catch (ViajeNoEncontradoException e) {
+        model.put("error", "No se encontró el viaje especificado.");
+    } catch (UsuarioNoAutorizadoException e) {
+        model.put("error", "No tiene permisos para cancelar este viaje.");
+    } catch (ViajeNoCancelableException e) {
+        model.put("error", "El viaje no se puede cancelar en este estado.");
+    } catch (Exception e) {
+        model.put("error", "Ocurrió un error al intentar cancelar el viaje.");
+    }
+
+    return new ModelAndView("errorCancelarViaje", model);
+    }
 }

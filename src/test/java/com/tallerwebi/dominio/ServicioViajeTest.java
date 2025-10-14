@@ -303,7 +303,7 @@ class ServicioViajeTest {
     }
 
     @Test
-    void seDebeCancelarViajeCorrectamente() throws Exception {
+        void seDebeCancelarViajeCorrectamente() throws Exception {
         
         Conductor conductor = new Conductor();
         conductor.setId(1L);
@@ -324,7 +324,7 @@ class ServicioViajeTest {
 
         assertEquals(EstadoDeViaje.CANCELADO, viaje.getEstado());
         verify(viajeRepositoryMock).modificarViaje(viaje);
-}
+    }
 
 
     @Test
@@ -341,7 +341,8 @@ class ServicioViajeTest {
     }
 
     @Test
-    void noDebeCancelarSiUnViajeNoExiste() {
+        void noDebeCancelarSiUnViajeNoExiste() {
+
         Usuario usuarioConductor = new Usuario();
         usuarioConductor.setId(1L);
         usuarioConductor.setRol("CONDUCTOR");
@@ -352,10 +353,10 @@ class ServicioViajeTest {
                 () -> servicioViaje.cancelarViaje(999L, usuarioConductor));
 
         verify(viajeRepositoryMock, never()).modificarViaje(any());
-}
+    }
 
-   @Test
-    void noSeDebeCancelarSiUnViajeNoPerteneceAlConductor() {
+    @Test
+        void noSeDebeCancelarSiUnViajeNoPerteneceAlConductor() {
         
         Usuario usuarioConductor = new Usuario();
         usuarioConductor.setId(1L);
@@ -376,10 +377,10 @@ class ServicioViajeTest {
                 () -> servicioViaje.cancelarViaje(100L, usuarioConductor));
 
         verify(viajeRepositoryMock, never()).modificarViaje(any());
-}
+    }
 
-@Test
-    void noSeDebeCancelarSiElEstadoDelViajeEsFinalizado() {
+    @Test
+        void noSeDebeCancelarSiElEstadoDelViajeEsFinalizado() {
     
         Usuario usuarioConductor = new Usuario();
         usuarioConductor.setId(1L);
@@ -400,10 +401,10 @@ class ServicioViajeTest {
                 () -> servicioViaje.cancelarViaje(100L, usuarioConductor));
 
         verify(viajeRepositoryMock, never()).modificarViaje(any());
-}
+    }
 
-@Test
-    void noSeDebeCancelarSiElEstadoDelViajeEsCancelado() {
+    @Test
+        void noSeDebeCancelarSiElEstadoDelViajeEsCancelado() {
 
         Usuario usuarioConductor = new Usuario();
         usuarioConductor.setId(1L);
@@ -424,10 +425,10 @@ class ServicioViajeTest {
                 () -> servicioViaje.cancelarViaje(100L, usuarioConductor));
 
         verify(viajeRepositoryMock, never()).modificarViaje(any());
-}
+    }
 
-@Test
-void noDebeListarViajesSiUsuarioNoEsConductor() {
+    @Test
+        void noDebeListarViajesSiUsuarioNoEsConductor() {
     
     Usuario usuarioSinRol = new Usuario();
     usuarioSinRol.setId(1L);
@@ -437,37 +438,37 @@ void noDebeListarViajesSiUsuarioNoEsConductor() {
     assertThrows(UsuarioNoAutorizadoException.class,
         () -> servicioViaje.listarViajesPorConductor(usuarioSinRol));
 
-}
+    }
 
 
-@Test
-void noDebeListarViajesSiUsuarioEsNull() {
+    @Test
+        void noDebeListarViajesSiUsuarioEsNull() {
     
-    assertThrows(UsuarioNoAutorizadoException.class,
+        assertThrows(UsuarioNoAutorizadoException.class,
         () -> servicioViaje.listarViajesPorConductor(null));
-}
+    }
 
 
-@Test
-void deberiaListarViajesSiUsuarioEsConductor() throws UsuarioNoAutorizadoException {
+    @Test
+        void deberiaListarViajesSiUsuarioEsConductor() throws UsuarioNoAutorizadoException {
     
-    Usuario usuarioConductor = new Usuario();
-    usuarioConductor.setId(1L);
-    usuarioConductor.setRol("CONDUCTOR");
+        Usuario usuarioConductor = new Usuario();
+        usuarioConductor.setId(1L);
+        usuarioConductor.setRol("CONDUCTOR");
 
-    Viaje viaje1 = new Viaje();
-    viaje1.setId(10L);
-    Viaje viaje2 = new Viaje();
-    viaje2.setId(20L);
+        Viaje viaje1 = new Viaje();
+        viaje1.setId(10L);
+        Viaje viaje2 = new Viaje();
+        viaje2.setId(20L);
 
-    List<Viaje> viajesMock = List.of(viaje1, viaje2);
+        List<Viaje> viajesMock = List.of(viaje1, viaje2);
 
-    when(viajeRepositoryMock.findByConductorId(1L)).thenReturn(viajesMock);
+        when(viajeRepositoryMock.findByConductorId(1L)).thenReturn(viajesMock);
 
-    List<Viaje> resultado = servicioViaje.listarViajesPorConductor(usuarioConductor);
+        List<Viaje> resultado = servicioViaje.listarViajesPorConductor(usuarioConductor);
 
-    assertNotNull(resultado);
-    assertEquals(2, resultado.size());
-    verify(viajeRepositoryMock).findByConductorId(1L);
-}
+        assertNotNull(resultado);
+        assertEquals(2, resultado.size());
+        verify(viajeRepositoryMock).findByConductorId(1L);
+    }
 }
