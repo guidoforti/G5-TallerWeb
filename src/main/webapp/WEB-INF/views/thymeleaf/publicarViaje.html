@@ -83,15 +83,12 @@
                         <!-- Ciudad de Origen -->
                         <div class="mb-3">
                             <label for="nombreCiudadOrigen" class="form-label">Ciudad de Origen</label>
-                            <input type="text"
-                                   id="nombreCiudadOrigen"
-                                   th:field="*{nombreCiudadOrigen}"
-                                   class="form-control"
-                                   list="sugerenciasOrigen"
-                                   placeholder="Ej: Buenos Aires"
-                                   autocomplete="off"
-                                   required>
-                            <datalist id="sugerenciasOrigen"></datalist>
+                            <select id="nombreCiudadOrigen"
+                                    th:field="*{nombreCiudadOrigen}"
+                                    class="form-control"
+                                    placeholder="Ej: Buenos Aires"
+                                    required>
+                            </select>
                             <small class="form-text text-muted">
                                 Escribí para buscar tu ciudad de origen
                             </small>
@@ -100,15 +97,12 @@
                         <!-- Ciudad de Destino -->
                         <div class="mb-3">
                             <label for="nombreCiudadDestino" class="form-label">Ciudad de Destino</label>
-                            <input type="text"
-                                   id="nombreCiudadDestino"
-                                   th:field="*{nombreCiudadDestino}"
-                                   class="form-control"
-                                   list="sugerenciasDestino"
-                                   placeholder="Ej: Córdoba"
-                                   autocomplete="off"
-                                   required>
-                            <datalist id="sugerenciasDestino"></datalist>
+                            <select id="nombreCiudadDestino"
+                                    th:field="*{nombreCiudadDestino}"
+                                    class="form-control"
+                                    placeholder="Ej: Córdoba"
+                                    required>
+                            </select>
                             <small class="form-text text-muted">
                                 Escribí para buscar tu ciudad de destino
                             </small>

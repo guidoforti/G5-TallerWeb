@@ -1,90 +1,106 @@
 /**
  * JavaScript para el formulario de publicación de viaje
- * Maneja autocomplete de Nominatim y paradas dinámicas
+ * Maneja autocomplete de Nominatim con Tom Select y paradas dinámicas
  */
 
 // =============================================================================
-// UTILIDADES
+// CONFIGURACIÓN DE TOM SELECT
 // =============================================================================
 
 /**
- * Función debounce para evitar múltiples requests
- * @param {Function} func - Función a ejecutar
- * @param {number} wait - Tiempo de espera en ms
- * @returns {Function} Función con debounce aplicado
+ * Configuración base para Tom Select con Nominatim
+ * @returns {Object} Objeto de configuración para Tom Select
  */
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
+function getTomSelectConfig() {
+    return {
+        valueField: 'text',
+        labelField: 'text',
+        searchField: 'text',
+        create: false,  // No permitir texto libre, solo selección de lista
+        loadThrottle: 300,  // Debounce de 300ms
+        placeholder: 'Escribí para buscar...',
+        preload: false,  // No cargar datos hasta que el usuario escriba
+
+        // Control de carga: solo buscar si hay al menos 2 caracteres
+        shouldLoad: function(query) {
+            return query.length >= 2;
+        },
+
+        // Función para cargar datos remotos desde Nominatim
+        load: function(query, callback) {
+            const url = `/spring/api/nominatim/buscar?query=${encodeURIComponent(query)}`;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Transformar array de strings a objetos con propiedad 'text'
+                    const options = data.map(ciudad => ({ text: ciudad }));
+                    callback(options);
+                })
+                .catch(error => {
+                    console.error('Error al buscar ciudades:', error);
+                    callback();  // Llamar callback sin datos en caso de error
+                });
+        },
+
+        // Mensaje cuando no hay resultados
+        render: {
+            no_results: function() {
+                return '<div class="no-results">No se encontraron ciudades</div>';
+            }
+        }
     };
 }
 
-// =============================================================================
-// AUTOCOMPLETE CON NOMINATIM
-// =============================================================================
-
 /**
- * Configura autocomplete con Nominatim para un input
- * @param {string} inputId - ID del input
- * @param {string} datalistId - ID del datalist asociado
+ * Inicializa Tom Select en un elemento select
+ * @param {string} selectId - ID del elemento select
+ * @returns {TomSelect|null} Instancia de Tom Select o null si falla
  */
-function setupNominatimAutocomplete(inputId, datalistId) {
-    const input = document.getElementById(inputId);
-    const datalist = document.getElementById(datalistId);
+function setupTomSelect(selectId) {
+    const selectElement = document.getElementById(selectId);
 
-    if (!input || !datalist) {
-        console.error(`No se encontró el input ${inputId} o datalist ${datalistId}`);
-        return;
+    if (!selectElement) {
+        console.error(`No se encontró el elemento select: ${selectId}`);
+        return null;
     }
 
-    // Evento input con debounce
-    input.addEventListener('input', debounce(async (e) => {
-        const query = e.target.value.trim();
+    // Si ya tiene Tom Select, destruirlo primero
+    if (selectElement.tomselect) {
+        selectElement.tomselect.destroy();
+    }
 
-        // Si el query es muy corto, limpiar el datalist
-        if (query.length < 2) {
-            datalist.innerHTML = '';
-            return;
-        }
-
-        try {
-            // Consultar endpoint de Nominatim
-            const response = await fetch(`/spring/api/nominatim/buscar?query=${encodeURIComponent(query)}`);
-
-            if (!response.ok) {
-                console.error('Error en la respuesta del servidor');
-                return;
-            }
-
-            const sugerencias = await response.json();
-
-            // Limpiar datalist
-            datalist.innerHTML = '';
-
-            // Agregar nuevas opciones
-            sugerencias.forEach(ciudad => {
-                const option = document.createElement('option');
-                option.value = ciudad;
-                datalist.appendChild(option);
-            });
-
-        } catch (error) {
-            console.error('Error al buscar ciudades:', error);
-        }
-    }, 300));
+    try {
+        return new TomSelect(`#${selectId}`, getTomSelectConfig());
+    } catch (error) {
+        console.error(`Error al inicializar Tom Select en ${selectId}:`, error);
+        return null;
+    }
 }
 
 // =============================================================================
 // MANEJO DE PARADAS DINÁMICAS
 // =============================================================================
 
-let paradaCount = 0;
+// Contador para IDs únicos de paradas (nunca decrementa)
+let paradaIdCounter = 0;
+
+// Almacena instancias de Tom Select para las paradas
+const tomSelectInstances = new Map();
+
+/**
+ * Obtiene el número actual de paradas en el formulario
+ * @returns {number} Cantidad de paradas
+ */
+function obtenerCantidadParadas() {
+    const container = document.getElementById('paradasContainer');
+    return container.querySelectorAll('.parada-item').length;
+}
 
 /**
  * Agrega una nueva parada al formulario
@@ -97,31 +113,34 @@ function agregarParada() {
         return;
     }
 
-    paradaCount++;
+    // Incrementar ID único (solo para identificación, no para mostrar)
+    paradaIdCounter++;
+    const uniqueId = paradaIdCounter;
+
+    // Calcular el número de orden visual basado en paradas existentes
+    const numeroOrden = obtenerCantidadParadas() + 1;
 
     // Crear div contenedor para la parada
     const paradaDiv = document.createElement('div');
     paradaDiv.className = 'parada-item mb-3';
-    paradaDiv.id = `parada-${paradaCount}`;
-    paradaDiv.dataset.index = paradaCount;
+    paradaDiv.id = `parada-${uniqueId}`;
+    paradaDiv.dataset.uniqueId = uniqueId;
 
     // HTML de la parada
     paradaDiv.innerHTML = `
         <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-unrumbo text-white parada-numero" style="background-color: #E16A3D;">${paradaCount}</span>
+            <span class="badge bg-unrumbo text-white parada-numero" style="background-color: #E16A3D;">${numeroOrden}</span>
             <div class="flex-grow-1">
-                <input type="text"
-                       id="parada-input-${paradaCount}"
-                       name="nombresParadas"
-                       class="form-control"
-                       list="sugerenciasParada-${paradaCount}"
-                       placeholder="Ej: Rosario"
-                       required>
-                <datalist id="sugerenciasParada-${paradaCount}"></datalist>
+                <select id="parada-input-${uniqueId}"
+                        name="nombresParadas"
+                        class="form-control"
+                        placeholder="Ej: Rosario"
+                        required>
+                </select>
             </div>
             <button type="button"
-                    class="btn btn-sm btn-outline-danger"
-                    onclick="eliminarParada(${paradaCount})">
+                    class="btn btn-sm btn-outline-danger btn-eliminar-parada"
+                    data-parada-id="${uniqueId}">
                 ✕
             </button>
         </div>
@@ -129,21 +148,42 @@ function agregarParada() {
 
     container.appendChild(paradaDiv);
 
-    // Configurar autocomplete para esta parada
-    setupNominatimAutocomplete(`parada-input-${paradaCount}`, `sugerenciasParada-${paradaCount}`);
+    // Agregar event listener al botón de eliminar
+    const btnEliminar = paradaDiv.querySelector('.btn-eliminar-parada');
+    btnEliminar.addEventListener('click', function() {
+        eliminarParada(uniqueId);
+    });
+
+    // Inicializar Tom Select para esta parada
+    const tomSelectInstance = setupTomSelect(`parada-input-${uniqueId}`);
+    if (tomSelectInstance) {
+        tomSelectInstances.set(uniqueId, tomSelectInstance);
+    }
 }
 
 /**
  * Elimina una parada del formulario
- * @param {number} index - Índice de la parada a eliminar
+ * @param {number} uniqueId - ID único de la parada a eliminar
  */
-function eliminarParada(index) {
-    const paradaDiv = document.getElementById(`parada-${index}`);
+function eliminarParada(uniqueId) {
+    const paradaDiv = document.getElementById(`parada-${uniqueId}`);
 
-    if (paradaDiv) {
-        paradaDiv.remove();
-        actualizarNumerosOrden();
+    if (!paradaDiv) {
+        return;
     }
+
+    // Destruir la instancia de Tom Select antes de eliminar el elemento
+    const tomSelectInstance = tomSelectInstances.get(uniqueId);
+    if (tomSelectInstance) {
+        tomSelectInstance.destroy();
+        tomSelectInstances.delete(uniqueId);
+    }
+
+    // Eliminar el elemento del DOM
+    paradaDiv.remove();
+
+    // Actualizar números de orden
+    actualizarNumerosOrden();
 }
 
 /**
@@ -163,66 +203,13 @@ function actualizarNumerosOrden() {
 }
 
 // =============================================================================
-// VALIDACIÓN DEL FORMULARIO
-// =============================================================================
-
-/**
- * Valida que los valores de los inputs estén en sus respectivos datalists
- * @returns {boolean} true si es válido, false si no
- */
-function validarFormulario() {
-    const inputs = [
-        { id: 'nombreCiudadOrigen', label: 'Origen' },
-        { id: 'nombreCiudadDestino', label: 'Destino' }
-    ];
-
-    // Validar origen y destino
-    for (const {id, label} of inputs) {
-        const input = document.getElementById(id);
-        if (input && input.value.trim()) {
-            const datalistId = input.getAttribute('list');
-            const datalist = document.getElementById(datalistId);
-
-            if (datalist) {
-                const options = Array.from(datalist.options).map(opt => opt.value);
-                if (!options.includes(input.value)) {
-                    alert(`Por favor, seleccioná una opción válida de la lista para ${label}`);
-                    input.focus();
-                    return false;
-                }
-            }
-        }
-    }
-
-    // Validar paradas
-    const paradaInputs = document.querySelectorAll('[name="nombresParadas"]');
-    for (const input of paradaInputs) {
-        if (input.value.trim()) {
-            const datalistId = input.getAttribute('list');
-            const datalist = document.getElementById(datalistId);
-
-            if (datalist) {
-                const options = Array.from(datalist.options).map(opt => opt.value);
-                if (!options.includes(input.value)) {
-                    alert('Por favor, seleccioná opciones válidas de la lista para todas las paradas');
-                    input.focus();
-                    return false;
-                }
-            }
-        }
-    }
-
-    return true;
-}
-
-// =============================================================================
 // INICIALIZACIÓN
 // =============================================================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Configurar autocomplete para origen y destino
-    setupNominatimAutocomplete('nombreCiudadOrigen', 'sugerenciasOrigen');
-    setupNominatimAutocomplete('nombreCiudadDestino', 'sugerenciasDestino');
+    // Inicializar Tom Select para origen y destino
+    setupTomSelect('nombreCiudadOrigen');
+    setupTomSelect('nombreCiudadDestino');
 
     // Configurar botón de agregar parada
     const btnAgregarParada = document.getElementById('btnAgregarParada');
@@ -230,13 +217,6 @@ document.addEventListener('DOMContentLoaded', function() {
         btnAgregarParada.addEventListener('click', agregarParada);
     }
 
-    // Configurar validación del formulario
-    const form = document.querySelector('form');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            if (!validarFormulario()) {
-                e.preventDefault();
-            }
-        });
-    }
+    // No es necesaria validación manual ya que Tom Select
+    // solo permite selección de la lista (create: false)
 });
