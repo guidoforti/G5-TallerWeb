@@ -91,5 +91,16 @@ public class ServicioViajeImpl implements ServicioViaje {
         if (viaje.getAsientosDisponibles() == null || viaje.getAsientosDisponibles() <= 0) {
             throw new DatoObligatorioException("Los asientos disponibles deben ser mayor a 0");
         }
+
+        // Validar ciudades (origen y destino)
+        if (viaje.getOrigen() == null) {
+            throw new DatoObligatorioException("La ciudad de origen es obligatoria");
+        }
+        if (viaje.getDestino() == null) {
+            throw new DatoObligatorioException("La ciudad de destino es obligatoria");
+        }
+        if (viaje.getOrigen().equals(viaje.getDestino())) {
+            throw new DatoObligatorioException("La ciudad de origen y destino deben ser diferentes");
+        }
     }
 }

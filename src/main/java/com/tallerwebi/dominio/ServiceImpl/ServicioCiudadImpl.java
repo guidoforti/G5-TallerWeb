@@ -9,7 +9,10 @@ import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.IRepository.RepositorioCiudad;
 import com.tallerwebi.dominio.IServicio.ServicioCiudad;
 
+import javax.transaction.Transactional;
+
 @Service
+@Transactional
 public class ServicioCiudadImpl implements ServicioCiudad {
 
     private RepositorioCiudad repositorioCiudad;

@@ -2,7 +2,6 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="fragments/fragments :: head('UnRumbo - Publicar Viaje')">
     <th:block th:fragment="extra">
-        <!-- Extra en el head si es necesario -->
     </th:block>
 </head>
 
@@ -81,6 +80,56 @@
                             </small>
                         </div>
 
+                        <!-- Ciudad de Origen -->
+                        <div class="mb-3">
+                            <label for="nombreCiudadOrigen" class="form-label">Ciudad de Origen</label>
+                            <input type="text"
+                                   id="nombreCiudadOrigen"
+                                   th:field="*{nombreCiudadOrigen}"
+                                   class="form-control"
+                                   list="sugerenciasOrigen"
+                                   placeholder="Ej: Buenos Aires"
+                                   autocomplete="off"
+                                   required>
+                            <datalist id="sugerenciasOrigen"></datalist>
+                            <small class="form-text text-muted">
+                                Escribí para buscar tu ciudad de origen
+                            </small>
+                        </div>
+
+                        <!-- Ciudad de Destino -->
+                        <div class="mb-3">
+                            <label for="nombreCiudadDestino" class="form-label">Ciudad de Destino</label>
+                            <input type="text"
+                                   id="nombreCiudadDestino"
+                                   th:field="*{nombreCiudadDestino}"
+                                   class="form-control"
+                                   list="sugerenciasDestino"
+                                   placeholder="Ej: Córdoba"
+                                   autocomplete="off"
+                                   required>
+                            <datalist id="sugerenciasDestino"></datalist>
+                            <small class="form-text text-muted">
+                                Escribí para buscar tu ciudad de destino
+                            </small>
+                        </div>
+
+                        <!-- Paradas Intermedias -->
+                        <div class="mb-3">
+                            <label class="form-label">Paradas Intermedias (opcional)</label>
+                            <div id="paradasContainer" class="mb-2">
+                                <!-- Las paradas se agregarán dinámicamente aquí -->
+                            </div>
+                            <button type="button"
+                                    id="btnAgregarParada"
+                                    class="btn btn-sm btn-outline-secondary">
+                                ➕ Agregar parada
+                            </button>
+                            <small class="form-text text-muted d-block mt-1">
+                                Agregá ciudades intermedias en el orden que las visitarás
+                            </small>
+                        </div>
+
                         <!-- Botones -->
                         <button type="submit" class="btn btn-unrumbo w-100 text-white fw-bold mt-3">
                             Publicar Viaje
@@ -102,5 +151,6 @@
 
 <!-- Bootstrap core js -->
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+<script type="module" th:src="@{/js/publicarViaje.js}"></script>
 </body>
 </html>

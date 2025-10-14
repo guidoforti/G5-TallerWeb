@@ -1,5 +1,6 @@
 package com.tallerwebi.dominio;
 
+import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Entity.Viaje;
@@ -40,6 +41,9 @@ class ServicioViajeTest {
     }
 
     private Viaje crearViajeDeTest() {
+        Ciudad origen = new Ciudad(1L, "Buenos Aires", -34.6037f, -58.3816f);
+        Ciudad destino = new Ciudad(2L, "Córdoba", -31.4201f, -64.1888f);
+
         Viaje viaje = new Viaje();
         viaje.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
         viaje.setPrecio(1500.0);
@@ -48,8 +52,8 @@ class ServicioViajeTest {
         viaje.setEstado(EstadoDeViaje.DISPONIBLE);
         viaje.setViajeros(new ArrayList<>());
         viaje.setParadas(new ArrayList<>());
-        viaje.setOrigen(null);
-        viaje.setDestino(null);
+        viaje.setOrigen(origen);
+        viaje.setDestino(destino);
         return viaje;
     }
 
@@ -273,5 +277,55 @@ class ServicioViajeTest {
 
         Viaje viajeGuardado = viajeCaptor.getValue();
         assertThat(viajeGuardado.getEstado(), equalTo(EstadoDeViaje.DISPONIBLE));
+    }
+
+    @Test
+    void noDeberiaPublicarSiOrigenEsNull() {
+        // given
+        Viaje viaje = crearViajeDeTest();
+        viaje.setOrigen(null);
+
+        // when & then
+        DatoObligatorioException exception = assertThrows(
+            DatoObligatorioException.class,
+            () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
+        );
+
+        assertThat(exception.getMessage(), equalTo("La ciudad de origen es obligatoria"));
+        verify(viajeRepositoryMock, never()).guardarViaje(any());
+    }
+
+    @Test
+    void noDeberiaPublicarSiDestinoEsNull() {
+        // given
+        Viaje viaje = crearViajeDeTest();
+        viaje.setDestino(null);
+
+        // when & then
+        DatoObligatorioException exception = assertThrows(
+            DatoObligatorioException.class,
+            () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
+        );
+
+        assertThat(exception.getMessage(), equalTo("La ciudad de destino es obligatoria"));
+        verify(viajeRepositoryMock, never()).guardarViaje(any());
+    }
+
+    @Test
+    void noDeberiaPublicarSiOrigenYDestinoSonIguales() {
+        // given
+        Ciudad ciudad = new Ciudad(1L, "Buenos Aires", -34.6037f, -58.3816f);
+        Viaje viaje = crearViajeDeTest();
+        viaje.setOrigen(ciudad);
+        viaje.setDestino(ciudad);
+
+        // when & then
+        DatoObligatorioException exception = assertThrows(
+            DatoObligatorioException.class,
+            () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
+        );
+
+        assertThat(exception.getMessage(), equalTo("La ciudad de origen y destino deben ser diferentes"));
+        verify(viajeRepositoryMock, never()).guardarViaje(any());
     }
 }
