@@ -1,6 +1,9 @@
 package com.tallerwebi.infraestructura;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -51,76 +54,127 @@ public class RepositorioViajeTest{
         this.repositorioViaje = new RepositorioViajeImpl(this.sessionFactory);
     }
 
-/*@Test
-    void deberiaModificarViajeExistente() {
-        Viaje viaje = new Viaje();
-        viaje.setId(300L);
-        viaje.setEstado(EstadoDeViaje.DISPONIBLE);
-        repositorioViaje.guardarViaje(viaje);
+@Test
+void deberiaModificarViajeExistente() {
+    // Arrange
+    Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+    Vehiculo vehiculo = sessionFactory.getCurrentSession().get(Vehiculo.class, 1L);
 
-        viaje.setEstado(EstadoDeViaje.CANCELADO);
-        repositorioViaje.modificarViaje(viaje);
+    Viaje viaje = new Viaje();
+    viaje.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
+    viaje.setPrecio(1000.0);
+    viaje.setAsientosDisponibles(2);
+    viaje.setEstado(EstadoDeViaje.DISPONIBLE);
+    viaje.setConductor(conductor);
+    viaje.setVehiculo(vehiculo);
 
-        Viaje modificado = repositorioViaje.findById(300L);
-        assertThat(modificado.getEstado(), equalTo(EstadoDeViaje.CANCELADO));
-    }
+    repositorioViaje.guardarViaje(viaje);
+    Long idGenerado = viaje.getId();
 
-    @Test
-    void deberiaBorrarViajePorId() {
-        Viaje viaje = new Viaje();
-        viaje.setId(400L);
-        repositorioViaje.guardarViaje(viaje);
+    // Act
+    viaje.setEstado(EstadoDeViaje.CANCELADO);
+    repositorioViaje.modificarViaje(viaje);
 
-        repositorioViaje.borrarViaje(400L);
+    // Assert
+    Viaje modificado = repositorioViaje.findById(idGenerado);
+    assertThat(modificado.getEstado(), equalTo(EstadoDeViaje.CANCELADO));
+}
 
-        assertThrows(NoSuchElementException.class, () -> repositorioViaje.findById(400L));
-    }
-
-
-
-    @Test
-    void deberiaBuscarPorOrigenDestinoYConductor() {
-        Ciudad origen = new Ciudad(null, "San Justo", 0, 0);
-        Ciudad destino = new Ciudad(null, "La Plata", 0, 0);
-        Conductor conductor = new Conductor();
-        conductor.setId(1L);
-
-        Viaje viaje = new Viaje();
-        viaje.setId(500L);
-        viaje.setOrigen(origen);
-        viaje.setDestino(destino);
-        viaje.setConductor(conductor);
-
-        repositorioViaje.guardarViaje(viaje);
-
-        List<Viaje> resultados = repositorioViaje.findByOrigenYDestinoYConductor(origen, destino, conductor);
-
-        assertThat(resultados, hasSize(1));
-        assertThat(resultados.get(0).getId(), equalTo(500L));
-    }
 
     @Test
-    void noDeberiaEncontrarViajeSiConductorNoCoincide() {
-        Ciudad origen = new Ciudad(null, "San Justo", 0, 0);
-        Ciudad destino = new Ciudad(null, "La Plata", 0, 0);
-        Conductor conductor = new Conductor();
-        conductor.setId(1L);
+void deberiaBorrarViajePorId() {
+    // Arrange
+    Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+    Vehiculo vehiculo = sessionFactory.getCurrentSession().get(Vehiculo.class, 1L);
 
-        Conductor otro = new Conductor();
-        otro.setId(99L);
+    Viaje viaje = new Viaje();
+    viaje.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
+    viaje.setPrecio(1000.0);
+    viaje.setAsientosDisponibles(2);
+    viaje.setEstado(EstadoDeViaje.DISPONIBLE);
+    viaje.setConductor(conductor);
+    viaje.setVehiculo(vehiculo);
 
-        Viaje viaje = new Viaje();
-        viaje.setId(600L);
-        viaje.setOrigen(origen);
-        viaje.setDestino(destino);
-        viaje.setConductor(otro);
+    repositorioViaje.guardarViaje(viaje);
+    Long idGenerado = viaje.getId();
 
-        repositorioViaje.guardarViaje(viaje);
+    // Act
+    repositorioViaje.borrarViaje(idGenerado);
+    sessionFactory.getCurrentSession().flush();
 
-        List<Viaje> resultados = repositorioViaje.findByOrigenYDestinoYConductor(origen, destino, conductor);
+    // Assert
+    Viaje borrado = repositorioViaje.findById(idGenerado);
+    assertNull(borrado, "El viaje debería haber sido eliminado");
+}
 
-        assertThat(resultados, empty());
-    }*/
+
+
+
+    @Test
+void deberiaBuscarPorOrigenDestinoYConductor() {
+    // Arrange
+    Ciudad origen = new Ciudad(null, "San Justo", 0, 0);
+    Ciudad destino = new Ciudad(null, "La Plata", 0, 0);
+    sessionFactory.getCurrentSession().persist(origen);
+    sessionFactory.getCurrentSession().persist(destino);
+
+    Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+
+    Viaje viaje = new Viaje();
+    viaje.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
+    viaje.setPrecio(1000.0);
+    viaje.setAsientosDisponibles(2);
+    viaje.setEstado(EstadoDeViaje.DISPONIBLE);
+    viaje.setOrigen(origen);
+    viaje.setDestino(destino);
+    viaje.setConductor(conductor);
+
+    repositorioViaje.guardarViaje(viaje);
+
+    // Act
+    List<Viaje> resultados = repositorioViaje.findByOrigenYDestinoYConductor(origen, destino, conductor);
+
+    // Assert
+    assertThat(resultados, hasSize(1));
+    assertThat(resultados.get(0).getId(), equalTo(viaje.getId()));
+}
+
+
+@Test
+void noDeberiaEncontrarViajeSiConductorNoCoincide() {
+    // Arrange
+    Ciudad origen = new Ciudad(null, "San Justo", 0, 0);
+    Ciudad destino = new Ciudad(null, "La Plata", 0, 0);
+    sessionFactory.getCurrentSession().persist(origen);
+    sessionFactory.getCurrentSession().persist(destino);
+
+    Conductor conductorCorrecto = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+
+    Conductor otroConductor = new Conductor();
+    otroConductor.setNombre("Otro");
+    otroConductor.setEmail("otro@correo.com");
+    otroConductor.setContrasenia("123456");
+    sessionFactory.getCurrentSession().persist(otroConductor);
+
+    Viaje viaje = new Viaje();
+    viaje.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
+    viaje.setPrecio(1000.0);
+    viaje.setAsientosDisponibles(2);
+    viaje.setEstado(EstadoDeViaje.DISPONIBLE);
+    viaje.setOrigen(origen);
+    viaje.setDestino(destino);
+    viaje.setConductor(otroConductor);
+
+    repositorioViaje.guardarViaje(viaje);
+
+    // Act
+    List<Viaje> resultados = repositorioViaje.findByOrigenYDestinoYConductor(origen, destino, conductorCorrecto);
+
+    // Assert
+    assertThat(resultados, empty());
+}
+
+
 
 @Test
     void deberiaGuardarViajeNuevo() {

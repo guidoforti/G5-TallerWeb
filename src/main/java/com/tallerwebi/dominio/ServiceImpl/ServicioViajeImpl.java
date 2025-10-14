@@ -9,9 +9,6 @@ import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
-import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
-import com.tallerwebi.dominio.excepcion.ViajeNoCancelableException;
-import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import com.tallerwebi.dominio.excepcion.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,10 +34,11 @@ public class ServicioViajeImpl implements ServicioViaje {
     }
 
 
-    @Override
-    public Viaje obtenerViajePorId(Long id) {
-        return null;
-    }
+   @Override
+public Viaje obtenerViajePorId(Long id) {
+    return this.viajeRepository.findById(id);
+}
+
 
     @Override
     public void publicarViaje(Viaje viaje, Long conductorId, Long vehiculoId) throws UsuarioInexistente, NotFoundException,
