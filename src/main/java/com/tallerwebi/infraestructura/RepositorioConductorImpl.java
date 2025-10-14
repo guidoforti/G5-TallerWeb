@@ -4,7 +4,6 @@ import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.IRepository.RepositorioConductor;
 import com.tallerwebi.infraestructura.Datos;
 import org.hibernate.SessionFactory;
-import org.hibernate.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,7 +14,7 @@ import java.util.Optional;
 @Repository("repositorioConductor")
 public class RepositorioConductorImpl implements RepositorioConductor {
 
-    private SessionFactory sessionFactory;
+    SessionFactory sessionFactory;
 
     public RepositorioConductorImpl(SessionFactory sessionFactory) {
 
@@ -23,7 +22,7 @@ public class RepositorioConductorImpl implements RepositorioConductor {
     }
 
     @Override
-    public Optional<Conductor> buscarPorEmailYContrasenia(String email, String contrasenia) {
+    public Optional<Conductor> buscarPorEmailYContrasenia(String email, String contrasenia) throws Exception {
 
 
             String hql = "SELECT c FROM Conductor c WHERE c.email= :email AND c.contrasenia= :contrasenia";
@@ -38,12 +37,12 @@ public class RepositorioConductorImpl implements RepositorioConductor {
 
     @Override
     public Optional<Conductor> buscarPorEmail(String email) {
-        String hql = "SELECT c FROM Conductor c WHERE c.email = :email";
+        String hql = "SELECT c FROM Conductor c WHERE email = :email";
+        Conductor conductor = this.sessionFactory.getCurrentSession().createQuery(hql, Conductor.class)
+                .setParameter("email", email)
+                .getSingleResult();
 
-        Query<Conductor> query = this.sessionFactory.getCurrentSession().createQuery(hql, Conductor.class)
-                .setParameter("email", email);
-
-        return query.uniqueResultOptional();
+        return Optional.of(conductor);
     }
 
     @Override
@@ -53,12 +52,12 @@ public class RepositorioConductorImpl implements RepositorioConductor {
                 .setParameter("id", id)
                 .getSingleResult();
 
-        return Optional.ofNullable(conductor);
+        return Optional.of(conductor);
     }
 
     @Override
     public Conductor guardarConductor(Conductor conductor) {
         this.sessionFactory.getCurrentSession().save(conductor);
-        return  conductor;
+        return conductor;
     }
 }

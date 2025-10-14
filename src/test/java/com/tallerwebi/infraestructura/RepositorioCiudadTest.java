@@ -83,5 +83,80 @@ public class RepositorioCiudadTest {
         assertEquals("Mendoza", ciudadRecuperada.getNombre());
     }
 
+    @Test
+    public void testBuscarCiudadPorCoordenadasExistentes() {
+        // Primero guardar una ciudad para poder buscarla
+        Ciudad nuevaCiudad = new Ciudad();
+        nuevaCiudad.setNombre("La Plata");
+        nuevaCiudad.setLatitud(-34.9205f);
+        nuevaCiudad.setLongitud(-57.9536f);
+
+        Ciudad ciudadGuardada = repositorioCiudad.guardarCiudad(nuevaCiudad);
+
+        // Buscar ciudad por coordenadas
+        Ciudad ciudad = repositorioCiudad.buscarPorCoordenadas(-34.9205f, -57.9536f);
+
+        // Verificaciones
+        assertNotNull(ciudad, "Debería encontrar la ciudad");
+        assertEquals("La Plata", ciudad.getNombre());
+        assertEquals(ciudadGuardada.getId(), ciudad.getId());
+    }
+
+    @Test
+    public void testBuscarCiudadPorCoordenadasNoExistentes() {
+        // Buscar con coordenadas que no existen
+        Ciudad ciudad = repositorioCiudad.buscarPorCoordenadas(-99.9999f, -99.9999f);
+
+        // Verificaciones
+        assertThat(ciudad, is(nullValue()));
+    }
+
+    @Test
+    public void testBuscarCiudadPorCoordenadasDespuesDeGuardar() {
+        // Guardar nueva ciudad
+        Ciudad nuevaCiudad = new Ciudad();
+        nuevaCiudad.setNombre("Mendoza");
+        nuevaCiudad.setLatitud(-32.8895f);
+        nuevaCiudad.setLongitud(-68.8458f);
+
+        repositorioCiudad.guardarCiudad(nuevaCiudad);
+
+        // Buscar por coordenadas
+        Ciudad ciudadEncontrada = repositorioCiudad.buscarPorCoordenadas(-32.8895f, -68.8458f);
+
+        // Verificaciones
+        assertNotNull(ciudadEncontrada);
+        assertEquals("Mendoza", ciudadEncontrada.getNombre());
+        assertEquals(-32.8895f, ciudadEncontrada.getLatitud(), 0.0001);
+        assertEquals(-68.8458f, ciudadEncontrada.getLongitud(), 0.0001);
+    }
+
+    @Test
+    public void testNoDeberiaCrearDuplicadosAlGuardarMismasCoordenadas() {
+        // Simular el escenario de publicar dos viajes con mismo origen/destino
+        // Primera llamada: guardar Buenos Aires
+        Ciudad buenosAires1 = new Ciudad();
+        buenosAires1.setNombre("Buenos Aires");
+        buenosAires1.setLatitud(-34.6096f);
+        buenosAires1.setLongitud(-58.3888f);
+        Ciudad buenosAiresGuardada = repositorioCiudad.guardarCiudad(buenosAires1);
+
+        // Segunda llamada: intentar guardar Buenos Aires nuevamente con mismas coordenadas
+        Ciudad buenosAires2Busqueda = repositorioCiudad.buscarPorCoordenadas(-34.6096f, -58.3888f);
+
+        // Verificaciones
+        assertNotNull(buenosAires2Busqueda, "Debería encontrar la ciudad guardada anteriormente");
+        assertEquals(buenosAiresGuardada.getId(), buenosAires2Busqueda.getId(), "Deberían ser la misma ciudad");
+        assertEquals("Buenos Aires", buenosAires2Busqueda.getNombre());
+
+        // Verificar que realmente no se duplicó contando cuántas hay con esas coordenadas
+        List<Ciudad> todasLasCiudades = repositorioCiudad.findAll();
+        long ciudadesConEsasCoordenadas = todasLasCiudades.stream()
+            .filter(c -> Math.abs(c.getLatitud() - (-34.6096f)) < 0.0001 &&
+                        Math.abs(c.getLongitud() - (-58.3888f)) < 0.0001)
+            .count();
+        assertEquals(1L, ciudadesConEsasCoordenadas, "Solo debería haber una ciudad con esas coordenadas");
+    }
+
 
 }
