@@ -19,6 +19,9 @@ import org.mockito.ArgumentCaptor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -69,6 +72,7 @@ class ServicioViajeTest {
 
         when(servicioConductorMock.obtenerConductor(conductorId)).thenReturn(conductor);
         when(servicioVehiculoMock.getById(vehiculoId)).thenReturn(vehiculo);
+        when(viajeRepositoryMock.findByOrigenYDestinoYConductorYEstadoIn(any(), any(), any(), anyList())).thenReturn(Collections.emptyList());
 
         // when
         servicioViaje.publicarViaje(viaje, conductorId, vehiculoId);
@@ -267,6 +271,7 @@ class ServicioViajeTest {
 
         when(servicioConductorMock.obtenerConductor(conductorId)).thenReturn(conductor);
         when(servicioVehiculoMock.getById(vehiculoId)).thenReturn(vehiculo);
+        when(viajeRepositoryMock.findByOrigenYDestinoYConductorYEstadoIn(any(), any(), any(), anyList())).thenReturn(Collections.emptyList());
 
         // when
         servicioViaje.publicarViaje(viaje, conductorId, vehiculoId);
@@ -327,5 +332,137 @@ class ServicioViajeTest {
 
         assertThat(exception.getMessage(), equalTo("La ciudad de origen y destino deben ser diferentes"));
         verify(viajeRepositoryMock, never()).guardarViaje(any());
+    }
+
+    @Test
+    void noDeberiaPublicarSiYaExisteViajeDisponibleConMismoOrigenYDestino() throws Exception {
+        // given
+        Long conductorId = 1L;
+        Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
+        Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
+
+        Viaje viaje = crearViajeDeTest();
+        Ciudad origen = viaje.getOrigen();
+        Ciudad destino = viaje.getDestino();
+
+        // Simular que ya existe un viaje en estado DISPONIBLE
+        Viaje viajeExistente = new Viaje();
+        viajeExistente.setEstado(EstadoDeViaje.DISPONIBLE);
+        viajeExistente.setOrigen(origen);
+        viajeExistente.setDestino(destino);
+        viajeExistente.setConductor(conductor);
+
+        when(servicioConductorMock.obtenerConductor(conductorId)).thenReturn(conductor);
+        when(servicioVehiculoMock.getById(1L)).thenReturn(vehiculo);
+        when(viajeRepositoryMock.findByOrigenYDestinoYConductorYEstadoIn(
+            eq(origen),
+            eq(destino),
+            eq(conductor),
+            anyList()
+        )).thenReturn(Arrays.asList(viajeExistente));
+
+        // when & then
+        ViajeDuplicadoException exception = assertThrows(
+            ViajeDuplicadoException.class,
+            () -> servicioViaje.publicarViaje(viaje, conductorId, 1L)
+        );
+
+        assertThat(exception.getMessage(), containsString("Ya tenés un viaje publicado con el mismo origen y destino"));
+        verify(viajeRepositoryMock, never()).guardarViaje(any());
+    }
+
+    @Test
+    void noDeberiaPublicarSiYaExisteViajeCompletoConMismoOrigenYDestino() throws Exception {
+        // given
+        Long conductorId = 1L;
+        Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
+        Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
+
+        Viaje viaje = crearViajeDeTest();
+        Ciudad origen = viaje.getOrigen();
+        Ciudad destino = viaje.getDestino();
+
+        // Simular que ya existe un viaje en estado COMPLETO
+        Viaje viajeExistente = new Viaje();
+        viajeExistente.setEstado(EstadoDeViaje.COMPLETO);
+        viajeExistente.setOrigen(origen);
+        viajeExistente.setDestino(destino);
+        viajeExistente.setConductor(conductor);
+
+        when(servicioConductorMock.obtenerConductor(conductorId)).thenReturn(conductor);
+        when(servicioVehiculoMock.getById(1L)).thenReturn(vehiculo);
+        when(viajeRepositoryMock.findByOrigenYDestinoYConductorYEstadoIn(
+            eq(origen),
+            eq(destino),
+            eq(conductor),
+            anyList()
+        )).thenReturn(Arrays.asList(viajeExistente));
+
+        // when & then
+        ViajeDuplicadoException exception = assertThrows(
+            ViajeDuplicadoException.class,
+            () -> servicioViaje.publicarViaje(viaje, conductorId, 1L)
+        );
+
+        assertThat(exception.getMessage(), containsString("Ya tenés un viaje publicado con el mismo origen y destino"));
+        verify(viajeRepositoryMock, never()).guardarViaje(any());
+    }
+
+    @Test
+    void deberiaPublicarSiViajeExistenteEstaFinalizado() throws Exception {
+        // given
+        Long conductorId = 1L;
+        Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
+        Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
+
+        Viaje viaje = crearViajeDeTest();
+        Ciudad origen = viaje.getOrigen();
+        Ciudad destino = viaje.getDestino();
+
+        when(servicioConductorMock.obtenerConductor(conductorId)).thenReturn(conductor);
+        when(servicioVehiculoMock.getById(1L)).thenReturn(vehiculo);
+        // Simular que no hay viajes en estados DISPONIBLE o COMPLETO
+        when(viajeRepositoryMock.findByOrigenYDestinoYConductorYEstadoIn(
+            eq(origen),
+            eq(destino),
+            eq(conductor),
+            anyList()
+        )).thenReturn(Collections.emptyList());
+
+        // when
+        servicioViaje.publicarViaje(viaje, conductorId, 1L);
+
+        // then
+        ArgumentCaptor<Viaje> viajeCaptor = ArgumentCaptor.forClass(Viaje.class);
+        verify(viajeRepositoryMock).guardarViaje(viajeCaptor.capture());
+    }
+
+    @Test
+    void deberiaPublicarSiViajeExistenteEstaCancelado() throws Exception {
+        // given
+        Long conductorId = 1L;
+        Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
+        Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
+
+        Viaje viaje = crearViajeDeTest();
+        Ciudad origen = viaje.getOrigen();
+        Ciudad destino = viaje.getDestino();
+
+        when(servicioConductorMock.obtenerConductor(conductorId)).thenReturn(conductor);
+        when(servicioVehiculoMock.getById(1L)).thenReturn(vehiculo);
+        // Simular que no hay viajes en estados DISPONIBLE o COMPLETO
+        when(viajeRepositoryMock.findByOrigenYDestinoYConductorYEstadoIn(
+            eq(origen),
+            eq(destino),
+            eq(conductor),
+            anyList()
+        )).thenReturn(Collections.emptyList());
+
+        // when
+        servicioViaje.publicarViaje(viaje, conductorId, 1L);
+
+        // then
+        ArgumentCaptor<Viaje> viajeCaptor = ArgumentCaptor.forClass(Viaje.class);
+        verify(viajeRepositoryMock).guardarViaje(viajeCaptor.capture());
     }
 }

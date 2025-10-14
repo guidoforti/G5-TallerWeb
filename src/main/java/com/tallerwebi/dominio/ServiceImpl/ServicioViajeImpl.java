@@ -4,6 +4,7 @@ package com.tallerwebi.dominio.ServiceImpl;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Entity.Viaje;
+import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 @Transactional
@@ -39,7 +42,7 @@ public class ServicioViajeImpl implements ServicioViaje {
 
     @Override
     public void publicarViaje(Viaje viaje, Long conductorId, Long vehiculoId) throws UsuarioInexistente, NotFoundException,
-            UsuarioNoAutorizadoException, AsientosDisponiblesMayorQueTotalesDelVehiculoException, DatoObligatorioException {
+            UsuarioNoAutorizadoException, AsientosDisponiblesMayorQueTotalesDelVehiculoException, DatoObligatorioException, ViajeDuplicadoException {
 
         // Validar datos obligatorios
         validarDatosObligatorios(viaje, conductorId, vehiculoId);
@@ -61,6 +64,22 @@ public class ServicioViajeImpl implements ServicioViaje {
             throw new AsientosDisponiblesMayorQueTotalesDelVehiculoException(
                 "Los asientos disponibles no pueden ser mayores a " + asientosMaximos +
                 " (total del vehículo menos el asiento del conductor)"
+            );
+        }
+
+        // Validar que no exista un viaje duplicado en estado DISPONIBLE o COMPLETO
+        List<EstadoDeViaje> estadosProhibidos = Arrays.asList(EstadoDeViaje.DISPONIBLE, EstadoDeViaje.COMPLETO);
+        List<Viaje> viajesDuplicados = viajeRepository.findByOrigenYDestinoYConductorYEstadoIn(
+            viaje.getOrigen(),
+            viaje.getDestino(),
+            conductor,
+            estadosProhibidos
+        );
+
+        if (!viajesDuplicados.isEmpty()) {
+            throw new ViajeDuplicadoException(
+                "Ya tenés un viaje publicado con el mismo origen y destino. " +
+                "Por favor, cancelá o finalizá el viaje existente antes de crear uno nuevo."
             );
         }
 

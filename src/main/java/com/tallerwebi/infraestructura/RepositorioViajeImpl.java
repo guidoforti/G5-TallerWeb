@@ -4,6 +4,7 @@ package com.tallerwebi.infraestructura;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Viaje;
+import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Repository;
@@ -50,6 +51,18 @@ public class RepositorioViajeImpl implements ViajeRepository {
                 .setParameter("conductor", conductor)
                 .setParameter("origen", origen)
                 .setParameter("destino", destino)
+                .getResultList();
+    }
+
+    @Override
+    public List<Viaje> findByOrigenYDestinoYConductorYEstadoIn(Ciudad origen, Ciudad destino, Conductor conductor, List<EstadoDeViaje> estados) {
+        String hql = "SELECT v FROM Viaje v WHERE v.conductor = :conductor AND v.origen = :origen AND v.destino = :destino AND v.estado IN (:estados)";
+        return this.sessionFactory.getCurrentSession()
+                .createQuery(hql, Viaje.class)
+                .setParameter("conductor", conductor)
+                .setParameter("origen", origen)
+                .setParameter("destino", destino)
+                .setParameter("estados", estados)
                 .getResultList();
     }
 }
