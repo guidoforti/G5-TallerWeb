@@ -13,7 +13,9 @@ import java.util.Objects;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "ciudad")
+@Table(name = "ciudad", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"latitud", "longitud"})
+})
 public class Ciudad {
 
     @Id

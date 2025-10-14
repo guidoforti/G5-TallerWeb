@@ -9,7 +9,10 @@ import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.IRepository.RepositorioCiudad;
 import com.tallerwebi.dominio.IServicio.ServicioCiudad;
 
+import javax.transaction.Transactional;
+
 @Service
+@Transactional
 public class ServicioCiudadImpl implements ServicioCiudad {
 
     private RepositorioCiudad repositorioCiudad;
@@ -36,8 +39,16 @@ public class ServicioCiudadImpl implements ServicioCiudad {
 
     @Override
     public Ciudad guardarCiudad(Ciudad ciudad) {
-        return repositorioCiudad.guardarCiudad(ciudad);
+        // Verificar si ya existe una ciudad con las mismas coordenadas
+        Ciudad ciudadExistente = repositorioCiudad.buscarPorCoordenadas(ciudad.getLatitud(), ciudad.getLongitud());
 
+        // Si existe, retornar la ciudad existente en lugar de crear una duplicada
+        if (ciudadExistente != null) {
+            return ciudadExistente;
+        }
+
+        // Si no existe, guardar la nueva ciudad
+        return repositorioCiudad.guardarCiudad(ciudad);
     }
 
     @Override
