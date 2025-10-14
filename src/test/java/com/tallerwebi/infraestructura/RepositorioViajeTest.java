@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.List;
@@ -261,4 +263,47 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
         Viaje borrado = repositorioViaje.findById(viajeId);
         assertNull(borrado, "El viaje debería haber sido eliminado");
     }
+
+    @Test
+    void deberiaEncontrarViajesPorConductor() {
+    
+    Ciudad origen = new Ciudad(null, "Morón", 0f, 0f);
+    Ciudad destino = new Ciudad(null, "Lanús", 0f, 0f);
+    sessionFactory.getCurrentSession().persist(origen);
+    sessionFactory.getCurrentSession().persist(destino);
+    Conductor conductor = new Conductor();
+    conductor.setNombre("Test");
+    conductor.setEmail("test@correo.com");
+    conductor.setContrasenia("123456");
+    sessionFactory.getCurrentSession().persist(conductor);
+
+    
+
+    Viaje viaje1 = new Viaje();
+    viaje1.setFechaHoraDeSalida(LocalDateTime.now().plusDays(2));
+    viaje1.setPrecio(1200.0);
+    viaje1.setAsientosDisponibles(4);
+    viaje1.setEstado(EstadoDeViaje.DISPONIBLE);
+    viaje1.setOrigen(origen);
+    viaje1.setDestino(destino);
+    viaje1.setConductor(conductor);
+    sessionFactory.getCurrentSession().persist(viaje1);
+    
+
+    Viaje viaje2 = new Viaje();
+    viaje2.setFechaHoraDeSalida(LocalDateTime.now().plusDays(3));
+    viaje2.setPrecio(1800.0);
+    viaje2.setAsientosDisponibles(2);
+    viaje2.setEstado(EstadoDeViaje.DISPONIBLE);
+    viaje2.setOrigen(origen);
+    viaje2.setDestino(destino);
+    viaje2.setConductor(conductor);
+    sessionFactory.getCurrentSession().persist(viaje2);
+
+    List<Viaje> resultados = repositorioViaje.findByConductorId(conductor.getId());
+
+    assertNotNull(resultados);
+    assertEquals(2, resultados.size(), "Debería encontrar 2 viajes para el conductor");
+    assertTrue(resultados.stream().allMatch(v -> v.getConductor().getId().equals(conductor.getId())));
+}
 }

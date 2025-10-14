@@ -10,6 +10,8 @@ import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
 import com.tallerwebi.dominio.excepcion.ViajeNoCancelableException;
 import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeVistaDTO;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -18,6 +20,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpSession;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/viaje")
@@ -143,6 +146,40 @@ public class ControladorViaje {
 
     // mensaje de error y vuelta a la vista correspondiente
     return new ModelAndView("errorCancelarViaje", model);
+}
+
+
+@GetMapping("/listar")
+public ModelAndView listarViajes(HttpSession session) {
+    ModelMap model = new ModelMap();
+
+    Object usuarioId = session.getAttribute("usuarioId");
+    Object rol = session.getAttribute("rol");
+
+    if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
+        model.put("error", "Debés iniciar sesión como conductor");
+        return new ModelAndView("errorAcceso", model);
+    }
+
+    Usuario usuarioEnSesion = new Usuario();
+    usuarioEnSesion.setId((Long) usuarioId);
+    usuarioEnSesion.setRol((String) rol);
+
+    try {
+        List<Viaje> listaViajes = servicioViaje.listarViajesPorConductor(usuarioEnSesion);
+
+        //dtos para la vista
+        List<ViajeVistaDTO> listaViajesDTO = listaViajes.stream()
+                .map(ViajeVistaDTO::new)
+                .collect(Collectors.toList());
+
+        model.put("listaViajes", listaViajesDTO);
+        return new ModelAndView("listarViajesConductor", model);
+
+    } catch (UsuarioNoAutorizadoException e) {
+        model.put("error", "No tenés permisos para ver los viajes");
+        return new ModelAndView("errorAcceso", model);
+    }
 }
 
 }

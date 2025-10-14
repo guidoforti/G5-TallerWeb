@@ -52,4 +52,13 @@ public class RepositorioViajeImpl implements ViajeRepository {
                 .setParameter("destino", destino)
                 .getResultList();
     }
+
+    @Override
+public List<Viaje> findByConductorId(Long idConductor) {
+    String hql = "SELECT v FROM Viaje v WHERE v.conductor.id = :idConductor";
+    return this.sessionFactory.getCurrentSession()
+            .createQuery(hql, Viaje.class)
+            .setParameter("idConductor", idConductor)
+            .getResultList();
+}
 }

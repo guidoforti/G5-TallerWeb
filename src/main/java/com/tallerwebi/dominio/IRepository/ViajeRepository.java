@@ -16,4 +16,5 @@ public interface ViajeRepository {
 
 
     List<Viaje> findByOrigenYDestinoYConductor(Ciudad origen, Ciudad destino , Conductor conductor);
+    List<Viaje> findByConductorId(Long idConductor);
 }

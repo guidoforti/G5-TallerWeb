@@ -10,13 +10,6 @@ import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.ServiceImpl.ServicioConductorImpl;
 import com.tallerwebi.dominio.ServiceImpl.ServicioViajeImpl;
-import com.tallerwebi.dominio.excepcion.CredencialesInvalidas;
-import com.tallerwebi.dominio.excepcion.FechaDeVencimientoDeLicenciaInvalida;
-import com.tallerwebi.dominio.excepcion.UsuarioExistente;
-import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
-import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
-import com.tallerwebi.dominio.excepcion.ViajeNoCancelableException;
-import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,11 +17,12 @@ import org.mockito.Mockito;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -430,5 +424,50 @@ class ServicioViajeTest {
                 () -> servicioViaje.cancelarViaje(100L, usuarioConductor));
 
         verify(viajeRepositoryMock, never()).modificarViaje(any());
+}
+
+@Test
+void noDebeListarViajesSiUsuarioNoEsConductor() {
+    
+    Usuario usuarioSinRol = new Usuario();
+    usuarioSinRol.setId(1L);
+    usuarioSinRol.setRol("PASAJERO"); // rol incorrecto
+
+    
+    assertThrows(UsuarioNoAutorizadoException.class,
+        () -> servicioViaje.listarViajesPorConductor(usuarioSinRol));
+
+}
+
+
+@Test
+void noDebeListarViajesSiUsuarioEsNull() {
+    
+    assertThrows(UsuarioNoAutorizadoException.class,
+        () -> servicioViaje.listarViajesPorConductor(null));
+}
+
+
+@Test
+void deberiaListarViajesSiUsuarioEsConductor() throws UsuarioNoAutorizadoException {
+    
+    Usuario usuarioConductor = new Usuario();
+    usuarioConductor.setId(1L);
+    usuarioConductor.setRol("CONDUCTOR");
+
+    Viaje viaje1 = new Viaje();
+    viaje1.setId(10L);
+    Viaje viaje2 = new Viaje();
+    viaje2.setId(20L);
+
+    List<Viaje> viajesMock = List.of(viaje1, viaje2);
+
+    when(viajeRepositoryMock.findByConductorId(1L)).thenReturn(viajesMock);
+
+    List<Viaje> resultado = servicioViaje.listarViajesPorConductor(usuarioConductor);
+
+    assertNotNull(resultado);
+    assertEquals(2, resultado.size());
+    verify(viajeRepositoryMock).findByConductorId(1L);
 }
 }

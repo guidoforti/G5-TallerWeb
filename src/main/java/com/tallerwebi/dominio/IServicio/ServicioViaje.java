@@ -6,6 +6,7 @@ import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
 import com.tallerwebi.dominio.excepcion.ViajeNoCancelableException;
 import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
 import com.tallerwebi.dominio.excepcion.*;
+import java.util.List;
 
 public interface ServicioViaje {
 
@@ -14,4 +15,5 @@ public interface ServicioViaje {
             UsuarioNoAutorizadoException, AsientosDisponiblesMayorQueTotalesDelVehiculoException, DatoObligatorioException;
             
     void cancelarViaje (Long id, Usuario usuarioEnSesion) throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeNoCancelableException;
+    List<Viaje> listarViajesPorConductor(Usuario usuarioEnSesion) throws UsuarioNoAutorizadoException;
 }

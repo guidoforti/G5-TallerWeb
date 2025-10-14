@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Transactional
@@ -124,4 +125,17 @@ public Viaje obtenerViajePorId(Long id) {
         viaje.setEstado(EstadoDeViaje.CANCELADO);
         this.viajeRepository.modificarViaje(viaje);
     }
+
+    @Override
+    public List<Viaje> listarViajesPorConductor(Usuario usuarioEnSesion) throws UsuarioNoAutorizadoException {
+    // validar que el usuario este logueado y sea conductor
+    if (usuarioEnSesion == null || usuarioEnSesion.getRol() == null || 
+        !usuarioEnSesion.getRol().equalsIgnoreCase("CONDUCTOR")) {
+        throw new UsuarioNoAutorizadoException("Debés iniciar sesión como conductor");
+    }
+
+    // obtener viajes del conductor
+    return this.viajeRepository.findByConductorId(usuarioEnSesion.getId());
+}
+
 }

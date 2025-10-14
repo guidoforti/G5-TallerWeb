@@ -1,9 +1,11 @@
 package com.tallerwebi.presentacion;
 
+import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Entity.Viaje;
+import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.Enums.EstadoVerificacion;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
@@ -448,4 +450,80 @@ public class ControladorViajeTest {
         assertThat(mav.getModel().get("error").toString(),
             equalTo("El viaje no se puede cancelar en este estado."));
     }
+
+
+    @Test
+        public void deberiaMostrarErrorSiNoHaySesionAlListar() throws Exception {
+        when(sessionMock.getAttribute("usuarioId")).thenReturn(null);
+
+        ModelAndView mav = controladorViaje.listarViajes(sessionMock);
+
+        assertThat(mav.getViewName(), equalTo("errorAcceso"));
+        assertThat(mav.getModel().get("error").toString(), containsString("Debés iniciar sesión como conductor"));
+        verify(servicioViajeMock, never()).listarViajesPorConductor(any());
+}
+
+
+@Test
+    public void deberiaMostrarErrorSiRolNoEsConductorAlListar() throws Exception {
+        when(sessionMock.getAttribute("usuarioId")).thenReturn(1L);
+        when(sessionMock.getAttribute("rol")).thenReturn("VIAJERO");
+
+        ModelAndView mav = controladorViaje.listarViajes(sessionMock);
+
+        assertThat(mav.getViewName(), equalTo("errorAcceso"));
+        assertThat(mav.getModel().get("error").toString(), containsString("Debés iniciar sesión como conductor"));
+        verify(servicioViajeMock, never()).listarViajesPorConductor(any());
+}
+
+
+@Test
+    public void deberiaMostrarErrorSiUsuarioNoAutorizadoAlListar() throws Exception {
+        when(sessionMock.getAttribute("usuarioId")).thenReturn(1L);
+        when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
+
+        Usuario usuario = new Usuario();
+        usuario.setId(1L);
+        usuario.setRol("CONDUCTOR");
+
+        when(servicioViajeMock.listarViajesPorConductor(any(Usuario.class)))
+            .thenThrow(new UsuarioNoAutorizadoException("No tenés permisos para ver los viajes"));
+
+        ModelAndView mav = controladorViaje.listarViajes(sessionMock);
+
+        assertThat(mav.getViewName(), equalTo("errorAcceso"));
+        assertThat(mav.getModel().get("error").toString(), containsString("No tenés permisos para ver los viajes"));
+        verify(servicioViajeMock).listarViajesPorConductor(any(Usuario.class));
+}
+
+
+@Test
+public void deberiaListarViajesCorrectamente() throws Exception {
+    
+    when(sessionMock.getAttribute("usuarioId")).thenReturn(1L);
+    when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
+
+    Usuario usuario = new Usuario();
+    usuario.setId(1L);
+    usuario.setRol("CONDUCTOR");
+
+    Viaje viaje1 = new Viaje();
+    viaje1.setId(10L);
+    viaje1.setOrigen(new Ciudad(null, "Morón", 0f, 0f));
+    viaje1.setDestino(new Ciudad(null, "Lanús", 0f, 0f));
+    viaje1.setVehiculo(new Vehiculo());
+    viaje1.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
+    viaje1.setEstado(EstadoDeViaje.DISPONIBLE);
+    viaje1.setAsientosDisponibles(3);
+
+    List<Viaje> viajes = List.of(viaje1);
+    when(servicioViajeMock.listarViajesPorConductor(any(Usuario.class))).thenReturn(viajes);
+
+    ModelAndView mav = controladorViaje.listarViajes(sessionMock);
+
+    assertThat(mav.getViewName(), equalTo("listarViajesConductor"));
+    assertThat(mav.getModel().containsKey("listaViajes"), equalTo(true));
+    assertThat(((List<?>) mav.getModel().get("listaViajes")).size(), equalTo(1));
+    verify(servicioViajeMock).listarViajesPorConductor(any(Usuario.class));
+}
 }
