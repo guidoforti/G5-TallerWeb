@@ -36,26 +36,17 @@ public class RepositorioConductorTest {
     void setUp() {
         this.repositorio = new RepositorioConductorImpl(this.sessionFactory);
 
-        // --- 1. PERSISTIR DATOS NECESARIOS (EN LUGAR DE ASUMIR QUE EXISTEN) ---
-
-        // Conductor para pruebas de éxito (ID y credenciales)
-        conductorBase = new Conductor(null, "Maria Lopez", "maria@correo.com", "abcd",
-                LocalDate.now(), new ArrayList<>(), new ArrayList<>());
-
-        repositorio.guardarConductor(conductorBase);
-
-        // Limpiar para asegurar que las búsquedas siguientes lean de la DB
-        sessionFactory.getCurrentSession().flush();
-        sessionFactory.getCurrentSession().clear();
+        conductorBase = new Conductor(2L, "Maria Lopez", "maria@correo.com", "abcd",
+                LocalDate.of(2026, 11, 20), new ArrayList<>(), new ArrayList<>());
     }
 
     @Test
     void deberiaGuardarConductorConductorNuevo() {
         // Arrange
         Conductor nuevo = new Conductor();
-        nuevo.setNombre("Pedro Ramirez");
-        nuevo.setEmail("pedro@correo.com");
-        nuevo.setContrasenia("clave123");
+        nuevo.setNombre("ConductorAGuardar");
+        nuevo.setEmail("pedro123@correo.com");
+        nuevo.setContrasenia("clave1234");
 
         // Act
         Conductor guardado = repositorio.guardarConductor(nuevo);
@@ -65,20 +56,20 @@ public class RepositorioConductorTest {
 
         Optional<Conductor>  recuperado = repositorio.buscarPorId(guardado.getId());
         assertTrue(recuperado.isPresent(), "Debería poder recuperarse el conductor guardado");
-        assertEquals("Pedro Ramirez", recuperado.get().getNombre());
-        assertEquals("pedro@correo.com", recuperado.get().getEmail());
+        assertEquals("ConductorAGuardar", recuperado.get().getNombre());
+        assertEquals("pedro123@correo.com", recuperado.get().getEmail());
     }
 
 
     @Test
-    void deberiaBuscarPorEmailYContrasenia() {
+    void deberiaBuscarPorEmailYContraseniaSiExiste() {
         // Act
-        Optional<Conductor> conductor = repositorio.buscarPorEmailYContrasenia("maria@correo.com", "abcd");
+        Optional<Conductor> conductor = repositorio.buscarPorEmailYContrasenia(conductorBase.getEmail(), conductorBase.getContrasenia());
 
         // Assert
         assertTrue(conductor.isPresent(), "El conductor debería encontrarse con credenciales correctas");
-        assertEquals(conductorBase.getNombre(), conductor.get().getNombre());
-        assertEquals("maria@correo.com", conductor.get().getEmail());
+        assertEquals(conductorBase.getId(), conductor.get().getId());
+        assertEquals(conductorBase.getEmail(), conductor.get().getEmail());
     }
 
     @Test
@@ -91,13 +82,21 @@ public class RepositorioConductorTest {
     }
 
     @Test
-    void deberiaBuscarPorId() {
-        // Act
-        Optional<Conductor> conductor = repositorio.buscarPorId(1L);
+    void deberiaBuscarPorIdSiExiste() {
+        Optional<Conductor> conductor = repositorio.buscarPorId(conductorBase.getId()); // Usamos 2L
 
         // Assert
-        assertNotNull(conductor);
-        assertEquals("Carlos Perez", conductor.get().getNombre());
-        assertEquals("carlos@correo.com", conductor.get().getEmail());
+        assertTrue(conductor.isPresent(), "Debería encontrar el conductor precargado por su ID");
+        assertEquals(conductorBase.getEmail(), conductor.get().getEmail());
+    }
+
+    @Test
+    void deberiaBuscarPorEmailSiExiste() {
+        // Act
+        Optional<Conductor> conductor = repositorio.buscarPorEmail(conductorBase.getEmail());
+
+        // Assert
+        assertTrue(conductor.isPresent(), "El conductor debería encontrarse con el email correcto");
+        assertEquals(conductorBase.getNombre(), conductor.get().getNombre());
     }
 }
