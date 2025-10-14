@@ -40,6 +40,18 @@ public class RepositorioCiudadImpl implements RepositorioCiudad {
     }
 
     @Override
+    public Ciudad buscarPorCoordenadas(Float latitud, Float longitud) {
+        String hql = "SELECT c FROM Ciudad c WHERE c.latitud = :latitud AND c.longitud = :longitud";
+        List<Ciudad> resultados = this.sessionFactory.getCurrentSession()
+                .createQuery(hql, Ciudad.class)
+                .setParameter("latitud", latitud)
+                .setParameter("longitud", longitud)
+                .getResultList();
+
+        return resultados.isEmpty() ? null : resultados.get(0);
+    }
+
+    @Override
     public Ciudad guardarCiudad(Ciudad ciudad) {
 
         this.sessionFactory.getCurrentSession().save(ciudad);

@@ -83,5 +83,53 @@ public class RepositorioCiudadTest {
         assertEquals("Mendoza", ciudadRecuperada.getNombre());
     }
 
+    @Test
+    public void testBuscarCiudadPorCoordenadasExistentes() {
+        // Primero guardar una ciudad para poder buscarla
+        Ciudad nuevaCiudad = new Ciudad();
+        nuevaCiudad.setNombre("La Plata");
+        nuevaCiudad.setLatitud(-34.9205f);
+        nuevaCiudad.setLongitud(-57.9536f);
+
+        Ciudad ciudadGuardada = repositorioCiudad.guardarCiudad(nuevaCiudad);
+
+        // Buscar ciudad por coordenadas
+        Ciudad ciudad = repositorioCiudad.buscarPorCoordenadas(-34.9205f, -57.9536f);
+
+        // Verificaciones
+        assertNotNull(ciudad, "Debería encontrar la ciudad");
+        assertEquals("La Plata", ciudad.getNombre());
+        assertEquals(ciudadGuardada.getId(), ciudad.getId());
+    }
+
+    @Test
+    public void testBuscarCiudadPorCoordenadasNoExistentes() {
+        // Buscar con coordenadas que no existen
+        Ciudad ciudad = repositorioCiudad.buscarPorCoordenadas(-99.9999f, -99.9999f);
+
+        // Verificaciones
+        assertThat(ciudad, is(nullValue()));
+    }
+
+    @Test
+    public void testBuscarCiudadPorCoordenadasDespuesDeGuardar() {
+        // Guardar nueva ciudad
+        Ciudad nuevaCiudad = new Ciudad();
+        nuevaCiudad.setNombre("Mendoza");
+        nuevaCiudad.setLatitud(-32.8895f);
+        nuevaCiudad.setLongitud(-68.8458f);
+
+        repositorioCiudad.guardarCiudad(nuevaCiudad);
+
+        // Buscar por coordenadas
+        Ciudad ciudadEncontrada = repositorioCiudad.buscarPorCoordenadas(-32.8895f, -68.8458f);
+
+        // Verificaciones
+        assertNotNull(ciudadEncontrada);
+        assertEquals("Mendoza", ciudadEncontrada.getNombre());
+        assertEquals(-32.8895f, ciudadEncontrada.getLatitud(), 0.0001);
+        assertEquals(-68.8458f, ciudadEncontrada.getLongitud(), 0.0001);
+    }
+
 
 }
