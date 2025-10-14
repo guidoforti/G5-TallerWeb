@@ -1,10 +1,14 @@
 package com.tallerwebi.presentacion.Controller;
 
 
+import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
+import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
+import com.tallerwebi.dominio.excepcion.ViajeNoCancelableException;
+import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -101,5 +105,44 @@ public class ControladorViaje {
         }
     }
 
+    @PostMapping("/cancelar")
+    public ModelAndView cancelarViaje(@RequestParam Long id, HttpSession session) {
+    ModelMap model = new ModelMap();
+
+    // primer valido sesion y rol
+    Object usuarioId = session.getAttribute("usuarioId");
+    Object rol = session.getAttribute("rol");
+
+    if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
+        return new ModelAndView("redirect:/conductor/login");
+    }
+
+    // creo usuarioEnSesion y seteo id y rol
+    Usuario usuarioEnSesion = new Usuario();
+    usuarioEnSesion.setId((Long) usuarioId);
+    usuarioEnSesion.setRol((String) rol);
+
+    try {
+        // cancelo viaje y en caso de que no funcione se accede a los catch de excpecion
+        servicioViaje.cancelarViaje(id, usuarioEnSesion);
+
+        // si fue exitoso, se devuelve a la home con mensaje de exito
+        model.put("exito", "El viaje fue cancelado exitosamente.");
+        return new ModelAndView("redirect:/conductor/home", model);
+
+        // se utilizan las excecpiones en caso de error
+    } catch (ViajeNoEncontradoException e) {
+        model.put("error", "No se encontró el viaje especificado.");
+    } catch (UsuarioNoAutorizadoException e) {
+        model.put("error", "No tiene permisos para cancelar este viaje.");
+    } catch (ViajeNoCancelableException e) {
+        model.put("error", "El viaje no se puede cancelar en este estado.");
+    } catch (Exception e) {
+        model.put("error", "Ocurrió un error al intentar cancelar el viaje.");
+    }
+
+    // mensaje de error y vuelta a la vista correspondiente
+    return new ModelAndView("errorCancelarViaje", model);
+}
 
 }
