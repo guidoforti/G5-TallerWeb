@@ -11,8 +11,11 @@ import com.tallerwebi.dominio.IServicio.ServicioNominatim;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.excepcion.NominatimResponseException;
+import com.tallerwebi.dominio.excepcion.NotFoundException;
+import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import com.tallerwebi.presentacion.DTO.NominatimResponse;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.DetalleViajeOutputDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -50,10 +53,6 @@ public class ControladorViaje {
         return new ModelAndView("buscarViajePorId", model);
     }
 
-    @GetMapping("")
-    public ModelAndView getViajeById(@RequestParam Long id) {
-        return null;
-    }
 
     @GetMapping("/publicar")
     public ModelAndView irAPublicarViaje(HttpSession session) {
@@ -126,6 +125,26 @@ public class ControladorViaje {
         }
     }
 
+    @GetMapping("/detalle")
+    public ModelAndView verDetalleDeUnViaje(HttpSession httpSession , @RequestParam("id") Long id) {
+        ModelMap model = new ModelMap();
+        Object rol = httpSession.getAttribute("rol");
+        if (rol == null || !rol.equals("CONDUCTOR")) {
+            UsuarioNoAutorizadoException e = new UsuarioNoAutorizadoException("Debe ser un usuario conductor para ver detalles de un viaje");
+            model.put("error" , e.getMessage());
+            return new ModelAndView("detalleViaje" , model);
+        }
+        try {
+            Viaje viaje = servicioViaje.obtenerViajePorId(id);
+            DetalleViajeOutputDTO detalleViajeOutputDTO = new DetalleViajeOutputDTO(viaje);
+            model.put("detalle" , detalleViajeOutputDTO);
+            return  new ModelAndView("detalleViaje" , model);
+
+        } catch (NotFoundException e) {
+            model.put("error" , e.getMessage());
+            return new ModelAndView("detalleViaje" , model);
+        }
+    }
     /**
      * Resuelve el nombre de una ciudad a una entidad Ciudad usando Nominatim.
      * Busca en la base de datos si ya existe (por latitud/longitud), o la crea si no existe.
