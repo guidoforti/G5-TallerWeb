@@ -22,7 +22,7 @@ public class RepositorioConductorImpl implements RepositorioConductor {
     }
 
     @Override
-    public Optional<Conductor> buscarPorEmailYContrasenia(String email, String contrasenia) throws Exception {
+    public Optional<Conductor> buscarPorEmailYContrasenia(String email, String contrasenia) {
 
 
             String hql = "SELECT c FROM Conductor c WHERE c.email= :email AND c.contrasenia= :contrasenia";

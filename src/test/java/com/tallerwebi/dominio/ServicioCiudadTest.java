@@ -3,6 +3,7 @@ package com.tallerwebi.dominio;
 import static org.mockito.Mockito.*;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
@@ -81,8 +82,8 @@ public void queGuardeNuevaCiudadSiNoExiste() {
     nuevaCiudad.setLatitud(-32.8895f);
     nuevaCiudad.setLongitud(-68.8458f);
 
-    // Mock: no existe ciudad con esas coordenadas
-    when(repositorioMock.buscarPorCoordenadas(-32.8895f, -68.8458f)).thenReturn(null);
+    // Mock CORREGIDO: ahora devuelve Optional.empty() para simular que NO existe
+    when(repositorioMock.buscarPorCoordenadas(-32.8895f, -68.8458f)).thenReturn(Optional.empty());
     when(repositorioMock.guardarCiudad(nuevaCiudad)).thenReturn(nuevaCiudad);
 
     // Act
@@ -111,8 +112,8 @@ public void queRetorneCiudadExistenteSiYaExisteConMismasCoordenadas() {
     nuevaCiudad.setLatitud(-34.6037f);
     nuevaCiudad.setLongitud(-58.3816f);
 
-    // Mock: existe ciudad con esas coordenadas
-    when(repositorioMock.buscarPorCoordenadas(-34.6037f, -58.3816f)).thenReturn(ciudadExistente);
+    // Mock CORREGIDO: ahora devuelve Optional.of(ciudadExistente) para simular que SÍ existe
+    when(repositorioMock.buscarPorCoordenadas(-34.6037f, -58.3816f)).thenReturn(Optional.of(ciudadExistente));
 
     // Act
     Ciudad resultado = servicio.guardarCiudad(nuevaCiudad);
@@ -134,18 +135,20 @@ public void queNoGuardeDuplicadosCuandoSeIntentaGuardarMismaCiudadDosVeces() {
     ciudad1.setNombre("Rosario");
     ciudad1.setLatitud(-32.9442f);
     ciudad1.setLongitud(-60.6505f);
+    ciudad1.setId(10L); // Asignamos ID para simular que ya fue guardada
 
     Ciudad ciudad2 = new Ciudad();
     ciudad2.setNombre("Rosario Centro");  // Nombre diferente
     ciudad2.setLatitud(-32.9442f);  // Mismas coordenadas
     ciudad2.setLongitud(-60.6505f);
 
-    // Primera vez: no existe
+    // Mock CORREGIDO:
     when(repositorioMock.buscarPorCoordenadas(-32.9442f, -60.6505f))
-        .thenReturn(null)
-        .thenReturn(ciudad1);  // Segunda vez: ya existe
+            // 1. Primera llamada: Optional.empty() -> No existe (debe guardar)
+            .thenReturn(Optional.empty())
+            // 2. Segunda llamada: Optional.of(ciudad1) -> Ya existe (no debe guardar)
+            .thenReturn(Optional.of(ciudad1));
 
-    ciudad1.setId(10L);
     when(repositorioMock.guardarCiudad(ciudad1)).thenReturn(ciudad1);
 
     // Act
@@ -155,7 +158,8 @@ public void queNoGuardeDuplicadosCuandoSeIntentaGuardarMismaCiudadDosVeces() {
     // Assert
     assertEquals(10L, resultado1.getId());
     assertEquals(10L, resultado2.getId());
-    assertEquals("Rosario", resultado2.getNombre());  // Retorna la primera, no la segunda
+    // El servicio retorna la ciudad existente (ciudad1) en el segundo intento
+    assertEquals("Rosario", resultado2.getNombre());
     verify(repositorioMock, times(1)).guardarCiudad(any());  // Solo se guarda una vez
 }
 
