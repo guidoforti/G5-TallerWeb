@@ -1,5 +1,6 @@
 package com.tallerwebi.dominio.IServicio;
 
+import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.excepcion.*;
@@ -12,5 +13,5 @@ public interface ServicioViaje {
             UsuarioNoAutorizadoException, AsientosDisponiblesMayorQueTotalesDelVehiculoException, DatoObligatorioException;
             
     void cancelarViaje (Long id, Usuario usuarioEnSesion) throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeNoCancelableException;
-    List<Viaje> listarViajesPorConductor(Usuario usuarioEnSesion) throws UsuarioNoAutorizadoException;
+    List<Viaje> listarViajesPorConductor(Conductor conductor) throws UsuarioNoAutorizadoException;
 }

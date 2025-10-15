@@ -1,11 +1,14 @@
 package com.tallerwebi.presentacion.Controller;
 
 
+import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Entity.Viaje;
+import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
+import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
 import com.tallerwebi.dominio.excepcion.ViajeNoCancelableException;
 import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
@@ -28,11 +31,13 @@ public class ControladorViaje {
 
     private ServicioViaje servicioViaje;
     private ServicioVehiculo servicioVehiculo;
+     private final ServicioConductor servicioConductor; 
 
     @Autowired
-    public ControladorViaje(ServicioViaje servicioViaje, ServicioVehiculo servicioVehiculo) {
+    public ControladorViaje(ServicioViaje servicioViaje, ServicioVehiculo servicioVehiculo, ServicioConductor servicioConductor) {
         this.servicioViaje = servicioViaje;
         this.servicioVehiculo = servicioVehiculo;
+        this.servicioConductor = servicioConductor;
     }
 
 
@@ -109,25 +114,29 @@ public class ControladorViaje {
     }
 
     @GetMapping("/listar")
-    public ModelAndView listarViajes(HttpSession session) {
-        ModelMap model = new ModelMap();
+public ModelAndView listarViajes(HttpSession session) { // QUITAMOS el 'throws UsuarioInexistente'
+    ModelMap model = new ModelMap();
 
-        Object usuarioId = session.getAttribute("usuarioId");
-        Object rol = session.getAttribute("rol");
+    Object usuarioIdObj = session.getAttribute("usuarioId");
+    Object rol = session.getAttribute("rol");
 
-        if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
+    // 1. Validación de Sesión y Rol (Se mantiene)
+    if (usuarioIdObj == null || !"CONDUCTOR".equals(rol)) {
         model.put("error", "Debés iniciar sesión como conductor");
         return new ModelAndView("errorAcceso", model);
     }
+    
+    Long conductorId = (Long) usuarioIdObj;
+    Conductor conductorEnSesion; // Declaramos aquí
 
-        Usuario usuarioEnSesion = new Usuario();
-        usuarioEnSesion.setId((Long) usuarioId);
-        usuarioEnSesion.setRol((String) rol);
+    try {
+        // 2. BUSCAR AL CONDUCTOR (El servicio lanza la excepción si no lo encuentra)
+        conductorEnSesion = servicioConductor.obtenerConductor(conductorId); 
+        
+        // 3. Listar Viajes (Llamada al servicio de Viaje)
+        List<Viaje> listaViajes = servicioViaje.listarViajesPorConductor(conductorEnSesion);
 
-        try {
-        List<Viaje> listaViajes = servicioViaje.listarViajesPorConductor(usuarioEnSesion);
-
-        //dtos para la vista
+        // dtos para la vista
         List<ViajeVistaDTO> listaViajesDTO = listaViajes.stream()
                 .map(ViajeVistaDTO::new)
                 .collect(Collectors.toList());
@@ -135,7 +144,13 @@ public class ControladorViaje {
         model.put("listaViajes", listaViajesDTO);
         return new ModelAndView("listarViajesConductor", model);
 
-        } catch (UsuarioNoAutorizadoException e) {
+    } catch (UsuarioInexistente e) {
+        // MANEJO DEL ERROR DE BÚSQUEDA POR ID
+        model.put("error", "Error interno: El conductor de la sesión no fue encontrado.");
+        return new ModelAndView("errorAcceso", model);
+        
+    } catch (UsuarioNoAutorizadoException e) {
+        // MANEJO DEL ERROR DE AUTORIZACIÓN (si el servicio lo lanza por conductor=null, aunque ya chequeamos)
         model.put("error", "No tenés permisos para ver los viajes");
         return new ModelAndView("errorAcceso", model);
     }
