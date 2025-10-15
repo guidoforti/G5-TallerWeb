@@ -365,7 +365,7 @@ class ServicioViajeTest {
         viaje.setConductor(conductor);
         viaje.setEstado(EstadoDeViaje.DISPONIBLE);
 
-        when(viajeRepositoryMock.findById(100L)).thenReturn(viaje);
+        when(viajeRepositoryMock.findById(100L)).thenReturn(Optional.of(viaje));
 
         servicioViaje.cancelarViaje(100L, usuarioEnSesion);
 
@@ -394,7 +394,7 @@ class ServicioViajeTest {
         usuarioConductor.setId(1L);
         usuarioConductor.setRol("CONDUCTOR");
 
-        when(viajeRepositoryMock.findById(999L)).thenReturn(null);
+        when(viajeRepositoryMock.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(ViajeNoEncontradoException.class,
                 () -> servicioViaje.cancelarViaje(999L, usuarioConductor));
@@ -418,7 +418,7 @@ class ServicioViajeTest {
         viaje.setConductor(otroConductor);
         viaje.setEstado(EstadoDeViaje.DISPONIBLE);
 
-        when(viajeRepositoryMock.findById(100L)).thenReturn(viaje);
+        when(viajeRepositoryMock.findById(100L)).thenReturn(Optional.of(viaje));
 
         assertThrows(UsuarioNoAutorizadoException.class,
                 () -> servicioViaje.cancelarViaje(100L, usuarioConductor));
@@ -442,7 +442,7 @@ class ServicioViajeTest {
         //el viaje se finalizo
         viaje.setEstado(EstadoDeViaje.FINALIZADO);
 
-        when(viajeRepositoryMock.findById(100L)).thenReturn(viaje);
+        when(viajeRepositoryMock.findById(100L)).thenReturn(Optional.of(viaje));
 
         assertThrows(ViajeNoCancelableException.class,
                 () -> servicioViaje.cancelarViaje(100L, usuarioConductor));
@@ -466,7 +466,7 @@ class ServicioViajeTest {
         //viaje cancelado
         viaje.setEstado(EstadoDeViaje.CANCELADO);
 
-        when(viajeRepositoryMock.findById(100L)).thenReturn(viaje);
+        when(viajeRepositoryMock.findById(100L)).thenReturn(Optional.of(viaje));
 
         assertThrows(ViajeNoCancelableException.class,
                 () -> servicioViaje.cancelarViaje(100L, usuarioConductor));
@@ -707,7 +707,7 @@ class ServicioViajeTest {
     }
 
     @Test
-    void obtenerViajePorIdDebeRetornarViaje() throws NotFoundException {
+    void obtenerViajePorIdDebeRetornarViaje() throws NotFoundException, ViajeNoEncontradoException, UsuarioNoAutorizadoException {
         // Arrange
         Viaje viajeEsperado = crearViajeDeTest();
         viajeEsperado.setId(1L);

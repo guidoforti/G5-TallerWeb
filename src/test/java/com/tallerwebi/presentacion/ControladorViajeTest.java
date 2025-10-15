@@ -382,8 +382,7 @@ public class ControladorViajeTest {
         verify(servicioViajeMock, times(1)).publicarViaje(any(Viaje.class), eq(conductorIdEnSesion), eq(1L));
     }
 
-    /* 
-    @Test
+    /*@Test
     public void deberiaCancelarViajeExitosamente() throws Exception {   
         // given
         Long viajeId = 1L;
@@ -398,13 +397,12 @@ public class ControladorViajeTest {
         ModelAndView mav = controladorViaje.cancelarViaje(viajeId, sessionMock);
 
         // then
-        assertThat(mav.getViewName(), equalTo("redirect:/conductor/home"));
+        assertThat(mav.getViewName(), equalTo("redirect:/viaje/listar"));
         assertThat(mav.getModel().containsKey("exito"), equalTo(true));
         assertThat(mav.getModel().get("exito").toString(),equalTo("El viaje fue cancelado exitosamente."));
 
         verify(servicioViajeMock, times(1)).cancelarViaje(eq(viajeId), any(Usuario.class));
-    }
-        */
+    }*/
 
     @Test
     public void deberiaRedirigirALoginSiNoHaySesionAlCancelar() throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeNoCancelableException {

@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -81,13 +82,13 @@ void deberiaModificarViajeExistente() {
     repositorioViaje.modificarViaje(viaje);
 
     // Assert
-    Viaje modificado = repositorioViaje.findById(idGenerado);
-    assertThat(modificado.getEstado(), equalTo(EstadoDeViaje.CANCELADO));
+    Optional<Viaje> modificado = repositorioViaje.findById(idGenerado);
+    assertThat(modificado.get().getEstado(), equalTo(EstadoDeViaje.CANCELADO));
 }
 
 
     @Test
-void deberiaBorrarViajePorId() {
+    void deberiaBorrarViajePorId() {
     // Arrange
     Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
     Vehiculo vehiculo = sessionFactory.getCurrentSession().get(Vehiculo.class, 1L);
@@ -108,8 +109,8 @@ void deberiaBorrarViajePorId() {
     sessionFactory.getCurrentSession().flush();
 
     // Assert
-    Viaje borrado = repositorioViaje.findById(idGenerado);
-    assertNull(borrado, "El viaje debería haber sido eliminado");
+    Optional<Viaje> borrado = repositorioViaje.findById(idGenerado);
+    assertThat(borrado.isEmpty(), equalTo(true));
 }
 
 

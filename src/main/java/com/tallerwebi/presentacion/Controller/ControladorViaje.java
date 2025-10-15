@@ -21,6 +21,7 @@ import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeVistaDTO;
 import com.tallerwebi.dominio.excepcion.NominatimResponseException;
+import com.tallerwebi.dominio.excepcion.NotFoundException;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import com.tallerwebi.presentacion.DTO.NominatimResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -184,7 +185,7 @@ public ModelAndView listarViajes(HttpSession session) { // QUITAMOS el 'throws U
 }
 
     @GetMapping("/cancelarViaje/{id}")
-    public ModelAndView irACancelarViaje(@PathVariable Long id, HttpSession session) {
+    public ModelAndView irACancelarViaje(@PathVariable Long id, HttpSession session) throws NotFoundException {
         ModelMap model = new ModelMap();
 
         Object usuarioId = session.getAttribute("usuarioId");
