@@ -48,13 +48,15 @@ public class ControladorViaje {
     public ControladorViaje(ServicioViaje servicioViaje,
                            ServicioVehiculo servicioVehiculo,
                            ServicioNominatim servicioNominatim,
-                           ServicioCiudad servicioCiudad, ServicioConductor servicioConductor) {
+                           ServicioCiudad servicioCiudad, 
+                           ServicioConductor servicioConductor) {
         this.servicioViaje = servicioViaje;
         this.servicioVehiculo = servicioVehiculo;
         this.servicioNominatim = servicioNominatim;
         this.servicioCiudad = servicioCiudad;
-         this.servicioConductor = servicioConductor;
+        this.servicioConductor = servicioConductor;
         }
+
 
     @GetMapping("/buscarViaje")
     public ModelAndView buscarViaje() {
@@ -244,7 +246,11 @@ public ModelAndView listarViajes(HttpSession session) { // QUITAMOS el 'throws U
     }
 
     return new ModelAndView("errorCancelarViaje", model);
+
     }
+
+
+
 
     /**
      * Resuelve el nombre de una ciudad a una entidad Ciudad usando Nominatim.

@@ -1,4 +1,5 @@
 package com.tallerwebi.infraestructura;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
@@ -9,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.List;
@@ -116,19 +116,33 @@ void deberiaBorrarViajePorId() {
 
     @Test
 void deberiaBuscarPorOrigenDestinoYConductor() {
-    // Arrange
-    Ciudad origen = new Ciudad(null, "San Justo", 0, 0);
-    Ciudad destino = new Ciudad(null, "La Plata", 0, 0);
-    sessionFactory.getCurrentSession().persist(origen);
-    sessionFactory.getCurrentSession().persist(destino);
+    // 1. ARRANGE - CREACIÓN Y PERSISTENCIA DE CIUDADES CON COORDENADAS ÚNICAS
+    // Usamos 'f' para el tipo float y valores diferentes.
+    Ciudad origen = new Ciudad(null, "San Justo", 0.0f, 0.0f); 
+    Ciudad destino = new Ciudad(null, "La Plata", 1.0f, 1.0f); // Valores únicos para no violar Constraint
 
-    Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+    // Usamos saveOrUpdate y flush() para asegurar que las entidades se guarden 
+    // y obtengan sus IDs antes de que Viaje las referencie.
+    sessionFactory.getCurrentSession().saveOrUpdate(origen); 
+    sessionFactory.getCurrentSession().saveOrUpdate(destino);
+    sessionFactory.getCurrentSession().flush(); 
 
+    // 2. ARRANGE - CREACIÓN Y PERSISTENCIA DEL CONDUCTOR
+    // Creamos el conductor para asegurar que existe, en lugar de usar get(..., 1L).
+    Conductor conductor = new Conductor();
+    conductor.setNombre("Conductor Principal");
+    conductor.setEmail("principal@correo.com");
+    conductor.setContrasenia("123456");
+    sessionFactory.getCurrentSession().saveOrUpdate(conductor);
+
+    // 3. ARRANGE - CREACIÓN Y PERSISTENCIA DEL VIAJE
     Viaje viaje = new Viaje();
     viaje.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
     viaje.setPrecio(1000.0);
     viaje.setAsientosDisponibles(2);
     viaje.setEstado(EstadoDeViaje.DISPONIBLE);
+    
+    // Asignamos las entidades persistidas
     viaje.setOrigen(origen);
     viaje.setDestino(destino);
     viaje.setConductor(conductor);
@@ -144,22 +158,38 @@ void deberiaBuscarPorOrigenDestinoYConductor() {
 }
 
 
+
+
 @Test
 void noDeberiaEncontrarViajeSiConductorNoCoincide() {
-    // Arrange
-    Ciudad origen = new Ciudad(null, "San Justo", 0, 0);
-    Ciudad destino = new Ciudad(null, "La Plata", 0, 0);
-    sessionFactory.getCurrentSession().persist(origen);
-    sessionFactory.getCurrentSession().persist(destino);
+    // 1. ARRANGE - CREACIÓN Y PERSISTENCIA DE CIUDADES CON COORDENADAS ÚNICAS
+    // Es crucial usar 0f y 1f (o cualquier valor distinto)
+    Ciudad origen = new Ciudad(null, "San Justo", 0.0f, 0.0f); 
+    Ciudad destino = new Ciudad(null, "La Plata", 1.0f, 1.0f); // Lat y Lon DIFERENTES
+    
+    // Usamos saveOrUpdate para ser más robustos
+    sessionFactory.getCurrentSession().saveOrUpdate(origen);
+    sessionFactory.getCurrentSession().saveOrUpdate(destino);
+    
+    // Forzamos el flush para que los IDs se generen antes de continuar,
+    // previniendo otros errores de Constraint/FK.
+    sessionFactory.getCurrentSession().flush(); 
 
-    Conductor conductorCorrecto = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
-
+    // 2. ARRANGE - CREACIÓN Y PERSISTENCIA DEL CONDUCTOR
+    // Crear el conductor es más seguro que usar get(..., 1L)
+    Conductor conductorCorrecto = new Conductor();
+    conductorCorrecto.setNombre("Conductor OK");
+    conductorCorrecto.setEmail("ok@correo.com");
+    conductorCorrecto.setContrasenia("123456");
+    sessionFactory.getCurrentSession().saveOrUpdate(conductorCorrecto);
+    
     Conductor otroConductor = new Conductor();
     otroConductor.setNombre("Otro");
     otroConductor.setEmail("otro@correo.com");
     otroConductor.setContrasenia("123456");
-    sessionFactory.getCurrentSession().persist(otroConductor);
+    sessionFactory.getCurrentSession().saveOrUpdate(otroConductor);
 
+    // 3. ARRANGE - CREACIÓN Y PERSISTENCIA DEL VIAJE
     Viaje viaje = new Viaje();
     viaje.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
     viaje.setPrecio(1000.0);
@@ -177,6 +207,7 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
     // Assert
     assertThat(resultados, empty());
 }
+
 
 
 
@@ -266,21 +297,30 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
         assertNull(borrado, "El viaje debería haber sido eliminado");
     }
 
+    
     @Test
     void deberiaEncontrarViajesPorConductor() {
-    
-    Ciudad origen = new Ciudad(null, "Morón", 0f, 0f);
-    Ciudad destino = new Ciudad(null, "Lanús", 0f, 0f);
-    sessionFactory.getCurrentSession().persist(origen);
+    // 1. ARRANGE - CREACIÓN Y PERSISTENCIA DE CIUDADES CON COORDENADAS ÚNICAS
+    Ciudad origen = new Ciudad(null, "Morón", 0.0f, 0.0f); // Coordenadas de Origen
+    Ciudad destino = new Ciudad(null, "Lanús", 1.0f, 1.0f); // Coordenadas DIFERENTES para evitar ConstraintViolation
+
+    // Persistir ciudades
+    sessionFactory.getCurrentSession().persist(origen); 
     sessionFactory.getCurrentSession().persist(destino);
+    
+    // Forzar el flush para que los IDs se generen y se registren en la DB antes de que Viaje las use.
+    sessionFactory.getCurrentSession().flush(); 
+
+    // 2. ARRANGE - CREACIÓN Y PERSISTENCIA DEL CONDUCTOR
     Conductor conductor = new Conductor();
     conductor.setNombre("Test");
     conductor.setEmail("test@correo.com");
     conductor.setContrasenia("123456");
     sessionFactory.getCurrentSession().persist(conductor);
 
+    // 3. ARRANGE - CREACIÓN Y PERSISTENCIA DE VIAJES
     
-
+    // Viaje 1
     Viaje viaje1 = new Viaje();
     viaje1.setFechaHoraDeSalida(LocalDateTime.now().plusDays(2));
     viaje1.setPrecio(1200.0);
@@ -291,7 +331,7 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
     viaje1.setConductor(conductor);
     sessionFactory.getCurrentSession().persist(viaje1);
     
-
+    // Viaje 2
     Viaje viaje2 = new Viaje();
     viaje2.setFechaHoraDeSalida(LocalDateTime.now().plusDays(3));
     viaje2.setPrecio(1800.0);
@@ -302,12 +342,15 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
     viaje2.setConductor(conductor);
     sessionFactory.getCurrentSession().persist(viaje2);
 
+    // Act
     List<Viaje> resultados = repositorioViaje.findByConductorId(conductor.getId());
 
+    // Assert
     assertNotNull(resultados);
     assertEquals(2, resultados.size(), "Debería encontrar 2 viajes para el conductor");
     assertTrue(resultados.stream().allMatch(v -> v.getConductor().getId().equals(conductor.getId())));
 }
+
     @Test
     void deberiaEncontrarViajesEnEstadosDisponibleYCompleto() {
         // Arrange - Usar datos de dataTest.sql

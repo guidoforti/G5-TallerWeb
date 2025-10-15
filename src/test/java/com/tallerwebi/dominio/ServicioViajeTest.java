@@ -472,6 +472,24 @@ class ServicioViajeTest {
     }
 
     @Test
+    void deberiaDevolverListaVaciaSiConductorNoTieneViajes() throws UsuarioNoAutorizadoException {
+      
+        
+        Conductor conductorSinViajes = new Conductor();
+        conductorSinViajes.setId(99L);
+
+        when(viajeRepositoryMock.findByConductorId(99L)).thenReturn(Collections.emptyList());
+
+        List<Viaje> resultado = servicioViaje.listarViajesPorConductor(conductorSinViajes);
+
+        assertNotNull(resultado);
+        assertTrue(resultado.isEmpty());
+        assertEquals(0, resultado.size());
+
+        verify(viajeRepositoryMock).findByConductorId(99L);
+    }
+
+    @Test
     void noDeberiaPublicarSiOrigenEsNull() {
         // given
         Viaje viaje = crearViajeDeTest();
@@ -651,27 +669,6 @@ class ServicioViajeTest {
         // then
         ArgumentCaptor<Viaje> viajeCaptor = ArgumentCaptor.forClass(Viaje.class);
         verify(viajeRepositoryMock).guardarViaje(viajeCaptor.capture());
-    }
-
-
-
-    
-    @Test
-    void deberiaDevolverListaVaciaSiConductorNoTieneViajes() throws UsuarioNoAutorizadoException {
-      
-        
-        Conductor conductorSinViajes = new Conductor();
-        conductorSinViajes.setId(99L);
-
-        when(viajeRepositoryMock.findByConductorId(99L)).thenReturn(Collections.emptyList());
-
-        List<Viaje> resultado = servicioViaje.listarViajesPorConductor(conductorSinViajes);
-
-        assertNotNull(resultado);
-        assertTrue(resultado.isEmpty());
-        assertEquals(0, resultado.size());
-
-        verify(viajeRepositoryMock).findByConductorId(99L);
     }
 }
 

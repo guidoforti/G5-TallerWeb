@@ -56,6 +56,7 @@ public class RepositorioViajeImpl implements ViajeRepository {
 
     @Override
     public List<Viaje> findByConductorId(Long idConductor) {
+
     String hql = "SELECT v FROM Viaje v WHERE v.conductor.id = :idConductor";
     return this.sessionFactory.getCurrentSession()
             .createQuery(hql, Viaje.class)

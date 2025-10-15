@@ -59,8 +59,6 @@ public class ControladorViajeTest {
         servicioCiudadMock = mock(ServicioCiudad.class);
         servicioConductorMock = mock(ServicioConductor.class);
         controladorViaje = new ControladorViaje(servicioViajeMock, servicioVehiculoMock, servicioNominatimMock, servicioCiudadMock, servicioConductorMock);
-        servicioConductorMock = mock(ServicioConductor.class);
- 
         sessionMock = mock(HttpSession.class);
 
         // Setup mocks por defecto para Nominatim y Ciudad (se pueden sobrescribir en tests específicos)
