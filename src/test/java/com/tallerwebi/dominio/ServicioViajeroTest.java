@@ -62,7 +62,7 @@ class ServicioViajeroTest {
 
         servicio.registrar(nuevo);
 
-        verify(repositorioMock, times(1)).guardar(nuevo);
+        verify(repositorioMock, times(1)).guardarViajero(nuevo);
     }
 
     @Test
@@ -77,7 +77,7 @@ class ServicioViajeroTest {
         assertThrows(UsuarioExistente.class,
                 () -> servicio.registrar(nuevo));
 
-        verify(repositorioMock, never()).guardar(any(Viajero.class));
+        verify(repositorioMock, never()).guardarViajero(any(Viajero.class));
     }
 
     @Test
@@ -87,7 +87,7 @@ class ServicioViajeroTest {
         assertThrows(DatoObligatorioException.class,
                 () -> servicio.registrar(sinNombre));
 
-        verify(repositorioMock, never()).guardar(any());
+        verify(repositorioMock, never()).guardarViajero(any());
     }
 
     @Test
@@ -97,7 +97,7 @@ class ServicioViajeroTest {
         assertThrows(DatoObligatorioException.class,
                 () -> servicio.registrar(sinNombre));
 
-        verify(repositorioMock, never()).guardar(any());
+        verify(repositorioMock, never()).guardarViajero(any());
     }
 
     @Test
@@ -107,7 +107,7 @@ class ServicioViajeroTest {
         assertThrows(EdadInvalidaException.class,
                 () -> servicio.registrar(sinEdad));
 
-        verify(repositorioMock, never()).guardar(any());
+        verify(repositorioMock, never()).guardarViajero(any());
     }
 
     @Test
@@ -117,7 +117,7 @@ class ServicioViajeroTest {
         assertThrows(EdadInvalidaException.class,
                 () -> servicio.registrar(menor));
 
-        verify(repositorioMock, never()).guardar(any());
+        verify(repositorioMock, never()).guardarViajero(any());
     }
 
     @Test
@@ -127,7 +127,7 @@ class ServicioViajeroTest {
         assertThrows(EdadInvalidaException.class,
                 () -> servicio.registrar(anciano));
 
-        verify(repositorioMock, never()).guardar(any());
+        verify(repositorioMock, never()).guardarViajero(any());
     }
 
     @Test

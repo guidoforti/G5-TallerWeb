@@ -3,6 +3,8 @@ package com.tallerwebi.dominio.IServicio;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.excepcion.*;
 
+import java.util.Optional;
+
 public interface ServicioViaje {
 
     Viaje obtenerViajePorId(Long id) throws NotFoundException;

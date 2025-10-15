@@ -4,12 +4,14 @@ package com.tallerwebi.infraestructura;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Viaje;
+import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository("repositorioViaje")
 public class RepositorioViajeImpl implements ViajeRepository {
@@ -21,13 +23,15 @@ public class RepositorioViajeImpl implements ViajeRepository {
     }
 
     @Override
-    public Viaje findById(Long id) {
-        return this.sessionFactory.getCurrentSession().get(Viaje.class, id);
+    public Optional<Viaje> findById(Long id) {
+        Viaje viaje = sessionFactory.getCurrentSession().get(Viaje.class, id);
+        return Optional.ofNullable(viaje);
     }
 
     @Override
-    public void guardarViaje(Viaje viaje) {
+    public Viaje guardarViaje(Viaje viaje) {
         this.sessionFactory.getCurrentSession().save(viaje);
+        return viaje;
     }
 
     @Override
@@ -37,10 +41,11 @@ public class RepositorioViajeImpl implements ViajeRepository {
 
     @Override
     public void borrarViaje(Long id) {
-        Viaje viaje = findById(id);
-        if (viaje != null) {
+        Optional<Viaje> viajeOptional = findById(id);
+
+        viajeOptional.ifPresent(viaje -> {
             this.sessionFactory.getCurrentSession().delete(viaje);
-        }
+        });
     }
 
     @Override
