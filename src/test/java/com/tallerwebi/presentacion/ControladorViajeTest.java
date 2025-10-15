@@ -8,6 +8,8 @@ import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.Enums.EstadoVerificacion;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
+import com.tallerwebi.dominio.IServicio.ServicioCiudad;
+import com.tallerwebi.dominio.IServicio.ServicioNominatim;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.excepcion.AsientosDisponiblesMayorQueTotalesDelVehiculoException;
@@ -19,6 +21,7 @@ import com.tallerwebi.dominio.excepcion.ViajeNoCancelableException;
 import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
 import com.tallerwebi.presentacion.Controller.ControladorViaje;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
+import com.tallerwebi.presentacion.DTO.NominatimResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.ModelAndView;
@@ -34,6 +37,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -43,15 +47,44 @@ public class ControladorViajeTest {
     private ServicioViaje servicioViajeMock;
     private ServicioVehiculo servicioVehiculoMock;
     private ServicioConductor servicioConductorMock;
+    private ServicioNominatim servicioNominatimMock;
+    private ServicioCiudad servicioCiudadMock;
     private HttpSession sessionMock;
 
     @BeforeEach
-    public void init() {
+    public void init() throws Exception {
         servicioViajeMock = mock(ServicioViaje.class);
         servicioVehiculoMock = mock(ServicioVehiculo.class);
+
+        servicioNominatimMock = mock(ServicioNominatim.class);
+        servicioCiudadMock = mock(ServicioCiudad.class);
         servicioConductorMock = mock(ServicioConductor.class);
-        controladorViaje = new ControladorViaje(servicioViajeMock, servicioVehiculoMock, servicioConductorMock);
+        controladorViaje = new ControladorViaje(servicioViajeMock, servicioVehiculoMock, servicioNominatimMock, servicioCiudadMock, servicioConductorMock);
         sessionMock = mock(HttpSession.class);
+
+        // Setup mocks por defecto para Nominatim y Ciudad (se pueden sobrescribir en tests específicos)
+        NominatimResponse origenResponse = new NominatimResponse("Buenos Aires", "-34.6037", "-58.3816", 1L, "city");
+        NominatimResponse destinoResponse = new NominatimResponse("Córdoba", "-31.4201", "-64.1888", 2L, "city");
+
+        when(servicioNominatimMock.buscarCiudadPorInputCompleto("Buenos Aires")).thenReturn(origenResponse);
+        when(servicioNominatimMock.buscarCiudadPorInputCompleto("Córdoba")).thenReturn(destinoResponse);
+
+        Ciudad buenosAires = new Ciudad(1L, "Buenos Aires", -34.6037f, -58.3816f);
+        Ciudad cordoba = new Ciudad(2L, "Córdoba", -31.4201f, -64.1888f);
+
+        when(servicioCiudadMock.guardarCiudad(any(Ciudad.class))).thenAnswer(invocation -> {
+            Ciudad ciudad = invocation.getArgument(0);
+            if (ciudad.getId() == null) {
+                ciudad.setId(1L);
+            }
+            return ciudad;
+        });
+    }
+
+    // Helper method para agregar ciudades por defecto a un DTO
+    private void agregarCiudadesAlDTO(ViajeInputDTO dto) {
+        dto.setNombreCiudadOrigen("Buenos Aires");
+        dto.setNombreCiudadDestino("Córdoba");
     }
 
     @Test
@@ -124,6 +157,8 @@ public class ControladorViajeTest {
         viajeInputDTO.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
         viajeInputDTO.setPrecio(1500.0);
         viajeInputDTO.setAsientosDisponibles(3);
+        viajeInputDTO.setNombreCiudadOrigen("Buenos Aires");
+        viajeInputDTO.setNombreCiudadDestino("Córdoba");
 
         when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
         when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
@@ -135,6 +170,8 @@ public class ControladorViajeTest {
         // then
         assertThat(mav.getViewName(), equalTo("redirect:/conductor/home"));
         verify(servicioViajeMock, times(1)).publicarViaje(any(Viaje.class), eq(conductorId), eq(1L));
+        verify(servicioNominatimMock, times(1)).buscarCiudadPorInputCompleto("Buenos Aires");
+        verify(servicioNominatimMock, times(1)).buscarCiudadPorInputCompleto("Córdoba");
     }
 
     @Test
@@ -175,6 +212,7 @@ public class ControladorViajeTest {
         viajeInputDTO.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
         viajeInputDTO.setPrecio(1500.0);
         viajeInputDTO.setAsientosDisponibles(3);
+        agregarCiudadesAlDTO(viajeInputDTO);
 
         Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
         Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
@@ -207,6 +245,7 @@ public class ControladorViajeTest {
         viajeInputDTO.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
         viajeInputDTO.setPrecio(1500.0);
         viajeInputDTO.setAsientosDisponibles(10);
+        agregarCiudadesAlDTO(viajeInputDTO);
 
         Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
         Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
@@ -237,6 +276,7 @@ public class ControladorViajeTest {
         viajeInputDTO.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
         viajeInputDTO.setPrecio(null); // precio obligatorio faltante
         viajeInputDTO.setAsientosDisponibles(3);
+        agregarCiudadesAlDTO(viajeInputDTO);
 
         Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
         Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
@@ -267,6 +307,7 @@ public class ControladorViajeTest {
         viajeInputDTO.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
         viajeInputDTO.setPrecio(1500.0);
         viajeInputDTO.setAsientosDisponibles(3);
+        agregarCiudadesAlDTO(viajeInputDTO);
 
         when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
         when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
@@ -293,6 +334,7 @@ public class ControladorViajeTest {
         viajeInputDTO.setFechaHoraDeSalida(LocalDateTime.now().minusDays(1)); // Fecha pasada
         viajeInputDTO.setPrecio(1500.0);
         viajeInputDTO.setAsientosDisponibles(3);
+        agregarCiudadesAlDTO(viajeInputDTO);
 
         Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
         Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
@@ -326,6 +368,8 @@ public class ControladorViajeTest {
         viajeInputDTO.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
         viajeInputDTO.setPrecio(1500.0);
         viajeInputDTO.setAsientosDisponibles(3);
+        viajeInputDTO.setNombreCiudadOrigen("Buenos Aires");
+        viajeInputDTO.setNombreCiudadDestino("Córdoba");
 
         when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorIdEnSesion);
         when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");

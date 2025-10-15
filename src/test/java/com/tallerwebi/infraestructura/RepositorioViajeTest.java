@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.List;
@@ -21,6 +20,7 @@ import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
+import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Entity.Viaje;
@@ -39,6 +39,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 
 
@@ -114,19 +116,33 @@ void deberiaBorrarViajePorId() {
 
     @Test
 void deberiaBuscarPorOrigenDestinoYConductor() {
-    // Arrange
-    Ciudad origen = new Ciudad(null, "San Justo", 0, 0);
-    Ciudad destino = new Ciudad(null, "La Plata", 0, 0);
-    sessionFactory.getCurrentSession().persist(origen);
-    sessionFactory.getCurrentSession().persist(destino);
+    // 1. ARRANGE - CREACIÓN Y PERSISTENCIA DE CIUDADES CON COORDENADAS ÚNICAS
+    // Usamos 'f' para el tipo float y valores diferentes.
+    Ciudad origen = new Ciudad(null, "San Justo", 0.0f, 0.0f); 
+    Ciudad destino = new Ciudad(null, "La Plata", 1.0f, 1.0f); // Valores únicos para no violar Constraint
 
-    Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+    // Usamos saveOrUpdate y flush() para asegurar que las entidades se guarden 
+    // y obtengan sus IDs antes de que Viaje las referencie.
+    sessionFactory.getCurrentSession().saveOrUpdate(origen); 
+    sessionFactory.getCurrentSession().saveOrUpdate(destino);
+    sessionFactory.getCurrentSession().flush(); 
 
+    // 2. ARRANGE - CREACIÓN Y PERSISTENCIA DEL CONDUCTOR
+    // Creamos el conductor para asegurar que existe, en lugar de usar get(..., 1L).
+    Conductor conductor = new Conductor();
+    conductor.setNombre("Conductor Principal");
+    conductor.setEmail("principal@correo.com");
+    conductor.setContrasenia("123456");
+    sessionFactory.getCurrentSession().saveOrUpdate(conductor);
+
+    // 3. ARRANGE - CREACIÓN Y PERSISTENCIA DEL VIAJE
     Viaje viaje = new Viaje();
     viaje.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
     viaje.setPrecio(1000.0);
     viaje.setAsientosDisponibles(2);
     viaje.setEstado(EstadoDeViaje.DISPONIBLE);
+    
+    // Asignamos las entidades persistidas
     viaje.setOrigen(origen);
     viaje.setDestino(destino);
     viaje.setConductor(conductor);
@@ -142,22 +158,38 @@ void deberiaBuscarPorOrigenDestinoYConductor() {
 }
 
 
+
+
 @Test
 void noDeberiaEncontrarViajeSiConductorNoCoincide() {
-    // Arrange
-    Ciudad origen = new Ciudad(null, "San Justo", 0, 0);
-    Ciudad destino = new Ciudad(null, "La Plata", 0, 0);
-    sessionFactory.getCurrentSession().persist(origen);
-    sessionFactory.getCurrentSession().persist(destino);
+    // 1. ARRANGE - CREACIÓN Y PERSISTENCIA DE CIUDADES CON COORDENADAS ÚNICAS
+    // Es crucial usar 0f y 1f (o cualquier valor distinto)
+    Ciudad origen = new Ciudad(null, "San Justo", 0.0f, 0.0f); 
+    Ciudad destino = new Ciudad(null, "La Plata", 1.0f, 1.0f); // Lat y Lon DIFERENTES
+    
+    // Usamos saveOrUpdate para ser más robustos
+    sessionFactory.getCurrentSession().saveOrUpdate(origen);
+    sessionFactory.getCurrentSession().saveOrUpdate(destino);
+    
+    // Forzamos el flush para que los IDs se generen antes de continuar,
+    // previniendo otros errores de Constraint/FK.
+    sessionFactory.getCurrentSession().flush(); 
 
-    Conductor conductorCorrecto = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
-
+    // 2. ARRANGE - CREACIÓN Y PERSISTENCIA DEL CONDUCTOR
+    // Crear el conductor es más seguro que usar get(..., 1L)
+    Conductor conductorCorrecto = new Conductor();
+    conductorCorrecto.setNombre("Conductor OK");
+    conductorCorrecto.setEmail("ok@correo.com");
+    conductorCorrecto.setContrasenia("123456");
+    sessionFactory.getCurrentSession().saveOrUpdate(conductorCorrecto);
+    
     Conductor otroConductor = new Conductor();
     otroConductor.setNombre("Otro");
     otroConductor.setEmail("otro@correo.com");
     otroConductor.setContrasenia("123456");
-    sessionFactory.getCurrentSession().persist(otroConductor);
+    sessionFactory.getCurrentSession().saveOrUpdate(otroConductor);
 
+    // 3. ARRANGE - CREACIÓN Y PERSISTENCIA DEL VIAJE
     Viaje viaje = new Viaje();
     viaje.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
     viaje.setPrecio(1000.0);
@@ -175,6 +207,7 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
     // Assert
     assertThat(resultados, empty());
 }
+
 
 
 
@@ -264,21 +297,30 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
         assertNull(borrado, "El viaje debería haber sido eliminado");
     }
 
-    @Test
-    void deberiaEncontrarViajesPorConductor() {
     
-    Ciudad origen = new Ciudad(null, "Morón", 0f, 0f);
-    Ciudad destino = new Ciudad(null, "Lanús", 0f, 0f);
-    sessionFactory.getCurrentSession().persist(origen);
+    @Test
+void deberiaEncontrarViajesPorConductor() {
+    // 1. ARRANGE - CREACIÓN Y PERSISTENCIA DE CIUDADES CON COORDENADAS ÚNICAS
+    Ciudad origen = new Ciudad(null, "Morón", 0.0f, 0.0f); // Coordenadas de Origen
+    Ciudad destino = new Ciudad(null, "Lanús", 1.0f, 1.0f); // Coordenadas DIFERENTES para evitar ConstraintViolation
+
+    // Persistir ciudades
+    sessionFactory.getCurrentSession().persist(origen); 
     sessionFactory.getCurrentSession().persist(destino);
+    
+    // Forzar el flush para que los IDs se generen y se registren en la DB antes de que Viaje las use.
+    sessionFactory.getCurrentSession().flush(); 
+
+    // 2. ARRANGE - CREACIÓN Y PERSISTENCIA DEL CONDUCTOR
     Conductor conductor = new Conductor();
     conductor.setNombre("Test");
     conductor.setEmail("test@correo.com");
     conductor.setContrasenia("123456");
     sessionFactory.getCurrentSession().persist(conductor);
 
+    // 3. ARRANGE - CREACIÓN Y PERSISTENCIA DE VIAJES
     
-
+    // Viaje 1
     Viaje viaje1 = new Viaje();
     viaje1.setFechaHoraDeSalida(LocalDateTime.now().plusDays(2));
     viaje1.setPrecio(1200.0);
@@ -289,7 +331,7 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
     viaje1.setConductor(conductor);
     sessionFactory.getCurrentSession().persist(viaje1);
     
-
+    // Viaje 2
     Viaje viaje2 = new Viaje();
     viaje2.setFechaHoraDeSalida(LocalDateTime.now().plusDays(3));
     viaje2.setPrecio(1800.0);
@@ -300,10 +342,99 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
     viaje2.setConductor(conductor);
     sessionFactory.getCurrentSession().persist(viaje2);
 
+    // Act
     List<Viaje> resultados = repositorioViaje.findByConductorId(conductor.getId());
 
+    // Assert
     assertNotNull(resultados);
     assertEquals(2, resultados.size(), "Debería encontrar 2 viajes para el conductor");
     assertTrue(resultados.stream().allMatch(v -> v.getConductor().getId().equals(conductor.getId())));
 }
+
+    
+    @Test
+    void deberiaEncontrarViajesEnEstadosDisponibleYCompleto() {
+        // Arrange - Usar datos de dataTest.sql
+        // Viaje 1: Buenos Aires -> Cordoba, conductor 1, estado DISPONIBLE (0)
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad cordoba = sessionFactory.getCurrentSession().get(Ciudad.class, 2L);
+
+        List<EstadoDeViaje> estadosProhibidos = Arrays.asList(EstadoDeViaje.DISPONIBLE, EstadoDeViaje.COMPLETO);
+
+        // Act
+        List<Viaje> viajesEncontrados = repositorioViaje.findByOrigenYDestinoYConductorYEstadoIn(
+            buenosAires,
+            cordoba,
+            conductor,
+            estadosProhibidos
+        );
+
+        // Assert
+        assertNotNull(viajesEncontrados);
+        assertEquals(1, viajesEncontrados.size(), "Debería encontrar el viaje existente en estado DISPONIBLE");
+        assertEquals(1L, viajesEncontrados.get(0).getId());
+        assertEquals(EstadoDeViaje.DISPONIBLE, viajesEncontrados.get(0).getEstado());
+    }
+
+    @Test
+    void noDeberiaEncontrarViajesEnEstadosFinalizadoOCancelado() {
+        // Arrange - Crear viaje en estado FINALIZADO
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+        Vehiculo vehiculo = sessionFactory.getCurrentSession().get(Vehiculo.class, 1L);
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad rosario = sessionFactory.getCurrentSession().get(Ciudad.class, 3L);
+
+        Viaje viajeFinalizadoForTest = new Viaje();
+        viajeFinalizadoForTest.setOrigen(buenosAires);
+        viajeFinalizadoForTest.setDestino(rosario);
+        viajeFinalizadoForTest.setConductor(conductor);
+        viajeFinalizadoForTest.setVehiculo(vehiculo);
+        viajeFinalizadoForTest.setEstado(EstadoDeViaje.FINALIZADO);
+        viajeFinalizadoForTest.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
+        viajeFinalizadoForTest.setPrecio(10000.0);
+        viajeFinalizadoForTest.setAsientosDisponibles(2);
+        viajeFinalizadoForTest.setFechaDeCreacion(LocalDateTime.now());
+        viajeFinalizadoForTest.setViajeros(new ArrayList<>());
+        viajeFinalizadoForTest.setParadas(new ArrayList<>());
+
+        repositorioViaje.guardarViaje(viajeFinalizadoForTest);
+        sessionFactory.getCurrentSession().flush();
+
+        List<EstadoDeViaje> estadosProhibidos = Arrays.asList(EstadoDeViaje.DISPONIBLE, EstadoDeViaje.COMPLETO);
+
+        // Act
+        List<Viaje> viajesEncontrados = repositorioViaje.findByOrigenYDestinoYConductorYEstadoIn(
+            buenosAires,
+            rosario,
+            conductor,
+            estadosProhibidos
+        );
+
+        // Assert
+        assertNotNull(viajesEncontrados);
+        assertEquals(0, viajesEncontrados.size(), "No debería encontrar viajes en estado FINALIZADO");
+    }
+
+    @Test
+    void deberiaRetornarListaVaciaCuandoNoHayViajesConEsosEstados() {
+        // Arrange
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 2L);
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad rosario = sessionFactory.getCurrentSession().get(Ciudad.class, 3L);
+
+        List<EstadoDeViaje> estadosProhibidos = Arrays.asList(EstadoDeViaje.DISPONIBLE, EstadoDeViaje.COMPLETO);
+
+        // Act - Buscar viaje que no existe (conductor 2 nunca viajó de Buenos Aires a Rosario)
+        List<Viaje> viajesEncontrados = repositorioViaje.findByOrigenYDestinoYConductorYEstadoIn(
+            buenosAires,
+            rosario,
+            conductor,
+            estadosProhibidos
+        );
+
+        // Assert
+        assertNotNull(viajesEncontrados);
+        assertEquals(0, viajesEncontrados.size(), "Debería retornar lista vacía");
+    }
 }
