@@ -18,6 +18,7 @@ import org.mockito.Mockito;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,7 +26,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 
@@ -436,51 +439,37 @@ class ServicioViajeTest {
         verify(viajeRepositoryMock, never()).modificarViaje(any());
     }
 
-    @Test
-        void noDebeListarViajesSiUsuarioNoEsConductor() {
-    
-    Usuario usuarioSinRol = new Usuario();
-    usuarioSinRol.setId(1L);
-    usuarioSinRol.setRol("PASAJERO"); // rol incorrecto
-
-    
-    assertThrows(UsuarioNoAutorizadoException.class,
-        () -> servicioViaje.listarViajesPorConductor(usuarioSinRol));
-
-    }
-
-
-    @Test
-        void noDebeListarViajesSiUsuarioEsNull() {
-    
+     @Test
+    void noDebeListarViajesSiConductorEsNull() {
+      
+        
         assertThrows(UsuarioNoAutorizadoException.class,
-        () -> servicioViaje.listarViajesPorConductor(null));
+                () -> servicioViaje.listarViajesPorConductor(null));
+        
+        verify(viajeRepositoryMock, never()).findByConductorId(anyLong());
     }
 
-
     @Test
-        void deberiaListarViajesSiUsuarioEsConductor() throws UsuarioNoAutorizadoException {
-    
-        Usuario usuarioConductor = new Usuario();
-        usuarioConductor.setId(1L);
-        usuarioConductor.setRol("CONDUCTOR");
+    void deberiaListarViajesPorConductor() throws UsuarioNoAutorizadoException {
+        Conductor conductor = new Conductor();
+        conductor.setId(1L);
 
         Viaje viaje1 = new Viaje();
         viaje1.setId(10L);
         Viaje viaje2 = new Viaje();
         viaje2.setId(20L);
 
-        List<Viaje> viajesMock = List.of(viaje1, viaje2);
+        List<Viaje> viajesEsperados = List.of(viaje1, viaje2);
 
-        when(viajeRepositoryMock.findByConductorId(1L)).thenReturn(viajesMock);
+        when(viajeRepositoryMock.findByConductorId(1L)).thenReturn(viajesEsperados);
 
-        List<Viaje> resultado = servicioViaje.listarViajesPorConductor(usuarioConductor);
+        List<Viaje> resultado = servicioViaje.listarViajesPorConductor(conductor);
 
         assertNotNull(resultado);
         assertEquals(2, resultado.size());
+        
         verify(viajeRepositoryMock).findByConductorId(1L);
     }
-
 
     @Test
     void noDeberiaPublicarSiOrigenEsNull() {
@@ -662,6 +651,27 @@ class ServicioViajeTest {
         // then
         ArgumentCaptor<Viaje> viajeCaptor = ArgumentCaptor.forClass(Viaje.class);
         verify(viajeRepositoryMock).guardarViaje(viajeCaptor.capture());
+    }
+
+
+
+    
+    @Test
+    void deberiaDevolverListaVaciaSiConductorNoTieneViajes() throws UsuarioNoAutorizadoException {
+      
+        
+        Conductor conductorSinViajes = new Conductor();
+        conductorSinViajes.setId(99L);
+
+        when(viajeRepositoryMock.findByConductorId(99L)).thenReturn(Collections.emptyList());
+
+        List<Viaje> resultado = servicioViaje.listarViajesPorConductor(conductorSinViajes);
+
+        assertNotNull(resultado);
+        assertTrue(resultado.isEmpty());
+        assertEquals(0, resultado.size());
+
+        verify(viajeRepositoryMock).findByConductorId(99L);
     }
 }
 

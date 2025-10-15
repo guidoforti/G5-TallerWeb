@@ -155,15 +155,14 @@ public Viaje obtenerViajePorId(Long id) {
     }
 
     @Override
-    public List<Viaje> listarViajesPorConductor(Usuario usuarioEnSesion) throws UsuarioNoAutorizadoException {
-    // validar que el usuario este logueado y sea conductor
-    if (usuarioEnSesion == null || usuarioEnSesion.getRol() == null || 
-        !usuarioEnSesion.getRol().equalsIgnoreCase("CONDUCTOR")) {
-        throw new UsuarioNoAutorizadoException("Debés iniciar sesión como conductor");
+public List<Viaje> listarViajesPorConductor(Conductor conductor) throws UsuarioNoAutorizadoException {
+   
+    if (conductor == null) {
+        throw new UsuarioNoAutorizadoException("El conductor es nulo, la sesión no es válida.");
     }
 
     // obtener viajes del conductor
-    return this.viajeRepository.findByConductorId(usuarioEnSesion.getId());
+    return this.viajeRepository.findByConductorId(conductor.getId());
 }
 
 }
