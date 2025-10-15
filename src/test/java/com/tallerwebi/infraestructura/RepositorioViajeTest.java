@@ -41,6 +41,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 
 
@@ -250,10 +251,12 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
         Long viajeId = 1L;
 
         // Act
-        Viaje resultado = repositorioViaje.findById(viajeId);
+        Optional<Viaje> resultadoOptional = repositorioViaje.findById(viajeId);
 
         // Assert
-        assertNotNull(resultado);
+        assertTrue(resultadoOptional.isPresent(), "El Optional debería contener el viaje");
+        Viaje resultado = resultadoOptional.get();
+
         assertEquals(viajeId, resultado.getId());
         assertEquals(15000.0, resultado.getPrecio());
         assertEquals(3, resultado.getAsientosDisponibles());
@@ -262,9 +265,18 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
     }
 
     @Test
+    void deberiaRetornarOptionalVacioSiNoExisteViaje() {
+        Long idInexistente = 999L;
+        // Act
+        Optional<Viaje> resultadoOptional = repositorioViaje.findById(idInexistente);
+        // Assert
+        assertTrue(resultadoOptional.isEmpty(), "El Optional debería estar vacío para un ID inexistente");
+    }
+
+    @Test
     void deberiaModificarViaje() {
         // Arrange - Usar viaje existente de dataTest.sql (id=2)
-        Viaje viaje = repositorioViaje.findById(2L);
+        Viaje viaje = repositorioViaje.findById(2L).get();
         Double precioOriginal = viaje.getPrecio();
         Integer asientosOriginales = viaje.getAsientosDisponibles();
 
@@ -274,7 +286,7 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
         repositorioViaje.modificarViaje(viaje);
 
         // Assert
-        Viaje modificado = repositorioViaje.findById(2L);
+        Viaje modificado = repositorioViaje.findById(2L).get();
         assertEquals(20000.0, modificado.getPrecio());
         assertEquals(1, modificado.getAsientosDisponibles());
         assertNotEquals(precioOriginal, modificado.getPrecio());
@@ -285,16 +297,25 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
     void deberiaBorrarViaje() {
         // Arrange - Usar viaje existente de dataTest.sql (id=3)
         Long viajeId = 3L;
-        Viaje viajeExistente = repositorioViaje.findById(viajeId);
-        assertNotNull(viajeExistente, "El viaje debería existir antes de borrarlo");
-
+        assertTrue(repositorioViaje.findById(viajeId).isPresent(), "El viaje debería existir antes de borrarlo");
         // Act
         repositorioViaje.borrarViaje(viajeId);
         sessionFactory.getCurrentSession().flush();
+        // Assert - Afirmamos que el Optional está vacío después de la operación
+        assertTrue(repositorioViaje.findById(viajeId).isEmpty(), "El Optional debería estar vacío después de borrarlo");
+    }
 
-        // Assert
-        Viaje borrado = repositorioViaje.findById(viajeId);
-        assertNull(borrado, "El viaje debería haber sido eliminado");
+    @Test
+    void deberiaIntentarBorrarViajeInexistenteSinExcepcion() {
+        // Arrange
+        Long idInexistente = 999L;
+        // Aseguramos que el viaje no existe
+        assertTrue(repositorioViaje.findById(idInexistente).isEmpty());
+
+        assertDoesNotThrow(() -> {
+            repositorioViaje.borrarViaje(idInexistente);
+            sessionFactory.getCurrentSession().flush();
+        }, "Borrar un viaje inexistente no debería lanzar excepción");
     }
 
     
@@ -376,6 +397,8 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
         assertEquals(EstadoDeViaje.DISPONIBLE, viajesEncontrados.get(0).getEstado());
     }
 
+
+
     @Test
     void noDeberiaEncontrarViajesEnEstadosFinalizadoOCancelado() {
         // Arrange - Crear viaje en estado FINALIZADO
@@ -435,5 +458,38 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
         // Assert
         assertNotNull(viajesEncontrados);
         assertEquals(0, viajesEncontrados.size(), "Debería retornar lista vacía");
+    }
+    @Test
+    void deberiaEncontrarViajesPorOrigenDestinoYConductor() {
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad cordoba = sessionFactory.getCurrentSession().get(Ciudad.class, 2L);
+
+        List<Viaje> viajesEncontrados = repositorioViaje.findByOrigenYDestinoYConductor(
+                buenosAires,
+                cordoba,
+                conductor
+        );
+
+        assertNotNull(viajesEncontrados);
+        assertEquals(1, viajesEncontrados.size(), "Debería encontrar el viaje 1L");
+        assertEquals(1L, viajesEncontrados.get(0).getId());
+    }
+
+    @Test
+    void deberiaRetornarListaVaciaSiNoHayViajesPorOrigenDestinoYConductor() {
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 2L);
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad rosario = sessionFactory.getCurrentSession().get(Ciudad.class, 3L);
+
+        // Act
+        List<Viaje> viajesEncontrados = repositorioViaje.findByOrigenYDestinoYConductor(
+                buenosAires,
+                rosario,
+                conductor
+        );
+
+        assertNotNull(viajesEncontrados);
+        assertTrue(viajesEncontrados.isEmpty(), "Debería retornar una lista vacía");
     }
 }

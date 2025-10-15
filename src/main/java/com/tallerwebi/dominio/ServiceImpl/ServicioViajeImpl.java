@@ -18,6 +18,7 @@ import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -35,12 +36,11 @@ public class ServicioViajeImpl implements ServicioViaje {
         this.servicioVehiculo = servicioVehiculo;
     }
 
-
-   @Override
-public Viaje obtenerViajePorId(Long id) {
-    return this.viajeRepository.findById(id);
-}
-
+    @Override
+    public Viaje obtenerViajePorId(Long id) throws NotFoundException {
+        return viajeRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("No se encontró el viaje"));
+    }
 
     @Override
     public void publicarViaje(Viaje viaje, Long conductorId, Long vehiculoId) throws UsuarioInexistente, NotFoundException,
@@ -134,10 +134,13 @@ public Viaje obtenerViajePorId(Long id) {
         }
 
         //busco viaje por id
-        Viaje viaje = this.viajeRepository.findById(id);
-        if(viaje == null){
-            throw new ViajeNoEncontradoException("No se encontro un viaje con ese id");
+        Optional<Viaje> viajeOptional = viajeRepository.findById(id);
+        if (viajeOptional.isEmpty()) {
+        throw new ViajeNoEncontradoException("No se encontró un viaje con ese ID");
         }
+
+        //Esta linea obtiene el objeto viaje
+          Viaje viaje = viajeOptional.get();
 
         //el viaje debe pertenecer al conductor
         if(!viaje.getConductor().getId().equals(usuarioEnSesion.getId())){
@@ -155,14 +158,14 @@ public Viaje obtenerViajePorId(Long id) {
     }
 
     @Override
-public List<Viaje> listarViajesPorConductor(Conductor conductor) throws UsuarioNoAutorizadoException {
+    public List<Viaje> listarViajesPorConductor(Conductor conductor) throws UsuarioNoAutorizadoException {
    
-    if (conductor == null) {
-        throw new UsuarioNoAutorizadoException("El conductor es nulo, la sesión no es válida.");
-    }
+        if (conductor == null) {
+            throw new UsuarioNoAutorizadoException("El conductor es nulo, la sesión no es válida.");
+        }
 
-    // obtener viajes del conductor
-    return this.viajeRepository.findByConductorId(conductor.getId());
-}
+        // obtener viajes del conductor
+        return this.viajeRepository.findByConductorId(conductor.getId());
+    }
 
 }
