@@ -40,9 +40,9 @@ public class RepositorioConductorImpl implements RepositorioConductor {
         String hql = "SELECT c FROM Conductor c WHERE email = :email";
         Conductor conductor = this.sessionFactory.getCurrentSession().createQuery(hql, Conductor.class)
                 .setParameter("email", email)
-                .getSingleResult();
+                .uniqueResult();
 
-        return Optional.of(conductor);
+        return Optional.ofNullable(conductor);
     }
 
     @Override
@@ -50,9 +50,9 @@ public class RepositorioConductorImpl implements RepositorioConductor {
         String hql = "SELECT c FROM Conductor c WHERE id = :id";
         Conductor conductor = this.sessionFactory.getCurrentSession().createQuery(hql, Conductor.class)
                 .setParameter("id", id)
-                .getSingleResult();
+                .uniqueResult();
 
-        return Optional.of(conductor);
+        return Optional.ofNullable(conductor);
     }
 
     @Override

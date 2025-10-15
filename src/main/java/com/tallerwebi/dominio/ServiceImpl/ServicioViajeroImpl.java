@@ -1,5 +1,7 @@
 package com.tallerwebi.dominio.ServiceImpl;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.tallerwebi.dominio.Entity.Viajero;
@@ -12,6 +14,7 @@ import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 
 @Service("servicioViajero")
+@Transactional
 public class ServicioViajeroImpl implements ServicioViajero{
 
 
