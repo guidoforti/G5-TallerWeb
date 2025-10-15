@@ -6,12 +6,13 @@ import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ViajeRepository {
 
 
-    Viaje findById(Long id);
-    void guardarViaje(Viaje viaje);
+    Optional<Viaje> findById(Long id);
+    Viaje guardarViaje(Viaje viaje);
     void modificarViajer(Viaje viaje);
     void borrarViaje(Long id);
 

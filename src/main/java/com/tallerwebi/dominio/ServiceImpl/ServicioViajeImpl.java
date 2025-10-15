@@ -36,8 +36,9 @@ public class ServicioViajeImpl implements ServicioViaje {
 
 
     @Override
-    public Viaje obtenerViajePorId(Long id) {
-        return null;
+    public Viaje obtenerViajePorId(Long id) throws NotFoundException {
+        return viajeRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("No se encontró el viaje"));
     }
 
     @Override

@@ -1,11 +1,13 @@
 package com.tallerwebi.dominio;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
-
+import com.tallerwebi.dominio.excepcion.NotFoundException;
 import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.IRepository.RepositorioCiudad;
 import com.tallerwebi.dominio.IServicio.ServicioCiudad;
@@ -81,8 +83,8 @@ public void queGuardeNuevaCiudadSiNoExiste() {
     nuevaCiudad.setLatitud(-32.8895f);
     nuevaCiudad.setLongitud(-68.8458f);
 
-    // Mock: no existe ciudad con esas coordenadas
-    when(repositorioMock.buscarPorCoordenadas(-32.8895f, -68.8458f)).thenReturn(null);
+    // Mock CORREGIDO: ahora devuelve Optional.empty() para simular que NO existe
+    when(repositorioMock.buscarPorCoordenadas(-32.8895f, -68.8458f)).thenReturn(Optional.empty());
     when(repositorioMock.guardarCiudad(nuevaCiudad)).thenReturn(nuevaCiudad);
 
     // Act
@@ -111,8 +113,8 @@ public void queRetorneCiudadExistenteSiYaExisteConMismasCoordenadas() {
     nuevaCiudad.setLatitud(-34.6037f);
     nuevaCiudad.setLongitud(-58.3816f);
 
-    // Mock: existe ciudad con esas coordenadas
-    when(repositorioMock.buscarPorCoordenadas(-34.6037f, -58.3816f)).thenReturn(ciudadExistente);
+    // Mock CORREGIDO: ahora devuelve Optional.of(ciudadExistente) para simular que SÍ existe
+    when(repositorioMock.buscarPorCoordenadas(-34.6037f, -58.3816f)).thenReturn(Optional.of(ciudadExistente));
 
     // Act
     Ciudad resultado = servicio.guardarCiudad(nuevaCiudad);
@@ -134,18 +136,17 @@ public void queNoGuardeDuplicadosCuandoSeIntentaGuardarMismaCiudadDosVeces() {
     ciudad1.setNombre("Rosario");
     ciudad1.setLatitud(-32.9442f);
     ciudad1.setLongitud(-60.6505f);
+    ciudad1.setId(10L);
 
     Ciudad ciudad2 = new Ciudad();
     ciudad2.setNombre("Rosario Centro");  // Nombre diferente
     ciudad2.setLatitud(-32.9442f);  // Mismas coordenadas
     ciudad2.setLongitud(-60.6505f);
 
-    // Primera vez: no existe
     when(repositorioMock.buscarPorCoordenadas(-32.9442f, -60.6505f))
-        .thenReturn(null)
-        .thenReturn(ciudad1);  // Segunda vez: ya existe
+            .thenReturn(Optional.empty())
+            .thenReturn(Optional.of(ciudad1));
 
-    ciudad1.setId(10L);
     when(repositorioMock.guardarCiudad(ciudad1)).thenReturn(ciudad1);
 
     // Act
@@ -155,10 +156,85 @@ public void queNoGuardeDuplicadosCuandoSeIntentaGuardarMismaCiudadDosVeces() {
     // Assert
     assertEquals(10L, resultado1.getId());
     assertEquals(10L, resultado2.getId());
-    assertEquals("Rosario", resultado2.getNombre());  // Retorna la primera, no la segunda
+    assertEquals("Rosario", resultado2.getNombre());
     verify(repositorioMock, times(1)).guardarCiudad(any());  // Solo se guarda una vez
 }
 
+    @Test
+    public void queElimineCiudadSiExiste() throws NotFoundException {
+        // Arrange
+        RepositorioCiudad repositorioMock = mock(RepositorioCiudad.class);
+        ServicioCiudad servicio = new ServicioCiudadImpl(repositorioMock);
+        Long idExistente = 1L;
 
+        // Mock: la ciudad existe
+        when(repositorioMock.buscarPorId(idExistente)).thenReturn(Optional.of(new Ciudad()));
+
+        // Act
+        servicio.eliminarCiudad(idExistente);
+
+        // Assert
+        verify(repositorioMock).buscarPorId(idExistente);
+        verify(repositorioMock).eliminarCiudad(idExistente);
+    }
+
+    @Test
+    public void queLanceExcepcionAlIntentarEliminarCiudadInexistente() {
+        // Arrange
+        RepositorioCiudad repositorioMock = mock(RepositorioCiudad.class);
+        ServicioCiudad servicio = new ServicioCiudadImpl(repositorioMock);
+        Long idInexistente = 999L;
+
+        when(repositorioMock.buscarPorId(idInexistente)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> servicio.eliminarCiudad(idInexistente));
+        verify(repositorioMock).buscarPorId(idInexistente);
+        verify(repositorioMock, never()).eliminarCiudad(anyLong());
+    }
+
+    @Test
+    public void queActualiceCiudadSiExiste() throws NotFoundException {
+        // Arrange
+        RepositorioCiudad repositorioMock = mock(RepositorioCiudad.class);
+        ServicioCiudad servicio = new ServicioCiudadImpl(repositorioMock);
+        Ciudad ciudadAModificar = new Ciudad();
+        ciudadAModificar.setId(1L);
+
+        when(repositorioMock.buscarPorId(1L)).thenReturn(Optional.of(ciudadAModificar));
+        when(repositorioMock.actualizarCiudad(ciudadAModificar)).thenReturn(ciudadAModificar);
+
+        Ciudad resultado = servicio.actualizarCiudad(ciudadAModificar);
+
+        // Assert
+        assertThat(resultado, is(ciudadAModificar));
+        verify(repositorioMock).buscarPorId(1L);
+        verify(repositorioMock).actualizarCiudad(ciudadAModificar);
+    }
+
+    @Test
+    public void queLanceExcepcionAlIntentarActualizarCiudadInexistente() {
+        // Arrange
+        RepositorioCiudad repositorioMock = mock(RepositorioCiudad.class);
+        ServicioCiudad servicio = new ServicioCiudadImpl(repositorioMock);
+        Ciudad ciudadInexistente = new Ciudad();
+        ciudadInexistente.setId(999L);
+
+        when(repositorioMock.buscarPorId(999L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(NotFoundException.class, () -> servicio.actualizarCiudad(ciudadInexistente));
+        verify(repositorioMock).buscarPorId(999L);
+        verify(repositorioMock, never()).actualizarCiudad(any());
+    }
+
+    @Test
+    public void queLanceExcepcionSiBuscarPorIdNoEncuentraCiudad() {
+        RepositorioCiudad repositorioMock = mock(RepositorioCiudad.class);
+        ServicioCiudad servicio = new ServicioCiudadImpl(repositorioMock);
+        Long idInexistente = 999L;
+        when(repositorioMock.buscarPorId(idInexistente)).thenReturn(Optional.empty());
+        assertThrows(NotFoundException.class, () -> servicio.buscarPorId(idInexistente));
+        verify(repositorioMock).buscarPorId(idInexistente);
+    }
 
 }

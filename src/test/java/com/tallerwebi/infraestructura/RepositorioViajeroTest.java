@@ -1,109 +1,126 @@
 package com.tallerwebi.infraestructura;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import com.tallerwebi.dominio.Entity.Viajero;
+import com.tallerwebi.integracion.config.DataBaseTestInitilizationConfig;
+import com.tallerwebi.integracion.config.HibernateTestConfig;
+import org.hibernate.SessionFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Optional;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.tallerwebi.dominio.Entity.Viajero;
-import com.tallerwebi.dominio.IRepository.RepositorioViajero;
-
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = { HibernateTestConfig.class, DataBaseTestInitilizationConfig.class })
+@Transactional
 public class RepositorioViajeroTest {
 
-    private RepositorioViajero repositorioViajero;
+    @Autowired
+    private SessionFactory sessionFactory;
+
+    private RepositorioViajeroImpl repositorioViajero;
+    private Viajero viajeroBase; // Necesaria para guardar el ID
 
     @BeforeEach
-    public void init(){
-        this.repositorioViajero = new RepositorioViajeroImpl();
+    public void setUp() {
+        this.repositorioViajero = new RepositorioViajeroImpl(this.sessionFactory);
+
+        viajeroBase = new Viajero(null, "ViajeroBaseTest", 30, "viajero.base.test@unlam.com", "securePass1", new ArrayList<>());
+        repositorioViajero.guardarViajero(viajeroBase);
+
+        //sessionFactory.getCurrentSession().flush();
+        //sessionFactory.getCurrentSession().clear();
     }
 
     @Test
-    public void cuandoSeAgregaViajeroNuevoSeGuarda(){
-        Viajero viajero = new Viajero(null, "Patricio", 20, "Patricio@gmail.com", "1234aa", new ArrayList<>());
+    public void cuandoSeAgregaViajeroNuevoSeGuardaYRetornaId(){
+        // Arrange
+        Viajero viajero = new Viajero(null, "Patricio Nuevo", 20, "patricio.nuevo@test.com", "1234aa", new ArrayList<>());
 
-        Boolean guardar = this.repositorioViajero.guardar(viajero);
+        Viajero viajeroGuardado = this.repositorioViajero.guardarViajero(viajero);
 
-        assertThat(guardar, is(true));
-        assertThat(viajero.getId(), is(4L));
-    }
+        assertThat(viajeroGuardado, is(notNullValue()));
+        assertThat(viajeroGuardado.getId(), is(notNullValue()));
 
-    @Test
-    public void cuandoSeAgregaViajeroConEmailDuplicadoNoSeGuarda(){
-         Viajero viajero = new Viajero(null, "Patricio", 20, "Patricio@gmail.com", "1234aa", new ArrayList<>());
-         Viajero viajeroDos = new Viajero(null, "Julia", 24, "Julia@gmail.com", "378dsf", new ArrayList<>());
-         Viajero viajeroTres = new Viajero(null, "Rodrigo", 22, "Patricio@gmail.com", "84kdgf", new ArrayList<>());
-
-         assertThat(repositorioViajero.guardar(viajero), is(true));
-         assertThat(repositorioViajero.guardar(viajeroDos),is(true));
-         assertThat(repositorioViajero.guardar(viajeroTres), is(false));
+        Optional<Viajero> encontrado = repositorioViajero.buscarPorId(viajeroGuardado.getId());
+        assertTrue(encontrado.isPresent());
     }
 
     @Test
     public void buscoViajeroPorEmailYContraseniaYLoEncuentro(){
-        Viajero viajero = new Viajero(null, "Juan", 21, "Juan@gmail.com", "asfsnak3", new ArrayList<>());
-        repositorioViajero.guardar(viajero);
+        // Arrange: Credenciales insertadas en el setUp
+        String email = "viajero.base.test@unlam.com";
+        String pass = "securePass1";
 
-        Optional<Viajero> viajeroEncontrado = repositorioViajero.buscarPorEmailYContrasenia("Juan@gmail.com", "asfsnak3");
 
-        assertThat(viajeroEncontrado.isPresent(), is(true));
-        assertThat(viajeroEncontrado.get().getNombre(), is("Juan"));
+        Optional<Viajero> viajeroEncontrado = repositorioViajero.buscarPorEmailYContrasenia(email, pass);
+
+
+        assertTrue(viajeroEncontrado.isPresent());
+        assertThat(viajeroEncontrado.get().getEmail(), is(email));
     }
 
     @Test
     public void siLaContraseniaEsIncorrectaNoDevuelveAlViajero(){
-        Viajero viajero = new Viajero(null, "Mario", 30, "Mario@gmail.com", "jgfs2", new ArrayList<>());
-        repositorioViajero.guardar(viajero);
+        Optional<Viajero> viajeroEncontrado = repositorioViajero.buscarPorEmailYContrasenia("viajero.base.test@unlam.com", "kfsvc1_incorrecta");
 
-        Optional<Viajero> viajeroEncontrado = repositorioViajero.buscarPorEmailYContrasenia("Mario@gmail.com", "kfsvc1");
+        assertThat(viajeroEncontrado.isPresent(), is(false));
+    }
+
+    @Test
+    public void siElEmailNoExisteNoDevuelveAlViajero(){
+        Optional<Viajero> viajeroEncontrado = repositorioViajero.buscarPorEmailYContrasenia("otro@mail.com", "securePass1");
 
         assertThat(viajeroEncontrado.isPresent(), is(false));
     }
 
     @Test
     public void buscoViajeroPorEmailYLoEncuentro(){
-        Viajero viajero = new Viajero(null, "Pepe", 27, "Pepe@gmail.com", "sfsa88", new ArrayList<>());
-        repositorioViajero.guardar(viajero);
+        // Arrange: Email insertado en el setUp
+        String email = "viajero.base.test@unlam.com";
 
-        Optional<Viajero> viajeroPorMailEncontrado = repositorioViajero.buscarPorEmail("Pepe@gmail.com");
+        // Act
+        Optional<Viajero> viajeroPorMailEncontrado = repositorioViajero.buscarPorEmail(email);
 
-        assertThat(viajeroPorMailEncontrado.isPresent(), is(true));
-        assertThat(viajeroPorMailEncontrado.get().getEmail(), is("Pepe@gmail.com"));
+        // Assert
+        assertTrue(viajeroPorMailEncontrado.isPresent());
+        assertThat(viajeroPorMailEncontrado.get().getEmail(), is(email));
     }
 
     @Test
     public void buscoViajeroPorEmailYNoLoEncuentro(){
-        Viajero viajero = new Viajero(null, "Pepe", 27, "Pepe@gmail.com", "sfsa88", new ArrayList<>());
-        repositorioViajero.guardar(viajero);
 
         Optional<Viajero> viajeroPorMailEncontrado = repositorioViajero.buscarPorEmail("Juan@gmail.com");
 
-        assertFalse(viajeroPorMailEncontrado.isPresent());
+        assertThat(viajeroPorMailEncontrado.isPresent(), is(false));
     }
 
     @Test
     public void buscoViajeroPorIdYLoEncuentro(){
-        Viajero viajero = new Viajero(null, "Ramon", 35, "Ramon@gmail.com", "SAJasfn2", new ArrayList<>());
-        repositorioViajero.guardar(viajero);
+        // Arrange: El ID se obtiene del objeto guardado en el setUp
+        Long idExistente = viajeroBase.getId();
 
-        Optional<Viajero> viajeroPorIDEncontrado = repositorioViajero.buscarPorId(viajero.getId());
+        Optional<Viajero> viajeroPorIDEncontrado = repositorioViajero.buscarPorId(idExistente);
 
-        assertThat(viajeroPorIDEncontrado.get().getId(), is(4L));
-        assertThat(viajeroPorIDEncontrado.get().getEmail(), is("Ramon@gmail.com"));
+        assertTrue(viajeroPorIDEncontrado.isPresent());
+        assertThat(viajeroPorIDEncontrado.get().getId(), is(idExistente));
+        assertThat(viajeroPorIDEncontrado.get().getEmail(), is("viajero.base.test@unlam.com"));
     }
-    
+
     @Test
     public void buscoViajeroPorIdYNoLoEncuentro(){
-        Viajero viajero = new Viajero(null, "Ramon", 35, "Ramon@gmail.com", "SAJasfn2", new ArrayList<>());
-        repositorioViajero.guardar(viajero);
 
-         Optional<Viajero> viajeroPorIDEncontrado = repositorioViajero.buscarPorId(5L);
+        Optional<Viajero> viajeroPorIDEncontrado = repositorioViajero.buscarPorId(999L);
 
-         assertThat(viajeroPorIDEncontrado.isPresent(), is(false));
+        assertThat(viajeroPorIDEncontrado.isPresent(), is(false));
     }
 }

@@ -16,11 +16,11 @@ import org.springframework.test.context.web.WebAppConfiguration;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 @ExtendWith(SpringExtension.class)
@@ -42,13 +42,22 @@ public class RepositorioCiudadTest {
 
     @Test
     public void testBuscarCiudadPorId() {
-        Ciudad ciudad = repositorioCiudad.buscarPorId(1L);
+        Optional<Ciudad> ciudadOptional = repositorioCiudad.buscarPorId(1L);
 
         // Verificaciones
-        assertNotNull(ciudad, "La ciudad no debería ser null");
+        assertTrue(ciudadOptional.isPresent(), "El Optional debería contener la ciudad");
+        Ciudad ciudad = ciudadOptional.get();
         assertEquals("Buenos Aires", ciudad.getNombre());
         assertEquals(-34.6037, ciudad.getLatitud(), 0.001);
         assertEquals(-58.3816, ciudad.getLongitud(), 0.001);
+    }
+
+    @Test
+    public void testBuscarCiudadPorIdNoExistente() {
+        // Act
+        Optional<Ciudad> ciudadOptional = repositorioCiudad.buscarPorId(999L);
+        // Assert
+        assertTrue(ciudadOptional.isEmpty(), "El Optional debería estar vacío para un ID inexistente");
     }
 
     @Test
@@ -79,8 +88,9 @@ public class RepositorioCiudadTest {
         assertEquals("Mendoza", ciudadGuardada.getNombre());
 
         // Verificar que se puede recuperar
-        Ciudad ciudadRecuperada = repositorioCiudad.buscarPorId(ciudadGuardada.getId());
-        assertEquals("Mendoza", ciudadRecuperada.getNombre());
+        Optional<Ciudad> ciudadOptional = repositorioCiudad.buscarPorId(ciudadGuardada.getId());
+        assertTrue(ciudadOptional.isPresent(), "La ciudad guardada debe ser recuperable");
+        assertEquals("Mendoza", ciudadOptional.get().getNombre());
     }
 
     @Test
@@ -94,10 +104,11 @@ public class RepositorioCiudadTest {
         Ciudad ciudadGuardada = repositorioCiudad.guardarCiudad(nuevaCiudad);
 
         // Buscar ciudad por coordenadas
-        Ciudad ciudad = repositorioCiudad.buscarPorCoordenadas(-34.9205f, -57.9536f);
+        Optional<Ciudad> ciudadOptional = repositorioCiudad.buscarPorCoordenadas(-34.9205f, -57.9536f);
 
         // Verificaciones
-        assertNotNull(ciudad, "Debería encontrar la ciudad");
+        assertTrue(ciudadOptional.isPresent(), "El Optional debería contener la ciudad");
+        Ciudad ciudad = ciudadOptional.get();
         assertEquals("La Plata", ciudad.getNombre());
         assertEquals(ciudadGuardada.getId(), ciudad.getId());
     }
@@ -105,10 +116,10 @@ public class RepositorioCiudadTest {
     @Test
     public void testBuscarCiudadPorCoordenadasNoExistentes() {
         // Buscar con coordenadas que no existen
-        Ciudad ciudad = repositorioCiudad.buscarPorCoordenadas(-99.9999f, -99.9999f);
+        Optional<Ciudad> ciudadOptional = repositorioCiudad.buscarPorCoordenadas(-99.9999f, -99.9999f);
 
         // Verificaciones
-        assertThat(ciudad, is(nullValue()));
+        assertTrue(ciudadOptional.isEmpty(), "El optional deberia estar vacio");
     }
 
     @Test
@@ -122,10 +133,11 @@ public class RepositorioCiudadTest {
         repositorioCiudad.guardarCiudad(nuevaCiudad);
 
         // Buscar por coordenadas
-        Ciudad ciudadEncontrada = repositorioCiudad.buscarPorCoordenadas(-32.8895f, -68.8458f);
+        Optional<Ciudad> ciudadOptional = repositorioCiudad.buscarPorCoordenadas(-32.8895f, -68.8458f);
 
         // Verificaciones
-        assertNotNull(ciudadEncontrada);
+        assertTrue(ciudadOptional.isPresent());
+        Ciudad ciudadEncontrada = ciudadOptional.get();
         assertEquals("Mendoza", ciudadEncontrada.getNombre());
         assertEquals(-32.8895f, ciudadEncontrada.getLatitud(), 0.0001);
         assertEquals(-68.8458f, ciudadEncontrada.getLongitud(), 0.0001);
@@ -142,21 +154,76 @@ public class RepositorioCiudadTest {
         Ciudad buenosAiresGuardada = repositorioCiudad.guardarCiudad(buenosAires1);
 
         // Segunda llamada: intentar guardar Buenos Aires nuevamente con mismas coordenadas
-        Ciudad buenosAires2Busqueda = repositorioCiudad.buscarPorCoordenadas(-34.6096f, -58.3888f);
+        Optional<Ciudad> ciudadOptional = repositorioCiudad.buscarPorCoordenadas(-34.6096f, -58.3888f);
 
         // Verificaciones
-        assertNotNull(buenosAires2Busqueda, "Debería encontrar la ciudad guardada anteriormente");
+        assertTrue(ciudadOptional.isPresent(), "Debería encontrar la ciudad guardada anteriormente");
+        Ciudad buenosAires2Busqueda = ciudadOptional.get();
         assertEquals(buenosAiresGuardada.getId(), buenosAires2Busqueda.getId(), "Deberían ser la misma ciudad");
         assertEquals("Buenos Aires", buenosAires2Busqueda.getNombre());
 
         // Verificar que realmente no se duplicó contando cuántas hay con esas coordenadas
         List<Ciudad> todasLasCiudades = repositorioCiudad.findAll();
         long ciudadesConEsasCoordenadas = todasLasCiudades.stream()
-            .filter(c -> Math.abs(c.getLatitud() - (-34.6096f)) < 0.0001 &&
+                .filter(c -> Math.abs(c.getLatitud() - (-34.6096f)) < 0.0001 &&
                         Math.abs(c.getLongitud() - (-58.3888f)) < 0.0001)
-            .count();
+                .count();
         assertEquals(1L, ciudadesConEsasCoordenadas, "Solo debería haber una ciudad con esas coordenadas");
     }
 
+    @Test
+    public void testDeberiaEliminarCiudadExistente() {
+        // creamos ciudad nueva para que no tenga dependencias
+        Ciudad ciudadNueva = new Ciudad();
+        ciudadNueva.setNombre("Ciudad Temporal");
+        ciudadNueva.setLatitud(-1f);
+        ciudadNueva.setLongitud(-1f);
+        repositorioCiudad.guardarCiudad(ciudadNueva);
+
+        Long ciudadId = ciudadNueva.getId();
+
+        assertTrue(repositorioCiudad.buscarPorId(ciudadId).isPresent(), "La ciudad debería existir antes de la eliminación");
+
+        repositorioCiudad.eliminarCiudad(ciudadId);
+        sessionFactory.getCurrentSession().flush();
+        sessionFactory.getCurrentSession().clear();
+
+        assertTrue(repositorioCiudad.buscarPorId(ciudadId).isEmpty(), "La ciudad no debería ser encontrada después de la eliminación");
+    }
+    @Test
+    public void testEliminarCiudadInexistenteNoDeberiaLanzarExcepcion() {
+        // Arrange
+        Long idInexistente = 999L;
+        assertDoesNotThrow(() -> {
+            repositorioCiudad.eliminarCiudad(idInexistente);
+            sessionFactory.getCurrentSession().flush();
+        }, "Eliminar una ciudad inexistente no debería lanzar excepción con DELETE HQL directo");
+    }
+
+    @Test
+    public void testDeberiaActualizarCiudadExistente() {
+        Long ciudadId = 2L;
+        Optional<Ciudad> ciudadOptional = repositorioCiudad.buscarPorId(ciudadId);
+        assertTrue(ciudadOptional.isPresent());
+        Ciudad ciudadAModificar = ciudadOptional.get();
+
+        String nuevoNombre = "Córdoba Capital";
+        float nuevaLatitud = -31.4167f;
+
+        ciudadAModificar.setNombre(nuevoNombre);
+        ciudadAModificar.setLatitud(nuevaLatitud);
+
+        // Act
+        repositorioCiudad.actualizarCiudad(ciudadAModificar);
+        sessionFactory.getCurrentSession().flush();
+
+        Optional<Ciudad> ciudadActualizadaOptional = repositorioCiudad.buscarPorId(ciudadId);
+        assertTrue(ciudadActualizadaOptional.isPresent());
+        Ciudad ciudadActualizada = ciudadActualizadaOptional.get();
+
+        assertEquals(ciudadId, ciudadActualizada.getId());
+        assertEquals(nuevoNombre, ciudadActualizada.getNombre());
+        assertEquals(nuevaLatitud, ciudadActualizada.getLatitud(), 0.0001); // Comparación de float con tolerancia
+    }
 
 }

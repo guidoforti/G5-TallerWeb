@@ -30,44 +30,30 @@ public class ServicioCiudadImpl implements ServicioCiudad {
 
     @Override
     public Ciudad buscarPorId(Long id) throws NotFoundException {
-        Ciudad ciudad =  repositorioCiudad.buscarPorId(id);
-        if (ciudad == null) {
-            throw  new NotFoundException("La ciudad con ese id no existe");
-        }
-        return ciudad;
+        return repositorioCiudad.buscarPorId(id).
+                orElseThrow(() -> new NotFoundException("La ciudad con ese id no existe"));
     }
 
     @Override
     public Ciudad guardarCiudad(Ciudad ciudad) {
-        // Verificar si ya existe una ciudad con las mismas coordenadas
-        Ciudad ciudadExistente = repositorioCiudad.buscarPorCoordenadas(ciudad.getLatitud(), ciudad.getLongitud());
-
-        // Si existe, retornar la ciudad existente en lugar de crear una duplicada
-        if (ciudadExistente != null) {
-            return ciudadExistente;
-        }
-
-        // Si no existe, guardar la nueva ciudad
-        return repositorioCiudad.guardarCiudad(ciudad);
+        return repositorioCiudad.buscarPorCoordenadas(ciudad.getLatitud(), ciudad.getLongitud())
+                .orElseGet(() -> {
+                    return repositorioCiudad.guardarCiudad(ciudad);
+                });
     }
 
     @Override
     public void eliminarCiudad(Long id) throws NotFoundException {
-        if (repositorioCiudad.buscarPorId(id) == null) {
-            throw new NotFoundException("no se encontro una ciudad con ese id");
-        }
+        repositorioCiudad.buscarPorId(id).
+                orElseThrow(() -> new NotFoundException("No se encontro ciudad con ese id"));
         repositorioCiudad.eliminarCiudad(id);
     }
 
     @Override
     public Ciudad actualizarCiudad(Ciudad ciudad) throws NotFoundException {
-        Ciudad ciudadExistente = repositorioCiudad.buscarPorId(ciudad.getId());
-        if (ciudadExistente == null) {
-            throw new NotFoundException("no se encontro una ciudad con ese id");
-        }
-        Ciudad ciudadADevoler = repositorioCiudad.actualizarCiudad(ciudad);
-
-        return ciudadADevoler;
+        repositorioCiudad.buscarPorId(ciudad.getId()).
+                orElseThrow(() -> new NotFoundException("No se encontro una ciudad con ese ID"));
+        return repositorioCiudad.actualizarCiudad(ciudad);
     }
 
 
