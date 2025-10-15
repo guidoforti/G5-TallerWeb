@@ -18,10 +18,7 @@ import org.mockito.ArgumentCaptor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -166,10 +163,12 @@ class ServicioViajeTest {
     }
 
     @Test
-    void noDeberiaPublicarSiAsientosDisponiblesEsCero() {
+    void noDeberiaPublicarSiAsientosDisponiblesEsCeroONegativo() {
         // given
         Viaje viaje = crearViajeDeTest();
         viaje.setAsientosDisponibles(0);
+        Viaje viajeNegativo = crearViajeDeTest();
+        viajeNegativo.setAsientosDisponibles(-1);
 
         // when & then
         DatoObligatorioException exception = assertThrows(
@@ -177,7 +176,12 @@ class ServicioViajeTest {
             () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
         );
 
+        DatoObligatorioException exceptionNegativo = assertThrows(
+                DatoObligatorioException.class,
+                () -> servicioViaje.publicarViaje(viajeNegativo, 1L, 1L)
+        );
         assertThat(exception.getMessage(), equalTo("Los asientos disponibles deben ser mayor a 0"));
+        assertThat(exceptionNegativo.getMessage(), equalTo("Los asientos disponibles deben ser mayor a 0"));
         verify(viajeRepositoryMock, never()).guardarViaje(any());
     }
 
@@ -186,14 +190,45 @@ class ServicioViajeTest {
         // given
         Viaje viaje = crearViajeDeTest();
         viaje.setPrecio(0.0);
+        Viaje viajeNegativo = crearViajeDeTest();
+        viajeNegativo.setPrecio(-10.0);
 
         // when & then
         DatoObligatorioException exception = assertThrows(
             DatoObligatorioException.class,
             () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
         );
-
+        DatoObligatorioException exceptionNegativo = assertThrows(
+                DatoObligatorioException.class,
+                () -> servicioViaje.publicarViaje(viajeNegativo, 1L, 1L)
+        );
         assertThat(exception.getMessage(), equalTo("El precio debe ser mayor a 0"));
+        assertThat(exceptionNegativo.getMessage(), equalTo("El precio debe ser mayor a 0"));
+        verify(viajeRepositoryMock, never()).guardarViaje(any());
+    }
+
+    @Test
+    void noDeberiaPublicarSiPrecioEsNull() {
+        Viaje viaje = crearViajeDeTest();
+        viaje.setPrecio(null);
+        DatoObligatorioException exception = assertThrows(
+                DatoObligatorioException.class,
+                () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
+        );
+        assertThat(exception.getMessage(), equalTo("El precio debe ser mayor a 0"));
+        verify(viajeRepositoryMock, never()).guardarViaje(any());
+    }
+
+    @Test
+    void noDeberiaPublicarSiAsientosDisponiblesEsNull() {
+        Viaje viaje = crearViajeDeTest();
+        viaje.setAsientosDisponibles(null);
+
+        DatoObligatorioException exception = assertThrows(
+                DatoObligatorioException.class,
+                () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
+        );
+        assertThat(exception.getMessage(), equalTo("Los asientos disponibles deben ser mayor a 0"));
         verify(viajeRepositoryMock, never()).guardarViaje(any());
     }
 
@@ -464,5 +499,25 @@ class ServicioViajeTest {
         // then
         ArgumentCaptor<Viaje> viajeCaptor = ArgumentCaptor.forClass(Viaje.class);
         verify(viajeRepositoryMock).guardarViaje(viajeCaptor.capture());
+    }
+
+    @Test
+    void obtenerViajePorIdDebeRetornarViaje() throws NotFoundException {
+        // Arrange
+        Viaje viajeEsperado = crearViajeDeTest();
+        viajeEsperado.setId(1L);
+        when(viajeRepositoryMock.findById(1L)).thenReturn(Optional.of(viajeEsperado));
+        Viaje resultado = servicioViaje.obtenerViajePorId(1L);
+        assertThat(resultado, is(viajeEsperado));
+        verify(viajeRepositoryMock).findById(1L);
+    }
+
+    @Test
+    void obtenerViajePorIdDebeLanzarNotFoundExceptionSiNoExiste() {
+        // Arrange
+        Long idInexistente = 99L;
+        when(viajeRepositoryMock.findById(idInexistente)).thenReturn(Optional.empty());
+        assertThrows(NotFoundException.class, () -> servicioViaje.obtenerViajePorId(idInexistente));
+        verify(viajeRepositoryMock).findById(idInexistente);
     }
 }

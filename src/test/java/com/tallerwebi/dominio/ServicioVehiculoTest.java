@@ -184,4 +184,30 @@ public class ServicioVehiculoTest {
         verify(repositorioVehiculoMock, times(1)).obtenerVehiculosParaConductor(conductorId);
     }
 
+    @Test
+    void obtenerVehiculosPorConductorDebeLanzarExcepcionSiIdEsNull() {
+        // Arrange
+        Long conductorIdNull = null;
+        assertThrows(IllegalArgumentException.class, () -> servicioVehiculo.obtenerVehiculosParaConductor(conductorIdNull));
+
+        // Assert
+        verify(repositorioVehiculoMock, never()).obtenerVehiculosParaConductor(any());
+    }
+
+    @Test
+    void obtenerVehiculosPorConductorDeberiaRetornarListaVacia() {
+        // Arrange
+        Long conductorId = 2L;
+
+        when(repositorioVehiculoMock.obtenerVehiculosParaConductor(conductorId)).thenReturn(new ArrayList<>());
+
+        // Act
+        List<Vehiculo> resultados = servicioVehiculo.obtenerVehiculosParaConductor(conductorId);
+
+        // Assert
+        assertThat(resultados, notNullValue());
+        assertThat(resultados, empty());
+        verify(repositorioVehiculoMock, times(1)).obtenerVehiculosParaConductor(conductorId);
+    }
+
 }
