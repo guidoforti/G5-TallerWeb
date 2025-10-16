@@ -12,4 +12,5 @@ public interface ServicioViaje {
     void publicarViaje(Viaje viaje, Long conductorId, Long vehiculoId) throws UsuarioInexistente, NotFoundException,
             UsuarioNoAutorizadoException, AsientosDisponiblesMayorQueTotalesDelVehiculoException, DatoObligatorioException, ViajeDuplicadoException;
 
+    Viaje obtenerDetalleDeViaje(Long id) throws NotFoundException;
 }

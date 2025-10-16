@@ -27,7 +27,7 @@ public class Conductor {
     private String email;
     private String contrasenia;
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @Column(name = "fecha_de_vencimiento_licencia")
     private LocalDate fechaDeVencimientoLicencia;
 
     @OneToMany(mappedBy = "conductor")
