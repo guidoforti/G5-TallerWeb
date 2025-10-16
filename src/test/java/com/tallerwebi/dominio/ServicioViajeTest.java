@@ -2,6 +2,36 @@ package com.tallerwebi.dominio;
 
 import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Conductor;
+import com.tallerwebi.dominio.Entity.Usuario;
+import com.tallerwebi.dominio.Entity.Viaje;
+import com.tallerwebi.dominio.Enums.EstadoDeViaje;
+import com.tallerwebi.dominio.IRepository.RepositorioConductor;
+import com.tallerwebi.dominio.IRepository.ViajeRepository;
+import com.tallerwebi.dominio.IServicio.ServicioConductor;
+import com.tallerwebi.dominio.IServicio.ServicioViaje;
+import com.tallerwebi.dominio.ServiceImpl.ServicioConductorImpl;
+import com.tallerwebi.dominio.ServiceImpl.ServicioViajeImpl;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
+
+
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
@@ -320,6 +350,181 @@ class ServicioViajeTest {
     }
 
     @Test
+        void seDebeCancelarViajeCorrectamente() throws Exception {
+        
+        Conductor conductor = new Conductor();
+        conductor.setId(1L);
+        conductor.setEmail("pepito@gmail.com");
+        
+        Usuario usuarioEnSesion = new Usuario();
+        usuarioEnSesion.setId(1L);
+        usuarioEnSesion.setRol("CONDUCTOR");
+
+        Viaje viaje = new Viaje();
+        viaje.setId(100L);
+        viaje.setConductor(conductor);
+        viaje.setEstado(EstadoDeViaje.DISPONIBLE);
+
+        when(viajeRepositoryMock.findById(100L)).thenReturn(Optional.of(viaje));
+
+        servicioViaje.cancelarViaje(100L, usuarioEnSesion);
+
+        assertEquals(EstadoDeViaje.CANCELADO, viaje.getEstado());
+        verify(viajeRepositoryMock).modificarViaje(viaje);
+    }
+
+
+    @Test
+        void noDebeCancelarSiUnUsuarioNoTieneRol() {
+        
+        Usuario usuarioSinRol = new Usuario();
+        usuarioSinRol.setId(2L);
+        usuarioSinRol.setRol(null);
+
+        assertThrows(UsuarioNoAutorizadoException.class,
+                () -> servicioViaje.cancelarViaje(100L, usuarioSinRol));
+
+        verify(viajeRepositoryMock, never()).modificarViaje(any());
+    }
+
+    @Test
+        void noDebeCancelarSiUnViajeNoExiste() {
+
+        Usuario usuarioConductor = new Usuario();
+        usuarioConductor.setId(1L);
+        usuarioConductor.setRol("CONDUCTOR");
+
+        when(viajeRepositoryMock.findById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(ViajeNoEncontradoException.class,
+                () -> servicioViaje.cancelarViaje(999L, usuarioConductor));
+
+        verify(viajeRepositoryMock, never()).modificarViaje(any());
+    }
+
+    @Test
+        void noSeDebeCancelarSiUnViajeNoPerteneceAlConductor() {
+        
+        Usuario usuarioConductor = new Usuario();
+        usuarioConductor.setId(1L);
+        usuarioConductor.setRol("CONDUCTOR");
+
+        // el viaje pertenece a otro conductor
+        Conductor otroConductor = new Conductor();
+        otroConductor.setId(99L);
+
+        Viaje viaje = new Viaje();
+        viaje.setId(100L);
+        viaje.setConductor(otroConductor);
+        viaje.setEstado(EstadoDeViaje.DISPONIBLE);
+
+        when(viajeRepositoryMock.findById(100L)).thenReturn(Optional.of(viaje));
+
+        assertThrows(UsuarioNoAutorizadoException.class,
+                () -> servicioViaje.cancelarViaje(100L, usuarioConductor));
+
+        verify(viajeRepositoryMock, never()).modificarViaje(any());
+    }
+
+    @Test
+        void noSeDebeCancelarSiElEstadoDelViajeEsFinalizado() {
+    
+        Usuario usuarioConductor = new Usuario();
+        usuarioConductor.setId(1L);
+        usuarioConductor.setRol("CONDUCTOR");
+
+        Conductor conductor = new Conductor();
+        conductor.setId(1L);
+
+        Viaje viaje = new Viaje();
+        viaje.setId(100L);
+        viaje.setConductor(conductor);
+        //el viaje se finalizo
+        viaje.setEstado(EstadoDeViaje.FINALIZADO);
+
+        when(viajeRepositoryMock.findById(100L)).thenReturn(Optional.of(viaje));
+
+        assertThrows(ViajeNoCancelableException.class,
+                () -> servicioViaje.cancelarViaje(100L, usuarioConductor));
+
+        verify(viajeRepositoryMock, never()).modificarViaje(any());
+    }
+
+    @Test
+        void noSeDebeCancelarSiElEstadoDelViajeEsCancelado() {
+
+        Usuario usuarioConductor = new Usuario();
+        usuarioConductor.setId(1L);
+        usuarioConductor.setRol("CONDUCTOR");
+
+        Conductor conductor = new Conductor();
+        conductor.setId(1L);
+
+        Viaje viaje = new Viaje();
+        viaje.setId(100L);
+        viaje.setConductor(conductor);
+        //viaje cancelado
+        viaje.setEstado(EstadoDeViaje.CANCELADO);
+
+        when(viajeRepositoryMock.findById(100L)).thenReturn(Optional.of(viaje));
+
+        assertThrows(ViajeNoCancelableException.class,
+                () -> servicioViaje.cancelarViaje(100L, usuarioConductor));
+
+        verify(viajeRepositoryMock, never()).modificarViaje(any());
+    }
+
+     @Test
+    void noDebeListarViajesSiConductorEsNull() {
+      
+        
+        assertThrows(UsuarioNoAutorizadoException.class,
+                () -> servicioViaje.listarViajesPorConductor(null));
+        
+        verify(viajeRepositoryMock, never()).findByConductorId(anyLong());
+    }
+
+    @Test
+    void deberiaListarViajesPorConductor() throws UsuarioNoAutorizadoException {
+        Conductor conductor = new Conductor();
+        conductor.setId(1L);
+
+        Viaje viaje1 = new Viaje();
+        viaje1.setId(10L);
+        Viaje viaje2 = new Viaje();
+        viaje2.setId(20L);
+
+        List<Viaje> viajesEsperados = List.of(viaje1, viaje2);
+
+        when(viajeRepositoryMock.findByConductorId(1L)).thenReturn(viajesEsperados);
+
+        List<Viaje> resultado = servicioViaje.listarViajesPorConductor(conductor);
+
+        assertNotNull(resultado);
+        assertEquals(2, resultado.size());
+        
+        verify(viajeRepositoryMock).findByConductorId(1L);
+    }
+
+    @Test
+    void deberiaDevolverListaVaciaSiConductorNoTieneViajes() throws UsuarioNoAutorizadoException {
+      
+        
+        Conductor conductorSinViajes = new Conductor();
+        conductorSinViajes.setId(99L);
+
+        when(viajeRepositoryMock.findByConductorId(99L)).thenReturn(Collections.emptyList());
+
+        List<Viaje> resultado = servicioViaje.listarViajesPorConductor(conductorSinViajes);
+
+        assertNotNull(resultado);
+        assertTrue(resultado.isEmpty());
+        assertEquals(0, resultado.size());
+
+        verify(viajeRepositoryMock).findByConductorId(99L);
+    }
+
+    @Test
     void noDeberiaPublicarSiOrigenEsNull() {
         // given
         Viaje viaje = crearViajeDeTest();
@@ -502,7 +707,7 @@ class ServicioViajeTest {
     }
 
     @Test
-    void obtenerViajePorIdDebeRetornarViaje() throws NotFoundException {
+    void obtenerViajePorIdDebeRetornarViaje() throws NotFoundException, ViajeNoEncontradoException, UsuarioNoAutorizadoException {
         // Arrange
         Viaje viajeEsperado = crearViajeDeTest();
         viajeEsperado.setId(1L);
@@ -521,3 +726,4 @@ class ServicioViajeTest {
         verify(viajeRepositoryMock).findById(idInexistente);
     }
 }
+

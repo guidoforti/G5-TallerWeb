@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/fragments :: head('UnRumbo - Cancelar Viaje')">
+    <th:block th:fragment="extra">
+        <!-- Puedes añadir estilos o scripts específicos aquí si es necesario -->
+    </th:block>
+</head>
+
+<body>
+<nav th:replace="fragments/fragments :: navbar"></nav>
+
+<main role="main" class="container" style="margin-top: 120px;">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Confirmación de Cancelación de Viaje</h5>
+                </div>
+                
+                <div class="card-body">
+                    <div th:if="${viaje == null}" class="alert alert-danger" role="alert">
+                        Error: No se ha encontrado la información del viaje.
+                    </div>
+
+                    <div th:if="${viaje != null}">
+                        <h4 class="card-title text-danger mb-4 text-center">
+                            ¿Estás seguro que deseas cancelar este viaje?
+                        </h4>
+                        
+                        <p class="mb-4 text-center text-muted">
+                            Una vez cancelado no se podra volver atras. Los pasajeros seran notificados de la cancelacion.
+                        </p>
+
+                        <div class="row mb-3 border-top pt-3">
+                            <div class="col-sm-6 mb-2">
+                                <label class="fw-bold d-block">Origen:</label>
+                                <span th:text="${viaje.origen}" class="text-dark"></span>
+                            </div>
+                            <div class="col-sm-6 mb-2">
+                                <label class="fw-bold d-block">Destino:</label>
+                                <span th:text="${viaje.destino}" class="text-dark"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-sm-6 mb-2">
+                                <label class="fw-bold d-block">Fecha y Hora de Salida:</label>
+                                <span th:text="${viaje.fechaSalida}" class="text-dark"></span>
+                            </div>
+                            <div class="col-sm-6 mb-2">
+                                <label class="fw-bold d-block">Vehículo:</label>
+                                <span th:text="${viaje.vehiculo}" class="text-dark"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-sm-6 mb-2">
+                                <label class="fw-bold d-block">Asientos Disponibles:</label>
+                                <span th:text="${viaje.asientosDisponibles}" class="text-dark"></span>
+                            </div>
+                             <div class="col-sm-6 mb-2">
+                                <label class="fw-bold d-block">Estado Actual:</label>
+                                <span class="badge rounded-pill bg-warning text-dark p-2" th:text="${viaje.estado}"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-sm-flex justify-content-sm-between mt-4 border-top pt-3">
+                            <button type="button" class="btn btn-danger btn-lg flex-fill me-sm-2" data-bs-toggle="modal" data-bs-target="#confirmCancelModal">
+                                Sí, Cancelar Viaje
+                            </button>
+                            
+                            <a th:href="@{/viaje/listar}" class="btn btn-secondary btn-lg flex-fill mt-2 mt-sm-0">
+                                No, Volver a Mis Viajes
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Modal de Confirmación (Bootstrap) -->
+<div class="modal fade" id="confirmCancelModal" tabindex="-1" aria-labelledby="confirmCancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="confirmCancelModalLabel">Confirmar Cancelación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Estás a punto de cancelar el viaje de **<span th:text="${viaje.origen}"></span>** a **<span th:text="${viaje.destino}"></span>**.</p>
+                <p class="fw-bold text-danger">Esta acción es irreversible. ¿Deseas continuar?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                
+                <!-- Formulario real de cancelación que se envía al PostMapping -->
+                <form th:action="@{/viaje/cancelarViaje}" method="post" style="display: inline;">
+                    <!-- Campo oculto con el ID del viaje, esencial para el controlador POST -->
+                    <input type="hidden" name="id" th:value="${viaje.id}" />
+                    <button type="submit" class="btn btn-danger fw-bold">Confirmar Cancelación</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

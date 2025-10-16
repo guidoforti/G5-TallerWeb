@@ -35,7 +35,7 @@ public class RepositorioViajeImpl implements ViajeRepository {
     }
 
     @Override
-    public void modificarViajer(Viaje viaje) {
+    public void modificarViaje(Viaje viaje) {
         this.sessionFactory.getCurrentSession().update(viaje);
     }
 
@@ -57,6 +57,16 @@ public class RepositorioViajeImpl implements ViajeRepository {
                 .setParameter("origen", origen)
                 .setParameter("destino", destino)
                 .getResultList();
+    }
+
+    @Override
+    public List<Viaje> findByConductorId(Long idConductor) {
+
+    String hql = "SELECT v FROM Viaje v WHERE v.conductor.id = :idConductor";
+    return this.sessionFactory.getCurrentSession()
+            .createQuery(hql, Viaje.class)
+            .setParameter("idConductor", idConductor)
+            .getResultList();
     }
 
     @Override
