@@ -2,17 +2,23 @@ package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Conductor;
+import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Entity.Viaje;
+import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.Enums.EstadoVerificacion;
 import com.tallerwebi.dominio.IServicio.ServicioCiudad;
 import com.tallerwebi.dominio.IServicio.ServicioNominatim;
+import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.excepcion.AsientosDisponiblesMayorQueTotalesDelVehiculoException;
 import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.NotFoundException;
+import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
+import com.tallerwebi.dominio.excepcion.ViajeNoCancelableException;
+import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
 import com.tallerwebi.presentacion.Controller.ControladorViaje;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import com.tallerwebi.presentacion.DTO.NominatimResponse;
@@ -43,6 +49,7 @@ public class ControladorViajeTest {
     private ServicioVehiculo servicioVehiculoMock;
     private ServicioNominatim servicioNominatimMock;
     private ServicioCiudad servicioCiudadMock;
+    private ServicioConductor servicioConductorMock;
     private HttpSession sessionMock;
 
     @BeforeEach
@@ -51,7 +58,8 @@ public class ControladorViajeTest {
         servicioVehiculoMock = mock(ServicioVehiculo.class);
         servicioNominatimMock = mock(ServicioNominatim.class);
         servicioCiudadMock = mock(ServicioCiudad.class);
-        controladorViaje = new ControladorViaje(servicioViajeMock, servicioVehiculoMock, servicioNominatimMock, servicioCiudadMock);
+        servicioConductorMock = mock(ServicioConductor.class);
+        controladorViaje = new ControladorViaje(servicioViajeMock, servicioVehiculoMock, servicioNominatimMock, servicioCiudadMock, servicioConductorMock);
         sessionMock = mock(HttpSession.class);
 
         // Setup mocks por defecto para Nominatim y Ciudad (se pueden sobrescribir en tests específicos)
@@ -373,6 +381,277 @@ public class ControladorViajeTest {
         // then
         // Verificar que se llama con el conductorId de la sesión, no del DTO
         verify(servicioViajeMock, times(1)).publicarViaje(any(Viaje.class), eq(conductorIdEnSesion), eq(1L));
+    }
+
+    /*@Test
+    public void deberiaCancelarViajeExitosamente() throws Exception {
+        // given
+        Long viajeId = 1L;
+        Long conductorId = 10L;
+
+        when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
+        when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
+
+        doNothing().when(servicioViajeMock).cancelarViaje(eq(viajeId), any(Usuario.class));
+
+        // when
+        ModelAndView mav = controladorViaje.cancelarViaje(viajeId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("redirect:/viaje/listar"));
+        assertThat(mav.getModel().containsKey("exito"), equalTo(true));
+        assertThat(mav.getModel().get("exito").toString(),equalTo("El viaje fue cancelado exitosamente."));
+
+        verify(servicioViajeMock, times(1)).cancelarViaje(eq(viajeId), any(Usuario.class));
+    }*/
+
+    @Test
+    public void deberiaRedirigirALoginSiNoHaySesionAlCancelar() throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeNoCancelableException {
+        // given
+        when(sessionMock.getAttribute("usuarioId")).thenReturn(null);
+
+        // when
+        ModelAndView mav = controladorViaje.cancelarViaje(1L, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("redirect:/conductor/login"));
+        verify(servicioViajeMock, never()).cancelarViaje(anyLong(), any(Usuario.class));
+    }
+
+    @Test
+    public void deberiaRedirigirALoginSiRolNoEsConductorAlCancelar() throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeNoCancelableException {
+        // given
+        when(sessionMock.getAttribute("usuarioId")).thenReturn(1L);
+        when(sessionMock.getAttribute("rol")).thenReturn("VIAJERO");
+
+        // when
+        ModelAndView mav = controladorViaje.cancelarViaje(1L, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("redirect:/conductor/login"));
+        verify(servicioViajeMock, never()).cancelarViaje(anyLong(), any(Usuario.class));
+    }
+
+    @Test
+    public void deberiaMostrarErrorSiViajeNoEncontrado() throws Exception {
+        // given
+        Long viajeId = 5L;
+        Long conductorId = 1L;
+
+        when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
+        when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
+
+        doThrow(new ViajeNoEncontradoException("No se encontró el viaje"))
+            .when(servicioViajeMock).cancelarViaje(eq(viajeId), any(Usuario.class));
+
+        // when
+        ModelAndView mav = controladorViaje.cancelarViaje(viajeId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("errorCancelarViaje"));
+        assertThat(mav.getModel().containsKey("error"), equalTo(true));
+        assertThat(mav.getModel().get("error").toString(), containsString("No se encontró el viaje"));
+
+        verify(servicioViajeMock, times(1)).cancelarViaje(eq(viajeId), any(Usuario.class));
+    }
+
+    @Test
+    public void deberiaMostrarErrorSiUsuarioNoAutorizadoAlCancelar() throws Exception {
+        // given
+        Long viajeId = 3L;
+        Long conductorId = 1L;
+
+        when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
+        when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
+
+        doThrow(new UsuarioNoAutorizadoException("No tiene permisos para cancelar este viaje."))
+            .when(servicioViajeMock).cancelarViaje(eq(viajeId), any(Usuario.class));
+
+        // when
+        ModelAndView mav = controladorViaje.cancelarViaje(viajeId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("errorCancelarViaje"));
+        assertThat(mav.getModel().containsKey("error"), equalTo(true));
+        assertThat(mav.getModel().get("error").toString(),
+            equalTo("No tiene permisos para cancelar este viaje."));
+    }
+
+    @Test
+    public void deberiaMostrarErrorSiViajeNoCancelable() throws Exception {
+        // given
+        Long viajeId = 7L;
+        Long conductorId = 2L;
+
+        when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
+        when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
+
+        doThrow(new ViajeNoCancelableException("El viaje no se puede cancelar en este estado."))
+            .when(servicioViajeMock).cancelarViaje(eq(viajeId), any(Usuario.class));
+
+        // when
+        ModelAndView mav = controladorViaje.cancelarViaje(viajeId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("errorCancelarViaje"));
+        assertThat(mav.getModel().containsKey("error"), equalTo(true));
+        assertThat(mav.getModel().get("error").toString(),
+            equalTo("El viaje no se puede cancelar en este estado."));
+    }
+
+
+    @Test
+    public void deberiaMostrarErrorSiNoHaySesionAlListar() throws Exception {
+        // GIVEN
+        when(sessionMock.getAttribute("usuarioId")).thenReturn(null);
+        when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
+
+        // WHEN
+        ModelAndView mav = controladorViaje.listarViajes(sessionMock);
+
+        // THEN
+        assertThat(mav.getViewName(), equalTo("errorAcceso"));
+        assertThat(mav.getModel().get("error").toString(), containsString("Debés iniciar sesión como conductor"));
+
+        // CORRECCIÓN: Usamos eq(null) o verificamos que nunca se llamó con cualquier Long.
+        // Si el problema es anyLong(), lo cambiamos por un valor explícito o null.
+        // Si el flujo de código se corta antes de castear, usamos Long.class.
+        verify(servicioConductorMock, never()).obtenerConductor(any(Long.class));
+        verify(servicioViajeMock, never()).listarViajesPorConductor(any());
+    }
+
+
+    @Test
+    public void deberiaMostrarErrorSiConductorDeSesionNoExiste() throws Exception {
+        Long conductorId = 1L;
+
+        when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
+        when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
+
+        // Asumiendo que UsuarioInexistente es tu excepción de negocio que extiende Exception
+        when(servicioConductorMock.obtenerConductor(conductorId))
+                .thenThrow(new UsuarioInexistente("El conductor de la sesión no fue encontrado."));
+
+        ModelAndView mav = controladorViaje.listarViajes(sessionMock);
+
+        assertThat(mav.getViewName(), equalTo("errorAcceso"));
+        assertThat(mav.getModel().get("error").toString(), containsString("El conductor de la sesión no fue encontrado."));
+        verify(servicioViajeMock, never()).listarViajesPorConductor(any());
+        verify(servicioConductorMock).obtenerConductor(conductorId);
+    }
+
+    @Test
+    public void deberiaListarViajesCorrectamente() throws Exception {
+        Long conductorId = 1L;
+
+        when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
+        when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
+
+        Conductor conductorMock = new Conductor();
+        conductorMock.setId(conductorId);
+
+        when(servicioConductorMock.obtenerConductor(conductorId)).thenReturn(conductorMock);
+
+        Viaje viaje1 = new Viaje();
+        viaje1.setId(10L);
+        viaje1.setOrigen(new Ciudad(null, "Morón", 0f, 0f));
+        viaje1.setDestino(new Ciudad(null, "Lanús", 0f, 0f));
+        viaje1.setVehiculo(new Vehiculo());
+        viaje1.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
+        viaje1.setEstado(EstadoDeViaje.DISPONIBLE);
+        viaje1.setAsientosDisponibles(3);
+
+        List<Viaje> viajes = List.of(viaje1);
+
+        when(servicioViajeMock.listarViajesPorConductor(any(Conductor.class))).thenReturn(viajes);
+
+        ModelAndView mav = controladorViaje.listarViajes(sessionMock);
+
+        assertThat(mav.getViewName(), equalTo("listarViajesConductor"));
+        assertThat(mav.getModel().containsKey("listaViajes"), equalTo(true));
+        assertThat(((List<?>) mav.getModel().get("listaViajes")).size(), equalTo(1));
+
+        verify(servicioConductorMock).obtenerConductor(conductorId);
+        verify(servicioViajeMock).listarViajesPorConductor(any(Conductor.class));
+    }
+
+
+    @Test
+    public void deberiaMostrarErrorSiUsuarioNoAutorizadoAlListar() throws Exception {
+        Long conductorId = 1L;
+
+        when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
+        when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
+
+        Conductor conductorMock = new Conductor();
+        conductorMock.setId(conductorId);
+
+        when(servicioConductorMock.obtenerConductor(conductorId)).thenReturn(conductorMock);
+
+        when(servicioViajeMock.listarViajesPorConductor(any(Conductor.class)))
+                .thenThrow(new UsuarioNoAutorizadoException("No tenés permisos para ver los viajes"));
+
+        ModelAndView mav = controladorViaje.listarViajes(sessionMock);
+
+        assertThat(mav.getViewName(), equalTo("errorAcceso"));
+        assertThat(mav.getModel().get("error").toString(), containsString("No tenés permisos para ver los viajes"));
+
+        verify(servicioConductorMock).obtenerConductor(conductorId);
+        verify(servicioViajeMock).listarViajesPorConductor(any(Conductor.class));
+    }
+
+    @Test
+    public void deberiaDevolverListaVaciaSiNoHayViajes() throws Exception {
+        Long conductorId = 2L;
+
+        when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
+        when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
+
+        Conductor conductorMock = new Conductor();
+        conductorMock.setId(conductorId);
+
+        when(servicioConductorMock.obtenerConductor(conductorId)).thenReturn(conductorMock);
+
+        when(servicioViajeMock.listarViajesPorConductor(any(Conductor.class))).thenReturn(List.of());
+
+        ModelAndView mav = controladorViaje.listarViajes(sessionMock);
+
+        assertThat(mav.getViewName(), equalTo("listarViajesConductor"));
+        assertThat(mav.getModel().containsKey("listaViajes"), equalTo(true));
+        assertThat(((List<?>) mav.getModel().get("listaViajes")).isEmpty(), equalTo(true));
+
+        verify(servicioConductorMock).obtenerConductor(conductorId);
+        verify(servicioViajeMock).listarViajesPorConductor(any(Conductor.class));
+    }
+
+    @Test
+    public void deberiaMostrarErrorSiRolEsConductorPeroSesionEsNull() throws Exception {
+        when(sessionMock.getAttribute("usuarioId")).thenReturn(null);
+        when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
+
+        ModelAndView mav = controladorViaje.listarViajes(sessionMock);
+
+        assertThat(mav.getViewName(), equalTo("errorAcceso"));
+        assertThat(mav.getModel().get("error").toString(), containsString("Debés iniciar sesión como conductor"));
+        // CORRECCIÓN: Si anyLong() falla, usamos any(Long.class) para ser más explícitos con el tipo.
+        verify(servicioConductorMock, never()).obtenerConductor(any(Long.class));
+        verify(servicioViajeMock, never()).listarViajesPorConductor(any());
+    }
+
+    @Test
+    public void deberiaMostrarErrorSiIdExistePeroRolEsNull() throws Exception {
+        Long conductorId = 3L;
+
+        when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
+        when(sessionMock.getAttribute("rol")).thenReturn(null);
+
+        ModelAndView mav = controladorViaje.listarViajes(sessionMock);
+
+        assertThat(mav.getViewName(), equalTo("errorAcceso"));
+        assertThat(mav.getModel().get("error").toString(), containsString("Debés iniciar sesión como conductor"));
+        // CORRECCIÓN: Si anyLong() falla, usamos any(Long.class).
+        verify(servicioConductorMock, never()).obtenerConductor(any(Long.class));
+        verify(servicioViajeMock, never()).listarViajesPorConductor(any());
     }
 
     @Test

@@ -1,6 +1,6 @@
 package com.tallerwebi.dominio.ServiceImpl;
 
-
+import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Parada;
 import com.tallerwebi.dominio.Entity.Vehiculo;
@@ -10,6 +10,7 @@ import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
+import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import com.tallerwebi.dominio.excepcion.*;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -35,7 +37,6 @@ public class ServicioViajeImpl implements ServicioViaje {
         this.servicioConductor = servicioConductor;
         this.servicioVehiculo = servicioVehiculo;
     }
-
 
     @Override
     public Viaje obtenerViajePorId(Long id) throws NotFoundException {
@@ -146,4 +147,48 @@ public class ServicioViajeImpl implements ServicioViaje {
             throw new DatoObligatorioException("La ciudad de origen y destino deben ser diferentes");
         }
     }
+
+
+    @Override
+    public void cancelarViaje(Long id, Usuario usuarioEnSesion) throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeNoCancelableException {
+        // valido que el rol sea de conductor primero que todo
+        if(usuarioEnSesion.getRol() == null || !usuarioEnSesion.getRol().equalsIgnoreCase("CONDUCTOR")){
+            throw new UsuarioNoAutorizadoException("Solo los conductores pueden cancelar viajes");
+        }
+
+        //busco viaje por id
+        Optional<Viaje> viajeOptional = viajeRepository.findById(id);
+        if (viajeOptional.isEmpty()) {
+        throw new ViajeNoEncontradoException("No se encontró un viaje con ese ID");
+        }
+
+        //Esta linea obtiene el objeto viaje
+          Viaje viaje = viajeOptional.get();
+
+        //el viaje debe pertenecer al conductor
+        if(!viaje.getConductor().getId().equals(usuarioEnSesion.getId())){
+            throw new UsuarioNoAutorizadoException("El viaje debe pertenecer al conductor");
+        }
+
+        //valido el estado del viaje
+        if(!(viaje.getEstado() == EstadoDeViaje.DISPONIBLE || viaje.getEstado() == EstadoDeViaje.COMPLETO)){
+            throw new ViajeNoCancelableException("El viaje debe estar en estado DISPONIBLE o COMPLETO para cancelarse");
+        }
+
+        //cancelo el viaje guardando el estado
+        viaje.setEstado(EstadoDeViaje.CANCELADO);
+        this.viajeRepository.modificarViaje(viaje);
+    }
+
+    @Override
+    public List<Viaje> listarViajesPorConductor(Conductor conductor) throws UsuarioNoAutorizadoException {
+   
+        if (conductor == null) {
+            throw new UsuarioNoAutorizadoException("El conductor es nulo, la sesión no es válida.");
+        }
+
+        // obtener viajes del conductor
+        return this.viajeRepository.findByConductorId(conductor.getId());
+    }
+
 }
