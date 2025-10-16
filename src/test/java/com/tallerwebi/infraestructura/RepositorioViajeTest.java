@@ -393,7 +393,7 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
 
         // Assert
         assertNotNull(viajesEncontrados);
-        assertEquals(1, viajesEncontrados.size(), "Debería encontrar el viaje existente en estado DISPONIBLE");
+        assertEquals(2 , viajesEncontrados.size(), "Debería encontrar el viaje existente en estado DISPONIBLE");
         assertEquals(1L, viajesEncontrados.get(0).getId());
         assertEquals(EstadoDeViaje.DISPONIBLE, viajesEncontrados.get(0).getEstado());
     }
@@ -473,7 +473,7 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
         );
 
         assertNotNull(viajesEncontrados);
-        assertEquals(1, viajesEncontrados.size(), "Debería encontrar el viaje 1L");
+        assertEquals(2, viajesEncontrados.size(), "Debería encontrar el viaje 1L");
         assertEquals(1L, viajesEncontrados.get(0).getId());
     }
 

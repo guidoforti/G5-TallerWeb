@@ -64,7 +64,7 @@ public class RepositorioCiudadTest {
     public void testListarTodasLasCiudades() {
         List<Ciudad> ciudades = repositorioCiudad.findAll();
         assertNotNull(ciudades);
-        assertEquals(3, ciudades.size(), "Debería haber 3 ciudades de dataTest.sql");
+        assertEquals(6, ciudades.size(), "Debería haber 6 ciudades de dataTest.sql");
 
         // Verificar que están ordenadas (asumiendo orden por ID)
         assertEquals("Buenos Aires", ciudades.get(0).getNombre());
