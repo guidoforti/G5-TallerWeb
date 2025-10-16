@@ -22,8 +22,11 @@ import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeVistaDTO;
 import com.tallerwebi.dominio.excepcion.NominatimResponseException;
 import com.tallerwebi.dominio.excepcion.NotFoundException;
+import com.tallerwebi.dominio.excepcion.NotFoundException;
+import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import com.tallerwebi.presentacion.DTO.NominatimResponse;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.DetalleViajeOutputDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -43,13 +46,13 @@ public class ControladorViaje {
     private final ServicioVehiculo servicioVehiculo;
     private final ServicioNominatim servicioNominatim;
     private final ServicioCiudad servicioCiudad;
-    private final ServicioConductor servicioConductor; 
+    private final ServicioConductor servicioConductor;
 
     @Autowired
     public ControladorViaje(ServicioViaje servicioViaje,
                            ServicioVehiculo servicioVehiculo,
                            ServicioNominatim servicioNominatim,
-                           ServicioCiudad servicioCiudad, 
+                           ServicioCiudad servicioCiudad,
                            ServicioConductor servicioConductor) {
         this.servicioViaje = servicioViaje;
         this.servicioVehiculo = servicioVehiculo;
@@ -65,10 +68,6 @@ public class ControladorViaje {
         return new ModelAndView("buscarViajePorId", model);
     }
 
-    @GetMapping("")
-    public ModelAndView getViajeById(@RequestParam Long id) {
-        return null;
-    }
 
     @GetMapping("/publicar")
     public ModelAndView irAPublicarViaje(HttpSession session) {
@@ -153,14 +152,14 @@ public ModelAndView listarViajes(HttpSession session) { // QUITAMOS el 'throws U
         model.put("error", "Debés iniciar sesión como conductor");
         return new ModelAndView("errorAcceso", model);
     }
-    
+
     Long conductorId = (Long) usuarioIdObj;
     Conductor conductorEnSesion; // Declaramos aquí
 
     try {
         // 2. BUSCAR AL CONDUCTOR (El servicio lanza la excepción si no lo encuentra)
-        conductorEnSesion = servicioConductor.obtenerConductor(conductorId); 
-        
+        conductorEnSesion = servicioConductor.obtenerConductor(conductorId);
+
         // 3. Listar Viajes (Llamada al servicio de Viaje)
         List<Viaje> listaViajes = servicioViaje.listarViajesPorConductor(conductorEnSesion);
 
@@ -176,7 +175,7 @@ public ModelAndView listarViajes(HttpSession session) { // QUITAMOS el 'throws U
         // MANEJO DEL ERROR DE BÚSQUEDA POR ID
         model.put("error", "Error interno: El conductor de la sesión no fue encontrado.");
         return new ModelAndView("errorAcceso", model);
-        
+
     } catch (UsuarioNoAutorizadoException e) {
         // MANEJO DEL ERROR DE AUTORIZACIÓN (si el servicio lo lanza por conductor=null, aunque ya chequeamos)
         model.put("error", "No tenés permisos para ver los viajes");
@@ -206,7 +205,7 @@ public ModelAndView listarViajes(HttpSession session) { // QUITAMOS el 'throws U
 
         model.put("viaje", viajeDTO);
         return new ModelAndView("cancelarViaje", model);
-    
+
     } catch (ViajeNoEncontradoException e) {
         model.put("error", "No se encontró el viaje especificado.");
         return new ModelAndView("errorCancelarViaje", model);
@@ -253,6 +252,26 @@ public ModelAndView listarViajes(HttpSession session) { // QUITAMOS el 'throws U
 
 
 
+    @GetMapping("/detalle")
+    public ModelAndView verDetalleDeUnViaje(HttpSession httpSession , @RequestParam("id") Long id) {
+        ModelMap model = new ModelMap();
+       /* Object rol = httpSession.getAttribute("rol");
+        if (rol == null || !rol.equals("CONDUCTOR")) {
+            UsuarioNoAutorizadoException e = new UsuarioNoAutorizadoException("Debe ser un usuario conductor para ver detalles de un viaje");
+            model.put("error" , e.getMessage());
+            return new ModelAndView("detalleViaje" , model);
+        } */
+        try {
+            Viaje viaje = servicioViaje.obtenerDetalleDeViaje(id);
+            DetalleViajeOutputDTO detalleViajeOutputDTO = new DetalleViajeOutputDTO(viaje);
+            model.put("detalle" , detalleViajeOutputDTO);
+            return  new ModelAndView("detalleViaje" , model);
+
+        } catch (NotFoundException e) {
+            model.put("error" , e.getMessage());
+            return new ModelAndView("detalleViaje" , model);
+        }
+    }
     /**
      * Resuelve el nombre de una ciudad a una entidad Ciudad usando Nominatim.
      * Busca en la base de datos si ya existe (por latitud/longitud), o la crea si no existe.
