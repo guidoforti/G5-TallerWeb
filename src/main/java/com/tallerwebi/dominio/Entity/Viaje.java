@@ -1,70 +1,68 @@
 package com.tallerwebi.dominio.Entity;
 
+import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
-//@Entity
+@Entity
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "viaje")
 public class Viaje {
 
-    private Long id;
-    /*@Id
+
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @ManyToOne */
+    @ManyToOne
+    @JoinColumn(name = "conductor_id")
     private Conductor conductor;
-   /* @ManyToMany
+
+    @ManyToOne
+    @JoinColumn(name = "vehiculo_id")
+    private Vehiculo vehiculo;
+
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "viaje_viajero", // Nombre de la tabla intermedia
             joinColumns = @JoinColumn(name = "viaje_id"), // Columna que referencia a Viaje
             inverseJoinColumns = @JoinColumn(name = "viajero_id") // Columna que referencia a Viajero
-    ) */
-    private List<Viajero> viajeros; /* @ManyToMany
-    @JoinTable(
-            name = "viaje_viajero", // Nombre de la tabla intermedia
-            joinColumns = @JoinColumn(name = "viaje_id"), // Columna que referencia a Viaje
-            inverseJoinColumns = @JoinColumn(name = "viajero_id") // Columna que referencia a Viajero
-    ) */
-
-   /* @Embedded
-    @AttributeOverrides({
-            @AttributeOverride(name = "direccion", column = @Column(name = "origen_direccion")),
-            @AttributeOverride(name = "ciudad", column = @Column(name = "origen_ciudad")),
-            @AttributeOverride(name = "provincia", column = @Column(name = "origen_provincia")),
-            @AttributeOverride(name = "pais", column = @Column(name = "origen_pais")),
-            @AttributeOverride(name = "latitud", column = @Column(name = "origen_latitud")),
-            @AttributeOverride(name = "longitud", column = @Column(name = "origen_longitud"))
-    }) */
-    private Ubicacion origen;
-
-   /* @Embedded
-    @AttributeOverrides({
-            @AttributeOverride(name = "direccion", column = @Column(name = "destino_direccion")),
-            @AttributeOverride(name = "ciudad", column = @Column(name = "destino_ciudad")),
-            @AttributeOverride(name = "provincia", column = @Column(name = "destino_provincia")),
-            @AttributeOverride(name = "pais", column = @Column(name = "destino_pais")),
-            @AttributeOverride(name = "latitud", column = @Column(name = "destino_latitud")),
-            @AttributeOverride(name = "longitud", column = @Column(name = "destino_longitud"))
-    })*/
-    private Ubicacion destino;
+    )
+    private List<Viajero> viajeros;
 
 
-    private List<Ubicacion> paradas;
+    // Lista de paradas
+    @OneToMany(mappedBy = "viaje", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("orden ASC")
+    private List<Parada> paradas;
+
+    @ManyToOne
+    @JoinColumn(name = "origen_id")
+    private Ciudad origen;
+
+    @ManyToOne
+    @JoinColumn(name = "destino_id")
+    private Ciudad destino;
+
+    @Column(name = "fecha_hora_de_salida")
     private LocalDateTime fechaHoraDeSalida;
     private Double precio;
-    private Integer asientosTotales;
+    @Column(name = "asientos_disponibles")
     private Integer asientosDisponibles;
+    @Column(name = "fecha_de_creacion")
     private LocalDateTime fechaDeCreacion;
-    private Vehiculo vehiculo;
+    private EstadoDeViaje estado;
 
 
 }

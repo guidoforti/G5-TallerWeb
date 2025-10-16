@@ -11,24 +11,32 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
-//@Entity
+@Entity
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "conductor")
 public class Conductor {
 
-   /* @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) */
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-   // @OneToMany(mappedBy = "conductor_id")
-    private List<Viaje> viajes;
+
     private String nombre;
     private String email;
     private String contrasenia;
-    //ESTO PUEDE CONVERTIRSE EN UNA ENTITY LICENCIA A FUTURO
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+
+    @Column(name = "fecha_de_vencimiento_licencia")
     private LocalDate fechaDeVencimientoLicencia;
+
+    @OneToMany(mappedBy = "conductor")
+    private List<Viaje> viajes;
+
+    //ESTO PUEDE CONVERTIRSE EN UNA ENTITY LICENCIA A FUTURO
+
+    @OneToMany(mappedBy = "conductor", cascade = CascadeType.ALL, orphanRemoval = false)
+    private List<Vehiculo> vehiculos;
 
     @Override
     public boolean equals(Object o) {

@@ -1,19 +1,20 @@
 package com.tallerwebi.dominio.IRepository;
 
 import com.tallerwebi.dominio.Entity.Conductor;
-import com.tallerwebi.dominio.Entity.Ubicacion;
+import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Viaje;
+import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ViajeRepository {
 
-
-    Viaje findById(Long id);
-    void guardarViaje(Viaje viaje);
-    void modificarViajer(Viaje viaje);
+    Optional<Viaje> findById(Long id);
+    Viaje guardarViaje(Viaje viaje);
+    void modificarViaje(Viaje viaje);
     void borrarViaje(Long id);
-
-    List<Viaje> findByOrigenYDestinoYConductor(Ubicacion origen, Ubicacion destino , Conductor conductor);
+    List<Viaje> findByOrigenYDestinoYConductorYEstadoIn(Ciudad origen, Ciudad destino, Conductor conductor, List<EstadoDeViaje> estados);
+    List<Viaje> findByOrigenYDestinoYConductor(Ciudad origen, Ciudad destino , Conductor conductor);
+    List<Viaje> findByConductorId(Long idConductor);
 }
-

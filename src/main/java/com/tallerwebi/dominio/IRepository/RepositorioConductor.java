@@ -8,5 +8,5 @@ public interface RepositorioConductor {
     Optional<Conductor> buscarPorEmailYContrasenia(String email, String contrasenia);
     Optional<Conductor> buscarPorEmail(String email);
     Optional<Conductor> buscarPorId(Long id);
-    boolean guardar(Conductor conductor);
+    Conductor guardarConductor(Conductor conductor);
 }

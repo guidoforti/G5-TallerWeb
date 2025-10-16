@@ -3,6 +3,7 @@ package com.tallerwebi.infraestructura;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.IRepository.RepositorioConductor;
 import com.tallerwebi.infraestructura.Datos;
+import org.hibernate.SessionFactory;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -13,47 +14,50 @@ import java.util.Optional;
 @Repository("repositorioConductor")
 public class RepositorioConductorImpl implements RepositorioConductor {
 
-    private Map<Long, Conductor> conductores = new HashMap<>();
-    private Long secuenciaId = 1L;
+    SessionFactory sessionFactory;
 
-    public RepositorioConductorImpl() {
-        for( Conductor conductor : Datos.obtenerConductores() ) {
-            conductor.setId(this.secuenciaId++);
-            this.conductores.put(conductor.getId(), conductor);
-        }
+    public RepositorioConductorImpl(SessionFactory sessionFactory) {
+
+        this.sessionFactory = sessionFactory;
     }
 
     @Override
     public Optional<Conductor> buscarPorEmailYContrasenia(String email, String contrasenia) {
-        return conductores.values().stream()
-                .filter(c -> c.getEmail().equals(email) && c.getContrasenia().equals(contrasenia))
-                .findFirst();
+
+
+            String hql = "SELECT c FROM Conductor c WHERE c.email= :email AND c.contrasenia= :contrasenia";
+            Conductor conductor = this.sessionFactory.getCurrentSession().createQuery(hql, Conductor.class)
+                    .setParameter("email", email)
+                    .setParameter("contrasenia", contrasenia)
+                    .uniqueResult();
+
+            return  Optional.ofNullable(conductor);
+
     }
 
     @Override
     public Optional<Conductor> buscarPorEmail(String email) {
-        return conductores.values().stream()
-                .filter(c -> c.getEmail().equals(email))
-                .findFirst();
+        String hql = "SELECT c FROM Conductor c WHERE email = :email";
+        Conductor conductor = this.sessionFactory.getCurrentSession().createQuery(hql, Conductor.class)
+                .setParameter("email", email)
+                .uniqueResult();
+
+        return Optional.ofNullable(conductor);
     }
 
     @Override
     public Optional<Conductor> buscarPorId(Long id) {
-        return Optional.ofNullable(conductores.get(id));
+        String hql = "SELECT c FROM Conductor c WHERE id = :id";
+        Conductor conductor = this.sessionFactory.getCurrentSession().createQuery(hql, Conductor.class)
+                .setParameter("id", id)
+                .uniqueResult();
+
+        return Optional.ofNullable(conductor);
     }
 
     @Override
-    public boolean guardar(Conductor conductor) {
-        // validamos que no exista un email repetido
-        boolean existe = this.conductores.values().stream()
-                .anyMatch(c -> c.getEmail().equals(conductor.getEmail()));
-        if (existe) {
-            return false;
-        }
-
-        // asignamos id incremental antes de guardar
-        conductor.setId(secuenciaId++);
-        this.conductores.put(conductor.getId(), conductor);
-        return true;
+    public Conductor guardarConductor(Conductor conductor) {
+        this.sessionFactory.getCurrentSession().save(conductor);
+        return conductor;
     }
 }

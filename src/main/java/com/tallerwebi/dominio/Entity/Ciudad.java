@@ -8,15 +8,20 @@ import lombok.Setter;
 import javax.persistence.*;
 import java.util.Objects;
 
-//@Embeddable
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Ubicacion {
+@Table(name = "ciudad", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"latitud", "longitud"})
+})
+public class Ciudad {
 
-
-    private String direccion;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String nombre;
    /* private String ciudad;
     private String provincia;
     private String pais;*/
@@ -28,8 +33,8 @@ public class Ubicacion {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        Ubicacion ubicacion = (Ubicacion) o;
-        return Objects.equals(latitud, ubicacion.latitud) && Objects.equals(longitud, ubicacion.longitud);
+        Ciudad ciudad = (Ciudad) o;
+        return Objects.equals(latitud, ciudad.latitud) && Objects.equals(longitud, ciudad.longitud);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.tallerwebi.dominio.IServicio;
 
+import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.excepcion.NotFoundException;
 import com.tallerwebi.dominio.excepcion.PatenteDuplicadaException;
 import com.tallerwebi.presentacion.DTO.InputsDTO.VehiculoInputDTO;
@@ -11,8 +12,8 @@ import java.util.Optional;
 public interface ServicioVehiculo {
 
 
-    VehiculoOutputDTO getById(Long Id) throws NotFoundException;
-    List<VehiculoOutputDTO> obtenerVehiculosParaConductor(Long conductorId);
-    VehiculoOutputDTO obtenerVehiculoConPatente(String patente) throws NotFoundException;
-    VehiculoOutputDTO guardarVehiculo(VehiculoInputDTO vehiculoInputDTO, Long idConductor) throws PatenteDuplicadaException, NotFoundException;
+    Vehiculo getById(Long Id) throws NotFoundException;
+    List<Vehiculo> obtenerVehiculosParaConductor(Long conductorId);
+    Vehiculo obtenerVehiculoConPatente(String patente) throws NotFoundException;
+    Vehiculo guardarVehiculo(Vehiculo vehiculo) throws PatenteDuplicadaException, NotFoundException;
 }
