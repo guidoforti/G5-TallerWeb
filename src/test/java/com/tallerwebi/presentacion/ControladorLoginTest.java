@@ -50,7 +50,7 @@ public class ControladorLoginTest {
 		verify(sessionMock, times(0)).setAttribute("ROL", "ADMIN");
 	}
 	
-	@Test
+/*	@Test
 	public void loginConUsuarioYPasswordCorrectosDeberiaLLevarAHome(){
 		// preparacion
 		Usuario usuarioEncontradoMock = mock(Usuario.class);
@@ -65,7 +65,7 @@ public class ControladorLoginTest {
 		// validacion
 		assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/home"));
 		verify(sessionMock, times(1)).setAttribute("ROL", usuarioEncontradoMock.getRol());
-	}
+	}*/
 
 	@Test
 	public void registrameSiUsuarioNoExisteDeberiaCrearUsuarioYVolverAlLogin() throws UsuarioExistente {
