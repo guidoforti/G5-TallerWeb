@@ -16,9 +16,10 @@ public abstract class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String email;
-    private String password;
+    private String contrasenia;
     private String rol;
     private Boolean activo = false;
+    private String nombre;
 
     public boolean activo() {
         return activo;
@@ -32,11 +33,11 @@ public abstract class Usuario {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Usuario usuario = (Usuario) o;
-        return Objects.equals(email, usuario.email) && Objects.equals(password, usuario.password);
+        return Objects.equals(email, usuario.email) && Objects.equals(contrasenia, usuario.contrasenia);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(email, password);
+        return Objects.hash(email, contrasenia);
     }
 }

@@ -31,46 +31,78 @@ class ServicioConductorTest {
 
     @Test
     void deberiaValidarLoginCorrecto() throws Exception {
-        Conductor c = new Conductor(1L,  "Pedro", "pedro@mail.com", "pass", LocalDate.now() ,new ArrayList<>(), new ArrayList<>()  );
+        // Arrange
+        Conductor c = new Conductor();
+        c.setId(1L);
+        c.setNombre("Pedro");
+        c.setEmail("pedro@mail.com");
+        c.setContrasenia("pass");
+        c.setRol("CONDUCTOR");
+        c.setActivo(true);
+        c.setFechaDeVencimientoLicencia(LocalDate.now());
 
         when(repositorioMock.buscarPorEmailYContrasenia(c.getEmail(), c.getContrasenia()))
                 .thenReturn(Optional.of(c));
 
+        // Act
         Conductor resultado = servicio.login(c.getEmail(), c.getContrasenia());
 
+        // Assert
         assertThat(resultado.getNombre(), equalTo(c.getNombre()));
     }
 
     @Test
-    void noDeberiaValidarLoginSiCredencialesInvalidas() throws Exception {
+    void noDeberiaValidarLoginSiCredencialesInvalidas() {
+        // Arrange
         when(repositorioMock.buscarPorEmailYContrasenia("pedro@mail.com", "pass"))
                 .thenReturn(Optional.empty());
 
+        // Act & Assert
         assertThrows(CredencialesInvalidas.class,
                 () -> servicio.login("pedro@mail.com", "pass"));
     }
 
     @Test
     void deberiaRegistrarConductorSiNoExiste() throws UsuarioExistente, FechaDeVencimientoDeLicenciaInvalida {
-        Conductor nuevo = new Conductor(null, "Ana", "ana@mail.com", "123", LocalDate.now().plusDays(10) , new ArrayList<>(),new ArrayList<>());
+        // Arrange
+        Conductor nuevo = new Conductor();
+        nuevo.setNombre("Ana");
+        nuevo.setEmail("ana@mail.com");
+        nuevo.setContrasenia("123");
+        nuevo.setRol("CONDUCTOR");
+        nuevo.setActivo(true);
+        nuevo.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(10));
 
         when(repositorioMock.buscarPorEmail(nuevo.getEmail()))
                 .thenReturn(Optional.empty());
 
+        // Act
         servicio.registrar(nuevo);
 
+        // Assert
         verify(repositorioMock, times(1)).guardarConductor(nuevo);
     }
 
     @Test
     void noDeberiaRegistrarSiUsuarioYaExiste() {
-        Conductor existente = new Conductor(1L,  "Ana", "ana@mail.com", "123", LocalDate.now() ,new ArrayList<>(),new ArrayList<>());
+        // Arrange
+        Conductor existente = new Conductor();
+        existente.setId(1L);
+        existente.setNombre("Ana");
+        existente.setEmail("ana@mail.com");
+        existente.setContrasenia("123");
+        existente.setFechaDeVencimientoLicencia(LocalDate.now());
 
         when(repositorioMock.buscarPorEmail(existente.getEmail()))
                 .thenReturn(Optional.of(existente));
 
-        Conductor nuevo = new Conductor(null,  "Ana", "ana@mail.com", "123", LocalDate.now(), new ArrayList<>(),new ArrayList<>());
+        Conductor nuevo = new Conductor();
+        nuevo.setNombre("Ana");
+        nuevo.setEmail("ana@mail.com");
+        nuevo.setContrasenia("123");
+        nuevo.setFechaDeVencimientoLicencia(LocalDate.now());
 
+        // Act & Assert
         assertThrows(UsuarioExistente.class,
                 () -> servicio.registrar(nuevo));
 
@@ -79,13 +111,14 @@ class ServicioConductorTest {
 
     @Test
     void noDeberiaRegistrarConductorSiLicenciaEstaVencida() {
-        Conductor vencido = new Conductor(
-                null,
-                "Carlos", "carlos@mail.com",
-                "1234",
-                LocalDate.now().minusDays(1) , new ArrayList<>() ,new ArrayList<>()
-        );
+        // Arrange
+        Conductor vencido = new Conductor();
+        vencido.setNombre("Carlos");
+        vencido.setEmail("carlos@mail.com");
+        vencido.setContrasenia("1234");
+        vencido.setFechaDeVencimientoLicencia(LocalDate.now().minusDays(1));
 
+        // Act & Assert
         FechaDeVencimientoDeLicenciaInvalida exception = assertThrows(
                 FechaDeVencimientoDeLicenciaInvalida.class,
                 () -> servicio.registrar(vencido)
@@ -97,37 +130,48 @@ class ServicioConductorTest {
 
     @Test
     void obtenerConductor_existente_deberiaRetornarConductor() throws UsuarioInexistente {
-        // given
+        // Arrange
         Long id = 1L;
-        Conductor esperado = new Conductor(id,  "Pedro", "pedro@mail.com", "pass", LocalDate.now(), new ArrayList<>(),new ArrayList<>());
+        Conductor esperado = new Conductor();
+        esperado.setId(id);
+        esperado.setNombre("Pedro");
+        esperado.setEmail("pedro@mail.com");
+        esperado.setContrasenia("pass");
+        esperado.setFechaDeVencimientoLicencia(LocalDate.now());
+
         when(repositorioMock.buscarPorId(id)).thenReturn(Optional.of(esperado));
 
-        // when
+        // Act
         Conductor resultado = servicio.obtenerConductor(id);
 
-        // then
+        // Assert
         assertThat(resultado, equalTo(esperado));
         verify(repositorioMock).buscarPorId(id);
     }
 
     @Test
     void obtenerConductor_noExistente_deberiaLanzarExcepcion() {
-        // given
+        // Arrange
         Long id = 1L;
         when(repositorioMock.buscarPorId(id)).thenReturn(Optional.empty());
 
-        // when & then
+        // Act & Assert
         assertThrows(UsuarioInexistente.class, () -> servicio.obtenerConductor(id));
         verify(repositorioMock).buscarPorId(id);
     }
 
     @Test
     void guardarConductor_ErrorAlGuardar_DeberiaLanzarExcepcion() {
-        Conductor c = new Conductor(null, "Luis", "luis@gmail.com", "1234", LocalDate.now().plusDays(10), new ArrayList<>(), new ArrayList<>());
+        // Arrange
+        Conductor c = new Conductor();
+        c.setNombre("Luis");
+        c.setEmail("luis@gmail.com");
+        c.setContrasenia("1234");
+        c.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(10));
 
-        // Forzamos que el repositorio lance una excepción
         doThrow(new RuntimeException("DB error")).when(repositorioMock).guardarConductor(c);
 
+        // Act & Assert
         ErrorAlGuardarConductorException exception = assertThrows(
                 ErrorAlGuardarConductorException.class,
                 () -> servicio.guardarConductor(c)
@@ -138,11 +182,18 @@ class ServicioConductorTest {
 
     @Test
     void guardarConductorCorrectamenteDeberiaRetornarConductor() throws ErrorAlGuardarConductorException {
-        Conductor c = new Conductor(null, "Luis", "luis@gmail.com", "1234", LocalDate.now().plusDays(10), new ArrayList<>(), new ArrayList<>());
-        //devuelve el mismo conductor
+        // Arrange
+        Conductor c = new Conductor();
+        c.setNombre("Luis");
+        c.setEmail("luis@gmail.com");
+        c.setContrasenia("1234");
+        c.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(10));
+
+        // Act
         servicio.guardarConductor(c);
+
+        // Assert
         verify(repositorioMock, times(1)).guardarConductor(c);
     }
-
 
 }

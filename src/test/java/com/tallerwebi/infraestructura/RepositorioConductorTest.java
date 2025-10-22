@@ -36,8 +36,18 @@ public class RepositorioConductorTest {
     void setUp() {
         this.repositorio = new RepositorioConductorImpl(this.sessionFactory);
 
-        conductorBase = new Conductor(2L, "Maria Lopez", "maria@correo.com", "abcd",
-                LocalDate.of(2026, 11, 20), new ArrayList<>(), new ArrayList<>());
+        // Creación del Conductor base refactorizada
+        conductorBase = new Conductor();
+        conductorBase.setNombre("Maria Lopez");
+        conductorBase.setEmail("maria@correo.com");
+        conductorBase.setContrasenia("abcd");
+        conductorBase.setRol("CONDUCTOR");
+        conductorBase.setActivo(true);
+        conductorBase.setFechaDeVencimientoLicencia(LocalDate.of(2026, 11, 20));
+        conductorBase.setViajes(new ArrayList<>());
+        conductorBase.setVehiculos(new ArrayList<>());
+
+        repositorio.guardarConductor(conductorBase); // Guardamos el conductor para que exista en la BD para los tests
     }
 
     @Test
@@ -47,12 +57,15 @@ public class RepositorioConductorTest {
         nuevo.setNombre("ConductorAGuardar");
         nuevo.setEmail("pedro123@correo.com");
         nuevo.setContrasenia("clave1234");
+        nuevo.setRol("CONDUCTOR");
+        nuevo.setActivo(true);
+        nuevo.setFechaDeVencimientoLicencia(LocalDate.now().plusYears(1));
 
         // Act
         Conductor guardado = repositorio.guardarConductor(nuevo);
 
         // Assert
-        assertNotNull(nuevo.getId(), "El conductor debería tener un ID asignado después de guardarse");
+        assertNotNull(guardado.getId(), "El conductor debería tener un ID asignado después de guardarse");
 
         Optional<Conductor>  recuperado = repositorio.buscarPorId(guardado.getId());
         assertTrue(recuperado.isPresent(), "Debería poder recuperarse el conductor guardado");
@@ -83,7 +96,8 @@ public class RepositorioConductorTest {
 
     @Test
     void deberiaBuscarPorIdSiExiste() {
-        Optional<Conductor> conductor = repositorio.buscarPorId(conductorBase.getId()); // Usamos 2L
+        // Act
+        Optional<Conductor> conductor = repositorio.buscarPorId(conductorBase.getId());
 
         // Assert
         assertTrue(conductor.isPresent(), "Debería encontrar el conductor precargado por su ID");

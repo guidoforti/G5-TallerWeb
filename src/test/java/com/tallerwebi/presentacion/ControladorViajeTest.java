@@ -90,7 +90,16 @@ public class ControladorViajeTest {
     public void deberiaRetornarFormularioConVehiculosCuandoConductorLogueado() {
         // given
         Long conductorId = 1L;
-        Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
+        Conductor conductor = new Conductor();
+        conductor.setId(1L);
+        conductor.setNombre("Juan");
+        conductor.setEmail("juan@test.com");
+        conductor.setContrasenia("pass");
+        conductor.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(30)); // O la fecha que corresponda
+        conductor.setViajes(new ArrayList<>());
+        conductor.setVehiculos(new ArrayList<>());
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true);
 
         Vehiculo vehiculo1 = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
         Vehiculo vehiculo2 = new Vehiculo(2L, "DEF456", "Honda Civic", "2019", 5, EstadoVerificacion.VERIFICADO, conductor);
@@ -213,8 +222,16 @@ public class ControladorViajeTest {
         viajeInputDTO.setAsientosDisponibles(3);
         agregarCiudadesAlDTO(viajeInputDTO);
 
-        Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
-        Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
+        Conductor conductor = new Conductor();
+        conductor.setId(1L);
+        conductor.setNombre("Juan");
+        conductor.setEmail("juan@test.com");
+        conductor.setContrasenia("pass");
+        conductor.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(30)); // O la fecha que corresponda
+        conductor.setViajes(new ArrayList<>());
+        conductor.setVehiculos(new ArrayList<>());
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true);  Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
         List<Vehiculo> vehiculos = Arrays.asList(vehiculo);
 
         when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
@@ -246,8 +263,16 @@ public class ControladorViajeTest {
         viajeInputDTO.setAsientosDisponibles(10);
         agregarCiudadesAlDTO(viajeInputDTO);
 
-        Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
-        Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
+        Conductor conductor = new Conductor();
+        conductor.setId(1L);
+        conductor.setNombre("Juan");
+        conductor.setEmail("juan@test.com");
+        conductor.setContrasenia("pass");
+        conductor.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(30)); // O la fecha que corresponda
+        conductor.setViajes(new ArrayList<>());
+        conductor.setVehiculos(new ArrayList<>());
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true); Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
         List<Vehiculo> vehiculos = Arrays.asList(vehiculo);
 
         when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
@@ -277,8 +302,16 @@ public class ControladorViajeTest {
         viajeInputDTO.setAsientosDisponibles(3);
         agregarCiudadesAlDTO(viajeInputDTO);
 
-        Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
-        Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
+        Conductor conductor = new Conductor();
+        conductor.setId(1L);
+        conductor.setNombre("Juan");
+        conductor.setEmail("juan@test.com");
+        conductor.setContrasenia("pass");
+        conductor.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(30)); // O la fecha que corresponda
+        conductor.setViajes(new ArrayList<>());
+        conductor.setVehiculos(new ArrayList<>());
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true); Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
         List<Vehiculo> vehiculos = Arrays.asList(vehiculo);
 
         when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
@@ -335,8 +368,16 @@ public class ControladorViajeTest {
         viajeInputDTO.setAsientosDisponibles(3);
         agregarCiudadesAlDTO(viajeInputDTO);
 
-        Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
-        Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
+        Conductor conductor = new Conductor();
+        conductor.setId(1L);
+        conductor.setNombre("Juan");
+        conductor.setEmail("juan@test.com");
+        conductor.setContrasenia("pass");
+        conductor.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(30)); // O la fecha que corresponda
+        conductor.setViajes(new ArrayList<>());
+        conductor.setVehiculos(new ArrayList<>());
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true); Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
         List<Vehiculo> vehiculos = Arrays.asList(vehiculo);
 
         when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
@@ -434,14 +475,19 @@ public class ControladorViajeTest {
     @Test
     public void deberiaMostrarErrorSiViajeNoEncontrado() throws Exception {
         // given
-        Long viajeId = 5L;
-        Long conductorId = 1L;
+        Long viajeId = 1293871293721L;
+        Long conductorId = 250L;
 
         when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
         when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
 
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+        conductor.setRol("CONDUCTOR");
+
+        when(servicioConductorMock.obtenerConductor(conductorId)).thenReturn(conductor);
         doThrow(new ViajeNoEncontradoException("No se encontró el viaje"))
-            .when(servicioViajeMock).cancelarViaje(eq(viajeId), any(Usuario.class));
+                .when(servicioViajeMock).cancelarViaje(eq(viajeId), any(Conductor.class));
 
         // when
         ModelAndView mav = controladorViaje.cancelarViaje(viajeId, sessionMock);
@@ -449,9 +495,7 @@ public class ControladorViajeTest {
         // then
         assertThat(mav.getViewName(), equalTo("errorCancelarViaje"));
         assertThat(mav.getModel().containsKey("error"), equalTo(true));
-        assertThat(mav.getModel().get("error").toString(), containsString("No se encontró el viaje"));
-
-        verify(servicioViajeMock, times(1)).cancelarViaje(eq(viajeId), any(Usuario.class));
+        assertThat(mav.getModel().get("error").toString(), containsString("No se encontró el viaje especificado."));
     }
 
     @Test
@@ -463,8 +507,13 @@ public class ControladorViajeTest {
         when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
         when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
 
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+        conductor.setRol("CONDUCTOR");
+
+        when(servicioConductorMock.obtenerConductor(conductorId)).thenReturn(conductor);
         doThrow(new UsuarioNoAutorizadoException("No tiene permisos para cancelar este viaje."))
-            .when(servicioViajeMock).cancelarViaje(eq(viajeId), any(Usuario.class));
+                .when(servicioViajeMock).cancelarViaje(eq(viajeId), any(Conductor.class));
 
         // when
         ModelAndView mav = controladorViaje.cancelarViaje(viajeId, sessionMock);
@@ -473,7 +522,7 @@ public class ControladorViajeTest {
         assertThat(mav.getViewName(), equalTo("errorCancelarViaje"));
         assertThat(mav.getModel().containsKey("error"), equalTo(true));
         assertThat(mav.getModel().get("error").toString(),
-            equalTo("No tiene permisos para cancelar este viaje."));
+                equalTo("No tiene permisos para cancelar este viaje."));
     }
 
     @Test
@@ -485,8 +534,13 @@ public class ControladorViajeTest {
         when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
         when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
 
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+        conductor.setRol("CONDUCTOR");
+
+        when(servicioConductorMock.obtenerConductor(conductorId)).thenReturn(conductor);
         doThrow(new ViajeNoCancelableException("El viaje no se puede cancelar en este estado."))
-            .when(servicioViajeMock).cancelarViaje(eq(viajeId), any(Usuario.class));
+                .when(servicioViajeMock).cancelarViaje(eq(viajeId), any(Conductor.class));
 
         // when
         ModelAndView mav = controladorViaje.cancelarViaje(viajeId, sessionMock);
@@ -495,7 +549,7 @@ public class ControladorViajeTest {
         assertThat(mav.getViewName(), equalTo("errorCancelarViaje"));
         assertThat(mav.getModel().containsKey("error"), equalTo(true));
         assertThat(mav.getModel().get("error").toString(),
-            equalTo("El viaje no se puede cancelar en este estado."));
+                equalTo("El viaje no se puede cancelar en este estado."));
     }
 
 

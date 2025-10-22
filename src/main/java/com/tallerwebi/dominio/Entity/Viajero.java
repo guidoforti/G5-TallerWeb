@@ -17,7 +17,6 @@ import java.util.List;
 @PrimaryKeyJoinColumn(name = "usuario_id")
 public class Viajero extends Usuario {
 
-
     private Integer edad;
 
     // Relación muchos a muchos con Viaje

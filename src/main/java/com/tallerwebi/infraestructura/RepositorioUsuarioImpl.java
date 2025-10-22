@@ -26,7 +26,7 @@ public class RepositorioUsuarioImpl implements RepositorioUsuario {
     public Optional<Usuario> buscarUsuario(String email, String contrasenia) {
 
         final Session session = sessionFactory.getCurrentSession();
-        String hql = "SELECT V FROM Viajero V WHERE V.email = :email AND contrasenia = :contrasenia";
+        String hql = "SELECT V FROM Usuario V WHERE V.email = :email AND contrasenia = :contrasenia";
         Query<Usuario> query = sessionFactory.getCurrentSession().createQuery(hql, Usuario.class)
                 .setParameter("email", email)
                 .setParameter("contrasenia", contrasenia);
@@ -34,15 +34,18 @@ public class RepositorioUsuarioImpl implements RepositorioUsuario {
     }
 
     @Override
-    public void guardar(Usuario usuario) {
+    public Usuario guardar(Usuario usuario) {
         sessionFactory.getCurrentSession().save(usuario);
+        return usuario;
     }
 
     @Override
-    public Usuario buscarPorEmail(String email) {
-        return (Usuario) sessionFactory.getCurrentSession().createCriteria(Usuario.class)
-                .add(Restrictions.eq("email", email))
-                .uniqueResult();
+    public Optional<Usuario> buscarPorEmail(String email) {
+        String hql = "SELECT V FROM Usuario V WHERE V.email = :email";
+        Query<Usuario> query = sessionFactory.getCurrentSession().createQuery(hql, Usuario.class)
+                .setParameter("email", email);
+
+        return query.uniqueResultOptional();
     }
 
     @Override

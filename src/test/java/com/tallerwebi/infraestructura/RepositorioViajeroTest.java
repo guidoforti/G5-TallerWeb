@@ -34,20 +34,35 @@ public class RepositorioViajeroTest {
     public void setUp() {
         this.repositorioViajero = new RepositorioViajeroImpl(this.sessionFactory);
 
-        viajeroBase = new Viajero(null, "ViajeroBaseTest", 30, "viajero.base.test@unlam.com", "securePass1", new ArrayList<>());
+        // Creación del Viajero base refactorizada
+        viajeroBase = new Viajero();
+        viajeroBase.setNombre("ViajeroBaseTest");
+        viajeroBase.setEdad(30);
+        viajeroBase.setEmail("viajero.base.test@unlam.com");
+        viajeroBase.setContrasenia("securePass1");
+        viajeroBase.setRol("VIAJERO");
+        viajeroBase.setActivo(true);
+        viajeroBase.setViajes(new ArrayList<>());
         repositorioViajero.guardarViajero(viajeroBase);
-
-        //sessionFactory.getCurrentSession().flush();
-        //sessionFactory.getCurrentSession().clear();
     }
 
     @Test
     public void cuandoSeAgregaViajeroNuevoSeGuardaYRetornaId(){
         // Arrange
-        Viajero viajero = new Viajero(null, "Patricio Nuevo", 20, "patricio.nuevo@test.com", "1234aa", new ArrayList<>());
+        // Creación del nuevo Viajero refactorizada
+        Viajero viajero = new Viajero();
+        viajero.setNombre("Patricio Nuevo");
+        viajero.setEdad(20);
+        viajero.setEmail("patricio.nuevo@test.com");
+        viajero.setContrasenia("1234aa");
+        viajero.setRol("VIAJERO");
+        viajero.setActivo(true);
+        viajero.setViajes(new ArrayList<>());
 
+        // Act
         Viajero viajeroGuardado = this.repositorioViajero.guardarViajero(viajero);
 
+        // Assert
         assertThat(viajeroGuardado, is(notNullValue()));
         assertThat(viajeroGuardado.getId(), is(notNullValue()));
 
@@ -61,25 +76,29 @@ public class RepositorioViajeroTest {
         String email = "viajero.base.test@unlam.com";
         String pass = "securePass1";
 
-
+        // Act
         Optional<Viajero> viajeroEncontrado = repositorioViajero.buscarPorEmailYContrasenia(email, pass);
 
-
+        // Assert
         assertTrue(viajeroEncontrado.isPresent());
         assertThat(viajeroEncontrado.get().getEmail(), is(email));
     }
 
     @Test
     public void siLaContraseniaEsIncorrectaNoDevuelveAlViajero(){
+        // Act
         Optional<Viajero> viajeroEncontrado = repositorioViajero.buscarPorEmailYContrasenia("viajero.base.test@unlam.com", "kfsvc1_incorrecta");
 
+        // Assert
         assertThat(viajeroEncontrado.isPresent(), is(false));
     }
 
     @Test
     public void siElEmailNoExisteNoDevuelveAlViajero(){
+        // Act
         Optional<Viajero> viajeroEncontrado = repositorioViajero.buscarPorEmailYContrasenia("otro@mail.com", "securePass1");
 
+        // Assert
         assertThat(viajeroEncontrado.isPresent(), is(false));
     }
 
@@ -98,9 +117,10 @@ public class RepositorioViajeroTest {
 
     @Test
     public void buscoViajeroPorEmailYNoLoEncuentro(){
-
+        // Act
         Optional<Viajero> viajeroPorMailEncontrado = repositorioViajero.buscarPorEmail("Juan@gmail.com");
 
+        // Assert
         assertThat(viajeroPorMailEncontrado.isPresent(), is(false));
     }
 
@@ -109,8 +129,10 @@ public class RepositorioViajeroTest {
         // Arrange: El ID se obtiene del objeto guardado en el setUp
         Long idExistente = viajeroBase.getId();
 
+        // Act
         Optional<Viajero> viajeroPorIDEncontrado = repositorioViajero.buscarPorId(idExistente);
 
+        // Assert
         assertTrue(viajeroPorIDEncontrado.isPresent());
         assertThat(viajeroPorIDEncontrado.get().getId(), is(idExistente));
         assertThat(viajeroPorIDEncontrado.get().getEmail(), is("viajero.base.test@unlam.com"));
@@ -118,9 +140,10 @@ public class RepositorioViajeroTest {
 
     @Test
     public void buscoViajeroPorIdYNoLoEncuentro(){
-
+        // Act
         Optional<Viajero> viajeroPorIDEncontrado = repositorioViajero.buscarPorId(999L);
 
+        // Assert
         assertThat(viajeroPorIDEncontrado.isPresent(), is(false));
     }
 }

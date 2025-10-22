@@ -3,56 +3,37 @@ package com.tallerwebi.dominio;
 import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Usuario;
-import com.tallerwebi.dominio.Entity.Viaje;
-import com.tallerwebi.dominio.Enums.EstadoDeViaje;
-import com.tallerwebi.dominio.IRepository.RepositorioConductor;
-import com.tallerwebi.dominio.IRepository.ViajeRepository;
-import com.tallerwebi.dominio.IServicio.ServicioConductor;
-import com.tallerwebi.dominio.IServicio.ServicioViaje;
-import com.tallerwebi.dominio.ServiceImpl.ServicioConductorImpl;
-import com.tallerwebi.dominio.ServiceImpl.ServicioViajeImpl;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.*;
-
-
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.Enums.EstadoVerificacion;
+import com.tallerwebi.dominio.IRepository.RepositorioConductor;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
+import com.tallerwebi.dominio.ServiceImpl.ServicioConductorImpl;
 import com.tallerwebi.dominio.ServiceImpl.ServicioViajeImpl;
 import com.tallerwebi.dominio.excepcion.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class ServicioViajeTest {
@@ -93,7 +74,15 @@ class ServicioViajeTest {
         Long conductorId = 1L;
         Long vehiculoId = 1L;
 
-        Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+        conductor.setNombre("Juan");
+        conductor.setEmail("juan@test.com");
+        conductor.setContrasenia("pass");
+        conductor.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(30));
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true);
+
         Vehiculo vehiculo = new Vehiculo(vehiculoId, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
         Viaje viaje = crearViajeDeTest();
 
@@ -134,7 +123,15 @@ class ServicioViajeTest {
     void noDeberiaPublicarSiVehiculoNoExiste() throws Exception {
         // given
         Long conductorId = 1L;
-        Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+        conductor.setNombre("Juan");
+        conductor.setEmail("juan@test.com");
+        conductor.setContrasenia("pass");
+        conductor.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(30));
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true);
+
         Viaje viaje = crearViajeDeTest();
 
         when(servicioConductorMock.obtenerConductor(conductorId)).thenReturn(conductor);
@@ -151,8 +148,24 @@ class ServicioViajeTest {
         Long conductorId = 1L;
         Long otroConductorId = 2L;
 
-        Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
-        Conductor otroConductor = new Conductor(otroConductorId, "Pedro", "pedro@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+        conductor.setNombre("Juan");
+        conductor.setEmail("juan@test.com");
+        conductor.setContrasenia("pass");
+        conductor.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(30));
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true);
+
+        Conductor otroConductor = new Conductor();
+        otroConductor.setId(otroConductorId);
+        otroConductor.setNombre("Pedro");
+        otroConductor.setEmail("pedro@test.com");
+        otroConductor.setContrasenia("pass");
+        otroConductor.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(30));
+        otroConductor.setRol("CONDUCTOR");
+        otroConductor.setActivo(true);
+
         Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, otroConductor);
         Viaje viaje = crearViajeDeTest();
 
@@ -161,8 +174,8 @@ class ServicioViajeTest {
 
         // when & then
         UsuarioNoAutorizadoException exception = assertThrows(
-            UsuarioNoAutorizadoException.class,
-            () -> servicioViaje.publicarViaje(viaje, conductorId, 1L)
+                UsuarioNoAutorizadoException.class,
+                () -> servicioViaje.publicarViaje(viaje, conductorId, 1L)
         );
 
         assertThat(exception.getMessage(), equalTo("El vehículo seleccionado no pertenece al conductor"));
@@ -173,7 +186,15 @@ class ServicioViajeTest {
     void noDeberiaPublicarSiAsientosDisponiblesMayorQueTotalesMenosUno() throws Exception {
         // given
         Long conductorId = 1L;
-        Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+        conductor.setNombre("Juan");
+        conductor.setEmail("juan@test.com");
+        conductor.setContrasenia("pass");
+        conductor.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(30));
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true);
+
         Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
 
         Viaje viaje = crearViajeDeTest();
@@ -184,8 +205,8 @@ class ServicioViajeTest {
 
         // when & then
         AsientosDisponiblesMayorQueTotalesDelVehiculoException exception = assertThrows(
-            AsientosDisponiblesMayorQueTotalesDelVehiculoException.class,
-            () -> servicioViaje.publicarViaje(viaje, conductorId, 1L)
+                AsientosDisponiblesMayorQueTotalesDelVehiculoException.class,
+                () -> servicioViaje.publicarViaje(viaje, conductorId, 1L)
         );
 
         assertThat(exception.getMessage(), containsString("Los asientos disponibles no pueden ser mayores a 4"));
@@ -202,8 +223,8 @@ class ServicioViajeTest {
 
         // when & then
         DatoObligatorioException exception = assertThrows(
-            DatoObligatorioException.class,
-            () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
+                DatoObligatorioException.class,
+                () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
         );
 
         DatoObligatorioException exceptionNegativo = assertThrows(
@@ -225,8 +246,8 @@ class ServicioViajeTest {
 
         // when & then
         DatoObligatorioException exception = assertThrows(
-            DatoObligatorioException.class,
-            () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
+                DatoObligatorioException.class,
+                () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
         );
         DatoObligatorioException exceptionNegativo = assertThrows(
                 DatoObligatorioException.class,
@@ -270,8 +291,8 @@ class ServicioViajeTest {
 
         // when & then
         DatoObligatorioException exception = assertThrows(
-            DatoObligatorioException.class,
-            () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
+                DatoObligatorioException.class,
+                () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
         );
 
         assertThat(exception.getMessage(), equalTo("La fecha y hora de salida es obligatoria"));
@@ -286,8 +307,8 @@ class ServicioViajeTest {
 
         // when & then
         DatoObligatorioException exception = assertThrows(
-            DatoObligatorioException.class,
-            () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
+                DatoObligatorioException.class,
+                () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
         );
 
         assertThat(exception.getMessage(), equalTo("La fecha y hora de salida debe ser mayor a la fecha actual"));
@@ -301,8 +322,8 @@ class ServicioViajeTest {
 
         // when & then
         DatoObligatorioException exception = assertThrows(
-            DatoObligatorioException.class,
-            () -> servicioViaje.publicarViaje(viaje, null, 1L)
+                DatoObligatorioException.class,
+                () -> servicioViaje.publicarViaje(viaje, null, 1L)
         );
 
         assertThat(exception.getMessage(), equalTo("El ID del conductor es obligatorio"));
@@ -316,8 +337,8 @@ class ServicioViajeTest {
 
         // when & then
         DatoObligatorioException exception = assertThrows(
-            DatoObligatorioException.class,
-            () -> servicioViaje.publicarViaje(viaje, 1L, null)
+                DatoObligatorioException.class,
+                () -> servicioViaje.publicarViaje(viaje, 1L, null)
         );
 
         assertThat(exception.getMessage(), equalTo("El vehículo es obligatorio"));
@@ -330,7 +351,15 @@ class ServicioViajeTest {
         Long conductorId = 1L;
         Long vehiculoId = 1L;
 
-        Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+        conductor.setNombre("Juan");
+        conductor.setEmail("juan@test.com");
+        conductor.setContrasenia("pass");
+        conductor.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(30));
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true);
+
         Vehiculo vehiculo = new Vehiculo(vehiculoId, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
         Viaje viaje = crearViajeDeTest();
 
@@ -350,13 +379,14 @@ class ServicioViajeTest {
     }
 
     @Test
-        void seDebeCancelarViajeCorrectamente() throws Exception {
-        
+    void seDebeCancelarViajeCorrectamente() throws Exception {
         Conductor conductor = new Conductor();
         conductor.setId(1L);
         conductor.setEmail("pepito@gmail.com");
-        
-        Usuario usuarioEnSesion = new Usuario();
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true);
+
+        Conductor usuarioEnSesion = new Conductor();
         usuarioEnSesion.setId(1L);
         usuarioEnSesion.setRol("CONDUCTOR");
 
@@ -373,11 +403,9 @@ class ServicioViajeTest {
         verify(viajeRepositoryMock).modificarViaje(viaje);
     }
 
-
     @Test
-        void noDebeCancelarSiUnUsuarioNoTieneRol() {
-        
-        Usuario usuarioSinRol = new Usuario();
+    void noDebeCancelarSiUnUsuarioNoTieneRol() {
+        Conductor usuarioSinRol = new Conductor();
         usuarioSinRol.setId(2L);
         usuarioSinRol.setRol(null);
 
@@ -388,9 +416,8 @@ class ServicioViajeTest {
     }
 
     @Test
-        void noDebeCancelarSiUnViajeNoExiste() {
-
-        Usuario usuarioConductor = new Usuario();
+    void noDebeCancelarSiUnViajeNoExiste() {
+        Conductor usuarioConductor = new Conductor();
         usuarioConductor.setId(1L);
         usuarioConductor.setRol("CONDUCTOR");
 
@@ -403,15 +430,16 @@ class ServicioViajeTest {
     }
 
     @Test
-        void noSeDebeCancelarSiUnViajeNoPerteneceAlConductor() {
-        
-        Usuario usuarioConductor = new Usuario();
+    void noSeDebeCancelarSiUnViajeNoPerteneceAlConductor() {
+        Conductor usuarioConductor = new Conductor();
         usuarioConductor.setId(1L);
         usuarioConductor.setRol("CONDUCTOR");
 
         // el viaje pertenece a otro conductor
         Conductor otroConductor = new Conductor();
         otroConductor.setId(99L);
+        otroConductor.setRol("CONDUCTOR");
+        otroConductor.setActivo(true);
 
         Viaje viaje = new Viaje();
         viaje.setId(100L);
@@ -427,14 +455,15 @@ class ServicioViajeTest {
     }
 
     @Test
-        void noSeDebeCancelarSiElEstadoDelViajeEsFinalizado() {
-    
-        Usuario usuarioConductor = new Usuario();
+    void noSeDebeCancelarSiElEstadoDelViajeEsFinalizado() {
+        Conductor usuarioConductor = new Conductor();
         usuarioConductor.setId(1L);
         usuarioConductor.setRol("CONDUCTOR");
 
         Conductor conductor = new Conductor();
         conductor.setId(1L);
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true);
 
         Viaje viaje = new Viaje();
         viaje.setId(100L);
@@ -451,14 +480,15 @@ class ServicioViajeTest {
     }
 
     @Test
-        void noSeDebeCancelarSiElEstadoDelViajeEsCancelado() {
-
-        Usuario usuarioConductor = new Usuario();
+    void noSeDebeCancelarSiElEstadoDelViajeEsCancelado() {
+        Conductor usuarioConductor = new Conductor();
         usuarioConductor.setId(1L);
         usuarioConductor.setRol("CONDUCTOR");
 
         Conductor conductor = new Conductor();
         conductor.setId(1L);
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true);
 
         Viaje viaje = new Viaje();
         viaje.setId(100L);
@@ -474,13 +504,11 @@ class ServicioViajeTest {
         verify(viajeRepositoryMock, never()).modificarViaje(any());
     }
 
-     @Test
+    @Test
     void noDebeListarViajesSiConductorEsNull() {
-      
-        
         assertThrows(UsuarioNoAutorizadoException.class,
                 () -> servicioViaje.listarViajesPorConductor(null));
-        
+
         verify(viajeRepositoryMock, never()).findByConductorId(anyLong());
     }
 
@@ -488,6 +516,8 @@ class ServicioViajeTest {
     void deberiaListarViajesPorConductor() throws UsuarioNoAutorizadoException {
         Conductor conductor = new Conductor();
         conductor.setId(1L);
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true);
 
         Viaje viaje1 = new Viaje();
         viaje1.setId(10L);
@@ -502,16 +532,16 @@ class ServicioViajeTest {
 
         assertNotNull(resultado);
         assertEquals(2, resultado.size());
-        
+
         verify(viajeRepositoryMock).findByConductorId(1L);
     }
 
     @Test
     void deberiaDevolverListaVaciaSiConductorNoTieneViajes() throws UsuarioNoAutorizadoException {
-      
-        
         Conductor conductorSinViajes = new Conductor();
         conductorSinViajes.setId(99L);
+        conductorSinViajes.setRol("CONDUCTOR");
+        conductorSinViajes.setActivo(true);
 
         when(viajeRepositoryMock.findByConductorId(99L)).thenReturn(Collections.emptyList());
 
@@ -532,8 +562,8 @@ class ServicioViajeTest {
 
         // when & then
         DatoObligatorioException exception = assertThrows(
-            DatoObligatorioException.class,
-            () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
+                DatoObligatorioException.class,
+                () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
         );
 
         assertThat(exception.getMessage(), equalTo("La ciudad de origen es obligatoria"));
@@ -548,8 +578,8 @@ class ServicioViajeTest {
 
         // when & then
         DatoObligatorioException exception = assertThrows(
-            DatoObligatorioException.class,
-            () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
+                DatoObligatorioException.class,
+                () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
         );
 
         assertThat(exception.getMessage(), equalTo("La ciudad de destino es obligatoria"));
@@ -566,8 +596,8 @@ class ServicioViajeTest {
 
         // when & then
         DatoObligatorioException exception = assertThrows(
-            DatoObligatorioException.class,
-            () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
+                DatoObligatorioException.class,
+                () -> servicioViaje.publicarViaje(viaje, 1L, 1L)
         );
 
         assertThat(exception.getMessage(), equalTo("La ciudad de origen y destino deben ser diferentes"));
@@ -578,7 +608,15 @@ class ServicioViajeTest {
     void noDeberiaPublicarSiYaExisteViajeDisponibleConMismoOrigenYDestino() throws Exception {
         // given
         Long conductorId = 1L;
-        Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+        conductor.setNombre("Juan");
+        conductor.setEmail("juan@test.com");
+        conductor.setContrasenia("pass");
+        conductor.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(30));
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true);
+
         Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
 
         Viaje viaje = crearViajeDeTest();
@@ -595,16 +633,16 @@ class ServicioViajeTest {
         when(servicioConductorMock.obtenerConductor(conductorId)).thenReturn(conductor);
         when(servicioVehiculoMock.getById(1L)).thenReturn(vehiculo);
         when(viajeRepositoryMock.findByOrigenYDestinoYConductorYEstadoIn(
-            eq(origen),
-            eq(destino),
-            eq(conductor),
-            anyList()
+                eq(origen),
+                eq(destino),
+                eq(conductor),
+                anyList()
         )).thenReturn(Arrays.asList(viajeExistente));
 
         // when & then
         ViajeDuplicadoException exception = assertThrows(
-            ViajeDuplicadoException.class,
-            () -> servicioViaje.publicarViaje(viaje, conductorId, 1L)
+                ViajeDuplicadoException.class,
+                () -> servicioViaje.publicarViaje(viaje, conductorId, 1L)
         );
 
         assertThat(exception.getMessage(), containsString("Ya tenés un viaje publicado con el mismo origen y destino"));
@@ -615,7 +653,15 @@ class ServicioViajeTest {
     void noDeberiaPublicarSiYaExisteViajeCompletoConMismoOrigenYDestino() throws Exception {
         // given
         Long conductorId = 1L;
-        Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+        conductor.setNombre("Juan");
+        conductor.setEmail("juan@test.com");
+        conductor.setContrasenia("pass");
+        conductor.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(30));
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true);
+
         Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
 
         Viaje viaje = crearViajeDeTest();
@@ -632,16 +678,16 @@ class ServicioViajeTest {
         when(servicioConductorMock.obtenerConductor(conductorId)).thenReturn(conductor);
         when(servicioVehiculoMock.getById(1L)).thenReturn(vehiculo);
         when(viajeRepositoryMock.findByOrigenYDestinoYConductorYEstadoIn(
-            eq(origen),
-            eq(destino),
-            eq(conductor),
-            anyList()
+                eq(origen),
+                eq(destino),
+                eq(conductor),
+                anyList()
         )).thenReturn(Arrays.asList(viajeExistente));
 
         // when & then
         ViajeDuplicadoException exception = assertThrows(
-            ViajeDuplicadoException.class,
-            () -> servicioViaje.publicarViaje(viaje, conductorId, 1L)
+                ViajeDuplicadoException.class,
+                () -> servicioViaje.publicarViaje(viaje, conductorId, 1L)
         );
 
         assertThat(exception.getMessage(), containsString("Ya tenés un viaje publicado con el mismo origen y destino"));
@@ -652,7 +698,15 @@ class ServicioViajeTest {
     void deberiaPublicarSiViajeExistenteEstaFinalizado() throws Exception {
         // given
         Long conductorId = 1L;
-        Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+        conductor.setNombre("Juan");
+        conductor.setEmail("juan@test.com");
+        conductor.setContrasenia("pass");
+        conductor.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(30));
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true);
+
         Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
 
         Viaje viaje = crearViajeDeTest();
@@ -663,10 +717,10 @@ class ServicioViajeTest {
         when(servicioVehiculoMock.getById(1L)).thenReturn(vehiculo);
         // Simular que no hay viajes en estados DISPONIBLE o COMPLETO
         when(viajeRepositoryMock.findByOrigenYDestinoYConductorYEstadoIn(
-            eq(origen),
-            eq(destino),
-            eq(conductor),
-            anyList()
+                eq(origen),
+                eq(destino),
+                eq(conductor),
+                anyList()
         )).thenReturn(Collections.emptyList());
 
         // when
@@ -681,7 +735,15 @@ class ServicioViajeTest {
     void deberiaPublicarSiViajeExistenteEstaCancelado() throws Exception {
         // given
         Long conductorId = 1L;
-        Conductor conductor = new Conductor(conductorId, "Juan", "juan@test.com", "pass", LocalDate.now().plusDays(30), new ArrayList<>(), new ArrayList<>());
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+        conductor.setNombre("Juan");
+        conductor.setEmail("juan@test.com");
+        conductor.setContrasenia("pass");
+        conductor.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(30));
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true);
+
         Vehiculo vehiculo = new Vehiculo(1L, "ABC123", "Toyota Corolla", "2020", 5, EstadoVerificacion.VERIFICADO, conductor);
 
         Viaje viaje = crearViajeDeTest();
@@ -692,10 +754,10 @@ class ServicioViajeTest {
         when(servicioVehiculoMock.getById(1L)).thenReturn(vehiculo);
         // Simular que no hay viajes en estados DISPONIBLE o COMPLETO
         when(viajeRepositoryMock.findByOrigenYDestinoYConductorYEstadoIn(
-            eq(origen),
-            eq(destino),
-            eq(conductor),
-            anyList()
+                eq(origen),
+                eq(destino),
+                eq(conductor),
+                anyList()
         )).thenReturn(Collections.emptyList());
 
         // when
@@ -726,4 +788,3 @@ class ServicioViajeTest {
         verify(viajeRepositoryMock).findById(idInexistente);
     }
 }
-
