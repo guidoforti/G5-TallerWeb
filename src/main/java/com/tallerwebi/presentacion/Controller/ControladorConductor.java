@@ -32,32 +32,6 @@ public class ControladorConductor {
 
     }
 
-    @GetMapping("/login")
-    public ModelAndView irALogin(HttpSession session) {
-        if (session != null && session.getAttribute("usuarioId") != null) {
-            return new ModelAndView("redirect:/conductor/home");
-        }
-        ModelMap model = new ModelMap();
-        model.put("datosLogin", new ConductorLoginDTO());
-        return new ModelAndView("loginConductor", model);
-    }
-
-    @PostMapping("/validar-login")
-    public ModelAndView validarLogin(@ModelAttribute("datosLogin") ConductorLoginDTO loginDTO, HttpSession session) {
-        ModelMap model = new ModelMap();
-        try {
-            Conductor conductor = servicioConductor.login(loginDTO.getEmail(), loginDTO.getContrasenia());
-            session.setAttribute("usuarioId", conductor.getId());
-            session.setAttribute("rol", "CONDUCTOR");
-            return new ModelAndView("redirect:/conductor/home", model);
-        } catch (CredencialesInvalidas e) {
-            model.addAttribute("error", e.getMessage());
-            return new ModelAndView("loginConductor", model);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     @GetMapping("/registrar")
     public ModelAndView irARegistro() {
         ModelMap model = new ModelMap();
@@ -100,11 +74,5 @@ public class ControladorConductor {
         }
     }
 
-    @GetMapping("/logout")
-    public ModelAndView logout(HttpSession session) {
-        ModelMap model = new ModelMap();
-        session.invalidate();
-        return new ModelAndView("redirect:/conductor/login", model);
-    }
 
 }

@@ -43,56 +43,6 @@ public class ControladorConductorTest {
     }
 
     @Test
-    public void loginConCredencialesCorrectasDeberiaRedirigirAHomeYSetearSesion() throws Exception {
-        // preparación
-        when(servicioConductorMock.login(loginDTO.getEmail(), loginDTO.getContrasenia()))
-                .thenReturn(conductorMock);
-
-        // ejecución
-        ModelAndView modelAndView = controladorConductor.validarLogin(loginDTO, sessionMock);
-
-        // validación
-        assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/conductor/home"));
-        verify(sessionMock, times(1)).setAttribute("usuarioId", conductorMock.getId());
-        verify(sessionMock, times(1)).setAttribute("rol", "CONDUCTOR");
-    }
-
-    @Test
-    public void loginConCredencialesInvalidasDeberiaVolverALoginConError() throws Exception {
-        // preparación
-        when(servicioConductorMock.login(loginDTO.getEmail(), loginDTO.getContrasenia()))
-                .thenThrow(new CredencialesInvalidas("Email o contraseña inválidos"));
-
-        // ejecución
-        ModelAndView modelAndView = controladorConductor.validarLogin(loginDTO, sessionMock);
-
-        // validación
-        assertThat(modelAndView.getViewName(), equalToIgnoringCase("loginConductor"));
-        assertThat(modelAndView.getModel().get("error").toString(), equalToIgnoringCase("Email o contraseña inválidos"));
-        verify(sessionMock, times(0)).setAttribute(eq("usuarioId"), any());
-    }
-
-    @Test
-    void siUsuarioYaEstaLogueadoDeberiaRedirigirAHome() {
-        when(sessionMock.getAttribute("usuarioId")).thenReturn(1L);
-
-        ModelAndView mav = controladorConductor.irALogin(sessionMock);
-
-        assertThat(mav.getViewName(), equalTo("redirect:/conductor/home"));
-        verify(sessionMock, times(1)).getAttribute("usuarioId");
-    }
-
-    @Test
-    void siUsuarioNoEstaLogueadoDeberiaMostrarLogin() {
-        when(sessionMock.getAttribute("usuarioId")).thenReturn(null);
-
-        ModelAndView mav = controladorConductor.irALogin(sessionMock);
-
-        assertThat(mav.getViewName(), equalTo("loginConductor"));
-        assertThat(mav.getModel().containsKey("datosLogin"), equalTo(true));
-    }
-
-    @Test
     public void irARegistroDeberiaMostrarFormulario() {
         ModelAndView mav = controladorConductor.irARegistro();
 
@@ -163,11 +113,5 @@ public class ControladorConductorTest {
         assertThat(mav.getModel().get("nombreConductor").toString(), equalTo(conductorMock.getNombre()));
     }
 
-    @Test
-    void logoutDeberiaInvalidarSesionYRedirigirALogin() {
-        ModelAndView mav = controladorConductor.logout(sessionMock);
 
-        assertThat(mav.getViewName(), equalTo("redirect:/conductor/login"));
-        verify(sessionMock, times(1)).invalidate();
-    }
 }

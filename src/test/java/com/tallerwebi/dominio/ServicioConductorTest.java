@@ -3,6 +3,7 @@ package com.tallerwebi.dominio;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.IRepository.RepositorioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
+import com.tallerwebi.dominio.IServicio.ServicioLogin;
 import com.tallerwebi.dominio.ServiceImpl.ServicioConductorImpl;
 import com.tallerwebi.dominio.excepcion.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,45 +23,15 @@ class ServicioConductorTest {
 
     private RepositorioConductor repositorioMock;
     private ServicioConductor servicio;
+    private ServicioLogin servicioMock;
 
     @BeforeEach
     void setUp() {
         repositorioMock = Mockito.mock(RepositorioConductor.class);
-        servicio = new ServicioConductorImpl(repositorioMock);
+        servicioMock = Mockito.mock(ServicioLogin.class);
+        servicio = new ServicioConductorImpl(repositorioMock, servicioMock);
     }
 
-    @Test
-    void deberiaValidarLoginCorrecto() throws Exception {
-        // Arrange
-        Conductor c = new Conductor();
-        c.setId(1L);
-        c.setNombre("Pedro");
-        c.setEmail("pedro@mail.com");
-        c.setContrasenia("pass");
-        c.setRol("CONDUCTOR");
-        c.setActivo(true);
-        c.setFechaDeVencimientoLicencia(LocalDate.now());
-
-        when(repositorioMock.buscarPorEmailYContrasenia(c.getEmail(), c.getContrasenia()))
-                .thenReturn(Optional.of(c));
-
-        // Act
-        Conductor resultado = servicio.login(c.getEmail(), c.getContrasenia());
-
-        // Assert
-        assertThat(resultado.getNombre(), equalTo(c.getNombre()));
-    }
-
-    @Test
-    void noDeberiaValidarLoginSiCredencialesInvalidas() {
-        // Arrange
-        when(repositorioMock.buscarPorEmailYContrasenia("pedro@mail.com", "pass"))
-                .thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThrows(CredencialesInvalidas.class,
-                () -> servicio.login("pedro@mail.com", "pass"));
-    }
 
     @Test
     void deberiaRegistrarConductorSiNoExiste() throws UsuarioExistente, FechaDeVencimientoDeLicenciaInvalida {

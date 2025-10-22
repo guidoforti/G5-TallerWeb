@@ -2,6 +2,7 @@ package com.tallerwebi.dominio;
 
 import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.IRepository.RepositorioViajero;
+import com.tallerwebi.dominio.IServicio.ServicioLogin;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
 import com.tallerwebi.dominio.ServiceImpl.ServicioViajeroImpl;
 import com.tallerwebi.dominio.excepcion.CredencialesInvalidas;
@@ -11,6 +12,7 @@ import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -25,41 +27,15 @@ class ServicioViajeroTest {
 
     private RepositorioViajero repositorioMock;
     private ServicioViajero servicio;
+    private ServicioLogin servicioMock;
 
     @BeforeEach
     void setUp() {
         repositorioMock = mock(RepositorioViajero.class);
-        servicio = new ServicioViajeroImpl(repositorioMock);
+        servicioMock = Mockito.mock(ServicioLogin.class);
+        servicio = new ServicioViajeroImpl(repositorioMock, servicioMock);
     }
 
-    @Test
-    void deberiaValidarLoginCorrecto() throws CredencialesInvalidas {
-        Viajero v = new Viajero();
-        v.setId(1L);
-        v.setNombre("Lucas");
-        v.setEdad(25);
-        v.setEmail("lucas@mail.com");
-        v.setContrasenia("pass");
-        v.setViajes(new ArrayList<>());
-        v.setRol("VIAJERO");
-        v.setActivo(true);
-
-        when(repositorioMock.buscarPorEmailYContrasenia(v.getEmail(), v.getContrasenia()))
-                .thenReturn(Optional.of(v));
-
-        Viajero resultado = servicio.login(v.getEmail(), v.getContrasenia());
-
-        assertThat(resultado.getNombre(), equalTo(v.getNombre()));
-    }
-
-    @Test
-    void noDeberiaValidarLoginSiCredencialesInvalidas() {
-        when(repositorioMock.buscarPorEmailYContrasenia("lucas@mail.com", "pass"))
-                .thenReturn(Optional.empty());
-
-        assertThrows(CredencialesInvalidas.class,
-                () -> servicio.login("lucas@mail.com", "pass"));
-    }
 
     @Test
     void deberiaRegistrarViajeroSiNoExiste() throws UsuarioExistente, EdadInvalidaException, DatoObligatorioException {

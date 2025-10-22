@@ -32,30 +32,6 @@ public class ControladorViajero {
 
     }
 
-    @GetMapping("/login")
-    public ModelAndView irALogin(HttpSession session) {
-        if (session != null && session.getAttribute("usuarioId") != null) {
-            return new ModelAndView("redirect:/viajero/home");
-        }
-        ModelMap model = new ModelMap();
-        model.put("datosLogin", new ViajeroLoginInputDTO());
-        return new ModelAndView("loginViajero", model);
-    }
-
-    @PostMapping("/validar-login")
-    public ModelAndView validarLogin(@ModelAttribute("datosLogin") ViajeroLoginInputDTO loginDTO, HttpSession session) {
-        ModelMap model = new ModelMap();
-        try {
-            Viajero viajero = servicioViajero.login(loginDTO.getEmail(), loginDTO.getContrasenia());
-            session.setAttribute("usuarioId", viajero.getId());
-            session.setAttribute("rol", "VIAJERO");
-            return new ModelAndView("redirect:/viajero/home", model);
-        } catch (CredencialesInvalidas e) {
-            model.addAttribute("error", e.getMessage());
-            return new ModelAndView("loginViajero", model);
-        }
-    }
-
     @GetMapping("/registrar")
     public ModelAndView irARegistro() {
         ModelMap model = new ModelMap();
@@ -98,11 +74,5 @@ public class ControladorViajero {
         }
     }
 
-    @GetMapping("/logout")
-    public ModelAndView logout(HttpSession session) {
-        ModelMap model = new ModelMap();
-        session.invalidate();
-        return new ModelAndView("redirect:/viajero/login", model);
-    }
 
 }

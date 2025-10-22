@@ -43,48 +43,6 @@ public class ControladorViajeroTest {
         when(viajeroMock.getNombre()).thenReturn("Juan");
     }
 
-    @Test 
-    public void cuandoLogeaConCredencialesCorrectasRedirigeAlHomeYSeteaSesion() throws CredencialesInvalidas {
-        when(servicioViajeroMock.login(loginDTO.getEmail(), loginDTO.getContrasenia()))
-                .thenReturn(viajeroMock);
-
-        ModelAndView m = controladorViajero.validarLogin(loginDTO, sessionMock);
-
-        assertThat(m.getViewName(), equalTo("redirect:/viajero/home"));
-        verify(sessionMock, times(1)).setAttribute("usuarioId", viajeroMock.getId());
-        verify(sessionMock, times(1)).setAttribute("rol", "VIAJERO");
-    }
-
-    @Test
-    public void loginConCredencialesInvalidasDeberiaVolverALoginConError() throws CredencialesInvalidas {
-        when(servicioViajeroMock.login(loginDTO.getEmail(), loginDTO.getContrasenia()))
-                .thenThrow(new CredencialesInvalidas("Email o contraseña inválidos"));
-
-        ModelAndView mav = controladorViajero.validarLogin(loginDTO, sessionMock);
-
-        assertThat(mav.getViewName(), equalTo("loginViajero"));
-        assertThat(mav.getModel().get("error").toString(), equalToIgnoringCase("Email o contraseña inválidos"));
-        verify(sessionMock, times(0)).setAttribute(eq("usuarioId"), any());
-    }
-
-    @Test
-    void siUsuarioYaEstaLogueadoDeberiaRedirigirAHome() {
-        when(sessionMock.getAttribute("usuarioId")).thenReturn(1L);
-
-        ModelAndView mav = controladorViajero.irALogin(sessionMock);
-
-        assertThat(mav.getViewName(), equalTo("redirect:/viajero/home"));
-    }
-
-    @Test
-    void siUsuarioNoEstaLogueadoDeberiaMostrarLogin() {
-        when(sessionMock.getAttribute("usuarioId")).thenReturn(null);
-
-        ModelAndView mav = controladorViajero.irALogin(sessionMock);
-
-        assertThat(mav.getViewName(), equalTo("loginViajero"));
-        assertThat(mav.getModel().containsKey("datosLogin"), equalTo(true));
-    }
 
     @Test
     public void irARegistroDeberiaMostrarFormulario() {
@@ -146,13 +104,7 @@ public class ControladorViajeroTest {
         assertThat(mav.getModel().get("nombreViajero").toString(), equalTo(viajeroMock.getNombre()));
     }
 
-    @Test
-    void logoutDeberiaInvalidarSesionYRedirigirALogin() {
-        ModelAndView mav = controladorViajero.logout(sessionMock);
 
-        assertThat(mav.getViewName(), equalTo("redirect:/viajero/login"));
-        verify(sessionMock, times(1)).invalidate();
-    }
 
     @Test
     public void registroConEdadInvalidaDeberiaVolverAFormularioConError() throws UsuarioExistente, EdadInvalidaException, DatoObligatorioException {
