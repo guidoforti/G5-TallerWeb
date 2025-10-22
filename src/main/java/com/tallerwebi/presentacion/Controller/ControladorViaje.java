@@ -79,7 +79,7 @@ public class ControladorViaje {
         Object rol = session.getAttribute("rol");
 
         if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
-            return new ModelAndView("redirect:/conductor/login");
+            return new ModelAndView("redirect:/login");
         }
 
         Long conductorId = (Long) usuarioId;
@@ -102,14 +102,14 @@ public class ControladorViaje {
         ModelMap model = new ModelMap();
 
         // Verificar que el usuario esté logueado
-        Object usuarioId = session.getAttribute("usuarioId");
+        Object usuarioIdObj = session.getAttribute("usuarioId");
         Object rol = session.getAttribute("rol");
 
-        if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
-            return new ModelAndView("redirect:/conductor/login");
+        if (usuarioIdObj == null || !"CONDUCTOR".equals(rol)) {
+            return new ModelAndView("redirect:/login");
         }
 
-        Long conductorId = (Long) usuarioId;
+        Long conductorId = (Long) usuarioIdObj;
 
         try {
             // 1. Resolver ciudades usando Nominatim
@@ -150,16 +150,14 @@ public class ControladorViaje {
 
         // 1. Validación de Sesión y Rol (Se mantiene)
         if (usuarioIdObj == null || !"CONDUCTOR".equals(rol)) {
-            model.put("error", "Debés iniciar sesión como conductor");
-            return new ModelAndView("errorAcceso", model);
+            return new ModelAndView("redirect:/login", model);
         }
 
         Long conductorId = (Long) usuarioIdObj;
-        Conductor conductorEnSesion; // Declaramos aquí
 
         try {
             // 2. BUSCAR AL CONDUCTOR (El servicio lanza la excepción si no lo encuentra)
-            conductorEnSesion = servicioConductor.obtenerConductor(conductorId);
+            Conductor conductorEnSesion = servicioConductor.obtenerConductor(conductorId);
 
             // 3. Listar Viajes (Llamada al servicio de Viaje)
             List<Viaje> listaViajes = servicioViaje.listarViajesPorConductor(conductorEnSesion);
@@ -193,7 +191,7 @@ public class ControladorViaje {
 
         // Validación de sesión
         if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
-            return new ModelAndView("redirect:/conductor/login");
+            return new ModelAndView("redirect:/login");
         }
 
         try {
@@ -220,7 +218,7 @@ public class ControladorViaje {
         Object rol = session.getAttribute("rol");
 
         if (usuarioIdObj == null || !"CONDUCTOR".equals(rol)) {
-            return new ModelAndView("redirect:/conductor/login");
+            return new ModelAndView("redirect:/login");
         }
 
 

@@ -19,7 +19,7 @@ public class ServicioConductorImpl implements ServicioConductor {
     private final ServicioLogin servicioLogin;
 
     @Autowired
-    public ServicioConductorImpl(RepositorioConductor repositorioConductor , ServicioLogin servicioLogin) {
+    public ServicioConductorImpl(RepositorioConductor repositorioConductor, ServicioLogin servicioLogin) {
         this.repositorioConductor = repositorioConductor;
         this.servicioLogin = servicioLogin;
 
@@ -47,16 +47,5 @@ public class ServicioConductorImpl implements ServicioConductor {
                 .orElseThrow(() -> new UsuarioInexistente("No existe un usuario para su sesion. Por favor inicie sesion nuevamente."));
 
         return conductor;
-    }
-
-    @Override
-    public Conductor guardarConductor(Conductor nuevoConductor) throws ErrorAlGuardarConductorException {
-        try {
-            repositorioConductor.guardarConductor(nuevoConductor);
-        } catch (Exception e) {
-            throw new ErrorAlGuardarConductorException ("Error al guardar el conductor en la base de datos: " + e.getMessage());
-        }
-
-        return nuevoConductor;
     }
 }

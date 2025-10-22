@@ -1,5 +1,6 @@
 package com.tallerwebi.presentacion.Controller;
 
+import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
 import com.tallerwebi.dominio.excepcion.CredencialesInvalidas;
@@ -60,17 +61,23 @@ public class ControladorViajero {
     public ModelAndView irAHome(HttpSession session) {
         ModelMap model = new ModelMap();
         Object usuarioId = session.getAttribute("usuarioId");
-        if (usuarioId == null) {
-            return new ModelAndView("redirect:/viajero/login", model);
+        String rol = (String) session.getAttribute("rol");
+        if (usuarioId == null || !"VIAJERO".equals(rol)) {
+            return new ModelAndView("redirect:/login", model);
         }
 
         try {
-            Viajero viajero = servicioViajero.obtenerViajero((Long) usuarioId);
-            model.put("nombreViajero", viajero.getNombre());
+            Long viajeroId = (Long) usuarioId;
+            Viajero viajero = servicioViajero.obtenerViajero(viajeroId);
+
+            model.put("nombreConductor", viajero.getNombre());
+            model.put("rol", rol);
             return new ModelAndView("homeViajero", model);
+
         } catch (UsuarioInexistente e) {
-            model.addAttribute("error", e.getMessage());
-            return new ModelAndView("redirect:/viajero/login", model);
+            session.invalidate();
+            model.addAttribute("error", "Su sesión no es válida. Por favor, inicie sesión nuevamente.");
+            return new ModelAndView("redirect:/login", model);
         }
     }
 

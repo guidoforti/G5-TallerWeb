@@ -60,17 +60,23 @@ public class ControladorConductor {
     public ModelAndView irAHome(HttpSession session) {
         ModelMap model = new ModelMap();
         Object usuarioId = session.getAttribute("usuarioId");
-        if (usuarioId == null) {
-            return new ModelAndView("redirect:/conductor/login", model);
+        String rol = (String) session.getAttribute("rol");
+        if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
+            return new ModelAndView("redirect:/login", model);
         }
 
         try {
-            Conductor conductor = servicioConductor.obtenerConductor((Long) usuarioId);
+            Long conductorId = (Long) usuarioId;
+            Conductor conductor = servicioConductor.obtenerConductor(conductorId);
+
             model.put("nombreConductor", conductor.getNombre());
+            model.put("rol", rol);
             return new ModelAndView("homeConductor", model);
+
         } catch (UsuarioInexistente e) {
-            model.addAttribute("error", e.getMessage());
-            return new ModelAndView("redirect:/conductor/login", model);
+            session.invalidate();
+            model.addAttribute("error", "Su sesión no es válida. Por favor, inicie sesión nuevamente.");
+            return new ModelAndView("redirect:/login", model);
         }
     }
 
