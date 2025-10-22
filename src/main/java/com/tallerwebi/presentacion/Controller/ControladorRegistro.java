@@ -42,6 +42,7 @@ public class ControladorRegistro {
     public ModelAndView registrar(@ModelAttribute("datosRegistro") RegistroInputDTO registroDTO, HttpSession session) {
         ModelMap model = new ModelMap();
         String vistaRetorno = "registro";
+        model.put("datosRegistro", registroDTO);
 
         if (registroDTO.getRolSeleccionado() == null || registroDTO.getRolSeleccionado().isEmpty()) {
             model.put("error", "Debes seleccionar un rol para registrarte.");
@@ -52,17 +53,15 @@ public class ControladorRegistro {
             if ("CONDUCTOR".equals(registroDTO.getRolSeleccionado())) {
                 Conductor nuevoConductor = registroDTO.toConductorEntity();
                 Conductor conductorRegistrado = servicioConductor.registrar(nuevoConductor);
-
-                session.setAttribute("usuarioId", conductorRegistrado.getId());
-                session.setAttribute("rol", "CONDUCTOR");
+                session.setAttribute("idUsuario", conductorRegistrado.getId());
+                session.setAttribute("ROL", "CONDUCTOR");
                 return new ModelAndView("redirect:/conductor/home");
 
             } else if ("VIAJERO".equals(registroDTO.getRolSeleccionado())) {
                 Viajero nuevoViajero = registroDTO.toViajeroEntity();
                 Viajero viajeroRegistrado = servicioViajero.registrar(nuevoViajero);
-
-                session.setAttribute("usuarioId", viajeroRegistrado.getId());
-                session.setAttribute("rol", "VIAJERO");
+                session.setAttribute("idUsuario", viajeroRegistrado.getId());
+                session.setAttribute("ROL", "VIAJERO");
                 return new ModelAndView("redirect:/viajero/home");
 
             } else {
@@ -77,10 +76,9 @@ public class ControladorRegistro {
         } catch (EdadInvalidaException | DatoObligatorioException e) {
             model.addAttribute("error", e.getMessage());
         } catch (Exception e) {
+            System.err.println("Error inesperado en el registro: " + e.getMessage());
             model.addAttribute("error", "Error desconocido durante el registro. Inténtalo de nuevo.");
         }
-
-        // Si hay error, se recarga la vista con los datos y el mensaje de error
         return new ModelAndView(vistaRetorno, model);
     }
 }

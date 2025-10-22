@@ -14,5 +14,4 @@ public class ViajeroDTO {
     private String email;
     private String nombre;
     private Integer edad;
-    // No incluimos la lista de viajes para evitar referencias circulares
 }

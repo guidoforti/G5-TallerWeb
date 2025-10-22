@@ -2,31 +2,22 @@ package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
-import com.tallerwebi.dominio.excepcion.CredencialesInvalidas;
-import com.tallerwebi.dominio.excepcion.FechaDeVencimientoDeLicenciaInvalida;
-import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.presentacion.Controller.ControladorConductor;
-import com.tallerwebi.presentacion.DTO.ConductorLoginDTO;
-import com.tallerwebi.presentacion.DTO.InputsDTO.ConductorRegistroInputDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpSession;
-import java.time.LocalDate;
-import java.util.ArrayList;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.equalToIgnoringCase;
 import static org.mockito.Mockito.*;
 
 public class ControladorConductorTest {
 
     private ControladorConductor controladorConductor;
     private ServicioConductor servicioConductorMock;
-    private ConductorLoginDTO loginDTO;
     private HttpSession sessionMock;
     private Conductor conductorMock;
 
@@ -34,84 +25,77 @@ public class ControladorConductorTest {
     public void init() {
         servicioConductorMock = mock(ServicioConductor.class);
         controladorConductor = new ControladorConductor(servicioConductorMock);
-        loginDTO = new ConductorLoginDTO("conductor@mail.com", "1234");
         sessionMock = mock(HttpSession.class);
         conductorMock = mock(Conductor.class);
 
         when(conductorMock.getId()).thenReturn(1L);
         when(conductorMock.getNombre()).thenReturn("Pepe");
     }
+    
+    // NOTA: Los tests de REGISTRO fueron movidos a ControladorRegistroTest
+    // Se eliminan irARegistro(), registroCorrectoDeberiaRedirigirAHomeYSetearSesion(), etc.
 
     @Test
-    public void irARegistroDeberiaMostrarFormulario() {
-        ModelAndView mav = controladorConductor.irARegistro();
-
-        assertThat(mav.getViewName(), equalTo("registroConductor"));
-        assertThat(mav.getModel().containsKey("datosConductor"), equalTo(true));
-    }
-
-    @Test
-    public void registroCorrectoDeberiaRedirigirAHomeYSetearSesion() throws UsuarioExistente, FechaDeVencimientoDeLicenciaInvalida {
-        Conductor nuevoConductor = new Conductor();
-        nuevoConductor.setId(null);
-        nuevoConductor.setNombre("Ana");
-        nuevoConductor.setEmail("ana@mail.com");
-        nuevoConductor.setContrasenia("123");
-        nuevoConductor.setFechaDeVencimientoLicencia(LocalDate.now());
-        nuevoConductor.setViajes(new ArrayList<>());
-        nuevoConductor.setVehiculos(new ArrayList<>());
-        nuevoConductor.setRol("CONDUCTOR");
-        nuevoConductor.setActivo(true);
-        ConductorRegistroInputDTO inputDTO = new ConductorRegistroInputDTO(
-                null, "Ana", "ana@mail.com", "123", LocalDate.now(), null
-        );
-
-        when(servicioConductorMock.registrar(any(Conductor.class))).thenReturn(nuevoConductor);
-
-        ModelAndView mav = controladorConductor.registrar(inputDTO, sessionMock);
-
-        assertThat(mav.getViewName(), equalTo("redirect:/conductor/home"));
-        verify(sessionMock, times(1)).setAttribute("usuarioId", nuevoConductor.getId());
-        verify(sessionMock, times(1)).setAttribute("rol", "CONDUCTOR");
-    }
-
-    @Test
-    public void registroConEmailExistenteDeberiaVolverAFormularioConError() throws UsuarioExistente, FechaDeVencimientoDeLicenciaInvalida {
-        ConductorRegistroInputDTO inputDTO = new ConductorRegistroInputDTO(
-                null, "Ana", "ana@mail.com", "123", LocalDate.now(), null
-        );
-
-        doThrow(new UsuarioExistente("Ya existe un usuario con ese email"))
-                .when(servicioConductorMock).registrar(any(Conductor.class));
-
-        ModelAndView mav = controladorConductor.registrar(inputDTO, sessionMock);
-
-        assertThat(mav.getViewName(), equalTo("registroConductor"));
-        assertThat(mav.getModel().get("error").toString(),
-                equalToIgnoringCase("Ya existe un usuario con ese email"));
-        verify(sessionMock, times(0)).setAttribute(eq("usuarioId"), any());
-    }
-
-    @Test
-    void siUsuarioNoEstaEnSesionEnHomeDeberiaRedirigirALogin() {
+    void siUsuarioNoEstaEnSesionEnHomeDeberiaRedirigirALoginCentral() {
+        // Arrange: No hay usuario ID, no hay ROL
         when(sessionMock.getAttribute("usuarioId")).thenReturn(null);
+        when(sessionMock.getAttribute("rol")).thenReturn(null);
 
+        // Act
         ModelAndView mav = controladorConductor.irAHome(sessionMock);
 
-        assertThat(mav.getViewName(), equalTo("redirect:/conductor/login"));
+        // Assert
+        // El ROL ya no es /conductor/login, es /login centralizado
+        assertThat(mav.getViewName(), equalTo("redirect:/login")); 
         verify(sessionMock, times(1)).getAttribute("usuarioId");
     }
-
+    
     @Test
-    void siUsuarioEstaEnSesionEnHomeDeberiaMostrarHomeConNombre() throws UsuarioInexistente {
+    void siUsuarioNoEsConductorDeberiaRedirigirALoginCentral() {
+        // Arrange: ID existe, pero ROL no es CONDUCTOR
         when(sessionMock.getAttribute("usuarioId")).thenReturn(1L);
-        when(servicioConductorMock.obtenerConductor(1L)).thenReturn(conductorMock);
+        when(sessionMock.getAttribute("rol")).thenReturn("VIAJERO"); // Rol incorrecto
 
+        // Act
         ModelAndView mav = controladorConductor.irAHome(sessionMock);
 
-        assertThat(mav.getViewName(), equalTo("homeConductor"));
-        assertThat(mav.getModel().get("nombreConductor").toString(), equalTo(conductorMock.getNombre()));
+        // Assert
+        assertThat(mav.getViewName(), equalTo("redirect:/login"));
+        verify(servicioConductorMock, never()).obtenerConductor(anyLong());
     }
 
+    @Test
+    void siUsuarioEstaEnSesionYEsConductorDeberiaMostrarHomeConNombre() throws UsuarioInexistente {
+        // Arrange
+        when(sessionMock.getAttribute("usuarioId")).thenReturn(1L);
+        when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
+        when(servicioConductorMock.obtenerConductor(1L)).thenReturn(conductorMock);
 
+        // Act
+        ModelAndView mav = controladorConductor.irAHome(sessionMock);
+
+        // Assert
+        assertThat(mav.getViewName(), equalTo("homeConductor"));
+        assertThat(mav.getModel().get("nombreConductor").toString(), equalTo(conductorMock.getNombre()));
+        assertThat(mav.getModel().get("rol").toString(), equalTo("CONDUCTOR"));
+        verify(servicioConductorMock, times(1)).obtenerConductor(1L);
+    }
+    
+    @Test
+    void siUsuarioInexistenteEnSesionDeberiaInvalidarSesionYRedirigirALogin() throws UsuarioInexistente {
+        // Arrange
+        when(sessionMock.getAttribute("usuarioId")).thenReturn(99L);
+        when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
+        
+        doThrow(new UsuarioInexistente("Error de sesión"))
+            .when(servicioConductorMock).obtenerConductor(99L);
+
+        // Act
+        ModelAndView mav = controladorConductor.irAHome(sessionMock);
+
+        // Assert
+        assertThat(mav.getViewName(), equalTo("redirect:/login"));
+        assertThat(mav.getModel().get("error").toString(), equalTo("Su sesión no es válida. Por favor, inicie sesión nuevamente."));
+        verify(sessionMock, times(1)).invalidate();
+    }
 }

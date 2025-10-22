@@ -1,8 +1,9 @@
 package com.tallerwebi.presentacion.Controller;
 
 import com.tallerwebi.dominio.IServicio.ServicioLogin;
+import com.tallerwebi.presentacion.DTO.DatosLoginDTO;
 import com.tallerwebi.dominio.Entity.Usuario;
-import com.tallerwebi.presentacion.DatosLogin;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -27,12 +28,12 @@ public class ControladorLogin {
     @RequestMapping("/login")
     public ModelAndView irALogin() {
         ModelMap modelo = new ModelMap();
-        modelo.put("datosLogin", new DatosLogin());
+        modelo.put("datosLogin", new DatosLoginDTO());
         return new ModelAndView("login", modelo);
     }
 
     @RequestMapping(path = "/validar-login", method = RequestMethod.POST)
-    public ModelAndView validarLogin(@ModelAttribute("datosLogin") DatosLogin datosLogin, HttpServletRequest request) {
+    public ModelAndView validarLogin(@ModelAttribute("datosLogin") DatosLoginDTO datosLogin, HttpServletRequest request) {
         ModelMap model = new ModelMap();
 
         Optional<Usuario> usuarioBuscado = servicioLogin.consultarUsuario(datosLogin.getEmail(), datosLogin.getPassword());
