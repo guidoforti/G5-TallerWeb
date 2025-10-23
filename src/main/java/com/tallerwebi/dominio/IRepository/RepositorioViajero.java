@@ -7,6 +7,4 @@ import com.tallerwebi.dominio.Entity.Viajero;
 public interface RepositorioViajero {
 
     Optional<Viajero> buscarPorId(Long id);
-
-
 }

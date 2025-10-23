@@ -48,8 +48,6 @@ public class RepositorioConductorTest {
         conductorBase.setViajes(new ArrayList<>());
         conductorBase.setVehiculos(new ArrayList<>());
 
-        // Usamos el RepositorioUsuario.guardar() para persistir la entidad Conductor
-        // Esto asigna el ID en la tabla Usuario y en la tabla Conductor.
         repositorioUsuario.guardar(conductorBase);
     }
     @Test

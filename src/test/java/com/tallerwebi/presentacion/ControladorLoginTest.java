@@ -11,6 +11,7 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.Optional;
+import static org.hamcrest.CoreMatchers.instanceOf;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -20,7 +21,6 @@ import static org.mockito.Mockito.*;
 public class ControladorLoginTest {
 
     private ControladorLogin controladorLogin;
-    private Usuario usuarioMock;
     private DatosLoginDTO datosLoginMock;
     private HttpServletRequest requestMock;
     private HttpSession sessionMock;
@@ -30,20 +30,62 @@ public class ControladorLoginTest {
     @BeforeEach
     public void init(){
         datosLoginMock = new DatosLoginDTO("dami@unlam.com", "123");
-        usuarioMock = mock(Usuario.class);
-        when(usuarioMock.getEmail()).thenReturn("dami@unlam.com");
+        // Configuramos los mocks de Request y Session
         requestMock = mock(HttpServletRequest.class);
         sessionMock = mock(HttpSession.class);
-        when(requestMock.getSession()).thenReturn(sessionMock); // Configuramos la sesión en el request
+        when(requestMock.getSession()).thenReturn(sessionMock);
+
         servicioLoginMock = mock(ServicioLogin.class);
         controladorLogin = new ControladorLogin(servicioLoginMock);
     }
 
+    // --- TESTS DE FLUJO BÁSICO ---
+
+    @Test
+    public void deberiaRetornarVistaLoginInicial() {
+        // Act
+        ModelAndView modelAndView = controladorLogin.irALogin();
+
+        // Validacion
+        assertThat(modelAndView.getViewName(), equalTo("login"));
+        assertThat(modelAndView.getModel().get("datosLogin"), instanceOf(DatosLoginDTO.class));
+    }
+
+    @Test
+    public void inicioDeberiaRedirigirALogin() {
+        // Act
+        ModelAndView modelAndView = controladorLogin.inicio();
+
+        // Validacion
+        assertThat(modelAndView.getViewName(), equalTo("redirect:/login"));
+    }
+
+    @Test
+    public void irAHomeDeberiaRetornarVistaHomeGenerica() {
+        // Act
+        ModelAndView modelAndView = controladorLogin.irAHome();
+
+        // Validacion
+        assertThat(modelAndView.getViewName(), equalTo("home"));
+    }
+
+    @Test
+    public void logoutDeberiaInvalidarSesionYRedirigirALogin() {
+        // Act
+        ModelAndView modelAndView = controladorLogin.logout(requestMock);
+
+        // Validacion
+        assertThat(modelAndView.getViewName(), equalTo("redirect:/login"));
+        verify(sessionMock, times(1)).invalidate();
+    }
+
+
+    // --- TESTS DE VALIDAR LOGIN ---
+
     @Test
     public void loginConUsuarioYPasswordInorrectosDeberiaLlevarALoginNuevamente(){
         // preparacion
-        // El servicio debe devolver un Optional vacío
-        when(servicioLoginMock.consultarUsuario(anyString(), anyString())).thenReturn(Optional.empty()); 
+        when(servicioLoginMock.consultarUsuario(anyString(), anyString())).thenReturn(Optional.empty());
 
         // ejecucion
         ModelAndView modelAndView = controladorLogin.validarLogin(datosLoginMock, requestMock);
@@ -53,7 +95,7 @@ public class ControladorLoginTest {
         assertThat(modelAndView.getModel().get("error").toString(), equalToIgnoringCase("Usuario o clave incorrecta"));
         verify(sessionMock, times(0)).setAttribute(anyString(), any());
     }
-    
+
     @Test
     public void loginConUsuarioYPasswordCorrectosDeberiaLLevarAHomeDeConductor(){
         // preparacion
@@ -61,18 +103,17 @@ public class ControladorLoginTest {
         when(usuarioEncontradoMock.getRol()).thenReturn("CONDUCTOR");
         when(usuarioEncontradoMock.getId()).thenReturn(5L);
 
-        // El servicio debe devolver un Optional presente
         when(servicioLoginMock.consultarUsuario(anyString(), anyString())).thenReturn(Optional.of(usuarioEncontradoMock));
-        
+
         // ejecucion
         ModelAndView modelAndView = controladorLogin.validarLogin(datosLoginMock, requestMock);
-        
+
         // validacion
         assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/conductor/home"));
         verify(sessionMock, times(1)).setAttribute("idUsuario", 5L);
         verify(sessionMock, times(1)).setAttribute("ROL", "CONDUCTOR");
     }
-    
+
     @Test
     public void loginConUsuarioYPasswordCorrectosDeberiaLLevarAHomeDeViajero(){
         // preparacion
@@ -81,17 +122,32 @@ public class ControladorLoginTest {
         when(usuarioEncontradoMock.getId()).thenReturn(6L);
 
         when(servicioLoginMock.consultarUsuario(anyString(), anyString())).thenReturn(Optional.of(usuarioEncontradoMock));
-        
+
         // ejecucion
         ModelAndView modelAndView = controladorLogin.validarLogin(datosLoginMock, requestMock);
-        
+
         // validacion
         assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/viajero/home"));
         verify(sessionMock, times(1)).setAttribute("idUsuario", 6L);
         verify(sessionMock, times(1)).setAttribute("ROL", "VIAJERO");
     }
 
-    // NOTA: Los tests de REGISTRO fueron movidos a ControladorRegistroTest.
-    // Eliminamos los tests: registrameSiUsuarioNoExisteDeberiaCrearUsuarioYVolverAlLogin,
-    // registrarmeSiUsuarioExisteDeberiaVolverAFormularioYMostrarError, errorEnRegistrarmeDeberiaVolverAFormularioYMostrarError
+    @Test
+    public void loginConRolDesconocidoDeberiaLLevarAHomeGenerico() {
+        // preparacion
+        Usuario usuarioEncontradoMock = mock(Usuario.class);
+        when(usuarioEncontradoMock.getRol()).thenReturn("ADMIN"); // Rol desconocido
+        when(usuarioEncontradoMock.getId()).thenReturn(7L);
+
+        when(servicioLoginMock.consultarUsuario(anyString(), anyString())).thenReturn(Optional.of(usuarioEncontradoMock));
+
+        // ejecucion
+        ModelAndView modelAndView = controladorLogin.validarLogin(datosLoginMock, requestMock);
+
+        // validacion
+        // Verifica el fallback a /home (ruta genérica)
+        assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/home"));
+        verify(sessionMock, times(1)).setAttribute("idUsuario", 7L);
+        verify(sessionMock, times(1)).setAttribute("ROL", "ADMIN");
+    }
 }

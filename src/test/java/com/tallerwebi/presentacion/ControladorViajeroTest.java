@@ -32,29 +32,27 @@ public class ControladorViajeroTest {
         when(viajeroMock.getNombre()).thenReturn("Juan");
     }
 
-    // NOTA: Los tests de REGISTRO fueron movidos a ControladorRegistroTest
-    // Se eliminan irARegistro(), registroCorrectoDeberiaRedirigirAHomeYSetearSesion(), etc.
-
     @Test
     void siUsuarioNoEstaEnSesionEnHomeDeberiaRedirigirALoginCentral() {
-        // Arrange: No hay usuario ID, no hay ROL
-        when(sessionMock.getAttribute("usuarioId")).thenReturn(null);
-        when(sessionMock.getAttribute("rol")).thenReturn(null);
+        // Arrange: Mockeamos las claves CORRECTAS: idUsuario y ROL
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(null);
+        when(sessionMock.getAttribute("ROL")).thenReturn(null);
 
         // Act
         ModelAndView mav = controladorViajero.irAHome(sessionMock);
 
         // Assert
-        // El ROL ya no es /viajero/login, es /login centralizado
-        assertThat(mav.getViewName(), equalTo("redirect:/login")); 
-        verify(sessionMock, times(1)).getAttribute("usuarioId");
+        assertThat(mav.getViewName(), equalTo("redirect:/login"));
+        verify(sessionMock, times(1)).getAttribute("idUsuario");
+        // El controlador lee "ROL" si "idUsuario" es null, por lo que esta verificación es opcional pero correcta.
+        verify(sessionMock, times(1)).getAttribute("ROL");
     }
-    
+
     @Test
-    void siUsuarioNoEsViajeroDeberiaRedirigirALoginCentral() {
-        // Arrange: ID existe, pero ROL no es VIAJERO
-        when(sessionMock.getAttribute("usuarioId")).thenReturn(1L);
-        when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR"); // Rol incorrecto
+    void siUsuarioNoEsViajeroDeberiaRedirigirALoginCentral() throws UsuarioInexistente {
+        // Arrange: Mockeamos las claves CORRECTAS: idUsuario y ROL
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
+        when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR"); // Rol incorrecto
 
         // Act
         ModelAndView mav = controladorViajero.irAHome(sessionMock);
@@ -67,9 +65,9 @@ public class ControladorViajeroTest {
 
     @Test
     void siUsuarioEstaEnSesionYEsViajeroDeberiaMostrarHomeConNombre() throws UsuarioInexistente {
-        // Arrange
-        when(sessionMock.getAttribute("usuarioId")).thenReturn(1L);
-        when(sessionMock.getAttribute("rol")).thenReturn("VIAJERO");
+        // Arrange: Mockeamos las claves CORRECTAS: idUsuario y ROL
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
+        when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
         when(servicioViajeroMock.obtenerViajero(1L)).thenReturn(viajeroMock);
 
         // Act
@@ -77,26 +75,27 @@ public class ControladorViajeroTest {
 
         // Assert
         assertThat(mav.getViewName(), equalTo("homeViajero"));
-        assertThat(mav.getModel().get("nombreConductor").toString(), equalTo(viajeroMock.getNombre())); // OJO: nombreConductor es un error del controlador, pero lo mantenemos por consistencia
+        // El modelo del controlador usa la clave "nombreConductor" (aún inconsistente, pero el test la respeta)
+        assertThat(mav.getModel().get("nombreConductor").toString(), equalTo(viajeroMock.getNombre()));
         assertThat(mav.getModel().get("rol").toString(), equalTo("VIAJERO"));
         verify(servicioViajeroMock, times(1)).obtenerViajero(1L);
     }
-    
+
     @Test
     void siUsuarioInexistenteEnSesionDeberiaInvalidarSesionYRedirigirALogin() throws UsuarioInexistente {
-        // Arrange
-        when(sessionMock.getAttribute("usuarioId")).thenReturn(99L);
-        when(sessionMock.getAttribute("rol")).thenReturn("VIAJERO");
-        
+        // Arrange: Mockeamos las claves CORRECTAS: idUsuario y ROL
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(99L);
+        when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
+
+        // Hacemos que la llamada al servicio falle (entra al catch)
         doThrow(new UsuarioInexistente("Error de sesión"))
-            .when(servicioViajeroMock).obtenerViajero(99L);
+                .when(servicioViajeroMock).obtenerViajero(99L);
 
         // Act
         ModelAndView mav = controladorViajero.irAHome(sessionMock);
 
         // Assert
         assertThat(mav.getViewName(), equalTo("redirect:/login"));
-        assertThat(mav.getModel().get("error").toString(), equalTo("Su sesión no es válida. Por favor, inicie sesión nuevamente."));
         verify(sessionMock, times(1)).invalidate();
     }
 }

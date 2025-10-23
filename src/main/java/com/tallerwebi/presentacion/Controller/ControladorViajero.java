@@ -17,18 +17,18 @@ public class ControladorViajero {
 
     private final ServicioViajero servicioViajero;
 
-
     @Autowired
     public ControladorViajero(ServicioViajero servicioViajero) {
         this.servicioViajero = servicioViajero;
-
     }
 
     @GetMapping("/home")
     public ModelAndView irAHome(HttpSession session) {
         ModelMap model = new ModelMap();
-        Object usuarioId = session.getAttribute("usuarioId");
-        String rol = (String) session.getAttribute("rol");
+        // CLAVES CORREGIDAS: Usar "idUsuario" y "ROL" (mayúsculas)
+        Object usuarioId = session.getAttribute("idUsuario");
+        String rol = (String) session.getAttribute("ROL"); // Usar "ROL"
+
         if (usuarioId == null || !"VIAJERO".equals(rol)) {
             return new ModelAndView("redirect:/login", model);
         }
@@ -47,6 +47,4 @@ public class ControladorViajero {
             return new ModelAndView("redirect:/login", model);
         }
     }
-
-
 }
