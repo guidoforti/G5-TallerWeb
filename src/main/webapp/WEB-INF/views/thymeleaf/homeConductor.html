@@ -2,7 +2,6 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="fragments/fragments :: head('UnRumbo - Home')">
     <th:block th:fragment="extra">
-        <!-- Extra en el head si es necesario -->
     </th:block>
 </head>
 
@@ -23,14 +22,13 @@
 
                     <a th:href="@{/vehiculos/registrar}" class="btn btn-unrumbo text-white w-100 fw-bold mt-3">Registrar vehículo</a>
 
-                    <a th:href="@{/conductor/logout}" class="btn btn-unrumbo w-100 text-white fw-bold mt-4">Cerrar sesión</a>
+                    <a th:href="@{/logout}" class="btn btn-unrumbo w-100 text-white fw-bold mt-4">Cerrar sesión</a>
                 </div>
             </div>
         </div>
     </div>
 </main>
 
-<!-- Bootstrap core js -->
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
 </body>
 </html>

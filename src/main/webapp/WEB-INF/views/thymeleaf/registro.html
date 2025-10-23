@@ -19,7 +19,7 @@
                         <p class="text-muted">Completa tus datos y selecciona tu rol</p>
                     </div>
 
-                    <form th:action="@{/validar-registro-unificado}" method="POST" th:object="${datosRegistro}">
+                    <form th:action="@{/validar-registro}" method="POST" th:object="${datosRegistro}">
 
                         <div class="mb-3">
                             <label for="rolSeleccionado" class="form-label">Quiero registrarme como:</label>
@@ -82,5 +82,6 @@
 </main>
 
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/registroDinamico.js}"></script>
 </body>
 </html>
