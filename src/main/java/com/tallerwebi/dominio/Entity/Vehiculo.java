@@ -22,7 +22,9 @@ public class Vehiculo {
     private String patente;
     private String Modelo;
     private String anio;
+    @Column(name = "asientos_totales")
     private Integer asientosTotales;
+    @Column(name = "estado_verificacion")
     private EstadoVerificacion estadoVerificacion;
 
     @ManyToOne

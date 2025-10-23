@@ -20,7 +20,7 @@ import java.util.Objects;
 @PrimaryKeyJoinColumn(name = "usuario_id")
 public class Conductor extends Usuario {
 
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @Column(name = "fecha_de_vencimiento_licencia")
     private LocalDate fechaDeVencimientoLicencia;
     @OneToMany(mappedBy = "conductor")
     private List<Viaje> viajes;

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "viaje")
 public class Viaje {
 
 
@@ -31,7 +33,7 @@ public class Viaje {
     @JoinColumn(name = "vehiculo_id")
     private Vehiculo vehiculo;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "viaje_viajero", // Nombre de la tabla intermedia
             joinColumns = @JoinColumn(name = "viaje_id"), // Columna que referencia a Viaje
@@ -53,10 +55,12 @@ public class Viaje {
     @JoinColumn(name = "destino_id")
     private Ciudad destino;
 
-
+    @Column(name = "fecha_hora_de_salida")
     private LocalDateTime fechaHoraDeSalida;
     private Double precio;
+    @Column(name = "asientos_disponibles")
     private Integer asientosDisponibles;
+    @Column(name = "fecha_de_creacion")
     private LocalDateTime fechaDeCreacion;
     private EstadoDeViaje estado;
 

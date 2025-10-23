@@ -2,6 +2,7 @@ package com.tallerwebi.dominio.ServiceImpl;
 
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Conductor;
+import com.tallerwebi.dominio.Entity.Parada;
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
@@ -11,6 +12,7 @@ import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import com.tallerwebi.dominio.excepcion.*;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +42,27 @@ public class ServicioViajeImpl implements ServicioViaje {
     public Viaje obtenerViajePorId(Long id) throws NotFoundException {
         return viajeRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("No se encontró el viaje"));
+    }
+    @Override
+    public Viaje obtenerDetalleDeViaje(Long id) throws NotFoundException {
+        Viaje viaje = viajeRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("No se encontró el viaje con id: " + id));
+
+
+        Hibernate.initialize(viaje.getOrigen());
+        Hibernate.initialize(viaje.getDestino());
+        Hibernate.initialize(viaje.getVehiculo());
+
+
+        Hibernate.initialize(viaje.getViajeros());
+        Hibernate.initialize(viaje.getParadas());
+
+
+        for (Parada parada : viaje.getParadas()) {
+            Hibernate.initialize(parada.getCiudad());
+        }
+
+        return viaje;
     }
 
     @Override

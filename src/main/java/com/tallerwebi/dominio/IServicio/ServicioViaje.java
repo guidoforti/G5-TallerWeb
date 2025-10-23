@@ -14,6 +14,5 @@ public interface ServicioViaje {
     void publicarViaje(Viaje viaje, Long conductorId, Long vehiculoId) throws UsuarioInexistente, NotFoundException, UsuarioNoAutorizadoException, AsientosDisponiblesMayorQueTotalesDelVehiculoException, DatoObligatorioException, ViajeDuplicadoException;
     void cancelarViaje (Long id, Usuario usuarioEnSesion) throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeNoCancelableException;
     List<Viaje> listarViajesPorConductor(Conductor conductor) throws UsuarioNoAutorizadoException;
+    Viaje obtenerDetalleDeViaje(Long id) throws NotFoundException;
 }
-
-

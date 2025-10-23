@@ -1,5 +1,6 @@
 package com.tallerwebi.dominio;
 
+import com.tallerwebi.dominio.Entity.*;
 import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Usuario;
@@ -34,6 +35,31 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
+
+import com.tallerwebi.dominio.Entity.Vehiculo;
+import com.tallerwebi.dominio.Entity.Viaje;
+import com.tallerwebi.dominio.Enums.EstadoDeViaje;
+import com.tallerwebi.dominio.Enums.EstadoVerificacion;
+import com.tallerwebi.dominio.IRepository.ViajeRepository;
+import com.tallerwebi.dominio.IServicio.ServicioConductor;
+import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
+import com.tallerwebi.dominio.IServicio.ServicioViaje;
+import com.tallerwebi.dominio.ServiceImpl.ServicioViajeImpl;
+import com.tallerwebi.dominio.excepcion.*;
+import org.hibernate.Hibernate;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 class ServicioViajeTest {
@@ -383,7 +409,7 @@ class ServicioViajeTest {
         Conductor conductor = new Conductor();
         conductor.setId(1L);
         conductor.setEmail("pepito@gmail.com");
-        conductor.setRol("CONDUCTOR");
+conductor.setRol("CONDUCTOR");
         conductor.setActivo(true);
 
         Conductor usuarioEnSesion = new Conductor();
@@ -506,6 +532,8 @@ class ServicioViajeTest {
 
     @Test
     void noDebeListarViajesSiConductorEsNull() {
+
+
         assertThrows(UsuarioNoAutorizadoException.class,
                 () -> servicioViaje.listarViajesPorConductor(null));
 
@@ -538,6 +566,8 @@ class ServicioViajeTest {
 
     @Test
     void deberiaDevolverListaVaciaSiConductorNoTieneViajes() throws UsuarioNoAutorizadoException {
+
+
         Conductor conductorSinViajes = new Conductor();
         conductorSinViajes.setId(99L);
         conductorSinViajes.setRol("CONDUCTOR");
@@ -786,5 +816,100 @@ class ServicioViajeTest {
         when(viajeRepositoryMock.findById(idInexistente)).thenReturn(Optional.empty());
         assertThrows(NotFoundException.class, () -> servicioViaje.obtenerViajePorId(idInexistente));
         verify(viajeRepositoryMock).findById(idInexistente);
+    }
+
+    @Test
+    void deberiaObtenerDetalleDeViajeCorrectamente() throws Exception {
+        // given
+        Long viajeId = 1L;
+        Viaje viajeEsperado = crearViajeCompleto();
+        when(viajeRepositoryMock.findById(viajeId)).thenReturn(Optional.of(viajeEsperado));
+
+        // when
+        Viaje resultado = servicioViaje.obtenerDetalleDeViaje(viajeId);
+
+        // then
+        assertThat(resultado, is(viajeEsperado));
+        verify(viajeRepositoryMock).findById(viajeId);
+        // Verificar que se inicializaron las relaciones
+        assertThat(Hibernate.isInitialized(resultado.getOrigen()), is(true));
+        assertThat(Hibernate.isInitialized(resultado.getDestino()), is(true));
+        assertThat(Hibernate.isInitialized(resultado.getVehiculo()), is(true));
+        assertThat(Hibernate.isInitialized(resultado.getViajeros()), is(true));
+        assertThat(Hibernate.isInitialized(resultado.getParadas()), is(true));
+        // Verificar inicialización de relaciones anidadas
+        for (Parada parada : resultado.getParadas()) {
+            assertThat(Hibernate.isInitialized(parada.getCiudad()), is(true));
+        }
+    }
+
+    @Test
+    void deberiaLanzarNotFoundExceptionSiViajeNoExiste() {
+        // given
+        Long viajeId = 999L;
+        when(viajeRepositoryMock.findById(viajeId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(NotFoundException.class, () ->
+                servicioViaje.obtenerDetalleDeViaje(viajeId)
+        );
+        verify(viajeRepositoryMock).findById(viajeId);
+    }
+
+    // Método auxiliar para crear un viaje con todas sus relaciones
+    private Viaje crearViajeCompleto() {
+        // Crear ciudades
+        Ciudad origen = new Ciudad(1L, "Buenos Aires", -34.6037f, -58.3816f);
+        Ciudad destino = new Ciudad(2L, "Córdoba", -31.4201f, -64.1888f);
+        Ciudad paradaCiudad = new Ciudad(3L, "Rosario", -32.9468f, -60.6393f);
+
+        // Crear conductor
+        Conductor conductor = new Conductor();
+        conductor.setId(1L);
+        conductor.setNombre("Juan");
+        conductor.setEmail("juan@test.com");
+
+        // Crear vehículo
+        Vehiculo vehiculo = new Vehiculo();
+        vehiculo.setId(1L);
+        vehiculo.setPatente("ABC123");
+        vehiculo.setModelo("Toyota Corolla");
+        vehiculo.setConductor(conductor);
+
+        // Crear viajeros
+        Viajero viajero1 = new Viajero();
+        viajero1.setId(1L);
+        viajero1.setNombre("Ana");
+        viajero1.setEmail("ana@test.com");
+
+        Viajero viajero2 = new Viajero();
+        viajero2.setId(2L);
+        viajero2.setNombre("Pedro");
+        viajero2.setEmail("pedro@test.com");
+
+        // Crear parada
+        Parada parada = new Parada();
+        parada.setId(1L);
+        parada.setCiudad(paradaCiudad);
+        parada.setOrden(1);
+
+        // Crear viaje
+        Viaje viaje = new Viaje();
+        viaje.setId(1L);
+        viaje.setOrigen(origen);
+        viaje.setDestino(destino);
+        viaje.setVehiculo(vehiculo);
+        viaje.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
+        viaje.setPrecio(1500.0);
+        viaje.setAsientosDisponibles(3);
+        viaje.setFechaDeCreacion(LocalDateTime.now());
+        viaje.setEstado(EstadoDeViaje.DISPONIBLE);
+        viaje.setViajeros(Arrays.asList(viajero1, viajero2));
+        viaje.setParadas(Collections.singletonList(parada));
+
+        // Establecer la relación bidireccional
+        parada.setViaje(viaje);
+
+        return viaje;
     }
 }
