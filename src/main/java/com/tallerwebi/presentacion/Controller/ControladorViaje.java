@@ -70,7 +70,7 @@ public class ControladorViaje {
     @GetMapping("/publicar")
     public ModelAndView irAPublicarViaje(HttpSession session) {
         ModelMap model = new ModelMap();
-
+        //prueba
         // CLAVES CORREGIDAS
         Object usuarioId = session.getAttribute("idUsuario");
         Object rol = session.getAttribute("ROL");
