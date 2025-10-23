@@ -29,7 +29,7 @@ VALUES (1, 'Buenos Aires', -34.6037, -58.3816),
 -- La columna ID aquí debe llamarse 'usuario_id' y ser el mismo ID de la tabla usuario.
 
 -- CONDUCTORES ESPECÍFICOS (IDs 1 a 3)
-INSERT INTO conductor (usuario_id, fechaDeVencimientoLicencia)
+INSERT INTO conductor (usuario_id, fecha_de_vencimiento_licencia)
 VALUES (1, '2027-05-10'), -- Corresponde a Carlos Perez (id=1)
        (2, '2026-11-20'), -- Corresponde a Maria Lopez (id=2)
        (3, '2028-03-15'); -- Corresponde a Juan Garcia (id=3)
@@ -42,14 +42,14 @@ VALUES (4, 25), -- Corresponde a Sofia Torres (id=4)
 
 
 -- 3️⃣ VEHÍCULOS (El conductor_id se mantiene igual)
-INSERT INTO vehiculo (id, Modelo, anio, asientosTotales, estadoVerificacion, patente, conductor_id)
+INSERT INTO vehiculo (id, modelo, anio, asientos_totales, estado_verificacion, patente, conductor_id)
 VALUES (1, 'Toyota Corolla', '2014', 5, 1, 'AB123CD', 1),
        (2, 'Volkswagen Gol', '2012', 4, 1, 'AC456EF', 2),
        (3, 'Peugeot 208', '2015', 5, 1, 'AD789GH', 3);
 
 -- 4️⃣ VIAJES
 -- Los IDs de conductor siguen siendo los mismos de la tabla usuario (1, 2, 3)
-INSERT INTO Viaje (id, asientosDisponibles, estado, fechaDeCreacion, fechaHoraDeSalida, precio, conductor_id, origen_id,
+INSERT INTO viaje (id, asientos_disponibles, estado, fecha_de_creacion, fecha_hora_de_salida, precio, conductor_id, origen_id,
                    destino_id, vehiculo_id)
 VALUES (1, 3, 0, '2025-10-01 10:00:00', '2025-10-05 08:00:00', 15000, 1, 1, 2, 1),
        (2, 2, 0, '2025-09-20 14:00:00', '2025-09-25 07:30:00', 12000, 2, 2, 3, 2),

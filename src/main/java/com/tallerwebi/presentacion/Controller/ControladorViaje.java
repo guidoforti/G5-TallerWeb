@@ -145,7 +145,7 @@ public class ControladorViaje {
 
         // CLAVES CORREGIDAS
         Object usuarioIdObj = session.getAttribute("idUsuario");
-        Object rol = session.getAttribute("ROL");
+        Object rol = session.getAttribute("rol");
 
         // 1. Validación de Sesión y Rol
         if (usuarioIdObj == null || !"CONDUCTOR".equals(rol)) {

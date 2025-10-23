@@ -40,6 +40,7 @@ public class ControladorVehiculoTest {
         vehiculoInputDTO = new VehiculoInputDTO("Toyota", "2020", "ABC123", 4, EstadoVerificacion.PENDIENTE);
         conductorMock = new Conductor();
         conductorMock.setId(1L);
+        conductorMock.setRol("CONDUCTOR");
         vehiculoMock = new Vehiculo(1L, "ABC123", "Toyota", "2020", 4, EstadoVerificacion.PENDIENTE, conductorMock);
 
 
@@ -50,6 +51,9 @@ public class ControladorVehiculoTest {
 
     @Test
     public void registrarVehiculo_conDatosValidos_deberiaRedirigirAlHome() throws Exception {
+        when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR");
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
+
         when(servicioConductorMock.obtenerConductor(1L)).thenReturn(conductorMock);
         when(servicioVehiculoMock.guardarVehiculo(any(Vehiculo.class))).thenReturn(vehiculoMock);
 
@@ -61,6 +65,8 @@ public class ControladorVehiculoTest {
 
     @Test
     public void registrarVehiculo_conPatenteDuplicada_deberiaMostrarError() throws Exception {
+        when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR");
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
         when(servicioConductorMock.obtenerConductor(1L)).thenReturn(conductorMock);
         when(servicioVehiculoMock.guardarVehiculo(any(Vehiculo.class)))
                 .thenThrow(new PatenteDuplicadaException("La patente ya está registrada"));
@@ -84,7 +90,8 @@ public class ControladorVehiculoTest {
 
     @Test
     public void mostrarFormularioDeRegistroVehiculo_conUsuarioNoAutorizado_deberiaMostrarError() throws Exception {
-        when(sessionMock.getAttribute("rol")).thenReturn("USUARIO"); // no es CONDUCTOR
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
+        when(sessionMock.getAttribute("ROL")).thenReturn("USUARIO");
 
         ModelAndView modelAndView = controladorVehiculo.mostrarFormularioDeRegistroVehiculo(sessionMock);
 

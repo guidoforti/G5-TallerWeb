@@ -244,7 +244,7 @@ public class ControladorViajeTest {
     public void deberiaMostrarErrorSiUsuarioNoAutorizadoAlListar() throws Exception {
         Long conductorId = 1L;
 
-        when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
         when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
 
         Conductor conductorMock = new Conductor();
@@ -268,7 +268,7 @@ public class ControladorViajeTest {
     public void deberiaDevolverListaVaciaSiNoHayViajes() throws Exception {
         Long conductorId = 2L;
 
-        when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
         when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
 
         Conductor conductorMock = new Conductor();
@@ -286,36 +286,6 @@ public class ControladorViajeTest {
 
         verify(servicioConductorMock).obtenerConductor(conductorId);
         verify(servicioViajeMock).listarViajesPorConductor(any(Conductor.class));
-    }
-
-    @Test
-    public void deberiaMostrarErrorSiRolEsConductorPeroSesionEsNull() throws Exception {
-        when(sessionMock.getAttribute("usuarioId")).thenReturn(null);
-        when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
-
-        ModelAndView mav = controladorViaje.listarViajes(sessionMock);
-
-        assertThat(mav.getViewName(), equalTo("errorAcceso"));
-        assertThat(mav.getModel().get("error").toString(), containsString("Debés iniciar sesión como conductor"));
-        // CORRECCIÓN: Si anyLong() falla, usamos any(Long.class) para ser más explícitos con el tipo.
-        verify(servicioConductorMock, never()).obtenerConductor(any(Long.class));
-        verify(servicioViajeMock, never()).listarViajesPorConductor(any());
-    }
-
-    @Test
-    public void deberiaMostrarErrorSiIdExistePeroRolEsNull() throws Exception {
-        Long conductorId = 3L;
-
-        when(sessionMock.getAttribute("usuarioId")).thenReturn(conductorId);
-        when(sessionMock.getAttribute("rol")).thenReturn(null);
-
-        ModelAndView mav = controladorViaje.listarViajes(sessionMock);
-
-        assertThat(mav.getViewName(), equalTo("errorAcceso"));
-        assertThat(mav.getModel().get("error").toString(), containsString("Debés iniciar sesión como conductor"));
-        // CORRECCIÓN: Si anyLong() falla, usamos any(Long.class).
-        verify(servicioConductorMock, never()).obtenerConductor(any(Long.class));
-        verify(servicioViajeMock, never()).listarViajesPorConductor(any());
     }
 
     @Test

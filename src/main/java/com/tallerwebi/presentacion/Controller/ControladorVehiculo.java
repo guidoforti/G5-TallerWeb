@@ -43,8 +43,9 @@ public class ControladorVehiculo {
         Object usuarioId = (session != null) ? session.getAttribute("idUsuario") : null;
 
         if (rol == null || !rol.equals("CONDUCTOR") || usuarioId == null) {
-            model.put("error", "Debes iniciar sesión como CONDUCTOR para acceder a este recurso.");
-            return new ModelAndView("redirect:/login", model);
+            Exception e = new UsuarioNoAutorizadoException("no tienes permisos para acceder a este recurso");
+            model.put("error", e.getMessage());
+            return new ModelAndView("usuarioNoAutorizado", model);
         }
 
         model.put("vehiculoInputDTO", new VehiculoInputDTO());
