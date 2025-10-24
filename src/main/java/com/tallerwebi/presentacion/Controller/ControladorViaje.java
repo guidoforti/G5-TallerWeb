@@ -145,7 +145,7 @@ public class ControladorViaje {
 
         // CLAVES CORREGIDAS
         Object usuarioIdObj = session.getAttribute("idUsuario");
-        Object rol = session.getAttribute("rol");
+        Object rol = session.getAttribute("ROL");
 
         // 1. Validación de Sesión y Rol
         if (usuarioIdObj == null || !"CONDUCTOR".equals(rol)) {
@@ -251,10 +251,8 @@ public class ControladorViaje {
     }
 
 
-
-
     @GetMapping("/detalle")
-    public ModelAndView verDetalleDeUnViaje(HttpSession httpSession , @RequestParam("id") Long id) {
+    public ModelAndView verDetalleDeUnViaje(HttpSession httpSession, @RequestParam("id") Long id) {
         ModelMap model = new ModelMap();
        /* Object rol = httpSession.getAttribute("rol");
         if (rol == null || !rol.equals("CONDUCTOR")) {
@@ -265,14 +263,15 @@ public class ControladorViaje {
         try {
             Viaje viaje = servicioViaje.obtenerDetalleDeViaje(id);
             DetalleViajeOutputDTO detalleViajeOutputDTO = new DetalleViajeOutputDTO(viaje);
-            model.put("detalle" , detalleViajeOutputDTO);
-            return  new ModelAndView("detalleViaje" , model);
+            model.put("detalle", detalleViajeOutputDTO);
+            return new ModelAndView("detalleViaje", model);
 
         } catch (NotFoundException e) {
-            model.put("error" , e.getMessage());
-            return new ModelAndView("detalleViaje" , model);
+            model.put("error", e.getMessage());
+            return new ModelAndView("detalleViaje", model);
         }
     }
+
     /**
      * Resuelve el nombre de una ciudad a una entidad Ciudad usando Nominatim.
      * Busca en la base de datos si ya existe (por latitud/longitud), o la crea si no existe.

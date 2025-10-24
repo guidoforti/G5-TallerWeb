@@ -11,22 +11,25 @@ VALUES (2, 'juan.perez@unlam.edu.ar', 'password123', 'Juan Pérez', 'CONDUCTOR',
 
 -- 3️⃣ CONDUCTOR ESPECÍFICO (JOINED)
 -- Se inserta en la tabla específica usando el ID del usuario conductor (ID 2)
-INSERT INTO conductor (usuario_id, fechaDeVencimientoLicencia)
+-- CAMBIO: fechaDeVencimientoLicencia → fecha_de_vencimiento_licencia
+INSERT INTO conductor (usuario_id, fecha_de_vencimiento_licencia)
 VALUES (2, '2026-12-31');
 
 -- 4️⃣ VEHÍCULOS (Referenciando el conductor_id=2)
--- La clave foránea conductor_id en vehiculo apunta al ID de la tabla USUARIO/CONDUCTOR (ID 2)
-INSERT INTO vehiculo (id, patente, Modelo, anio, asientosTotales, estadoVerificacion, conductor_id)
+-- CAMBIO: asientosTotales → asientos_totales
+-- CAMBIO: estadoVerificacion → estado_verificacion
+-- CAMBIO: Modelo → modelo (para mantener consistencia)
+INSERT INTO vehiculo (id, patente, modelo, anio, asientos_totales, estado_verificacion, conductor_id)
 VALUES (1, 'ABC123', 'Toyota Corolla', '2020', 5, 1, 2);
 
-INSERT INTO vehiculo (id, patente, Modelo, anio, asientosTotales, estadoVerificacion, conductor_id)
+INSERT INTO vehiculo (id, patente, modelo, anio, asientos_totales, estado_verificacion, conductor_id)
 VALUES (2, 'DEF456', 'Honda Civic', '2019', 5, 1, 2);
 
-INSERT INTO vehiculo (id, patente, Modelo, anio, asientosTotales, estadoVerificacion, conductor_id)
+INSERT INTO vehiculo (id, patente, modelo, anio, asientos_totales, estado_verificacion, conductor_id)
 VALUES (3, 'GHI789', 'Volkswagen Vento', '2021', 5, 1, 2);
 
-INSERT INTO vehiculo (id, patente, Modelo, anio, asientosTotales, estadoVerificacion, conductor_id)
+INSERT INTO vehiculo (id, patente, modelo, anio, asientos_totales, estado_verificacion, conductor_id)
 VALUES (4, 'JKL012', 'Ford Focus', '2018', 5, 0, 2);
 
-INSERT INTO vehiculo (id, patente, Modelo, anio, asientosTotales, estadoVerificacion, conductor_id)
+INSERT INTO vehiculo (id, patente, modelo, anio, asientos_totales, estado_verificacion, conductor_id)
 VALUES (5, 'MNO345', 'Chevrolet Cruze', '2022', 5, 1, 2);
