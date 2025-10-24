@@ -245,7 +245,7 @@ public class ControladorViajeTest {
         Long conductorId = 1L;
 
         when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
-        when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
+        when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR");
 
         Conductor conductorMock = new Conductor();
         conductorMock.setId(conductorId);
@@ -269,7 +269,7 @@ public class ControladorViajeTest {
         Long conductorId = 2L;
 
         when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
-        when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
+        when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR");
 
         Conductor conductorMock = new Conductor();
         conductorMock.setId(conductorId);
