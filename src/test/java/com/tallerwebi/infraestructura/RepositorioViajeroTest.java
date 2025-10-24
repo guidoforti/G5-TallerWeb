@@ -1,6 +1,7 @@
 package com.tallerwebi.infraestructura;
 
 import com.tallerwebi.dominio.Entity.Viajero;
+import com.tallerwebi.dominio.IRepository.RepositorioViajero;
 import com.tallerwebi.integracion.config.DataBaseTestInitilizationConfig;
 import com.tallerwebi.integracion.config.HibernateTestConfig;
 import org.hibernate.SessionFactory;
@@ -27,86 +28,31 @@ public class RepositorioViajeroTest {
     @Autowired
     private SessionFactory sessionFactory;
 
-    private RepositorioViajeroImpl repositorioViajero;
-    private Viajero viajeroBase; // Necesaria para guardar el ID
+    private RepositorioViajero repositorioViajero;
+    private RepositorioUsuarioImpl repositorioUsuario;
+
+    private Viajero viajeroBase;
 
     @BeforeEach
     public void setUp() {
         this.repositorioViajero = new RepositorioViajeroImpl(this.sessionFactory);
+        this.repositorioUsuario = new RepositorioUsuarioImpl(this.sessionFactory);
 
-        viajeroBase = new Viajero(null, "ViajeroBaseTest", 30, "viajero.base.test@unlam.com", "securePass1", new ArrayList<>());
-        repositorioViajero.guardarViajero(viajeroBase);
+        viajeroBase = new Viajero();
+        viajeroBase.setNombre("ViajeroBaseTest");
+        viajeroBase.setEdad(30);
+        viajeroBase.setEmail("viajero.base.test@unlam.com");
+        viajeroBase.setContrasenia("securePass1");
+        viajeroBase.setRol("VIAJERO");
+        viajeroBase.setActivo(true);
+        viajeroBase.setViajes(new ArrayList<>());
 
-        //sessionFactory.getCurrentSession().flush();
-        //sessionFactory.getCurrentSession().clear();
+        repositorioUsuario.guardar(viajeroBase);
     }
 
-    @Test
-    public void cuandoSeAgregaViajeroNuevoSeGuardaYRetornaId(){
-        // Arrange
-        Viajero viajero = new Viajero(null, "Patricio Nuevo", 20, "patricio.nuevo@test.com", "1234aa", new ArrayList<>());
-
-        Viajero viajeroGuardado = this.repositorioViajero.guardarViajero(viajero);
-
-        assertThat(viajeroGuardado, is(notNullValue()));
-        assertThat(viajeroGuardado.getId(), is(notNullValue()));
-
-        Optional<Viajero> encontrado = repositorioViajero.buscarPorId(viajeroGuardado.getId());
-        assertTrue(encontrado.isPresent());
-    }
-
-    @Test
-    public void buscoViajeroPorEmailYContraseniaYLoEncuentro(){
-        // Arrange: Credenciales insertadas en el setUp
-        String email = "viajero.base.test@unlam.com";
-        String pass = "securePass1";
-
-
-        Optional<Viajero> viajeroEncontrado = repositorioViajero.buscarPorEmailYContrasenia(email, pass);
-
-
-        assertTrue(viajeroEncontrado.isPresent());
-        assertThat(viajeroEncontrado.get().getEmail(), is(email));
-    }
-
-    @Test
-    public void siLaContraseniaEsIncorrectaNoDevuelveAlViajero(){
-        Optional<Viajero> viajeroEncontrado = repositorioViajero.buscarPorEmailYContrasenia("viajero.base.test@unlam.com", "kfsvc1_incorrecta");
-
-        assertThat(viajeroEncontrado.isPresent(), is(false));
-    }
-
-    @Test
-    public void siElEmailNoExisteNoDevuelveAlViajero(){
-        Optional<Viajero> viajeroEncontrado = repositorioViajero.buscarPorEmailYContrasenia("otro@mail.com", "securePass1");
-
-        assertThat(viajeroEncontrado.isPresent(), is(false));
-    }
-
-    @Test
-    public void buscoViajeroPorEmailYLoEncuentro(){
-        // Arrange: Email insertado en el setUp
-        String email = "viajero.base.test@unlam.com";
-
-        // Act
-        Optional<Viajero> viajeroPorMailEncontrado = repositorioViajero.buscarPorEmail(email);
-
-        // Assert
-        assertTrue(viajeroPorMailEncontrado.isPresent());
-        assertThat(viajeroPorMailEncontrado.get().getEmail(), is(email));
-    }
-
-    @Test
-    public void buscoViajeroPorEmailYNoLoEncuentro(){
-
-        Optional<Viajero> viajeroPorMailEncontrado = repositorioViajero.buscarPorEmail("Juan@gmail.com");
-
-        assertThat(viajeroPorMailEncontrado.isPresent(), is(false));
-    }
 
     @Test
     public void buscoViajeroPorIdYLoEncuentro(){
-        // Arrange: El ID se obtiene del objeto guardado en el setUp
         Long idExistente = viajeroBase.getId();
 
         Optional<Viajero> viajeroPorIDEncontrado = repositorioViajero.buscarPorId(idExistente);
@@ -118,7 +64,6 @@ public class RepositorioViajeroTest {
 
     @Test
     public void buscoViajeroPorIdYNoLoEncuentro(){
-
         Optional<Viajero> viajeroPorIDEncontrado = repositorioViajero.buscarPorId(999L);
 
         assertThat(viajeroPorIDEncontrado.isPresent(), is(false));

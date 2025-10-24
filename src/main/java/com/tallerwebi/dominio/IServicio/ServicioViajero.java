@@ -9,7 +9,6 @@ import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 
 public interface ServicioViajero {
 
-    Viajero login(String nombreUsuario, String contrasenia) throws CredencialesInvalidas;
     Viajero registrar(Viajero nuevoViajero) throws UsuarioExistente, EdadInvalidaException ,DatoObligatorioException;
     Viajero obtenerViajero(Long viajeroId) throws UsuarioInexistente;
 

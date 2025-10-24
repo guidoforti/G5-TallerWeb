@@ -20,35 +20,11 @@ public class RepositorioViajeroImpl implements RepositorioViajero {
         this.sessionFactory = sessionFactory;
     }
 
-    @Override
-    public Optional<Viajero> buscarPorEmailYContrasenia(String email, String contrasenia) {
-        String hql = "SELECT V FROM Viajero V WHERE V.email = :email AND contrasenia = :contrasenia";
-        Query<Viajero> query = sessionFactory.getCurrentSession().createQuery(hql, Viajero.class)
-                .setParameter("email", email)
-                .setParameter("contrasenia", contrasenia);
-
-        return query.uniqueResultOptional();
-    }
-
-    @Override
-    public Optional<Viajero> buscarPorEmail(String email) {
-        String hql = "SELECT V FROM Viajero V WHERE V.email = :email";
-        Query<Viajero> query = sessionFactory.getCurrentSession().createQuery(hql, Viajero.class)
-                .setParameter("email", email);
-
-        return query.uniqueResultOptional();
-    }
 
     @Override
     public Optional<Viajero> buscarPorId(Long id) {
         Viajero viajero = sessionFactory.getCurrentSession().get(Viajero.class, id);
         return Optional.ofNullable(viajero);
-    }
-
-    @Override
-    public Viajero guardarViajero(Viajero viajero) {
-        sessionFactory.getCurrentSession().save(viajero);
-        return viajero;
     }
 
 }

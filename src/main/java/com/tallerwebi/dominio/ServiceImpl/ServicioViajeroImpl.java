@@ -2,6 +2,7 @@ package com.tallerwebi.dominio.ServiceImpl;
 
 import javax.transaction.Transactional;
 
+import com.tallerwebi.dominio.IServicio.ServicioLogin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.tallerwebi.dominio.Entity.Viajero;
@@ -19,28 +20,18 @@ public class ServicioViajeroImpl implements ServicioViajero{
 
 
     private final RepositorioViajero repositorioViajero;
-
+    private final ServicioLogin servicioLogin;
 
     @Autowired
-    public ServicioViajeroImpl(RepositorioViajero repositorioViajero) {
+    public ServicioViajeroImpl(RepositorioViajero repositorioViajero, ServicioLogin servicioLogin) {
         this.repositorioViajero = repositorioViajero;
+        this.servicioLogin  = servicioLogin;
 
-    }
-
-    @Override
-    public Viajero login(String nombreUsuario, String contrasenia) throws CredencialesInvalidas {
-        Viajero viajeroEncontrado = this.repositorioViajero.buscarPorEmailYContrasenia(nombreUsuario, contrasenia)
-                .orElseThrow(() -> new CredencialesInvalidas("Email o contraseña inválidos."));
-       
-                return viajeroEncontrado;
     }
 
     @Override
     public Viajero registrar(Viajero nuevoViajero) throws UsuarioExistente, EdadInvalidaException, DatoObligatorioException {
-    
-        if (repositorioViajero.buscarPorEmail(nuevoViajero.getEmail()).isPresent()) {
-            throw new UsuarioExistente("Ya existe un usuario con ese email.");
-        }
+
 
         if (nuevoViajero.getNombre() == null || nuevoViajero.getNombre().isBlank()) {
             throw new DatoObligatorioException("El nombre es obligatorio.");
@@ -56,7 +47,9 @@ public class ServicioViajeroImpl implements ServicioViajero{
             throw new EdadInvalidaException("La edad ingresada no es válida.");
         }
 
-        repositorioViajero.guardarViajero(nuevoViajero);
+        nuevoViajero.setRol("VIAJERO");
+        nuevoViajero.setActivo(true);
+        servicioLogin.registrar(nuevoViajero);
 
         return nuevoViajero;
     }

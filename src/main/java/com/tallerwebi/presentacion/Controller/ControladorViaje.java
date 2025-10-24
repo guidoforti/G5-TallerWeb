@@ -12,8 +12,6 @@ import com.tallerwebi.dominio.IServicio.ServicioNominatim;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
-import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
-import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
 import com.tallerwebi.dominio.excepcion.ViajeNoCancelableException;
@@ -50,16 +48,16 @@ public class ControladorViaje {
 
     @Autowired
     public ControladorViaje(ServicioViaje servicioViaje,
-                           ServicioVehiculo servicioVehiculo,
-                           ServicioNominatim servicioNominatim,
-                           ServicioCiudad servicioCiudad,
-                           ServicioConductor servicioConductor) {
+                            ServicioVehiculo servicioVehiculo,
+                            ServicioNominatim servicioNominatim,
+                            ServicioCiudad servicioCiudad,
+                            ServicioConductor servicioConductor) {
         this.servicioViaje = servicioViaje;
         this.servicioVehiculo = servicioVehiculo;
         this.servicioNominatim = servicioNominatim;
         this.servicioCiudad = servicioCiudad;
         this.servicioConductor = servicioConductor;
-        }
+    }
 
 
     @GetMapping("/buscarViaje")
@@ -72,13 +70,13 @@ public class ControladorViaje {
     @GetMapping("/publicar")
     public ModelAndView irAPublicarViaje(HttpSession session) {
         ModelMap model = new ModelMap();
-
-        // Verificar que el usuario esté logueado
-        Object usuarioId = session.getAttribute("usuarioId");
-        Object rol = session.getAttribute("rol");
+        //prueba
+        // CLAVES CORREGIDAS
+        Object usuarioId = session.getAttribute("idUsuario");
+        Object rol = session.getAttribute("ROL");
 
         if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
-            return new ModelAndView("redirect:/conductor/login");
+            return new ModelAndView("redirect:/login");
         }
 
         Long conductorId = (Long) usuarioId;
@@ -100,15 +98,15 @@ public class ControladorViaje {
     public ModelAndView publicarViaje(@ModelAttribute("viaje") ViajeInputDTO viajeInputDTO, HttpSession session) {
         ModelMap model = new ModelMap();
 
-        // Verificar que el usuario esté logueado
-        Object usuarioId = session.getAttribute("usuarioId");
-        Object rol = session.getAttribute("rol");
+        // CLAVES CORREGIDAS
+        Object usuarioIdObj = session.getAttribute("idUsuario");
+        Object rol = session.getAttribute("ROL");
 
-        if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
-            return new ModelAndView("redirect:/conductor/login");
+        if (usuarioIdObj == null || !"CONDUCTOR".equals(rol)) {
+            return new ModelAndView("redirect:/login");
         }
 
-        Long conductorId = (Long) usuarioId;
+        Long conductorId = (Long) usuarioIdObj;
 
         try {
             // 1. Resolver ciudades usando Nominatim
@@ -132,6 +130,7 @@ public class ControladorViaje {
 
         } catch (Exception e) {
             // Si hay error, volver a mostrar el formulario con el mensaje de error
+            // Se debe volver a cargar la lista de vehículos para evitar NullPointerException en la vista
             List<Vehiculo> vehiculos = servicioVehiculo.obtenerVehiculosParaConductor(conductorId);
             model.put("viaje", viajeInputDTO);
             model.put("vehiculos", vehiculos);
@@ -141,119 +140,119 @@ public class ControladorViaje {
     }
 
     @GetMapping("/listar")
-public ModelAndView listarViajes(HttpSession session) { // QUITAMOS el 'throws UsuarioInexistente'
-    ModelMap model = new ModelMap();
+    public ModelAndView listarViajes(HttpSession session) {
+        ModelMap model = new ModelMap();
 
-    Object usuarioIdObj = session.getAttribute("usuarioId");
-    Object rol = session.getAttribute("rol");
+        // CLAVES CORREGIDAS
+        Object usuarioIdObj = session.getAttribute("idUsuario");
+        Object rol = session.getAttribute("ROL");
 
-    // 1. Validación de Sesión y Rol (Se mantiene)
-    if (usuarioIdObj == null || !"CONDUCTOR".equals(rol)) {
-        model.put("error", "Debés iniciar sesión como conductor");
-        return new ModelAndView("errorAcceso", model);
+        // 1. Validación de Sesión y Rol
+        if (usuarioIdObj == null || !"CONDUCTOR".equals(rol)) {
+            // Si falla la validación inicial, redirige al login.
+            return new ModelAndView("redirect:/login", model);
+        }
+
+        Long conductorId = (Long) usuarioIdObj;
+
+        try {
+            // 2. BUSCAR AL CONDUCTOR
+            Conductor conductorEnSesion = servicioConductor.obtenerConductor(conductorId);
+
+            // 3. Listar Viajes
+            List<Viaje> listaViajes = servicioViaje.listarViajesPorConductor(conductorEnSesion);
+
+            // dtos para la vista
+            List<ViajeVistaDTO> listaViajesDTO = listaViajes.stream()
+                    .map(ViajeVistaDTO::new)
+                    .collect(Collectors.toList());
+
+            model.put("listaViajes", listaViajesDTO);
+            return new ModelAndView("listarViajesConductor", model);
+
+        } catch (UsuarioInexistente e) {
+            // MANEJO DEL ERROR DE BÚSQUEDA POR ID (Sesión válida, pero usuario borrado de DB)
+            model.put("error", "Error interno: El conductor de la sesión no fue encontrado.");
+            return new ModelAndView("errorAcceso", model);
+
+        } catch (UsuarioNoAutorizadoException e) {
+            // MANEJO DEL ERROR DE AUTORIZACIÓN
+            model.put("error", "No tenés permisos para ver los viajes");
+            return new ModelAndView("errorAcceso", model);
+        }
     }
-
-    Long conductorId = (Long) usuarioIdObj;
-    Conductor conductorEnSesion; // Declaramos aquí
-
-    try {
-        // 2. BUSCAR AL CONDUCTOR (El servicio lanza la excepción si no lo encuentra)
-        conductorEnSesion = servicioConductor.obtenerConductor(conductorId);
-
-        // 3. Listar Viajes (Llamada al servicio de Viaje)
-        List<Viaje> listaViajes = servicioViaje.listarViajesPorConductor(conductorEnSesion);
-
-        // dtos para la vista
-        List<ViajeVistaDTO> listaViajesDTO = listaViajes.stream()
-                .map(ViajeVistaDTO::new)
-                .collect(Collectors.toList());
-
-        model.put("listaViajes", listaViajesDTO);
-        return new ModelAndView("listarViajesConductor", model);
-
-    } catch (UsuarioInexistente e) {
-        // MANEJO DEL ERROR DE BÚSQUEDA POR ID
-        model.put("error", "Error interno: El conductor de la sesión no fue encontrado.");
-        return new ModelAndView("errorAcceso", model);
-
-    } catch (UsuarioNoAutorizadoException e) {
-        // MANEJO DEL ERROR DE AUTORIZACIÓN (si el servicio lo lanza por conductor=null, aunque ya chequeamos)
-        model.put("error", "No tenés permisos para ver los viajes");
-        return new ModelAndView("errorAcceso", model);
-    }
-}
 
     @GetMapping("/cancelarViaje/{id}")
     public ModelAndView irACancelarViaje(@PathVariable Long id, HttpSession session) throws NotFoundException {
         ModelMap model = new ModelMap();
 
-        Object usuarioId = session.getAttribute("usuarioId");
-        Object rol = session.getAttribute("rol");
+        // CLAVES CORREGIDAS
+        Object usuarioId = session.getAttribute("idUsuario");
+        Object rol = session.getAttribute("ROL");
 
         // Validación de sesión
         if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
-            return new ModelAndView("redirect:/conductor/login");
+            return new ModelAndView("redirect:/login");
         }
 
-        Usuario usuarioEnSesion = new Usuario();
-        usuarioEnSesion.setId((Long) usuarioId);
-        usuarioEnSesion.setRol((String) rol);
-
         try {
-        Viaje viaje = servicioViaje.obtenerViajePorId(id);
-        ViajeVistaDTO viajeDTO = new ViajeVistaDTO(viaje);
+            Viaje viaje = servicioViaje.obtenerViajePorId(id);
+            ViajeVistaDTO viajeDTO = new ViajeVistaDTO(viaje);
 
-        model.put("viaje", viajeDTO);
-        return new ModelAndView("cancelarViaje", model);
+            model.put("viaje", viajeDTO);
+            return new ModelAndView("cancelarViaje", model);
 
-    } catch (ViajeNoEncontradoException e) {
-        model.put("error", "No se encontró el viaje especificado.");
-        return new ModelAndView("errorCancelarViaje", model);
-    } catch (UsuarioNoAutorizadoException e) {
-        model.put("error", "No tiene permisos para acceder a este viaje.");
-        return new ModelAndView("errorCancelarViaje", model);
+        } catch (ViajeNoEncontradoException e) {
+            model.put("error", "No se encontró el viaje especificado.");
+            return new ModelAndView("errorCancelarViaje", model);
+        } catch (UsuarioNoAutorizadoException e) {
+            model.put("error", "No tiene permisos para acceder a este viaje.");
+            return new ModelAndView("errorCancelarViaje", model);
+        }
     }
-}
 
     @PostMapping("/cancelarViaje")
     public ModelAndView cancelarViaje(@RequestParam Long id, HttpSession session) {
         ModelMap model = new ModelMap();
 
-        Object usuarioId = session.getAttribute("usuarioId");
-        Object rol = session.getAttribute("rol");
+        // CLAVES CORREGIDAS
+        Object usuarioIdObj = session.getAttribute("idUsuario");
+        Object rol = session.getAttribute("ROL");
 
-        if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
-        return new ModelAndView("redirect:/conductor/login");
+        if (usuarioIdObj == null || !"CONDUCTOR".equals(rol)) {
+            return new ModelAndView("redirect:/login");
         }
 
-        Usuario usuarioEnSesion = new Usuario();
-        usuarioEnSesion.setId((Long) usuarioId);
-        usuarioEnSesion.setRol((String) rol);
+
+        Long conductorId = (Long) usuarioIdObj;
+        Conductor conductorEnSesion;
 
         try {
-        servicioViaje.cancelarViaje(id, usuarioEnSesion);
-        model.put("exito", "El viaje fue cancelado exitosamente.");
-        return new ModelAndView("redirect:/viaje/listar");
+            conductorEnSesion = servicioConductor.obtenerConductor(conductorId);
+            servicioViaje.cancelarViaje(id, conductorEnSesion);
+            model.put("exito", "El viaje fue cancelado exitosamente.");
+            return new ModelAndView("redirect:/viaje/listar");
 
-    } catch (ViajeNoEncontradoException e) {
-        model.put("error", "No se encontró el viaje especificado.");
-    } catch (UsuarioNoAutorizadoException e) {
-        model.put("error", "No tiene permisos para cancelar este viaje.");
-    } catch (ViajeNoCancelableException e) {
-        model.put("error", "El viaje no se puede cancelar en este estado.");
-    } catch (Exception e) {
-        model.put("error", "Ocurrió un error al intentar cancelar el viaje.");
+        } catch (ViajeNoEncontradoException e) {
+            model.put("error", "No se encontró el viaje especificado.");
+        } catch (UsuarioNoAutorizadoException e) {
+            model.put("error", "No tiene permisos para cancelar este viaje.");
+        } catch (ViajeNoCancelableException e) {
+            model.put("error", "El viaje no se puede cancelar en este estado.");
+        } catch (UsuarioInexistente e) {
+            // Manejamos UsuarioInexistente que puede lanzar obtenerConductor, aunque el flujo no lo cubra directamente en el try/catch
+            model.put("error", "Error interno: El conductor de la sesión no fue encontrado.");
+        } catch (Exception e) {
+            model.put("error", "Ocurrió un error al intentar cancelar el viaje.");
+        }
+
+        return new ModelAndView("errorCancelarViaje", model);
+
     }
-
-    return new ModelAndView("errorCancelarViaje", model);
-
-    }
-
-
 
 
     @GetMapping("/detalle")
-    public ModelAndView verDetalleDeUnViaje(HttpSession httpSession , @RequestParam("id") Long id) {
+    public ModelAndView verDetalleDeUnViaje(HttpSession httpSession, @RequestParam("id") Long id) {
         ModelMap model = new ModelMap();
        /* Object rol = httpSession.getAttribute("rol");
         if (rol == null || !rol.equals("CONDUCTOR")) {
@@ -264,14 +263,15 @@ public ModelAndView listarViajes(HttpSession session) { // QUITAMOS el 'throws U
         try {
             Viaje viaje = servicioViaje.obtenerDetalleDeViaje(id);
             DetalleViajeOutputDTO detalleViajeOutputDTO = new DetalleViajeOutputDTO(viaje);
-            model.put("detalle" , detalleViajeOutputDTO);
-            return  new ModelAndView("detalleViaje" , model);
+            model.put("detalle", detalleViajeOutputDTO);
+            return new ModelAndView("detalleViaje", model);
 
         } catch (NotFoundException e) {
-            model.put("error" , e.getMessage());
-            return new ModelAndView("detalleViaje" , model);
+            model.put("error", e.getMessage());
+            return new ModelAndView("detalleViaje", model);
         }
     }
+
     /**
      * Resuelve el nombre de una ciudad a una entidad Ciudad usando Nominatim.
      * Busca en la base de datos si ya existe (por latitud/longitud), o la crea si no existe.
@@ -279,7 +279,7 @@ public ModelAndView listarViajes(HttpSession session) { // QUITAMOS el 'throws U
      * @param nombreCompleto Nombre completo de la ciudad elegido del autocomplete
      * @return Ciudad entity guardada en base de datos
      * @throws NominatimResponseException si no se encuentra la ciudad
-     * @throws JsonProcessingException si hay error parseando la respuesta de Nominatim
+     * @throws JsonProcessingException    si hay error parseando la respuesta de Nominatim
      */
     private Ciudad resolverCiudad(String nombreCompleto) throws NominatimResponseException, JsonProcessingException {
         // Buscar ciudad en Nominatim
@@ -299,10 +299,10 @@ public ModelAndView listarViajes(HttpSession session) { // QUITAMOS el 'throws U
      * Crea una lista de Paradas a partir de nombres de ciudades.
      *
      * @param nombres Lista de nombres completos de ciudades
-     * @param viaje Viaje al que pertenecen las paradas
+     * @param viaje   Viaje al que pertenecen las paradas
      * @return Lista de Paradas con orden asignado
      * @throws NominatimResponseException si no se encuentra alguna ciudad
-     * @throws JsonProcessingException si hay error parseando respuesta de Nominatim
+     * @throws JsonProcessingException    si hay error parseando respuesta de Nominatim
      */
     private List<Parada> crearParadasDesdeNombres(List<String> nombres, Viaje viaje)
             throws NominatimResponseException, JsonProcessingException {

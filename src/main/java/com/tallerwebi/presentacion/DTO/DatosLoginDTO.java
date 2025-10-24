@@ -1,15 +1,21 @@
 package com.tallerwebi.presentacion.DTO;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
+
+@Getter 
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
-public class ConductorLoginDTO {
+
+public class DatosLoginDTO {
+
     private String email;
-    private String contrasenia;
+    private String password;
+
+
 }

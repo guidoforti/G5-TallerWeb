@@ -17,37 +17,14 @@ import java.util.Objects;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "conductor")
-public class Conductor {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String nombre;
-    private String email;
-    private String contrasenia;
+@PrimaryKeyJoinColumn(name = "usuario_id")
+public class Conductor extends Usuario {
 
     @Column(name = "fecha_de_vencimiento_licencia")
     private LocalDate fechaDeVencimientoLicencia;
-
     @OneToMany(mappedBy = "conductor")
     private List<Viaje> viajes;
-
-    //ESTO PUEDE CONVERTIRSE EN UNA ENTITY LICENCIA A FUTURO
-
     @OneToMany(mappedBy = "conductor", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<Vehiculo> vehiculos;
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Conductor)) return false;
-        Conductor that = (Conductor) o;
-        return Objects.equals(email, that.email); // or your identity fields
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(email);
-    }
 }

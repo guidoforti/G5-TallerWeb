@@ -14,16 +14,11 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "viajero")
-public class Viajero {
+@PrimaryKeyJoinColumn(name = "usuario_id")
+public class Viajero extends Usuario {
 
-     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String nombre;
     private Integer edad;
-    private String email;
-    private String contrasenia;
+
     // Relación muchos a muchos con Viaje
     @ManyToMany(mappedBy = "viajeros")
     private List<Viaje> viajes;
