@@ -33,3 +33,48 @@ VALUES (4, 'JKL012', 'Ford Focus', '2018', 5, 0, 2);
 
 INSERT INTO vehiculo (id, patente, modelo, anio, asientos_totales, estado_verificacion, conductor_id)
 VALUES (5, 'MNO345', 'Chevrolet Cruze', '2022', 5, 1, 2);
+
+-- 5️⃣ USUARIO VIAJERO (ID 3)
+-- La inserción debe ir primero a la tabla base
+INSERT INTO usuario (id, email, contrasenia, nombre, rol, activo)
+VALUES (3, 'maria.gomez@unlam.edu.ar', 'viajero123', 'María Gómez', 'VIAJERO', TRUE);
+
+-- 6️⃣ VIAJERO ESPECÍFICO (JOINED)
+-- Se inserta en la tabla específica usando el ID del usuario viajero (ID 3)
+INSERT INTO viajero (usuario_id, edad)
+VALUES (3, 28);
+
+-- 7️⃣ CIUDADES (Coordinates from Nominatim API)
+INSERT INTO ciudad (id, nombre, latitud, longitud)
+VALUES (1, 'Buenos Aires', -34.6095579, -58.3887904);
+
+INSERT INTO ciudad (id, nombre, latitud, longitud)
+VALUES (2, 'Córdoba', -31.4166867, -64.1834193);
+
+INSERT INTO ciudad (id, nombre, latitud, longitud)
+VALUES (3, 'Rosario', -32.9593609, -60.6617024);
+
+INSERT INTO ciudad (id, nombre, latitud, longitud)
+VALUES (4, 'Ciudad de Mendoza', -32.8894155, -68.8446177);
+
+-- 8️⃣ VIAJES DE PRUEBA
+-- Estado: 0=DISPONIBLE, 1=COMPLETO, 2=FINALIZADO, 3=CANCELADO
+-- Viaje 1: Buenos Aires → Córdoba (DISPONIBLE, futuro)
+INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion)
+VALUES (1, 1, 2, 2, 1, '2025-10-30 08:00:00', 3, 5000.00, 0, CURRENT_TIMESTAMP);
+
+-- Viaje 2: Buenos Aires → Rosario (DISPONIBLE, futuro)
+INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion)
+VALUES (2, 1, 3, 2, 2, '2025-11-01 10:00:00', 4, 3500.00, 0, CURRENT_TIMESTAMP);
+
+-- Viaje 3: Córdoba → Buenos Aires (COMPLETO, futuro)
+INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion)
+VALUES (3, 2, 1, 2, 3, '2025-11-05 14:00:00', 0, 4800.00, 1, CURRENT_TIMESTAMP);
+
+-- Viaje 4: Buenos Aires → Ciudad de Mendoza (DISPONIBLE, futuro, más caro)
+INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion)
+VALUES (4, 1, 4, 2, 5, '2025-11-10 06:00:00', 2, 12000.00, 0, CURRENT_TIMESTAMP);
+
+-- Viaje 5: Buenos Aires → Córdoba (FINALIZADO, pasado)
+INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion)
+VALUES (5, 1, 2, 2, 1, '2025-10-20 09:00:00', 0, 4500.00, 2, CURRENT_TIMESTAMP);

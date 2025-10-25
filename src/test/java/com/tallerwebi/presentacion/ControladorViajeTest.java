@@ -4,6 +4,7 @@ import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Entity.Viaje;
+import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.Enums.EstadoVerificacion;
 import com.tallerwebi.dominio.IServicio.ServicioCiudad;
 import com.tallerwebi.dominio.IServicio.ServicioNominatim;
@@ -395,7 +396,7 @@ public class ControladorViajeTest {
         when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
         when(servicioViajeMock.obtenerDetalleDeViaje(viajeId)).thenReturn(viajeMock);
 
-        // Descomentar cuando se active la validación
+        // Descomentar cuando se activate la validación
         // when
         // ModelAndView mav = controladorViaje.verDetalleDeUnViaje(sessionMock, viajeId);
 
@@ -403,6 +404,210 @@ public class ControladorViajeTest {
         // assertThat(mav.getViewName(), equalTo("detalleViaje"));
         // assertThat(mav.getModel().containsKey("detalle"), equalTo(true));
         // verify(servicioViajeMock, times(1)).obtenerDetalleDeViaje(viajeId);
+    }
+
+    // ==================== TESTS FOR SEARCH FEATURE ====================
+
+    @Test
+    public void deberiaRetornarVistaBuscarViajeConFormularioVacio() {
+        // given
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
+
+        // when
+        ModelAndView mav = controladorViaje.buscarViaje(sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("buscarViaje"));
+        assertThat(mav.getModel().containsKey("busqueda"), is(true));
+        assertThat(mav.getModel().get("busqueda"), instanceOf(com.tallerwebi.presentacion.DTO.InputsDTO.BusquedaViajeInputDTO.class));
+    }
+
+    @Test
+    public void deberiaRedirigirALoginSiNoHaySesionEnBuscar() {
+        // given
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(null);
+
+        // when
+        ModelAndView mav = controladorViaje.buscarViaje(sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("redirect:/login"));
+    }
+
+    @Test
+    public void deberiaBuscarYRetornarViajesDisponibles() throws Exception {
+        // given
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
+
+        Ciudad origen = new Ciudad(1L, "Buenos Aires", -34.6037f, -58.3816f);
+        Ciudad destino = new Ciudad(2L, "Córdoba", -31.4201f, -64.1888f);
+
+        Conductor conductor = new Conductor();
+        conductor.setId(1L);
+        conductor.setNombre("Juan");
+
+        Vehiculo vehiculo = new Vehiculo();
+        vehiculo.setId(1L);
+        vehiculo.setModelo("Toyota");
+        vehiculo.setPatente("ABC123");
+
+        Viaje viaje1 = new Viaje();
+        viaje1.setId(1L);
+        viaje1.setOrigen(origen);
+        viaje1.setDestino(destino);
+        viaje1.setConductor(conductor);
+        viaje1.setVehiculo(vehiculo);
+        viaje1.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
+        viaje1.setPrecio(1500.0);
+        viaje1.setAsientosDisponibles(3);
+        viaje1.setEstado(EstadoDeViaje.DISPONIBLE);
+
+        List<Viaje> viajes = Arrays.asList(viaje1);
+
+        when(servicioViajeMock.buscarViajesDisponibles(
+                any(Ciudad.class),
+                any(Ciudad.class),
+                any(),
+                any(),
+                any()
+        )).thenReturn(viajes);
+
+        com.tallerwebi.presentacion.DTO.InputsDTO.BusquedaViajeInputDTO busquedaDTO =
+            new com.tallerwebi.presentacion.DTO.InputsDTO.BusquedaViajeInputDTO();
+        busquedaDTO.setNombreCiudadOrigen("Buenos Aires");
+        busquedaDTO.setNombreCiudadDestino("Córdoba");
+
+        // when
+        ModelAndView mav = controladorViaje.buscarViajePost(busquedaDTO, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("buscarViaje"));
+        assertThat(mav.getModel().containsKey("resultados"), is(true));
+
+        @SuppressWarnings("unchecked")
+        List<com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeResultadoDTO> resultados =
+            (List<com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeResultadoDTO>) mav.getModel().get("resultados");
+
+        assertThat(resultados, hasSize(1));
+        assertThat(resultados.get(0).getId(), equalTo(1L));
+        assertThat(resultados.get(0).getNombreConductor(), equalTo("Juan"));
+        assertThat(resultados.get(0).getOrigen(), equalTo("Buenos Aires"));
+        assertThat(resultados.get(0).getDestino(), equalTo("Córdoba"));
+        assertThat(resultados.get(0).getPrecio(), equalTo(1500.0));
+
+        verify(servicioViajeMock).buscarViajesDisponibles(
+                any(Ciudad.class),
+                any(Ciudad.class),
+                any(),
+                any(),
+                any()
+        );
+    }
+
+    @Test
+    public void deberiaRetornarMensajeCuandoNoHayResultados() throws Exception {
+        // given
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
+
+        when(servicioViajeMock.buscarViajesDisponibles(
+                any(Ciudad.class),
+                any(Ciudad.class),
+                any(),
+                any(),
+                any()
+        )).thenReturn(new ArrayList<>());
+
+        com.tallerwebi.presentacion.DTO.InputsDTO.BusquedaViajeInputDTO busquedaDTO =
+            new com.tallerwebi.presentacion.DTO.InputsDTO.BusquedaViajeInputDTO();
+        busquedaDTO.setNombreCiudadOrigen("Buenos Aires");
+        busquedaDTO.setNombreCiudadDestino("Córdoba");
+
+        // when
+        ModelAndView mav = controladorViaje.buscarViajePost(busquedaDTO, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("buscarViaje"));
+        assertThat(mav.getModel().containsKey("mensaje"), is(true));
+        assertThat(mav.getModel().get("mensaje").toString(),
+            equalTo("No se encontraron viajes disponibles con los filtros seleccionados."));
+
+        @SuppressWarnings("unchecked")
+        List<com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeResultadoDTO> resultados =
+            (List<com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeResultadoDTO>) mav.getModel().get("resultados");
+
+        assertThat(resultados, empty());
+    }
+
+    @Test
+    public void deberiaManejarErrorDeNominatim() throws Exception {
+        // given
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
+
+        when(servicioNominatimMock.buscarCiudadPorInputCompleto("CiudadInexistente"))
+                .thenThrow(new com.tallerwebi.dominio.excepcion.NominatimResponseException("Ciudad no encontrada"));
+
+        com.tallerwebi.presentacion.DTO.InputsDTO.BusquedaViajeInputDTO busquedaDTO =
+            new com.tallerwebi.presentacion.DTO.InputsDTO.BusquedaViajeInputDTO();
+        busquedaDTO.setNombreCiudadOrigen("CiudadInexistente");
+        busquedaDTO.setNombreCiudadDestino("Córdoba");
+
+        // when
+        ModelAndView mav = controladorViaje.buscarViajePost(busquedaDTO, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("buscarViaje"));
+        assertThat(mav.getModel().containsKey("error"), is(true));
+        assertThat(mav.getModel().get("error").toString(), containsString("Error al buscar las ciudades"));
+    }
+
+    @Test
+    public void deberiaAplicarFiltrosDePrecio() throws Exception {
+        // given
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
+
+        when(servicioViajeMock.buscarViajesDisponibles(
+                any(Ciudad.class),
+                any(Ciudad.class),
+                any(),
+                eq(1000.0),
+                eq(2000.0)
+        )).thenReturn(new ArrayList<>());
+
+        com.tallerwebi.presentacion.DTO.InputsDTO.BusquedaViajeInputDTO busquedaDTO =
+            new com.tallerwebi.presentacion.DTO.InputsDTO.BusquedaViajeInputDTO();
+        busquedaDTO.setNombreCiudadOrigen("Buenos Aires");
+        busquedaDTO.setNombreCiudadDestino("Córdoba");
+        busquedaDTO.setPrecioMin(1000.0);
+        busquedaDTO.setPrecioMax(2000.0);
+
+        // when
+        controladorViaje.buscarViajePost(busquedaDTO, sessionMock);
+
+        // then
+        verify(servicioViajeMock).buscarViajesDisponibles(
+                any(Ciudad.class),
+                any(Ciudad.class),
+                any(),
+                eq(1000.0),
+                eq(2000.0)
+        );
+    }
+
+    @Test
+    public void deberiaRedirigirALoginSiNoHaySesionEnBuscarPost() {
+        // given
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(null);
+
+        com.tallerwebi.presentacion.DTO.InputsDTO.BusquedaViajeInputDTO busquedaDTO =
+            new com.tallerwebi.presentacion.DTO.InputsDTO.BusquedaViajeInputDTO();
+        busquedaDTO.setNombreCiudadOrigen("Buenos Aires");
+        busquedaDTO.setNombreCiudadDestino("Córdoba");
+
+        // when
+        ModelAndView mav = controladorViaje.buscarViajePost(busquedaDTO, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("redirect:/login"));
     }
 
 }

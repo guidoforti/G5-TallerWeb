@@ -1,10 +1,12 @@
 package com.tallerwebi.dominio.IServicio;
 
+import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Parada;
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.excepcion.*;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ServicioViaje {
@@ -19,4 +21,5 @@ public interface ServicioViaje {
 
     // En ServicioViaje.java
     Viaje obtenerViajeConParadas(Long id) throws NotFoundException;
+    List<Viaje> buscarViajesDisponibles(Ciudad origen, Ciudad destino, LocalDateTime fechaSalida, Double precioMin, Double precioMax) throws DatoObligatorioException;
 }
