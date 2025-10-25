@@ -11,6 +11,7 @@ import com.tallerwebi.dominio.IServicio.ServicioNominatim;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
+import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.excepcion.NotFoundException;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -47,6 +48,7 @@ public class ControladorViajeTest {
     private ServicioNominatim servicioNominatimMock;
     private ServicioCiudad servicioCiudadMock;
     private ServicioConductor servicioConductorMock;
+    private ServicioReserva servicioReservaMock;
     private HttpSession sessionMock;
 
     @BeforeEach
@@ -56,7 +58,8 @@ public class ControladorViajeTest {
         servicioNominatimMock = mock(ServicioNominatim.class);
         servicioCiudadMock = mock(ServicioCiudad.class);
         servicioConductorMock = mock(ServicioConductor.class);
-        controladorViaje = new ControladorViaje(servicioViajeMock, servicioVehiculoMock, servicioNominatimMock, servicioCiudadMock, servicioConductorMock);
+        servicioReservaMock = mock(ServicioReserva.class);
+        controladorViaje = new ControladorViaje(servicioViajeMock, servicioVehiculoMock, servicioNominatimMock, servicioCiudadMock, servicioConductorMock, servicioReservaMock);
         sessionMock = mock(HttpSession.class);
 
         // Setup mocks por defecto para Nominatim y Ciudad
@@ -315,7 +318,7 @@ public class ControladorViajeTest {
         viajeMock.setDestino(destino);
         viajeMock.setVehiculo(vehiculo);
         viajeMock.setParadas(new ArrayList<>());  // Lista vacía de paradas
-        viajeMock.setViajeros(new ArrayList<>()); // Lista vacía de viajeros
+        viajeMock.setReservas(new ArrayList<>()); // Lista vacía de viajeros
 
         when(servicioViajeMock.obtenerDetalleDeViaje(viajeId)).thenReturn(viajeMock);
 
@@ -391,7 +394,7 @@ public class ControladorViajeTest {
         viajeMock.setDestino(destino);
         viajeMock.setVehiculo(vehiculo);
         viajeMock.setParadas(new ArrayList<>());
-        viajeMock.setViajeros(new ArrayList<>());
+        viajeMock.setReservas(new ArrayList<>());
 
         when(sessionMock.getAttribute("rol")).thenReturn("CONDUCTOR");
         when(servicioViajeMock.obtenerDetalleDeViaje(viajeId)).thenReturn(viajeMock);

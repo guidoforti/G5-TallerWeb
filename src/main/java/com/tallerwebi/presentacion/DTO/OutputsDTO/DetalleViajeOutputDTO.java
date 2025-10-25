@@ -26,13 +26,11 @@ public class DetalleViajeOutputDTO {
     private LocalDateTime fechaHoraDeSalida;
     private Integer asientosDisponibles;
 
-    public DetalleViajeOutputDTO (Viaje viaje) {
+    public DetalleViajeOutputDTO (Viaje viaje, List<ViajeroDTO> viajeros) {
         this.origen = new CiudadDTO(viaje.getOrigen());
         this.destino = new CiudadDTO(viaje.getDestino());
         this.vehiculo = new VehiculoOutputDTO(viaje.getVehiculo());
-        this.viajeros = viaje.getViajeros().stream()
-                .map(v -> new ViajeroDTO(v))
-                .collect(Collectors.toList());
+        this.viajeros = viajeros;
         this.paradas = viaje.getParadas().stream()
                 .map(p -> new ParadaDTO(p))
                 .collect(Collectors.toList());

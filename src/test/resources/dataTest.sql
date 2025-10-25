@@ -64,12 +64,6 @@ VALUES (1, 1, 1, 1),
        (5, 1, 3, 3),
        (6, 2, 1, 3);
 
--- 6️⃣ VIAJE_VIAJERO
--- Usamos los IDs de viajero de la tabla usuario (4, 5, 6)
-INSERT INTO viaje_viajero (viaje_id, viajero_id)
-VALUES (1, 4), -- Sofia Torres (ID 4)
-       (1, 5), -- Martin Diaz (ID 5)
-       (2, 5), -- Martin Diaz (ID 5)
-       (2, 6), -- Lucia Fernandez (ID 6)
-       (3, 4), -- Sofia Torres (ID 4)
-       (3, 6); -- Lucia Fernandez (ID 6)
+-- 6️⃣ RESERVAS
+-- Dejamos la tabla vacía para que los tests de repositorio puedan crear sus propios datos de prueba
+-- Los tests necesitan un estado limpio para verificar correctamente las operaciones CRUD

@@ -62,7 +62,7 @@ public class Datos {
         viajero1.setRol("VIAJERO");
         viajero1.setActivo(true);
         viajero1.setEdad(25);
-        viajero1.setViajes(new ArrayList<>());
+        viajero1.setReservas(new ArrayList<>());
 
         viajero2.setId(5L);
         viajero2.setNombre("Luis Garcia");
@@ -71,7 +71,7 @@ public class Datos {
         viajero2.setRol("VIAJERO");
         viajero2.setActivo(true);
         viajero2.setEdad(30);
-        viajero2.setViajes(new ArrayList<>());
+        viajero2.setReservas(new ArrayList<>());
 
         viajero3.setId(6L);
         viajero3.setNombre("Sofia Lopez");
@@ -80,7 +80,7 @@ public class Datos {
         viajero3.setRol("VIAJERO");
         viajero3.setActivo(true);
         viajero3.setEdad(28);
-        viajero3.setViajes(new ArrayList<>());
+        viajero3.setReservas(new ArrayList<>());
     }
 
     // ==== Vehículos ====

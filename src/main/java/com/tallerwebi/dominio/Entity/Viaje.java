@@ -33,14 +33,13 @@ public class Viaje {
     @JoinColumn(name = "vehiculo_id")
     private Vehiculo vehiculo;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "viaje_viajero", // Nombre de la tabla intermedia
-            joinColumns = @JoinColumn(name = "viaje_id"), // Columna que referencia a Viaje
-            inverseJoinColumns = @JoinColumn(name = "viajero_id") // Columna que referencia a Viajero
-    )
-    private List<Viajero> viajeros;
+    // Optimistic locking para concurrencia
+    @Version
+    private Long version;
 
+    // Relación con reservas
+    @OneToMany(mappedBy = "viaje", fetch = FetchType.LAZY)
+    private List<Reserva> reservas = new ArrayList<>();
 
     // Lista de paradas
     @OneToMany(mappedBy = "viaje", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -53,7 +53,7 @@ public class ServicioViajeImpl implements ServicioViaje {
         Hibernate.initialize(viaje.getVehiculo());
 
 
-        Hibernate.initialize(viaje.getViajeros());
+        Hibernate.initialize(viaje.getReservas());
         Hibernate.initialize(viaje.getParadas());
 
 

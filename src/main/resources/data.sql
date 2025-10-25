@@ -78,3 +78,12 @@ VALUES (4, 1, 4, 2, 5, '2025-11-10 06:00:00', 2, 12000.00, 0, CURRENT_TIMESTAMP)
 -- Viaje 5: Buenos Aires → Córdoba (FINALIZADO, pasado)
 INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion)
 VALUES (5, 1, 2, 2, 1, '2025-10-20 09:00:00', 0, 4500.00, 2, CURRENT_TIMESTAMP);
+
+-- 9️⃣ RESERVAS DE PRUEBA
+-- Estados: 0=PENDIENTE, 1=CONFIRMADA, 2=RECHAZADA, 3=CANCELADA_POR_VIAJERO
+-- Reserva del viajero María Gómez (ID 3) para algunos viajes
+INSERT INTO reserva (id, viaje_id, viajero_id, fecha_solicitud, estado, motivo_rechazo)
+VALUES (1, 1, 3, '2025-10-25 10:00:00', 0, NULL);  -- PENDIENTE para viaje a Córdoba
+
+INSERT INTO reserva (id, viaje_id, viajero_id, fecha_solicitud, estado, motivo_rechazo)
+VALUES (2, 5, 3, '2025-10-19 15:00:00', 1, NULL);  -- CONFIRMADA para viaje finalizado

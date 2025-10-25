@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -19,8 +20,8 @@ public class Viajero extends Usuario {
 
     private Integer edad;
 
-    // Relación muchos a muchos con Viaje
-    @ManyToMany(mappedBy = "viajeros")
-    private List<Viaje> viajes;
+    // Relación con reservas
+    @OneToMany(mappedBy = "viajero", fetch = FetchType.LAZY)
+    private List<Reserva> reservas = new ArrayList<>();
 
 }
