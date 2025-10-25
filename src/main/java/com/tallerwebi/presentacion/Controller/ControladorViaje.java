@@ -1,7 +1,6 @@
 package com.tallerwebi.presentacion.Controller;
 
 import com.tallerwebi.dominio.Entity.Conductor;
-import com.tallerwebi.dominio.Entity.Usuario;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Parada;
@@ -16,13 +15,11 @@ import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
 import com.tallerwebi.dominio.excepcion.ViajeNoCancelableException;
 import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
+import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeEdicionDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeVistaDTO;
 import com.tallerwebi.dominio.excepcion.NominatimResponseException;
 import com.tallerwebi.dominio.excepcion.NotFoundException;
-import com.tallerwebi.dominio.excepcion.NotFoundException;
-import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
-import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import com.tallerwebi.presentacion.DTO.NominatimResponse;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.DetalleViajeOutputDTO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -271,6 +268,111 @@ public class ControladorViaje {
             return new ModelAndView("detalleViaje", model);
         }
     }
+
+    @GetMapping("/editar/{id}")
+    public ModelAndView mostrarFormularioEdicion(HttpSession httpSession, @PathVariable Long id) throws UsuarioNoAutorizadoException, ViajeNoEncontradoException, NotFoundException, UsuarioInexistente {
+        ModelMap model = new ModelMap();
+        //prueba
+        // CLAVES CORREGIDAS
+        Object usuarioId = httpSession.getAttribute("idUsuario");
+        Object rol = httpSession.getAttribute("ROL");
+        if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
+            Exception e = new UsuarioNoAutorizadoException("usuario no autorizado");
+            model.addAttribute("error", e.getMessage());
+            return new ModelAndView("usuarioNoAutorizado", model);
+        }
+
+
+        // Obtener el viaje existente
+        Viaje viaje = servicioViaje.obtenerViajeConParadas(id);
+
+        // Verificar que el viaje pertenezca al conductor
+        if (!viaje.getConductor().getId().equals(usuarioId)) {
+            throw new UsuarioNoAutorizadoException("No tienes permiso para editar este viaje");
+        }
+        Long conductorId = (Long) usuarioId;
+        Conductor conductorEnSesion;
+        conductorEnSesion = servicioConductor.obtenerConductor(conductorId);
+        // Convertir a DTO para el formulario
+
+        ViajeEdicionDTO viajeDTO = new ViajeEdicionDTO();
+        viajeDTO.setId(viaje.getId());
+        viajeDTO.setNombreCiudadOrigen(viaje.getOrigen().getNombre());
+        viajeDTO.setNombreCiudadDestino(viaje.getDestino().getNombre());
+        viajeDTO.setVehiculoId(viaje.getVehiculo().getId());
+        viajeDTO.setFechaHoraDeSalida(viaje.getFechaHoraDeSalida());
+        viajeDTO.setPrecio(viaje.getPrecio());
+        viajeDTO.setAsientosDisponibles(viaje.getAsientosDisponibles());
+        List<String> paradas = viaje.getParadas().stream()
+                .map(parada -> parada.getCiudad().getNombre())  // Obtener el nombre de la ciudad
+                .collect(Collectors.toList());
+        viajeDTO.setNombreParadas(paradas);
+        model.addAttribute("viaje", viajeDTO);
+        model.addAttribute("vehiculos", servicioVehiculo.obtenerVehiculosParaConductor(conductorEnSesion.getId()));
+        return new ModelAndView("editarViaje", model);
+    }
+
+    @PostMapping("/editar")
+    public ModelAndView editarViajer(HttpSession httpSession, @ModelAttribute("viaje") ViajeEdicionDTO viaje) throws UsuarioInexistente {
+        ModelMap model = new ModelMap();
+        Object usuarioId = httpSession.getAttribute("idUsuario");
+        Object rol = httpSession.getAttribute("ROL");
+
+        if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
+            Exception e = new UsuarioNoAutorizadoException("usuario no autorizado");
+            model.addAttribute("error", e.getMessage());
+            return new ModelAndView("usuarioNoAutorizado", model);
+        }
+        Long conductorId = (Long) usuarioId;
+        Conductor conductorEnSesion;
+        conductorEnSesion = servicioConductor.obtenerConductor(conductorId);
+
+
+        try {
+            // Obtener el viaje existente
+            Viaje viajeExistente = servicioViaje.obtenerViajeConParadas(viaje.getId());
+
+            // Verificar que el viaje pertenece al conductor
+            if (!viajeExistente.getConductor().getId().equals(usuarioId)) {
+                model.addAttribute("error", "No tienes permiso para editar este viaje");
+                return new ModelAndView("usuarioNoAutorizado", model);
+            }
+
+            // Resolver ciudades en el controlador
+            Ciudad origen = resolverCiudad(viaje.getNombreCiudadOrigen());
+            Ciudad destino = resolverCiudad(viaje.getNombreCiudadDestino());
+
+            // Resolver ciudades de las paradas
+            List<Parada> paradasActualizadas = new ArrayList<>();
+            if (viaje.getNombreParadas() != null) {
+                for (int i = 0; i < viaje.getNombreParadas().size(); i++) {
+                    String nombreParada = viaje.getNombreParadas().get(i);
+                    if (nombreParada != null && !nombreParada.trim().isEmpty()) {
+                        Ciudad ciudadParada = resolverCiudad(nombreParada.trim());
+                        Parada parada = new Parada(ciudadParada, i + 1);
+                        parada.setViaje(viajeExistente);
+                        paradasActualizadas.add(parada);
+                    }
+                }
+            }
+
+            // Convertir DTO a entidad con las ciudades resueltas
+            Vehiculo vehiculo = servicioVehiculo.getById(viaje.getVehiculoId());
+            Viaje viajeActualizado = viaje.toEntity(origen, destino, vehiculo);
+            viajeActualizado.setId(viaje.getId());
+
+            // Llamar al servicio para modificar el viaje con las paradas ya resueltas
+            servicioViaje.modificarViaje(viajeActualizado, paradasActualizadas);
+
+            model.put("exito", "Se modificó el viaje con éxito");
+            return new ModelAndView("redirect:/viaje/listar", model);
+
+        } catch (Exception e) {
+            model.addAttribute("error", "Error al modificar el viaje: " + e.getMessage());
+            return new ModelAndView("editarViaje", model);
+        }
+    }
+
 
     /**
      * Resuelve el nombre de una ciudad a una entidad Ciudad usando Nominatim.
