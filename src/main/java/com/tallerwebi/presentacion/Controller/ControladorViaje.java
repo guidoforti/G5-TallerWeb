@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpSession;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -94,11 +95,17 @@ public class ControladorViaje {
             Ciudad origen = resolverCiudad(busquedaDTO.getNombreCiudadOrigen());
             Ciudad destino = resolverCiudad(busquedaDTO.getNombreCiudadDestino());
 
+            // Convertir LocalDate a LocalDateTime (inicio del día)
+            LocalDateTime fechaSalidaDateTime = null;
+            if (busquedaDTO.getFechaSalida() != null) {
+                fechaSalidaDateTime = busquedaDTO.getFechaSalida().atStartOfDay();
+            }
+
             // Buscar viajes disponibles
             List<Viaje> viajes = servicioViaje.buscarViajesDisponibles(
                 origen,
                 destino,
-                busquedaDTO.getFechaSalida(),
+                fechaSalidaDateTime,
                 busquedaDTO.getPrecioMin(),
                 busquedaDTO.getPrecioMax()
             );

@@ -64,13 +64,13 @@
                             <div class="row">
                                 <!-- Fecha de salida -->
                                 <div class="col-md-4 mb-3">
-                                    <label for="fechaSalida" class="form-label">Fecha de Salida (opcional)</label>
-                                    <input type="datetime-local"
+                                    <label for="fechaSalida" class="form-label">Desde qué fecha (opcional)</label>
+                                    <input type="date"
                                            id="fechaSalida"
                                            th:field="*{fechaSalida}"
                                            class="form-control">
                                     <small class="form-text text-muted">
-                                        Si no especificás, se buscan desde ahora
+                                        Buscar viajes desde esta fecha en adelante
                                     </small>
                                 </div>
 
