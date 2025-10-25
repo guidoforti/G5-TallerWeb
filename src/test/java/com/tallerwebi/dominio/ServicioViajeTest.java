@@ -912,4 +912,223 @@ conductor.setRol("CONDUCTOR");
 
         return viaje;
     }
+
+    // ==================== TESTS FOR buscarViajesDisponibles ====================
+
+    @Test
+    void deberiaBuscarViajesDisponiblesConEstadosDisponibleYCompleto() throws Exception {
+        // given
+        Ciudad origen = new Ciudad(1L, "Buenos Aires", -34.6037f, -58.3816f);
+        Ciudad destino = new Ciudad(2L, "Córdoba", -31.4201f, -64.1888f);
+
+        List<Viaje> viajesEsperados = Arrays.asList(crearViajeDeTest(), crearViajeDeTest());
+        List<EstadoDeViaje> estadosPermitidos = Arrays.asList(EstadoDeViaje.DISPONIBLE, EstadoDeViaje.COMPLETO);
+
+        when(viajeRepositoryMock.buscarViajesPorFiltros(
+                eq(origen),
+                eq(destino),
+                eq(estadosPermitidos),
+                any(LocalDateTime.class),
+                eq(null),
+                eq(null)
+        )).thenReturn(viajesEsperados);
+
+        // when
+        List<Viaje> resultados = servicioViaje.buscarViajesDisponibles(origen, destino, null, null, null);
+
+        // then
+        assertThat(resultados, hasSize(2));
+        verify(viajeRepositoryMock).buscarViajesPorFiltros(
+                eq(origen),
+                eq(destino),
+                eq(estadosPermitidos),
+                any(LocalDateTime.class),
+                eq(null),
+                eq(null)
+        );
+    }
+
+    @Test
+    void deberiaUsarFechaActualComoMinimoSiFechaSalidaEsNull() throws Exception {
+        // given
+        Ciudad origen = new Ciudad(1L, "Buenos Aires", -34.6037f, -58.3816f);
+        Ciudad destino = new Ciudad(2L, "Córdoba", -31.4201f, -64.1888f);
+
+        when(viajeRepositoryMock.buscarViajesPorFiltros(
+                any(Ciudad.class),
+                any(Ciudad.class),
+                anyList(),
+                any(LocalDateTime.class),
+                any(),
+                any()
+        )).thenReturn(new ArrayList<>());
+
+        // when
+        servicioViaje.buscarViajesDisponibles(origen, destino, null, null, null);
+
+        // then
+        ArgumentCaptor<LocalDateTime> fechaCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+        verify(viajeRepositoryMock).buscarViajesPorFiltros(
+                any(Ciudad.class),
+                any(Ciudad.class),
+                anyList(),
+                fechaCaptor.capture(),
+                any(),
+                any()
+        );
+
+        LocalDateTime fechaUsada = fechaCaptor.getValue();
+        assertNotNull(fechaUsada);
+        // Should be close to LocalDateTime.now()
+        assertTrue(fechaUsada.isBefore(LocalDateTime.now().plusMinutes(1)));
+    }
+
+    @Test
+    void deberiaRetornarListaVaciaCuandoNoHayResultados() throws Exception {
+        // given
+        Ciudad origen = new Ciudad(1L, "Buenos Aires", -34.6037f, -58.3816f);
+        Ciudad destino = new Ciudad(2L, "Córdoba", -31.4201f, -64.1888f);
+
+        when(viajeRepositoryMock.buscarViajesPorFiltros(
+                any(Ciudad.class),
+                any(Ciudad.class),
+                anyList(),
+                any(LocalDateTime.class),
+                any(),
+                any()
+        )).thenReturn(new ArrayList<>());
+
+        // when
+        List<Viaje> resultados = servicioViaje.buscarViajesDisponibles(origen, destino, null, null, null);
+
+        // then
+        assertNotNull(resultados);
+        assertThat(resultados, empty());
+    }
+
+    @Test
+    void deberiaFiltrarPorRangoDePrecioCuandoSeProvee() throws Exception {
+        // given
+        Ciudad origen = new Ciudad(1L, "Buenos Aires", -34.6037f, -58.3816f);
+        Ciudad destino = new Ciudad(2L, "Córdoba", -31.4201f, -64.1888f);
+        Double precioMin = 1000.0;
+        Double precioMax = 2000.0;
+
+        when(viajeRepositoryMock.buscarViajesPorFiltros(
+                any(Ciudad.class),
+                any(Ciudad.class),
+                anyList(),
+                any(LocalDateTime.class),
+                eq(precioMin),
+                eq(precioMax)
+        )).thenReturn(new ArrayList<>());
+
+        // when
+        servicioViaje.buscarViajesDisponibles(origen, destino, null, precioMin, precioMax);
+
+        // then
+        verify(viajeRepositoryMock).buscarViajesPorFiltros(
+                eq(origen),
+                eq(destino),
+                anyList(),
+                any(LocalDateTime.class),
+                eq(precioMin),
+                eq(precioMax)
+        );
+    }
+
+    @Test
+    void deberiaExcluirViajesEnFechaPasada() throws Exception {
+        // given
+        Ciudad origen = new Ciudad(1L, "Buenos Aires", -34.6037f, -58.3816f);
+        Ciudad destino = new Ciudad(2L, "Córdoba", -31.4201f, -64.1888f);
+        LocalDateTime fechaFutura = LocalDateTime.now().plusDays(2);
+
+        when(viajeRepositoryMock.buscarViajesPorFiltros(
+                any(Ciudad.class),
+                any(Ciudad.class),
+                anyList(),
+                eq(fechaFutura),
+                any(),
+                any()
+        )).thenReturn(new ArrayList<>());
+
+        // when
+        servicioViaje.buscarViajesDisponibles(origen, destino, fechaFutura, null, null);
+
+        // then
+        verify(viajeRepositoryMock).buscarViajesPorFiltros(
+                eq(origen),
+                eq(destino),
+                anyList(),
+                eq(fechaFutura),
+                eq(null),
+                eq(null)
+        );
+    }
+
+    @Test
+    void deberiaLanzarExcepcionSiOrigenEsNull() {
+        // given
+        Ciudad destino = new Ciudad(2L, "Córdoba", -31.4201f, -64.1888f);
+
+        // when & then
+        DatoObligatorioException exception = assertThrows(
+                DatoObligatorioException.class,
+                () -> servicioViaje.buscarViajesDisponibles(null, destino, null, null, null)
+        );
+
+        assertThat(exception.getMessage(), containsString("origen"));
+    }
+
+    @Test
+    void deberiaLanzarExcepcionSiDestinoEsNull() {
+        // given
+        Ciudad origen = new Ciudad(1L, "Buenos Aires", -34.6037f, -58.3816f);
+
+        // when & then
+        DatoObligatorioException exception = assertThrows(
+                DatoObligatorioException.class,
+                () -> servicioViaje.buscarViajesDisponibles(origen, null, null, null, null)
+        );
+
+        assertThat(exception.getMessage(), containsString("destino"));
+    }
+
+    @Test
+    void noDeberiaIncluirViajesFinalizadosOCancelados() throws Exception {
+        // given
+        Ciudad origen = new Ciudad(1L, "Buenos Aires", -34.6037f, -58.3816f);
+        Ciudad destino = new Ciudad(2L, "Córdoba", -31.4201f, -64.1888f);
+
+        List<EstadoDeViaje> estadosPermitidos = Arrays.asList(EstadoDeViaje.DISPONIBLE, EstadoDeViaje.COMPLETO);
+
+        when(viajeRepositoryMock.buscarViajesPorFiltros(
+                eq(origen),
+                eq(destino),
+                eq(estadosPermitidos),
+                any(LocalDateTime.class),
+                any(),
+                any()
+        )).thenReturn(new ArrayList<>());
+
+        // when
+        servicioViaje.buscarViajesDisponibles(origen, destino, null, null, null);
+
+        // then - Verify that only DISPONIBLE and COMPLETO are allowed
+        ArgumentCaptor<List<EstadoDeViaje>> estadosCaptor = ArgumentCaptor.forClass(List.class);
+        verify(viajeRepositoryMock).buscarViajesPorFiltros(
+                any(Ciudad.class),
+                any(Ciudad.class),
+                estadosCaptor.capture(),
+                any(LocalDateTime.class),
+                any(),
+                any()
+        );
+
+        List<EstadoDeViaje> estadosUsados = estadosCaptor.getValue();
+        assertThat(estadosUsados, containsInAnyOrder(EstadoDeViaje.DISPONIBLE, EstadoDeViaje.COMPLETO));
+        assertThat(estadosUsados, not(hasItem(EstadoDeViaje.FINALIZADO)));
+        assertThat(estadosUsados, not(hasItem(EstadoDeViaje.CANCELADO)));
+    }
 }

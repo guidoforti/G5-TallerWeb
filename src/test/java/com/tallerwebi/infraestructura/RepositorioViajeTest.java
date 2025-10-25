@@ -493,4 +493,226 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
         assertNotNull(viajesEncontrados);
         assertTrue(viajesEncontrados.isEmpty(), "Debería retornar una lista vacía");
     }
+
+    // ==================== TESTS FOR buscarViajesPorFiltros ====================
+
+    @Test
+    void deberiaBuscarViajesPorOrigenYDestino() {
+        // given
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad cordoba = sessionFactory.getCurrentSession().get(Ciudad.class, 2L);
+        List<EstadoDeViaje> estados = Arrays.asList(EstadoDeViaje.DISPONIBLE, EstadoDeViaje.COMPLETO);
+
+        // when
+        List<Viaje> resultados = repositorioViaje.buscarViajesPorFiltros(
+                buenosAires,
+                cordoba,
+                estados,
+                null,
+                null,
+                null
+        );
+
+        // then
+        assertNotNull(resultados);
+        assertThat(resultados, hasSize(1));
+        assertThat(resultados.get(0).getOrigen().getId(), equalTo(buenosAires.getId()));
+        assertThat(resultados.get(0).getDestino().getId(), equalTo(cordoba.getId()));
+    }
+
+    @Test
+    void deberiaBuscarViajesConFiltrosDeEstado() {
+        // given
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad cordoba = sessionFactory.getCurrentSession().get(Ciudad.class, 2L);
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+        Vehiculo vehiculo = sessionFactory.getCurrentSession().get(Vehiculo.class, 1L);
+
+        // Create trip with COMPLETO state
+        Viaje viajeCompleto = new Viaje();
+        viajeCompleto.setOrigen(buenosAires);
+        viajeCompleto.setDestino(cordoba);
+        viajeCompleto.setConductor(conductor);
+        viajeCompleto.setVehiculo(vehiculo);
+        viajeCompleto.setEstado(EstadoDeViaje.COMPLETO);
+        viajeCompleto.setFechaHoraDeSalida(LocalDateTime.now().plusDays(2));
+        viajeCompleto.setPrecio(10000.0);
+        viajeCompleto.setAsientosDisponibles(0);
+        viajeCompleto.setFechaDeCreacion(LocalDateTime.now());
+        viajeCompleto.setViajeros(new ArrayList<>());
+        viajeCompleto.setParadas(new ArrayList<>());
+        repositorioViaje.guardarViaje(viajeCompleto);
+        sessionFactory.getCurrentSession().flush();
+
+        // when - Only search for COMPLETO
+        List<EstadoDeViaje> soloCompleto = Arrays.asList(EstadoDeViaje.COMPLETO);
+        List<Viaje> resultados = repositorioViaje.buscarViajesPorFiltros(
+                buenosAires,
+                cordoba,
+                soloCompleto,
+                null,
+                null,
+                null
+        );
+
+        // then
+        assertNotNull(resultados);
+        assertThat(resultados, hasSize(1));
+        assertThat(resultados.get(0).getEstado(), equalTo(EstadoDeViaje.COMPLETO));
+    }
+
+    @Test
+    void deberiaBuscarViajesConFiltrosDeFecha() {
+        // given
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad cordoba = sessionFactory.getCurrentSession().get(Ciudad.class, 2L);
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+        Vehiculo vehiculo = sessionFactory.getCurrentSession().get(Vehiculo.class, 1L);
+
+        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime mañana = ahora.plusDays(1);
+        LocalDateTime pasadoMañana = ahora.plusDays(2);
+
+        // Create trip for tomorrow
+        Viaje viajeMañana = new Viaje();
+        viajeMañana.setOrigen(buenosAires);
+        viajeMañana.setDestino(cordoba);
+        viajeMañana.setConductor(conductor);
+        viajeMañana.setVehiculo(vehiculo);
+        viajeMañana.setEstado(EstadoDeViaje.DISPONIBLE);
+        viajeMañana.setFechaHoraDeSalida(mañana);
+        viajeMañana.setPrecio(10000.0);
+        viajeMañana.setAsientosDisponibles(3);
+        viajeMañana.setFechaDeCreacion(ahora);
+        viajeMañana.setViajeros(new ArrayList<>());
+        viajeMañana.setParadas(new ArrayList<>());
+        repositorioViaje.guardarViaje(viajeMañana);
+
+        sessionFactory.getCurrentSession().flush();
+
+        // when - Search trips from pasado mañana (should exclude tomorrow's trip)
+        List<EstadoDeViaje> estados = Arrays.asList(EstadoDeViaje.DISPONIBLE);
+        List<Viaje> resultados = repositorioViaje.buscarViajesPorFiltros(
+                buenosAires,
+                cordoba,
+                estados,
+                pasadoMañana,
+                null,
+                null
+        );
+
+        // then - Should not include tomorrow's trip
+        assertNotNull(resultados);
+        assertTrue(resultados.stream().noneMatch(v -> v.getId().equals(viajeMañana.getId())),
+                "No debería incluir viajes antes de la fecha mínima");
+    }
+
+    @Test
+    void deberiaBuscarViajesConFiltrosDePrecio() {
+        // given
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad cordoba = sessionFactory.getCurrentSession().get(Ciudad.class, 2L);
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+        Vehiculo vehiculo = sessionFactory.getCurrentSession().get(Vehiculo.class, 1L);
+
+        // Create trip with price 5000
+        Viaje viajeBarato = new Viaje();
+        viajeBarato.setOrigen(buenosAires);
+        viajeBarato.setDestino(cordoba);
+        viajeBarato.setConductor(conductor);
+        viajeBarato.setVehiculo(vehiculo);
+        viajeBarato.setEstado(EstadoDeViaje.DISPONIBLE);
+        viajeBarato.setFechaHoraDeSalida(LocalDateTime.now().plusDays(3));
+        viajeBarato.setPrecio(5000.0);
+        viajeBarato.setAsientosDisponibles(3);
+        viajeBarato.setFechaDeCreacion(LocalDateTime.now());
+        viajeBarato.setViajeros(new ArrayList<>());
+        viajeBarato.setParadas(new ArrayList<>());
+        repositorioViaje.guardarViaje(viajeBarato);
+        sessionFactory.getCurrentSession().flush();
+
+        // when - Search with price range 6000-20000 (should exclude 5000 trip)
+        List<EstadoDeViaje> estados = Arrays.asList(EstadoDeViaje.DISPONIBLE);
+        List<Viaje> resultados = repositorioViaje.buscarViajesPorFiltros(
+                buenosAires,
+                cordoba,
+                estados,
+                null,
+                6000.0,
+                20000.0
+        );
+
+        // then
+        assertNotNull(resultados);
+        assertTrue(resultados.stream().noneMatch(v -> v.getId().equals(viajeBarato.getId())),
+                "No debería incluir viajes fuera del rango de precio");
+        assertTrue(resultados.stream().allMatch(v -> v.getPrecio() >= 6000.0 && v.getPrecio() <= 20000.0),
+                "Todos los viajes deben estar en el rango de precio");
+    }
+
+    @Test
+    void deberiaOrdenarResultadosPorFechaHoraDeSalidaAscendente() {
+        // given
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad cordoba = sessionFactory.getCurrentSession().get(Ciudad.class, 2L);
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+        Vehiculo vehiculo = sessionFactory.getCurrentSession().get(Vehiculo.class, 1L);
+
+        LocalDateTime ahora = LocalDateTime.now();
+
+        // Create trip for 5 days from now
+        Viaje viajeLejano = new Viaje();
+        viajeLejano.setOrigen(buenosAires);
+        viajeLejano.setDestino(cordoba);
+        viajeLejano.setConductor(conductor);
+        viajeLejano.setVehiculo(vehiculo);
+        viajeLejano.setEstado(EstadoDeViaje.DISPONIBLE);
+        viajeLejano.setFechaHoraDeSalida(ahora.plusDays(5));
+        viajeLejano.setPrecio(10000.0);
+        viajeLejano.setAsientosDisponibles(3);
+        viajeLejano.setFechaDeCreacion(ahora);
+        viajeLejano.setViajeros(new ArrayList<>());
+        viajeLejano.setParadas(new ArrayList<>());
+        repositorioViaje.guardarViaje(viajeLejano);
+
+        // Create trip for 2 days from now (closer)
+        Viaje viajeCercano = new Viaje();
+        viajeCercano.setOrigen(buenosAires);
+        viajeCercano.setDestino(cordoba);
+        viajeCercano.setConductor(conductor);
+        viajeCercano.setVehiculo(vehiculo);
+        viajeCercano.setEstado(EstadoDeViaje.DISPONIBLE);
+        viajeCercano.setFechaHoraDeSalida(ahora.plusDays(2));
+        viajeCercano.setPrecio(10000.0);
+        viajeCercano.setAsientosDisponibles(3);
+        viajeCercano.setFechaDeCreacion(ahora);
+        viajeCercano.setViajeros(new ArrayList<>());
+        viajeCercano.setParadas(new ArrayList<>());
+        repositorioViaje.guardarViaje(viajeCercano);
+
+        sessionFactory.getCurrentSession().flush();
+
+        // when
+        List<EstadoDeViaje> estados = Arrays.asList(EstadoDeViaje.DISPONIBLE);
+        List<Viaje> resultados = repositorioViaje.buscarViajesPorFiltros(
+                buenosAires,
+                cordoba,
+                estados,
+                null,
+                null,
+                null
+        );
+
+        // then
+        assertNotNull(resultados);
+        assertTrue(resultados.size() >= 2, "Debería haber al menos 2 viajes");
+
+        // Verify ascending order
+        for (int i = 0; i < resultados.size() - 1; i++) {
+            LocalDateTime fechaActual = resultados.get(i).getFechaHoraDeSalida();
+            LocalDateTime fechaSiguiente = resultados.get(i + 1).getFechaHoraDeSalida();
+            assertTrue(fechaActual.isBefore(fechaSiguiente) || fechaActual.isEqual(fechaSiguiente),
+                    "Los viajes deben estar ordenados por fecha de salida ascendente");
+        }
+    }
 }

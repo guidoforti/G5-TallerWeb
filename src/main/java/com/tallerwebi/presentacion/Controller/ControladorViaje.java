@@ -12,11 +12,14 @@ import com.tallerwebi.dominio.IServicio.ServicioNominatim;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
+import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
 import com.tallerwebi.dominio.excepcion.ViajeNoCancelableException;
 import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
+import com.tallerwebi.presentacion.DTO.InputsDTO.BusquedaViajeInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeResultadoDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeVistaDTO;
 import com.tallerwebi.dominio.excepcion.NominatimResponseException;
 import com.tallerwebi.dominio.excepcion.NotFoundException;
@@ -60,8 +63,78 @@ public class ControladorViaje {
     }
 
 
+    @GetMapping("/buscar")
+    public ModelAndView buscarViaje(HttpSession session) {
+        ModelMap model = new ModelMap();
+
+        // Validar sesión
+        Object usuarioId = session.getAttribute("idUsuario");
+        if (usuarioId == null) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        // Retornar vista con formulario vacío
+        model.put("busqueda", new BusquedaViajeInputDTO());
+        return new ModelAndView("buscarViaje", model);
+    }
+
+    @PostMapping("/buscar")
+    public ModelAndView buscarViajePost(@ModelAttribute("busqueda") BusquedaViajeInputDTO busquedaDTO,
+                                        HttpSession session) {
+        ModelMap model = new ModelMap();
+
+        // Validar sesión
+        Object usuarioId = session.getAttribute("idUsuario");
+        if (usuarioId == null) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        try {
+            // Resolver ciudades usando Nominatim
+            Ciudad origen = resolverCiudad(busquedaDTO.getNombreCiudadOrigen());
+            Ciudad destino = resolverCiudad(busquedaDTO.getNombreCiudadDestino());
+
+            // Buscar viajes disponibles
+            List<Viaje> viajes = servicioViaje.buscarViajesDisponibles(
+                origen,
+                destino,
+                busquedaDTO.getFechaSalida(),
+                busquedaDTO.getPrecioMin(),
+                busquedaDTO.getPrecioMax()
+            );
+
+            // Convertir a DTOs
+            List<ViajeResultadoDTO> resultados = viajes.stream()
+                .map(ViajeResultadoDTO::new)
+                .collect(Collectors.toList());
+
+            model.put("resultados", resultados);
+            model.put("busqueda", busquedaDTO);
+
+            // Si no hay resultados, agregar mensaje
+            if (resultados.isEmpty()) {
+                model.put("mensaje", "No se encontraron viajes disponibles con los filtros seleccionados.");
+            }
+
+            return new ModelAndView("buscarViaje", model);
+
+        } catch (NominatimResponseException e) {
+            model.put("error", "Error al buscar las ciudades: " + e.getMessage());
+            model.put("busqueda", busquedaDTO);
+            return new ModelAndView("buscarViaje", model);
+        } catch (DatoObligatorioException e) {
+            model.put("error", e.getMessage());
+            model.put("busqueda", busquedaDTO);
+            return new ModelAndView("buscarViaje", model);
+        } catch (Exception e) {
+            model.put("error", "Ocurrió un error al buscar viajes: " + e.getMessage());
+            model.put("busqueda", busquedaDTO);
+            return new ModelAndView("buscarViaje", model);
+        }
+    }
+
     @GetMapping("/buscarViaje")
-    public ModelAndView buscarViaje() {
+    public ModelAndView buscarViajePorId() {
         ModelMap model = new ModelMap();
         return new ModelAndView("buscarViajePorId", model);
     }

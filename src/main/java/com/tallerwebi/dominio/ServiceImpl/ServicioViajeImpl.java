@@ -1,5 +1,6 @@
 package com.tallerwebi.dominio.ServiceImpl;
 
+import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Parada;
@@ -182,13 +183,50 @@ public class ServicioViajeImpl implements ServicioViaje {
 
     @Override
     public List<Viaje> listarViajesPorConductor(Conductor conductor) throws UsuarioNoAutorizadoException {
-   
+
         if (conductor == null) {
             throw new UsuarioNoAutorizadoException("El conductor es nulo, la sesión no es válida.");
         }
 
         // obtener viajes del conductor
         return this.viajeRepository.findByConductorId(conductor.getId());
+    }
+
+    @Override
+    public List<Viaje> buscarViajesDisponibles(Ciudad origen, Ciudad destino, LocalDateTime fechaSalida, Double precioMin, Double precioMax) throws DatoObligatorioException {
+        // Validate mandatory fields
+        if (origen == null) {
+            throw new DatoObligatorioException("El origen es obligatorio");
+        }
+        if (destino == null) {
+            throw new DatoObligatorioException("El destino es obligatorio");
+        }
+
+        // Business rule: Define which estados are "disponibles"
+        List<EstadoDeViaje> estadosPermitidos = Arrays.asList(EstadoDeViaje.DISPONIBLE, EstadoDeViaje.COMPLETO);
+
+        // Business rule: No past trips - use current date/time if not provided
+        LocalDateTime fechaDesde = (fechaSalida != null) ? fechaSalida : LocalDateTime.now();
+
+        // Call repository with all parameters
+        List<Viaje> viajes = viajeRepository.buscarViajesPorFiltros(
+                origen,
+                destino,
+                estadosPermitidos,
+                fechaDesde,
+                precioMin,
+                precioMax
+        );
+
+        // Initialize lazy collections for each viaje
+        for (Viaje viaje : viajes) {
+            Hibernate.initialize(viaje.getConductor());
+            Hibernate.initialize(viaje.getVehiculo());
+            Hibernate.initialize(viaje.getOrigen());
+            Hibernate.initialize(viaje.getDestino());
+        }
+
+        return viajes;
     }
 
 }

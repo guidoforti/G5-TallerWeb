@@ -8,8 +8,10 @@ import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -79,5 +81,42 @@ public class RepositorioViajeImpl implements ViajeRepository {
                 .setParameter("destino", destino)
                 .setParameter("estados", estados)
                 .getResultList();
+    }
+
+    @Override
+    public List<Viaje> buscarViajesPorFiltros(Ciudad origen, Ciudad destino, List<EstadoDeViaje> estados, LocalDateTime fechaDesde, Double precioMin, Double precioMax) {
+        StringBuilder hql = new StringBuilder("SELECT v FROM Viaje v WHERE v.origen = :origen AND v.destino = :destino AND v.estado IN (:estados)");
+
+        // Add optional filters
+        if (fechaDesde != null) {
+            hql.append(" AND v.fechaHoraDeSalida >= :fechaDesde");
+        }
+        if (precioMin != null) {
+            hql.append(" AND v.precio >= :precioMin");
+        }
+        if (precioMax != null) {
+            hql.append(" AND v.precio <= :precioMax");
+        }
+
+        hql.append(" ORDER BY v.fechaHoraDeSalida ASC");
+
+        Query<Viaje> query = this.sessionFactory.getCurrentSession()
+                .createQuery(hql.toString(), Viaje.class)
+                .setParameter("origen", origen)
+                .setParameter("destino", destino)
+                .setParameter("estados", estados);
+
+        // Set optional parameters
+        if (fechaDesde != null) {
+            query.setParameter("fechaDesde", fechaDesde);
+        }
+        if (precioMin != null) {
+            query.setParameter("precioMin", precioMin);
+        }
+        if (precioMax != null) {
+            query.setParameter("precioMax", precioMax);
+        }
+
+        return query.getResultList();
     }
 }
