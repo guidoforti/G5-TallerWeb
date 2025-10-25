@@ -20,7 +20,7 @@ public class Vehiculo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String patente;
-    private String Modelo;
+    private String modelo;
     private String anio;
     @Column(name = "asientos_totales")
     private Integer asientosTotales;

@@ -3,23 +3,19 @@ package com.tallerwebi.dominio;
 import com.tallerwebi.dominio.Entity.*;
 import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Conductor;
-import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.Enums.EstadoVerificacion;
-import com.tallerwebi.dominio.IRepository.RepositorioConductor;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
-import com.tallerwebi.dominio.ServiceImpl.ServicioConductorImpl;
 import com.tallerwebi.dominio.ServiceImpl.ServicioViajeImpl;
 import com.tallerwebi.dominio.excepcion.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -38,29 +34,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 
-import com.tallerwebi.dominio.Entity.Vehiculo;
-import com.tallerwebi.dominio.Entity.Viaje;
-import com.tallerwebi.dominio.Enums.EstadoDeViaje;
-import com.tallerwebi.dominio.Enums.EstadoVerificacion;
-import com.tallerwebi.dominio.IRepository.ViajeRepository;
-import com.tallerwebi.dominio.IServicio.ServicioConductor;
-import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
-import com.tallerwebi.dominio.IServicio.ServicioViaje;
-import com.tallerwebi.dominio.ServiceImpl.ServicioViajeImpl;
-import com.tallerwebi.dominio.excepcion.*;
 import org.hibernate.Hibernate;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
 
 class ServicioViajeTest {
 

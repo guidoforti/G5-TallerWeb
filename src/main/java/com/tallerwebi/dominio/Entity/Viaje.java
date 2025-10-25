@@ -65,4 +65,8 @@ public class Viaje {
     private EstadoDeViaje estado;
 
 
+    public void agregarParada(Parada parada) {
+        paradas.add(parada);
+        parada.setViaje(this);
+    }
 }
