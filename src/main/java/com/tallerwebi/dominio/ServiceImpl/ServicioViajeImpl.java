@@ -1,12 +1,9 @@
 package com.tallerwebi.dominio.ServiceImpl;
 
-import com.tallerwebi.dominio.Entity.Usuario;
-import com.tallerwebi.dominio.Entity.Conductor;
-import com.tallerwebi.dominio.Entity.Parada;
-import com.tallerwebi.dominio.Entity.Vehiculo;
-import com.tallerwebi.dominio.Entity.Viaje;
+import com.tallerwebi.dominio.Entity.*;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
+import com.tallerwebi.dominio.IServicio.ServicioCiudad;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
@@ -18,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -60,6 +58,60 @@ public class ServicioViajeImpl implements ServicioViaje {
 
         for (Parada parada : viaje.getParadas()) {
             Hibernate.initialize(parada.getCiudad());
+        }
+
+        return viaje;
+    }
+
+    @Override
+    @Transactional
+    public void modificarViaje(Viaje viaje, List<Parada> paradas) throws BadRequestException {
+        if (viaje == null) {
+            throw new BadRequestException("El viaje no puede ser nulo");
+        }
+
+        // Obtener el viaje existente
+        Viaje viajeExistente = viajeRepository.findById(viaje.getId())
+                .orElseThrow(() -> new BadRequestException("El viaje no existe"));
+
+        // Validar estado
+        if (!viajeExistente.getEstado().equals(EstadoDeViaje.DISPONIBLE)) {
+            throw new BadRequestException("El viaje debe estar disponible para ser modificado");
+        }
+
+        // Validar asientos
+        if (viaje.getAsientosDisponibles() > viaje.getVehiculo().getAsientosTotales()) {
+            throw new BadRequestException("Los asientos disponibles no pueden ser mayores a los asientos totales del vehículo");
+        }
+
+        // Actualizar campos básicos
+        viajeExistente.setOrigen(viaje.getOrigen());
+        viajeExistente.setDestino(viaje.getDestino());
+        viajeExistente.setVehiculo(viaje.getVehiculo());
+        viajeExistente.setFechaHoraDeSalida(viaje.getFechaHoraDeSalida());
+        viajeExistente.setPrecio(viaje.getPrecio());
+        viajeExistente.setAsientosDisponibles(viaje.getAsientosDisponibles());
+
+        // Actualizar paradas
+        viajeExistente.getParadas().clear();
+        if (paradas != null) {
+            viajeExistente.getParadas().addAll(paradas);
+        }
+
+        viajeRepository.modificarViaje(viajeExistente);
+    }
+
+    @Override
+    public Viaje obtenerViajeConParadas(Long id) throws NotFoundException {
+        Viaje viaje = viajeRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("No se encontró el viaje"));
+
+        // Inicializar explícitamente las relaciones necesarias
+        Hibernate.initialize(viaje.getParadas());
+        if (viaje.getParadas() != null) {
+            for (Parada parada : viaje.getParadas()) {
+                Hibernate.initialize(parada.getCiudad());
+            }
         }
 
         return viaje;
