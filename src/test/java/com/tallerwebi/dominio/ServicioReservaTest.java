@@ -7,7 +7,6 @@ import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
-import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
@@ -33,15 +32,13 @@ class ServicioReservaTest {
     private ServicioReserva servicioReserva;
     private ServicioViaje servicioViaje;
     private ServicioViajero servicioViajero;
-    private ViajeRepository viajeRepositoryMock;
 
     @BeforeEach
     void setUp() {
         repositorioReservaMock = mock(ReservaRepository.class);
         servicioViaje = mock(ServicioViaje.class);
         servicioViajero = mock(ServicioViajero.class);
-        viajeRepositoryMock = mock(ViajeRepository.class);
-        servicioReserva = new ServicioReservaImpl(repositorioReservaMock, servicioViaje, servicioViajero, viajeRepositoryMock);
+        servicioReserva = new ServicioReservaImpl(repositorioReservaMock, servicioViaje, servicioViajero);
     }
 
     // --- TESTS DE SOLICITAR RESERVA ---
@@ -247,7 +244,7 @@ class ServicioReservaTest {
         reserva.setViaje(viaje);
 
         when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
-        when(viajeRepositoryMock.findById(viaje.getId())).thenReturn(Optional.of(viaje));
+        when(servicioViaje.obtenerViajePorId(viaje.getId())).thenReturn(viaje);
 
         // when
         servicioReserva.confirmarReserva(reservaId, conductorId);
@@ -255,7 +252,8 @@ class ServicioReservaTest {
         // then
         assertThat(reserva.getEstado(), is(EstadoReserva.CONFIRMADA));
         assertThat(viaje.getAsientosDisponibles(), is(2)); // Decrementado de 3 a 2
-        // No se verifica modificarViaje porque Hibernate usa dirty checking automático
+        // No se llama explícitamente a modificarViaje porque Hibernate usa dirty checking automático
+        // El viaje se actualizará automáticamente al finalizar la transacción
         verify(repositorioReservaMock, times(1)).update(reserva);
     }
 

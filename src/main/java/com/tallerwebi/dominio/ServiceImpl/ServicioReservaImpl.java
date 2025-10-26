@@ -5,7 +5,6 @@ import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
-import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
@@ -25,14 +24,12 @@ public class ServicioReservaImpl implements ServicioReserva {
     private final ReservaRepository reservaRepository;
     private final ServicioViaje servicioViaje;
     private final ServicioViajero servicioViajero;
-    private final ViajeRepository viajeRepository;
 
     @Autowired
-    public ServicioReservaImpl(ReservaRepository reservaRepository, ServicioViaje servicioViaje, ServicioViajero servicioViajero, ViajeRepository viajeRepository) {
+    public ServicioReservaImpl(ReservaRepository reservaRepository, ServicioViaje servicioViaje, ServicioViajero servicioViajero) {
         this.reservaRepository = reservaRepository;
         this.servicioViaje = servicioViaje;
         this.servicioViajero = servicioViajero;
-        this.viajeRepository = viajeRepository;
     }
 
     @Override
@@ -139,8 +136,7 @@ public class ServicioReservaImpl implements ServicioReserva {
         }
 
         // Obtener el viaje completo para asegurar que tenga todos los campos (incluido version)
-        Viaje viaje = viajeRepository.findById(reserva.getViaje().getId())
-                .orElseThrow(() -> new ViajeNoEncontradoException("No se encontró el viaje"));
+        Viaje viaje = servicioViaje.obtenerViajePorId(reserva.getViaje().getId());
 
         // Decrementar asientos disponibles
         viaje.setAsientosDisponibles(viaje.getAsientosDisponibles() - 1);
@@ -149,7 +145,7 @@ public class ServicioReservaImpl implements ServicioReserva {
         reserva.setEstado(EstadoReserva.CONFIRMADA);
 
         // No es necesario llamar a update/modificar porque Hibernate detectará los cambios automáticamente
-        // gracias a @Transactional y dirty checking
+        // gracias a @Transactional y dirty checking. El viaje se actualizará automáticamente.
         reservaRepository.update(reserva);
     }
 
