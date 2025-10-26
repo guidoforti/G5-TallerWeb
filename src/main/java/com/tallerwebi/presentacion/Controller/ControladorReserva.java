@@ -9,6 +9,7 @@ import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
 import com.tallerwebi.dominio.excepcion.*;
+import com.tallerwebi.presentacion.DTO.InputsDTO.RechazoReservaInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.SolicitudReservaInputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ReservaVistaDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeReservaSolicitudDTO;
@@ -207,5 +208,94 @@ public class ControladorReserva {
             model.put("error", e.getMessage());
             return new ModelAndView("error", model);
         }
+    }
+
+    /**
+     * Confirma una reserva pendiente
+     * POST /reserva/confirmar?reservaId={id}
+     */
+    @PostMapping("/confirmar")
+    public ModelAndView confirmarReserva(@RequestParam("reservaId") Long reservaId,
+                                         HttpSession session) {
+        ModelMap model = new ModelMap();
+
+        // Validar sesión
+        Object conductorId = session.getAttribute("idUsuario");
+        if (conductorId == null) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        try {
+            servicioReserva.confirmarReserva(reservaId, (Long) conductorId);
+            model.put("mensaje", "Reserva confirmada exitosamente");
+        } catch (NotFoundException e) {
+            model.put("error", "No se encontró la reserva");
+        } catch (UsuarioNoAutorizadoException e) {
+            model.put("error", "No tienes permiso");
+        } catch (SinAsientosDisponiblesException e) {
+            model.put("error", "No hay asientos disponibles");
+        } catch (ReservaYaExisteException | ViajeNoEncontradoException e) {
+            model.put("error", e.getMessage());
+        }
+
+        return new ModelAndView("redirect:/reserva/misReservas", model);
+    }
+
+    /**
+     * Muestra el formulario para rechazar una reserva
+     * GET /reserva/rechazar?reservaId={id}
+     */
+    @GetMapping("/rechazar")
+    public ModelAndView mostrarFormularioRechazo(@RequestParam("reservaId") Long reservaId,
+                                                 HttpSession session) {
+        ModelMap model = new ModelMap();
+
+        // Validar sesión
+        Object usuarioId = session.getAttribute("idUsuario");
+        if (usuarioId == null) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        // Preparar el DTO con el ID de la reserva
+        RechazoReservaInputDTO rechazoDTO = new RechazoReservaInputDTO();
+        rechazoDTO.setReservaId(reservaId);
+
+        model.put("rechazoDTO", rechazoDTO);
+        return new ModelAndView("rechazarReserva", model);
+    }
+
+    /**
+     * Procesa el rechazo de una reserva
+     * POST /reserva/rechazar
+     */
+    @PostMapping("/rechazar")
+    public ModelAndView rechazarReserva(@ModelAttribute("rechazoDTO") RechazoReservaInputDTO rechazoDTO,
+                                        HttpSession session) {
+        ModelMap model = new ModelMap();
+
+        // Validar sesión
+        Object conductorId = session.getAttribute("idUsuario");
+        if (conductorId == null) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        try {
+            servicioReserva.rechazarReserva(rechazoDTO.getReservaId(), (Long) conductorId, rechazoDTO.getMotivo());
+            model.put("mensaje", "Reserva rechazada exitosamente");
+            return new ModelAndView("redirect:/reserva/misReservas", model);
+
+        } catch (DatoObligatorioException e) {
+            model.put("error", "El motivo del rechazo es obligatorio");
+        } catch (NotFoundException e) {
+            model.put("error", "No se encontró la reserva");
+        } catch (UsuarioNoAutorizadoException e) {
+            model.put("error", "No tienes permiso");
+        } catch (ReservaYaExisteException e) {
+            model.put("error", e.getMessage());
+        }
+
+        // Si hubo error, volver a mostrar el formulario
+        model.put("rechazoDTO", rechazoDTO);
+        return new ModelAndView("rechazarReserva", model);
     }
 }

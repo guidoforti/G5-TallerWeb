@@ -1,11 +1,13 @@
 package com.tallerwebi.dominio;
 
+import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Reserva;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
+import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
@@ -31,13 +33,15 @@ class ServicioReservaTest {
     private ServicioReserva servicioReserva;
     private ServicioViaje servicioViaje;
     private ServicioViajero servicioViajero;
+    private ViajeRepository viajeRepositoryMock;
 
     @BeforeEach
     void setUp() {
         repositorioReservaMock = mock(ReservaRepository.class);
         servicioViaje = mock(ServicioViaje.class);
         servicioViajero = mock(ServicioViajero.class);
-        servicioReserva = new ServicioReservaImpl(repositorioReservaMock, servicioViaje, servicioViajero);
+        viajeRepositoryMock = mock(ViajeRepository.class);
+        servicioReserva = new ServicioReservaImpl(repositorioReservaMock, servicioViaje, servicioViajero, viajeRepositoryMock);
     }
 
     // --- TESTS DE SOLICITAR RESERVA ---
@@ -224,6 +228,259 @@ class ServicioReservaTest {
 
     // --- TESTS DE OBTENER VIAJEROS CONFIRMADOS ---
 
+
+    // --- TESTS DE CONFIRMAR RESERVA ---
+
+    @Test
+    void deberiaConfirmarReservaPendienteYDecrementarAsientos() throws Exception {
+        // given
+        Long reservaId = 1L;
+        Long conductorId = 1L;
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = crearViajeMock(1L, 3, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusDays(1));
+        viaje.setConductor(conductor);
+
+        Reserva reserva = crearReservaMock(reservaId, EstadoReserva.PENDIENTE);
+        reserva.setViaje(viaje);
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+        when(viajeRepositoryMock.findById(viaje.getId())).thenReturn(Optional.of(viaje));
+
+        // when
+        servicioReserva.confirmarReserva(reservaId, conductorId);
+
+        // then
+        assertThat(reserva.getEstado(), is(EstadoReserva.CONFIRMADA));
+        assertThat(viaje.getAsientosDisponibles(), is(2)); // Decrementado de 3 a 2
+        // No se verifica modificarViaje porque Hibernate usa dirty checking automático
+        verify(repositorioReservaMock, times(1)).update(reserva);
+    }
+
+    @Test
+    void deberiaLanzarExcepcionSiReservaNoExisteAlConfirmar() {
+        // given
+        Long reservaId = 999L;
+        Long conductorId = 1L;
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(NotFoundException.class, () -> {
+            servicioReserva.confirmarReserva(reservaId, conductorId);
+        });
+
+        verify(repositorioReservaMock, never()).update(any());
+    }
+
+    @Test
+    void deberiaLanzarExcepcionSiConductorNoEsDuenioDelViajeAlConfirmar() {
+        // given
+        Long reservaId = 1L;
+        Long conductorId = 1L;
+        Long otroConductorId = 2L;
+
+        Conductor conductor = new Conductor();
+        conductor.setId(otroConductorId); // Diferente conductor
+
+        Viaje viaje = crearViajeMock(1L, 3, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusDays(1));
+        viaje.setConductor(conductor);
+
+        Reserva reserva = crearReservaMock(reservaId, EstadoReserva.PENDIENTE);
+        reserva.setViaje(viaje);
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+
+        // when & then
+        assertThrows(UsuarioNoAutorizadoException.class, () -> {
+            servicioReserva.confirmarReserva(reservaId, conductorId);
+        });
+
+        verify(repositorioReservaMock, never()).update(any());
+    }
+
+    @Test
+    void deberiaLanzarExcepcionSiReservaNoEstaPendienteAlConfirmar() {
+        // given
+        Long reservaId = 1L;
+        Long conductorId = 1L;
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = crearViajeMock(1L, 3, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusDays(1));
+        viaje.setConductor(conductor);
+
+        Reserva reserva = crearReservaMock(reservaId, EstadoReserva.CONFIRMADA); // Ya confirmada
+        reserva.setViaje(viaje);
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+
+        // when & then
+        assertThrows(ReservaYaExisteException.class, () -> {
+            servicioReserva.confirmarReserva(reservaId, conductorId);
+        });
+
+        verify(repositorioReservaMock, never()).update(any());
+    }
+
+    @Test
+    void deberiaLanzarExcepcionSiNoHayAsientosDisponiblesAlConfirmar() {
+        // given
+        Long reservaId = 1L;
+        Long conductorId = 1L;
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = crearViajeMock(1L, 0, EstadoDeViaje.COMPLETO, LocalDateTime.now().plusDays(1)); // Sin asientos
+        viaje.setConductor(conductor);
+
+        Reserva reserva = crearReservaMock(reservaId, EstadoReserva.PENDIENTE);
+        reserva.setViaje(viaje);
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+
+        // when & then
+        assertThrows(SinAsientosDisponiblesException.class, () -> {
+            servicioReserva.confirmarReserva(reservaId, conductorId);
+        });
+
+        verify(repositorioReservaMock, never()).update(any());
+    }
+
+    // --- TESTS DE RECHAZAR RESERVA ---
+
+    @Test
+    void deberiaRechazarReservaPendienteConMotivo() throws Exception {
+        // given
+        Long reservaId = 1L;
+        Long conductorId = 1L;
+        String motivo = "No hay lugar para equipaje grande";
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = crearViajeMock(1L, 3, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusDays(1));
+        viaje.setConductor(conductor);
+
+        Reserva reserva = crearReservaMock(reservaId, EstadoReserva.PENDIENTE);
+        reserva.setViaje(viaje);
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+
+        // when
+        servicioReserva.rechazarReserva(reservaId, conductorId, motivo);
+
+        // then
+        assertThat(reserva.getEstado(), is(EstadoReserva.RECHAZADA));
+        assertThat(reserva.getMotivoRechazo(), is(motivo));
+        verify(repositorioReservaMock, times(1)).update(reserva);
+    }
+
+    @Test
+    void deberiaLanzarExcepcionSiMotivoEstaVacioAlRechazar() {
+        // given
+        Long reservaId = 1L;
+        Long conductorId = 1L;
+        String motivoVacio = "";
+
+        // when & then
+        assertThrows(DatoObligatorioException.class, () -> {
+            servicioReserva.rechazarReserva(reservaId, conductorId, motivoVacio);
+        });
+
+        verify(repositorioReservaMock, never()).findById(any());
+        verify(repositorioReservaMock, never()).update(any());
+    }
+
+    @Test
+    void deberiaLanzarExcepcionSiMotivoEsNullAlRechazar() {
+        // given
+        Long reservaId = 1L;
+        Long conductorId = 1L;
+        String motivoNull = null;
+
+        // when & then
+        assertThrows(DatoObligatorioException.class, () -> {
+            servicioReserva.rechazarReserva(reservaId, conductorId, motivoNull);
+        });
+
+        verify(repositorioReservaMock, never()).findById(any());
+        verify(repositorioReservaMock, never()).update(any());
+    }
+
+    @Test
+    void deberiaLanzarExcepcionSiReservaNoExisteAlRechazar() {
+        // given
+        Long reservaId = 999L;
+        Long conductorId = 1L;
+        String motivo = "Motivo válido";
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(NotFoundException.class, () -> {
+            servicioReserva.rechazarReserva(reservaId, conductorId, motivo);
+        });
+
+        verify(repositorioReservaMock, never()).update(any());
+    }
+
+    @Test
+    void deberiaLanzarExcepcionSiConductorNoEsDuenioDelViajeAlRechazar() {
+        // given
+        Long reservaId = 1L;
+        Long conductorId = 1L;
+        Long otroConductorId = 2L;
+        String motivo = "Motivo válido";
+
+        Conductor conductor = new Conductor();
+        conductor.setId(otroConductorId);
+
+        Viaje viaje = crearViajeMock(1L, 3, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusDays(1));
+        viaje.setConductor(conductor);
+
+        Reserva reserva = crearReservaMock(reservaId, EstadoReserva.PENDIENTE);
+        reserva.setViaje(viaje);
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+
+        // when & then
+        assertThrows(UsuarioNoAutorizadoException.class, () -> {
+            servicioReserva.rechazarReserva(reservaId, conductorId, motivo);
+        });
+
+        verify(repositorioReservaMock, never()).update(any());
+    }
+
+    @Test
+    void deberiaLanzarExcepcionSiReservaNoEstaPendienteAlRechazar() {
+        // given
+        Long reservaId = 1L;
+        Long conductorId = 1L;
+        String motivo = "Motivo válido";
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = crearViajeMock(1L, 3, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusDays(1));
+        viaje.setConductor(conductor);
+
+        Reserva reserva = crearReservaMock(reservaId, EstadoReserva.RECHAZADA); // Ya rechazada
+        reserva.setViaje(viaje);
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+
+        // when & then
+        assertThrows(ReservaYaExisteException.class, () -> {
+            servicioReserva.rechazarReserva(reservaId, conductorId, motivo);
+        });
+
+        verify(repositorioReservaMock, never()).update(any());
+    }
 
     // --- MÉTODOS AUXILIARES PARA CREAR MOCKS ---
 

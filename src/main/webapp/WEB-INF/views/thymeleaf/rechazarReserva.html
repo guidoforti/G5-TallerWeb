@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/fragments :: head('UnRumbo - Rechazar Reserva')">
+    <th:block th:fragment="extra">
+        <style>
+            .form-card {
+                max-width: 600px;
+                margin: 0 auto;
+            }
+            .text-unrumbo {
+                color: #E16A3D;
+            }
+            .btn-unrumbo {
+                background-color: #E16A3D;
+                border-color: #E16A3D;
+                color: white;
+            }
+            .btn-unrumbo:hover {
+                background-color: #c5552f;
+                border-color: #c5552f;
+                color: white;
+            }
+        </style>
+    </th:block>
+</head>
+
+<body>
+<nav th:replace="fragments/fragments :: navbar"></nav>
+
+<main role="main" class="container py-4" style="margin-top: 100px;">
+    <div class="row">
+        <div class="col-12">
+            <div class="card form-card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-x-circle me-2"></i>
+                        Rechazar Reserva
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Mensaje de error -->
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Error:</strong> <span th:text="${error}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Importante:</strong> El viajero recibirá una notificación con el motivo de rechazo.
+                    </div>
+
+                    <form th:action="@{/reserva/rechazar}" method="post" th:object="${rechazoDTO}">
+                        <!-- ID de la reserva (hidden) -->
+                        <input type="hidden" th:field="*{reservaId}" />
+
+                        <!-- Campo de motivo -->
+                        <div class="mb-3">
+                            <label for="motivo" class="form-label fw-bold">
+                                Motivo del rechazo <span class="text-danger">*</span>
+                            </label>
+                            <textarea
+                                class="form-control"
+                                id="motivo"
+                                name="motivo"
+                                th:field="*{motivo}"
+                                rows="5"
+                                placeholder="Por favor, explica el motivo por el cual rechazas esta reserva..."
+                                required
+                                maxlength="500"></textarea>
+                            <small class="form-text text-muted">
+                                Máximo 500 caracteres. Sé claro y respetuoso.
+                            </small>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a th:href="@{/reserva/misReservas}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Rechazar Reserva
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Scripts -->
+<script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

@@ -60,4 +60,30 @@ public interface ServicioReserva {
      * @return Lista de viajeros confirmados
      */
     List<Viajero> obtenerViajerosConfirmados(Viaje viaje) throws ViajeNoEncontradoException, NotFoundException, UsuarioNoAutorizadoException;
+
+    /**
+     * Confirma una reserva pendiente y decrementa los asientos disponibles del viaje
+     *
+     * @param reservaId El ID de la reserva a confirmar
+     * @param conductorId El ID del conductor que confirma
+     * @throws NotFoundException Si no se encuentra la reserva
+     * @throws UsuarioNoAutorizadoException Si el conductor no es dueño del viaje
+     * @throws ReservaYaExisteException Si la reserva no está en estado PENDIENTE
+     * @throws SinAsientosDisponiblesException Si no hay asientos disponibles
+     * @throws ViajeNoEncontradoException Si no se encuentra el viaje
+     */
+    void confirmarReserva(Long reservaId, Long conductorId) throws NotFoundException, UsuarioNoAutorizadoException, ReservaYaExisteException, SinAsientosDisponiblesException, ViajeNoEncontradoException;
+
+    /**
+     * Rechaza una reserva pendiente con un motivo
+     *
+     * @param reservaId El ID de la reserva a rechazar
+     * @param conductorId El ID del conductor que rechaza
+     * @param motivo El motivo del rechazo (obligatorio)
+     * @throws NotFoundException Si no se encuentra la reserva
+     * @throws UsuarioNoAutorizadoException Si el conductor no es dueño del viaje
+     * @throws ReservaYaExisteException Si la reserva no está en estado PENDIENTE
+     * @throws DatoObligatorioException Si el motivo está vacío
+     */
+    void rechazarReserva(Long reservaId, Long conductorId, String motivo) throws NotFoundException, UsuarioNoAutorizadoException, ReservaYaExisteException, DatoObligatorioException;
 }

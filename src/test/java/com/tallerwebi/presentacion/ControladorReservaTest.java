@@ -10,6 +10,7 @@ import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
 import com.tallerwebi.dominio.excepcion.*;
 import com.tallerwebi.presentacion.Controller.ControladorReserva;
+import com.tallerwebi.presentacion.DTO.InputsDTO.RechazoReservaInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.SolicitudReservaInputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ReservaVistaDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeReservaSolicitudDTO;
@@ -299,5 +300,219 @@ public class ControladorReservaTest {
         // then
         assertThat(mav.getViewName(), is("redirect:/login"));
         verify(servicioReservaMock, never()).listarReservasPorViajero(any());
+    }
+
+    // --- TESTS DE CONFIRMAR RESERVA ---
+
+    @Test
+    public void deberiaConfirmarReservaExitosamente() throws Exception {
+        // given
+        Long conductorId = 1L;
+        Long reservaId = 10L;
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+        doNothing().when(servicioReservaMock).confirmarReserva(reservaId, conductorId);
+
+        // when
+        ModelAndView mav = controladorReserva.confirmarReserva(reservaId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("redirect:/reserva/misReservas"));
+        verify(servicioReservaMock, times(1)).confirmarReserva(reservaId, conductorId);
+    }
+
+    @Test
+    public void deberiaRedirigirALoginSiNoHaySesionEnConfirmar() throws Exception {
+        // given
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(null);
+
+        // when
+        ModelAndView mav = controladorReserva.confirmarReserva(1L, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("redirect:/login"));
+        verify(servicioReservaMock, never()).confirmarReserva(anyLong(), anyLong());
+    }
+
+    @Test
+    public void deberiaMostrarErrorSiReservaNoExisteAlConfirmar() throws Exception {
+        // given
+        Long conductorId = 1L;
+        Long reservaId = 999L;
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+        doThrow(new NotFoundException("No se encontró la reserva"))
+                .when(servicioReservaMock).confirmarReserva(reservaId, conductorId);
+
+        // when
+        ModelAndView mav = controladorReserva.confirmarReserva(reservaId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("redirect:/reserva/misReservas"));
+        assertThat(mav.getModel().get("error"), is("No se encontró la reserva"));
+        verify(servicioReservaMock, times(1)).confirmarReserva(reservaId, conductorId);
+    }
+
+    @Test
+    public void deberiaMostrarErrorSiConductorNoAutorizadoAlConfirmar() throws Exception {
+        // given
+        Long conductorId = 1L;
+        Long reservaId = 10L;
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+        doThrow(new UsuarioNoAutorizadoException("No tienes permiso"))
+                .when(servicioReservaMock).confirmarReserva(reservaId, conductorId);
+
+        // when
+        ModelAndView mav = controladorReserva.confirmarReserva(reservaId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("redirect:/reserva/misReservas"));
+        assertThat(mav.getModel().get("error"), is("No tienes permiso"));
+        verify(servicioReservaMock, times(1)).confirmarReserva(reservaId, conductorId);
+    }
+
+    @Test
+    public void deberiaMostrarErrorSiNoHayAsientosDisponiblesAlConfirmar() throws Exception {
+        // given
+        Long conductorId = 1L;
+        Long reservaId = 10L;
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+        doThrow(new SinAsientosDisponiblesException("No hay asientos disponibles"))
+                .when(servicioReservaMock).confirmarReserva(reservaId, conductorId);
+
+        // when
+        ModelAndView mav = controladorReserva.confirmarReserva(reservaId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("redirect:/reserva/misReservas"));
+        assertThat(mav.getModel().get("error"), is("No hay asientos disponibles"));
+        verify(servicioReservaMock, times(1)).confirmarReserva(reservaId, conductorId);
+    }
+
+    // --- TESTS DE RECHAZAR RESERVA (GET - MOSTRAR FORMULARIO) ---
+
+    @Test
+    public void deberiaMostrarFormularioRechazo() {
+        // given
+        Long conductorId = 1L;
+        Long reservaId = 10L;
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+
+        // when
+        ModelAndView mav = controladorReserva.mostrarFormularioRechazo(reservaId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("rechazarReserva"));
+        assertThat(mav.getModel().get("rechazoDTO"), instanceOf(RechazoReservaInputDTO.class));
+        RechazoReservaInputDTO dto = (RechazoReservaInputDTO) mav.getModel().get("rechazoDTO");
+        assertThat(dto.getReservaId(), is(reservaId));
+    }
+
+    @Test
+    public void deberiaRedirigirALoginSiNoHaySesionEnFormularioRechazo() {
+        // given
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(null);
+
+        // when
+        ModelAndView mav = controladorReserva.mostrarFormularioRechazo(1L, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("redirect:/login"));
+    }
+
+    // --- TESTS DE RECHAZAR RESERVA (POST - PROCESAR RECHAZO) ---
+
+    @Test
+    public void deberiaRechazarReservaExitosamente() throws Exception {
+        // given
+        Long conductorId = 1L;
+        RechazoReservaInputDTO rechazoDTO = new RechazoReservaInputDTO(10L, "No hay espacio suficiente");
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+        doNothing().when(servicioReservaMock).rechazarReserva(rechazoDTO.getReservaId(), conductorId, rechazoDTO.getMotivo());
+
+        // when
+        ModelAndView mav = controladorReserva.rechazarReserva(rechazoDTO, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("redirect:/reserva/misReservas"));
+        verify(servicioReservaMock, times(1)).rechazarReserva(rechazoDTO.getReservaId(), conductorId, rechazoDTO.getMotivo());
+    }
+
+    @Test
+    public void deberiaRedirigirALoginSiNoHaySesionEnRechazar() throws Exception {
+        // given
+        RechazoReservaInputDTO rechazoDTO = new RechazoReservaInputDTO(10L, "Motivo");
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(null);
+
+        // when
+        ModelAndView mav = controladorReserva.rechazarReserva(rechazoDTO, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("redirect:/login"));
+        verify(servicioReservaMock, never()).rechazarReserva(anyLong(), anyLong(), anyString());
+    }
+
+    @Test
+    public void deberiaMostrarErrorSiMotivoVacioAlRechazar() throws Exception {
+        // given
+        Long conductorId = 1L;
+        RechazoReservaInputDTO rechazoDTO = new RechazoReservaInputDTO(10L, "");
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+        doThrow(new DatoObligatorioException("El motivo del rechazo es obligatorio"))
+                .when(servicioReservaMock).rechazarReserva(rechazoDTO.getReservaId(), conductorId, rechazoDTO.getMotivo());
+
+        // when
+        ModelAndView mav = controladorReserva.rechazarReserva(rechazoDTO, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("rechazarReserva"));
+        assertThat(mav.getModel().get("error"), is("El motivo del rechazo es obligatorio"));
+        assertThat(mav.getModel().get("rechazoDTO"), is(rechazoDTO));
+        verify(servicioReservaMock, times(1)).rechazarReserva(rechazoDTO.getReservaId(), conductorId, rechazoDTO.getMotivo());
+    }
+
+    @Test
+    public void deberiaMostrarErrorSiReservaNoExisteAlRechazar() throws Exception {
+        // given
+        Long conductorId = 1L;
+        RechazoReservaInputDTO rechazoDTO = new RechazoReservaInputDTO(999L, "Motivo");
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+        doThrow(new NotFoundException("No se encontró la reserva"))
+                .when(servicioReservaMock).rechazarReserva(rechazoDTO.getReservaId(), conductorId, rechazoDTO.getMotivo());
+
+        // when
+        ModelAndView mav = controladorReserva.rechazarReserva(rechazoDTO, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("rechazarReserva"));
+        assertThat(mav.getModel().get("error"), is("No se encontró la reserva"));
+        assertThat(mav.getModel().get("rechazoDTO"), is(rechazoDTO));
+        verify(servicioReservaMock, times(1)).rechazarReserva(rechazoDTO.getReservaId(), conductorId, rechazoDTO.getMotivo());
+    }
+
+    @Test
+    public void deberiaMostrarErrorSiConductorNoAutorizadoAlRechazar() throws Exception {
+        // given
+        Long conductorId = 1L;
+        RechazoReservaInputDTO rechazoDTO = new RechazoReservaInputDTO(10L, "Motivo");
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+        doThrow(new UsuarioNoAutorizadoException("No tienes permiso"))
+                .when(servicioReservaMock).rechazarReserva(rechazoDTO.getReservaId(), conductorId, rechazoDTO.getMotivo());
+
+        // when
+        ModelAndView mav = controladorReserva.rechazarReserva(rechazoDTO, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("rechazarReserva"));
+        assertThat(mav.getModel().get("error"), is("No tienes permiso"));
+        assertThat(mav.getModel().get("rechazoDTO"), is(rechazoDTO));
+        verify(servicioReservaMock, times(1)).rechazarReserva(rechazoDTO.getReservaId(), conductorId, rechazoDTO.getMotivo());
     }
 }

@@ -5,6 +5,7 @@ import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
+import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
@@ -24,12 +25,14 @@ public class ServicioReservaImpl implements ServicioReserva {
     private final ReservaRepository reservaRepository;
     private final ServicioViaje servicioViaje;
     private final ServicioViajero servicioViajero;
+    private final ViajeRepository viajeRepository;
 
     @Autowired
-    public ServicioReservaImpl(ReservaRepository reservaRepository, ServicioViaje servicioViaje, ServicioViajero servicioViajero) {
+    public ServicioReservaImpl(ReservaRepository reservaRepository, ServicioViaje servicioViaje, ServicioViajero servicioViajero, ViajeRepository viajeRepository) {
         this.reservaRepository = reservaRepository;
         this.servicioViaje = servicioViaje;
         this.servicioViajero = servicioViajero;
+        this.viajeRepository = viajeRepository;
     }
 
     @Override
@@ -112,5 +115,70 @@ public class ServicioReservaImpl implements ServicioReserva {
         if (viaje.getFechaHoraDeSalida() != null && viaje.getFechaHoraDeSalida().isBefore(LocalDateTime.now())) {
             throw new ViajeYaIniciadoException("El viaje ya ha iniciado, no se pueden solicitar reservas");
         }
+    }
+
+    @Override
+    public void confirmarReserva(Long reservaId, Long conductorId) throws NotFoundException, UsuarioNoAutorizadoException, ReservaYaExisteException, SinAsientosDisponiblesException, ViajeNoEncontradoException {
+        // Obtener la reserva
+        Reserva reserva = reservaRepository.findById(reservaId)
+                .orElseThrow(() -> new NotFoundException("No se encontró la reserva con id: " + reservaId));
+
+        // Validar que el conductor sea el dueño del viaje
+        if (!reserva.getViaje().getConductor().getId().equals(conductorId)) {
+            throw new UsuarioNoAutorizadoException("No tienes permiso para confirmar esta reserva");
+        }
+
+        // Validar que la reserva esté en estado PENDIENTE
+        if (reserva.getEstado() != EstadoReserva.PENDIENTE) {
+            throw new ReservaYaExisteException("La reserva no está en estado PENDIENTE");
+        }
+
+        // Validar que haya asientos disponibles
+        if (reserva.getViaje().getAsientosDisponibles() == null || reserva.getViaje().getAsientosDisponibles() <= 0) {
+            throw new SinAsientosDisponiblesException("No hay asientos disponibles");
+        }
+
+        // Obtener el viaje completo para asegurar que tenga todos los campos (incluido version)
+        Viaje viaje = viajeRepository.findById(reserva.getViaje().getId())
+                .orElseThrow(() -> new ViajeNoEncontradoException("No se encontró el viaje"));
+
+        // Decrementar asientos disponibles
+        viaje.setAsientosDisponibles(viaje.getAsientosDisponibles() - 1);
+
+        // Cambiar estado a CONFIRMADA
+        reserva.setEstado(EstadoReserva.CONFIRMADA);
+
+        // No es necesario llamar a update/modificar porque Hibernate detectará los cambios automáticamente
+        // gracias a @Transactional y dirty checking
+        reservaRepository.update(reserva);
+    }
+
+    @Override
+    public void rechazarReserva(Long reservaId, Long conductorId, String motivo) throws NotFoundException, UsuarioNoAutorizadoException, ReservaYaExisteException, DatoObligatorioException {
+        // Validar que el motivo no esté vacío
+        if (motivo == null || motivo.trim().isEmpty()) {
+            throw new DatoObligatorioException("El motivo del rechazo es obligatorio");
+        }
+
+        // Obtener la reserva
+        Reserva reserva = reservaRepository.findById(reservaId)
+                .orElseThrow(() -> new NotFoundException("No se encontró la reserva con id: " + reservaId));
+
+        // Validar que el conductor sea el dueño del viaje
+        if (!reserva.getViaje().getConductor().getId().equals(conductorId)) {
+            throw new UsuarioNoAutorizadoException("No tienes permiso para rechazar esta reserva");
+        }
+
+        // Validar que la reserva esté en estado PENDIENTE
+        if (reserva.getEstado() != EstadoReserva.PENDIENTE) {
+            throw new ReservaYaExisteException("La reserva no está en estado PENDIENTE");
+        }
+
+        // Cambiar estado a RECHAZADA y setear motivo
+        reserva.setEstado(EstadoReserva.RECHAZADA);
+        reserva.setMotivoRechazo(motivo);
+
+        // Guardar cambios
+        reservaRepository.update(reserva);
     }
 }
