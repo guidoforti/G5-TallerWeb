@@ -51,5 +51,11 @@ public interface ReservaRepository {
      */
     void update(Reserva reserva);
 
+    /**
+     * Busca todas las reservas confirmadas de un viaje
+     * @param viaje El viaje
+     * @return Lista de reservas confirmadas
+     */
+    List<Reserva> findConfirmadasByViaje(Viaje viaje);
 
 }

@@ -3,6 +3,7 @@ package com.tallerwebi.dominio.ServiceImpl;
 import com.tallerwebi.dominio.Entity.Reserva;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.Viajero;
+import com.tallerwebi.dominio.Enums.EstadoAsistencia;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
@@ -173,6 +174,63 @@ public class ServicioReservaImpl implements ServicioReserva {
         // Cambiar estado a RECHAZADA y setear motivo
         reserva.setEstado(EstadoReserva.RECHAZADA);
         reserva.setMotivoRechazo(motivo);
+
+        // Guardar cambios
+        reservaRepository.update(reserva);
+    }
+
+    @Override
+    public List<Reserva> listarViajerosConfirmados(Long viajeId, Long conductorId) throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, NotFoundException {
+        // Obtener el viaje
+        Viaje viaje = servicioViaje.obtenerViajePorId(viajeId);
+
+        // Validar que el conductor sea el dueño del viaje
+        if (!viaje.getConductor().getId().equals(conductorId)) {
+            throw new UsuarioNoAutorizadoException("No tienes permiso para ver los viajeros de este viaje");
+        }
+
+        // Obtener reservas confirmadas
+        return reservaRepository.findConfirmadasByViaje(viaje);
+    }
+
+    @Override
+    public void marcarAsistencia(Long reservaId, Long conductorId, String asistencia) throws NotFoundException, UsuarioNoAutorizadoException, ReservaYaExisteException, AccionNoPermitidaException, DatoObligatorioException {
+        // Validar que asistencia sea un valor válido
+        EstadoAsistencia estadoAsistencia;
+        try {
+            estadoAsistencia = EstadoAsistencia.valueOf(asistencia);
+            if (estadoAsistencia == EstadoAsistencia.NO_MARCADO) {
+                throw new DatoObligatorioException("El valor de asistencia debe ser PRESENTE o AUSENTE");
+            }
+        } catch (IllegalArgumentException e) {
+            throw new DatoObligatorioException("El valor de asistencia debe ser PRESENTE o AUSENTE");
+        }
+
+        // Obtener la reserva
+        Reserva reserva = reservaRepository.findById(reservaId)
+                .orElseThrow(() -> new NotFoundException("No se encontró la reserva con id: " + reservaId));
+
+        // Validar que el conductor sea el dueño del viaje
+        if (!reserva.getViaje().getConductor().getId().equals(conductorId)) {
+            throw new UsuarioNoAutorizadoException("No tienes permiso para marcar asistencia en este viaje");
+        }
+
+        // Validar que la reserva esté confirmada
+        if (reserva.getEstado() != EstadoReserva.CONFIRMADA) {
+            throw new ReservaYaExisteException("Solo se puede marcar asistencia en reservas confirmadas");
+        }
+
+        // Validar que estemos dentro de la ventana de tiempo (30 minutos antes de la salida en adelante)
+        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime fechaSalida = reserva.getViaje().getFechaHoraDeSalida();
+        LocalDateTime ventanaPermitida = fechaSalida.minusMinutes(30);
+
+        if (ahora.isBefore(ventanaPermitida)) {
+            throw new AccionNoPermitidaException("Solo se puede marcar asistencia desde 30 minutos antes de la salida del viaje");
+        }
+
+        // Marcar asistencia
+        reserva.setAsistencia(estadoAsistencia);
 
         // Guardar cambios
         reservaRepository.update(reserva);

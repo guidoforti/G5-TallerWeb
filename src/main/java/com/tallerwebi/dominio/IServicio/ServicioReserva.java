@@ -86,4 +86,32 @@ public interface ServicioReserva {
      * @throws DatoObligatorioException Si el motivo está vacío
      */
     void rechazarReserva(Long reservaId, Long conductorId, String motivo) throws NotFoundException, UsuarioNoAutorizadoException, ReservaYaExisteException, DatoObligatorioException;
+
+    /**
+     * Lista los viajeros confirmados de un viaje (reservas en estado CONFIRMADA)
+     * Solo el conductor del viaje puede acceder a esta información
+     *
+     * @param viajeId El ID del viaje
+     * @param conductorId El ID del conductor que solicita la lista
+     * @return Lista de reservas confirmadas
+     * @throws ViajeNoEncontradoException Si no se encuentra el viaje
+     * @throws UsuarioNoAutorizadoException Si el conductor no es dueño del viaje
+     * @throws NotFoundException Si no se encuentra el viaje
+     */
+    List<Reserva> listarViajerosConfirmados(Long viajeId, Long conductorId) throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, NotFoundException;
+
+    /**
+     * Marca la asistencia de un viajero a un viaje
+     * Solo disponible desde 30 minutos antes de la salida del viaje
+     *
+     * @param reservaId El ID de la reserva
+     * @param conductorId El ID del conductor que marca la asistencia
+     * @param asistencia El estado de asistencia ("PRESENTE" o "AUSENTE")
+     * @throws NotFoundException Si no se encuentra la reserva
+     * @throws UsuarioNoAutorizadoException Si el conductor no es dueño del viaje
+     * @throws ReservaYaExisteException Si la reserva no está confirmada
+     * @throws AccionNoPermitidaException Si intenta marcar antes de 30 minutos de la salida
+     * @throws DatoObligatorioException Si el valor de asistencia es inválido
+     */
+    void marcarAsistencia(Long reservaId, Long conductorId, String asistencia) throws NotFoundException, UsuarioNoAutorizadoException, ReservaYaExisteException, AccionNoPermitidaException, DatoObligatorioException;
 }

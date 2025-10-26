@@ -9,10 +9,12 @@ import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
 import com.tallerwebi.dominio.excepcion.*;
+import com.tallerwebi.presentacion.DTO.InputsDTO.MarcarAsistenciaInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.RechazoReservaInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.SolicitudReservaInputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ReservaVistaDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeReservaSolicitudDTO;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeroConfirmadoDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -297,5 +299,91 @@ public class ControladorReserva {
         // Si hubo error, volver a mostrar el formulario
         model.put("rechazoDTO", rechazoDTO);
         return new ModelAndView("rechazarReserva", model);
+    }
+
+    /**
+     * Lista los viajeros confirmados de un viaje
+     * GET /reserva/viajerosConfirmados?viajeId={id}
+     */
+    @GetMapping("/viajerosConfirmados")
+    @Transactional(readOnly = true)
+    public ModelAndView listarViajerosConfirmados(@RequestParam("viajeId") Long viajeId,
+                                                   HttpSession session) {
+        ModelMap model = new ModelMap();
+
+        // Validar sesión
+        Object conductorIdObj = session.getAttribute("idUsuario");
+        Object rol = session.getAttribute("ROL");
+
+        if (conductorIdObj == null || !"CONDUCTOR".equals(rol)) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        Long conductorId = (Long) conductorIdObj;
+
+        try {
+            // Obtener el viaje para mostrar información en la vista
+            Viaje viaje = servicioViaje.obtenerViajePorId(viajeId);
+
+            // Obtener reservas confirmadas
+            List<Reserva> reservasConfirmadas = servicioReserva.listarViajerosConfirmados(viajeId, conductorId);
+
+            // Convertir a DTOs
+            List<ViajeroConfirmadoDTO> viajerosDTO = reservasConfirmadas.stream()
+                    .map(ViajeroConfirmadoDTO::new)
+                    .collect(Collectors.toList());
+
+            model.put("viaje", viaje);
+            model.put("viajeros", viajerosDTO);
+            return new ModelAndView("viajerosConfirmados", model);
+
+        } catch (ViajeNoEncontradoException | NotFoundException e) {
+            model.put("error", "No se encontró el viaje");
+            return new ModelAndView("redirect:/viaje/listar");
+        } catch (UsuarioNoAutorizadoException e) {
+            model.put("error", "No tienes permiso para ver esta información");
+            return new ModelAndView("redirect:/viaje/listar");
+        }
+    }
+
+    /**
+     * Marca la asistencia de un viajero
+     * POST /reserva/marcarAsistencia
+     */
+    @PostMapping("/marcarAsistencia")
+    public ModelAndView marcarAsistencia(@ModelAttribute MarcarAsistenciaInputDTO inputDTO,
+                                         HttpSession session) {
+        ModelMap model = new ModelMap();
+
+        // Validar sesión
+        Object conductorIdObj = session.getAttribute("idUsuario");
+        if (conductorIdObj == null) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        Long conductorId = (Long) conductorIdObj;
+
+        try {
+            servicioReserva.marcarAsistencia(inputDTO.getReservaId(), conductorId, inputDTO.getAsistencia());
+            model.put("mensaje", "Asistencia marcada exitosamente");
+        } catch (NotFoundException e) {
+            model.put("error", "No se encontró la reserva");
+        } catch (UsuarioNoAutorizadoException e) {
+            model.put("error", "No tienes permiso");
+        } catch (ReservaYaExisteException e) {
+            model.put("error", "Solo se puede marcar asistencia en reservas confirmadas");
+        } catch (AccionNoPermitidaException e) {
+            model.put("error", e.getMessage());
+        } catch (DatoObligatorioException e) {
+            model.put("error", "Valor de asistencia inválido");
+        }
+
+        // Obtener viajeId de la reserva para redirigir
+        try {
+            Reserva reserva = servicioReserva.obtenerReservaPorId(inputDTO.getReservaId());
+            return new ModelAndView("redirect:/reserva/viajerosConfirmados?viajeId=" + reserva.getViaje().getId(), model);
+        } catch (NotFoundException e) {
+            return new ModelAndView("redirect:/reserva/misReservas", model);
+        }
     }
 }

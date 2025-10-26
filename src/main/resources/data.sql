@@ -81,14 +81,16 @@ VALUES (5, 1, 2, 2, 1, '2025-10-20 09:00:00', 0, 4500.00, 2, CURRENT_TIMESTAMP, 
 
 -- 9️⃣ RESERVAS DE PRUEBA
 -- Estados: 0=PENDIENTE, 1=CONFIRMADA, 2=RECHAZADA, 3=CANCELADA_POR_VIAJERO
+-- EstadoPago: NO_PAGADO, PAGADO
+-- EstadoAsistencia: NO_MARCADO, PRESENTE, AUSENTE
 -- Reserva del viajero María Gómez (ID 3) para algunos viajes
-INSERT INTO reserva (id, viaje_id, viajero_id, fecha_solicitud, estado, motivo_rechazo)
-VALUES (1, 1, 3, '2025-10-25 10:00:00', 0, NULL);  -- PENDIENTE para viaje a Córdoba
+INSERT INTO reserva (id, viaje_id, viajero_id, fecha_solicitud, estado, motivo_rechazo, estado_pago, asistencia)
+VALUES (1, 1, 3, '2025-10-25 10:00:00', 0, NULL, 'NO_PAGADO', 'NO_MARCADO');  -- PENDIENTE para viaje a Córdoba
 
-INSERT INTO reserva (id, viaje_id, viajero_id, fecha_solicitud, estado, motivo_rechazo)
-VALUES (2, 5, 3, '2025-10-19 15:00:00', 1, NULL);  -- CONFIRMADA para viaje finalizado
+INSERT INTO reserva (id, viaje_id, viajero_id, fecha_solicitud, estado, motivo_rechazo, estado_pago, asistencia)
+VALUES (2, 5, 3, '2025-10-19 15:00:00', 1, NULL, 'PAGADO', 'PRESENTE');  -- CONFIRMADA para viaje finalizado
 
 -- 10️⃣ NUEVA RESERVA PARA EL VIAJE 2 (Buenos Aires → Rosario)
 -- Insertar la reserva con estado PENDIENTE (0)
-INSERT INTO reserva (id, viaje_id, viajero_id, fecha_solicitud, estado, motivo_rechazo)
-VALUES (3, 2, 3, CURRENT_TIMESTAMP, 0, NULL);
+INSERT INTO reserva (id, viaje_id, viajero_id, fecha_solicitud, estado, motivo_rechazo, estado_pago, asistencia)
+VALUES (3, 2, 3, CURRENT_TIMESTAMP, 0, NULL, 'NO_PAGADO', 'NO_MARCADO');
