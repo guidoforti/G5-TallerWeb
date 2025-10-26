@@ -6,6 +6,7 @@ import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
+import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.excepcion.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,10 +21,12 @@ import java.util.stream.Collectors;
 public class ServicioReservaImpl implements ServicioReserva {
 
     private final ReservaRepository reservaRepository;
+    private final ServicioViaje servicioViaje;
 
     @Autowired
-    public ServicioReservaImpl(ReservaRepository reservaRepository) {
+    public ServicioReservaImpl(ReservaRepository reservaRepository, ServicioViaje servicioViaje) {
         this.reservaRepository = reservaRepository;
+        this.servicioViaje = servicioViaje;
     }
 
     @Override
@@ -67,8 +70,9 @@ public class ServicioReservaImpl implements ServicioReserva {
     }
 
     @Override
-    public List<Viajero> obtenerViajerosConfirmados(Viaje viaje) {
-        return reservaRepository.findByViaje(viaje).stream()
+    public List<Viajero> obtenerViajerosConfirmados(Viaje viaje) throws ViajeNoEncontradoException, NotFoundException, UsuarioNoAutorizadoException {
+        Viaje viajeConfirmado  = servicioViaje.obtenerViajePorId(viaje.getId());
+        return reservaRepository.findByViaje(viajeConfirmado).stream()
                 .filter(reserva -> reserva.getEstado() == EstadoReserva.CONFIRMADA)
                 .map(Reserva::getViajero)
                 .collect(Collectors.toList());

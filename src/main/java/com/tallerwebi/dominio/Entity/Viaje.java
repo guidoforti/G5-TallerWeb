@@ -46,11 +46,10 @@ public class Viaje {
     @OrderBy("orden ASC")
     private List<Parada> paradas;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "origen_id")
     private Ciudad origen;
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "destino_id")
     private Ciudad destino;
 

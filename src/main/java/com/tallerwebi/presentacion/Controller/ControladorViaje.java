@@ -356,7 +356,7 @@ public class ControladorViaje {
             model.put("detalle", detalleViajeOutputDTO);
             return new ModelAndView("detalleViaje", model);
 
-        } catch (NotFoundException e) {
+        } catch (NotFoundException | ViajeNoEncontradoException | UsuarioNoAutorizadoException e) {
             model.put("error", e.getMessage());
             return new ModelAndView("detalleViaje", model);
         }

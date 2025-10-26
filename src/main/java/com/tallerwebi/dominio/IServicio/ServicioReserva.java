@@ -39,6 +39,7 @@ public interface ServicioReserva {
      */
     List<Reserva> listarReservasPorViajero(Viajero viajero);
 
+
     /**
      * Obtiene una reserva por su ID
      *
@@ -54,5 +55,5 @@ public interface ServicioReserva {
      * @param viaje El viaje
      * @return Lista de viajeros confirmados
      */
-    List<Viajero> obtenerViajerosConfirmados(Viaje viaje);
+    List<Viajero> obtenerViajerosConfirmados(Viaje viaje) throws ViajeNoEncontradoException, NotFoundException, UsuarioNoAutorizadoException;
 }

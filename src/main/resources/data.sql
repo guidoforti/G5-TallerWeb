@@ -87,3 +87,8 @@ VALUES (1, 1, 3, '2025-10-25 10:00:00', 0, NULL);  -- PENDIENTE para viaje a Có
 
 INSERT INTO reserva (id, viaje_id, viajero_id, fecha_solicitud, estado, motivo_rechazo)
 VALUES (2, 5, 3, '2025-10-19 15:00:00', 1, NULL);  -- CONFIRMADA para viaje finalizado
+
+-- 10️⃣ NUEVA RESERVA PARA EL VIAJE 2 (Buenos Aires → Rosario)
+-- Insertar la reserva con estado PENDIENTE (0)
+INSERT INTO reserva (id, viaje_id, viajero_id, fecha_solicitud, estado, motivo_rechazo)
+VALUES (3, 2, 3, CURRENT_TIMESTAMP, 0, NULL);
