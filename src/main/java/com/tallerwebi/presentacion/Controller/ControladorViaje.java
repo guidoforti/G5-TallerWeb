@@ -337,6 +337,13 @@ public class ControladorViaje {
     @GetMapping("/detalle")
     public ModelAndView verDetalleDeUnViaje(HttpSession httpSession, @RequestParam("id") Long id) {
         ModelMap model = new ModelMap();
+
+        // Pasar el rol del usuario a la vista
+        Object rol = httpSession.getAttribute("ROL");
+        if (rol != null) {
+            model.put("userRole", rol.toString());
+        }
+
        /* Object rol = httpSession.getAttribute("rol");
         if (rol == null || !rol.equals("CONDUCTOR")) {
             UsuarioNoAutorizadoException e = new UsuarioNoAutorizadoException("Debe ser un usuario conductor para ver detalles de un viaje");
@@ -354,6 +361,7 @@ public class ControladorViaje {
 
             DetalleViajeOutputDTO detalleViajeOutputDTO = new DetalleViajeOutputDTO(viaje, viajerosDTO);
             model.put("detalle", detalleViajeOutputDTO);
+            model.put("viajeId", id);  // Pasar el ID del viaje para el botón de reserva
             return new ModelAndView("detalleViaje", model);
 
         } catch (NotFoundException | ViajeNoEncontradoException | UsuarioNoAutorizadoException e) {

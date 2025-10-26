@@ -11,6 +11,7 @@ import com.tallerwebi.dominio.IServicio.ServicioViajero;
 import com.tallerwebi.dominio.excepcion.*;
 import com.tallerwebi.presentacion.DTO.InputsDTO.SolicitudReservaInputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ReservaVistaDTO;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeReservaSolicitudDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,7 +68,10 @@ public class ControladorReserva {
             solicitudDTO.setViajeId(viajeId);
             solicitudDTO.setViajeroId((Long) usuarioId);
 
-            model.put("viaje", viaje);
+            // Crear un DTO para pasar fechas formateadas y otros datos al template
+            ViajeReservaSolicitudDTO viajeDTO = new ViajeReservaSolicitudDTO(viaje);
+
+            model.put("viaje", viajeDTO);
             model.put("solicitud", solicitudDTO);
             return new ModelAndView("solicitarReserva", model);
 
@@ -106,18 +110,27 @@ public class ControladorReserva {
 
         } catch (ReservaYaExisteException e) {
             model.put("error", "Ya tienes una reserva para este viaje");
-            return new ModelAndView("redirect:/viaje/buscar");
         } catch (SinAsientosDisponiblesException e) {
             model.put("error", "No hay asientos disponibles para este viaje");
-            return new ModelAndView("redirect:/viaje/buscar");
         } catch (ViajeYaIniciadoException e) {
             model.put("error", "El viaje ya ha iniciado, no se pueden solicitar reservas");
-            return new ModelAndView("redirect:/viaje/buscar");
         } catch (DatoObligatorioException | NotFoundException | UsuarioInexistente | ViajeNoEncontradoException |
                  UsuarioNoAutorizadoException e) {
             model.put("error", e.getMessage());
+        }
+
+        // Si hubo error, volver a mostrar el formulario con el error
+        try {
+            Viaje viaje = servicioViaje.obtenerViajePorId(solicitudDTO.getViajeId());
+            ViajeReservaSolicitudDTO viajeDTO = new ViajeReservaSolicitudDTO(viaje);
+            model.put("viaje", viajeDTO);
+            model.put("solicitud", solicitudDTO);
+        } catch (Exception ex) {
+            // Si no se puede obtener el viaje, redirigir a buscar
             return new ModelAndView("redirect:/viaje/buscar");
         }
+
+        return new ModelAndView("solicitarReserva", model);
     }
 
     /**

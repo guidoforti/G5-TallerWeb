@@ -22,11 +22,11 @@ public class RepositorioReservaImpl implements ReservaRepository {
 
     @Override
     public Optional<Reserva> findByViajeAndViajero(Viaje viaje, Viajero viajero) {
-        String hql = "SELECT r FROM Reserva r WHERE r.viaje = :viaje AND r.viajero = :viajero";
+        String hql = "SELECT r FROM Reserva r WHERE r.viaje.id = :viajeId AND r.viajero.id = :viajeroId";
         Query<Reserva> query = sessionFactory.getCurrentSession()
                 .createQuery(hql, Reserva.class)
-                .setParameter("viaje", viaje)
-                .setParameter("viajero", viajero);
+                .setParameter("viajeId", viaje.getId())
+                .setParameter("viajeroId", viajero.getId());
 
         List<Reserva> resultados = query.getResultList();
         return resultados.isEmpty() ? Optional.empty() : Optional.of(resultados.get(0));
@@ -34,19 +34,19 @@ public class RepositorioReservaImpl implements ReservaRepository {
 
     @Override
     public List<Reserva> findByViaje(Viaje viaje) {
-        String hql = "SELECT r FROM Reserva r WHERE r.viaje = :viaje ORDER BY r.fechaSolicitud ASC";
+        String hql = "SELECT r FROM Reserva r WHERE r.viaje.id = :viajeId ORDER BY r.fechaSolicitud ASC";
         return sessionFactory.getCurrentSession()
                 .createQuery(hql, Reserva.class)
-                .setParameter("viaje", viaje)
+                .setParameter("viajeId", viaje.getId())
                 .getResultList();
     }
 
     @Override
     public List<Reserva> findByViajero(Viajero viajero) {
-        String hql = "SELECT r FROM Reserva r WHERE r.viajero = :viajero ORDER BY r.fechaSolicitud DESC";
+        String hql = "SELECT r FROM Reserva r WHERE r.viajero.id = :viajeroId ORDER BY r.fechaSolicitud DESC";
         return sessionFactory.getCurrentSession()
                 .createQuery(hql, Reserva.class)
-                .setParameter("viajero", viajero)
+                .setParameter("viajeroId", viajero.getId())
                 .getResultList();
     }
 

@@ -8,6 +8,7 @@ import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
+import com.tallerwebi.dominio.IServicio.ServicioViajero;
 import com.tallerwebi.dominio.ServiceImpl.ServicioReservaImpl;
 import com.tallerwebi.dominio.excepcion.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,12 +30,14 @@ class ServicioReservaTest {
     private ReservaRepository repositorioReservaMock;
     private ServicioReserva servicioReserva;
     private ServicioViaje servicioViaje;
+    private ServicioViajero servicioViajero;
 
     @BeforeEach
     void setUp() {
         repositorioReservaMock = mock(ReservaRepository.class);
         servicioViaje = mock(ServicioViaje.class);
-        servicioReserva = new ServicioReservaImpl(repositorioReservaMock, servicioViaje);
+        servicioViajero = mock(ServicioViajero.class);
+        servicioReserva = new ServicioReservaImpl(repositorioReservaMock, servicioViaje, servicioViajero);
     }
 
     // --- TESTS DE SOLICITAR RESERVA ---
@@ -46,6 +49,8 @@ class ServicioReservaTest {
         Viajero viajero = crearViajeroMock(1L);
 
         when(repositorioReservaMock.findByViajeAndViajero(viaje, viajero)).thenReturn(Optional.empty());
+        when(servicioViaje.obtenerViajePorId(viaje.getId())).thenReturn(viaje);
+        when(servicioViajero.obtenerViajero(viajero.getId())).thenReturn(viajero);
         when(repositorioReservaMock.save(any(Reserva.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // when
@@ -57,6 +62,8 @@ class ServicioReservaTest {
         assertThat(reserva.getEstado(), is(EstadoReserva.PENDIENTE));
         assertThat(reserva.getFechaSolicitud(), notNullValue());
         verify(repositorioReservaMock, times(1)).findByViajeAndViajero(viaje, viajero);
+        verify(servicioViaje, times(1)).obtenerViajePorId(viaje.getId());
+        verify(servicioViajero, times(1)).obtenerViajero(viajero.getId());
         verify(repositorioReservaMock, times(1)).save(any(Reserva.class));
     }
 

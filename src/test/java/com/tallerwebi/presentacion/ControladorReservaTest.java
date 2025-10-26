@@ -12,6 +12,7 @@ import com.tallerwebi.dominio.excepcion.*;
 import com.tallerwebi.presentacion.Controller.ControladorReserva;
 import com.tallerwebi.presentacion.DTO.InputsDTO.SolicitudReservaInputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ReservaVistaDTO;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeReservaSolicitudDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.ModelAndView;
@@ -64,7 +65,7 @@ public class ControladorReservaTest {
 
         // then
         assertThat(mav.getViewName(), is("solicitarReserva"));
-        assertThat(mav.getModel().get("viaje"), is(viajeMock));
+        assertThat(mav.getModel().get("viaje"), instanceOf(ViajeReservaSolicitudDTO.class));
         assertThat(mav.getModel().get("solicitud"), instanceOf(SolicitudReservaInputDTO.class));
         verify(servicioViajeMock, times(1)).obtenerViajePorId(viajeId);
     }
@@ -137,7 +138,7 @@ public class ControladorReservaTest {
     }
 
     @Test
-    public void deberiaRedirigirALoginSiNoHaySesionEnPost() throws ReservaYaExisteException, DatoObligatorioException, ViajeYaIniciadoException, SinAsientosDisponiblesException {
+    public void deberiaRedirigirALoginSiNoHaySesionEnPost() throws ReservaYaExisteException, DatoObligatorioException, ViajeYaIniciadoException, SinAsientosDisponiblesException, ViajeNoEncontradoException, NotFoundException, UsuarioNoAutorizadoException, UsuarioInexistente {
         // given
         SolicitudReservaInputDTO solicitudDTO = new SolicitudReservaInputDTO(1L, 1L);
         when(sessionMock.getAttribute("idUsuario")).thenReturn(null);
@@ -151,13 +152,14 @@ public class ControladorReservaTest {
     }
 
     @Test
-    public void deberiaRedirigirABuscarSiReservaYaExiste() throws Exception {
+    public void deberiaMostrarErrorSiReservaYaExiste() throws Exception {
         // given
         Long usuarioId = 1L;
         Long viajeId = 10L;
         SolicitudReservaInputDTO solicitudDTO = new SolicitudReservaInputDTO(viajeId, usuarioId);
 
         Viaje viajeMock = new Viaje();
+        viajeMock.setId(viajeId);
         Viajero viajeroMock = new Viajero();
 
         when(sessionMock.getAttribute("idUsuario")).thenReturn(usuarioId);
@@ -170,18 +172,23 @@ public class ControladorReservaTest {
         ModelAndView mav = controladorReserva.solicitarReserva(solicitudDTO, sessionMock);
 
         // then
-        assertThat(mav.getViewName(), is("redirect:/viaje/buscar"));
+        assertThat(mav.getViewName(), is("solicitarReserva"));
+        assertThat(mav.getModel().get("error"), is("Ya tienes una reserva para este viaje"));
+        assertThat(mav.getModel().get("viaje"), instanceOf(ViajeReservaSolicitudDTO.class));
+        assertThat(mav.getModel().get("solicitud"), instanceOf(SolicitudReservaInputDTO.class));
         verify(servicioReservaMock, times(1)).solicitarReserva(viajeMock, viajeroMock);
+        verify(servicioViajeMock, times(2)).obtenerViajePorId(viajeId); // Once for attempt, once for re-display
     }
 
     @Test
-    public void deberiaRedirigirABuscarSiNoHayAsientosDisponibles() throws Exception {
+    public void deberiaMostrarErrorSiNoHayAsientosDisponibles() throws Exception {
         // given
         Long usuarioId = 1L;
         Long viajeId = 10L;
         SolicitudReservaInputDTO solicitudDTO = new SolicitudReservaInputDTO(viajeId, usuarioId);
 
         Viaje viajeMock = new Viaje();
+        viajeMock.setId(viajeId);
         Viajero viajeroMock = new Viajero();
 
         when(sessionMock.getAttribute("idUsuario")).thenReturn(usuarioId);
@@ -194,18 +201,23 @@ public class ControladorReservaTest {
         ModelAndView mav = controladorReserva.solicitarReserva(solicitudDTO, sessionMock);
 
         // then
-        assertThat(mav.getViewName(), is("redirect:/viaje/buscar"));
+        assertThat(mav.getViewName(), is("solicitarReserva"));
+        assertThat(mav.getModel().get("error"), is("No hay asientos disponibles para este viaje"));
+        assertThat(mav.getModel().get("viaje"), instanceOf(ViajeReservaSolicitudDTO.class));
+        assertThat(mav.getModel().get("solicitud"), instanceOf(SolicitudReservaInputDTO.class));
         verify(servicioReservaMock, times(1)).solicitarReserva(viajeMock, viajeroMock);
+        verify(servicioViajeMock, times(2)).obtenerViajePorId(viajeId);
     }
 
     @Test
-    public void deberiaRedirigirABuscarSiViajeYaInicio() throws Exception {
+    public void deberiaMostrarErrorSiViajeYaInicio() throws Exception {
         // given
         Long usuarioId = 1L;
         Long viajeId = 10L;
         SolicitudReservaInputDTO solicitudDTO = new SolicitudReservaInputDTO(viajeId, usuarioId);
 
         Viaje viajeMock = new Viaje();
+        viajeMock.setId(viajeId);
         Viajero viajeroMock = new Viajero();
 
         when(sessionMock.getAttribute("idUsuario")).thenReturn(usuarioId);
@@ -218,8 +230,12 @@ public class ControladorReservaTest {
         ModelAndView mav = controladorReserva.solicitarReserva(solicitudDTO, sessionMock);
 
         // then
-        assertThat(mav.getViewName(), is("redirect:/viaje/buscar"));
+        assertThat(mav.getViewName(), is("solicitarReserva"));
+        assertThat(mav.getModel().get("error"), is("El viaje ya ha iniciado, no se pueden solicitar reservas"));
+        assertThat(mav.getModel().get("viaje"), instanceOf(ViajeReservaSolicitudDTO.class));
+        assertThat(mav.getModel().get("solicitud"), instanceOf(SolicitudReservaInputDTO.class));
         verify(servicioReservaMock, times(1)).solicitarReserva(viajeMock, viajeroMock);
+        verify(servicioViajeMock, times(2)).obtenerViajePorId(viajeId);
     }
 
     // --- TESTS DE LISTAR RESERVAS DE VIAJE ---

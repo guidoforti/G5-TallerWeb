@@ -20,8 +20,12 @@ public interface ServicioReserva {
      * @throws SinAsientosDisponiblesException Si no hay asientos disponibles
      * @throws ViajeYaIniciadoException Si el viaje ya inició
      * @throws DatoObligatorioException Si faltan datos obligatorios
+     * @throws ViajeNoEncontradoException Si no se encuentra el viaje
+     * @throws NotFoundException Si no se encuentra alguna entidad
+     * @throws UsuarioNoAutorizadoException Si el usuario no está autorizado
+     * @throws UsuarioInexistente Si el usuario no existe
      */
-    Reserva solicitarReserva(Viaje viaje, Viajero viajero) throws ReservaYaExisteException, SinAsientosDisponiblesException, ViajeYaIniciadoException, DatoObligatorioException;
+    Reserva solicitarReserva(Viaje viaje, Viajero viajero) throws ReservaYaExisteException, SinAsientosDisponiblesException, ViajeYaIniciadoException, DatoObligatorioException, ViajeNoEncontradoException, NotFoundException, UsuarioNoAutorizadoException, UsuarioInexistente;
 
     /**
      * Lista todas las reservas de un viaje ordenadas por fecha de solicitud (ASC)

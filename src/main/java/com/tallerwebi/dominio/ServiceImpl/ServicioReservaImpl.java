@@ -7,6 +7,7 @@ import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
+import com.tallerwebi.dominio.IServicio.ServicioViajero;
 import com.tallerwebi.dominio.excepcion.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,15 +23,17 @@ public class ServicioReservaImpl implements ServicioReserva {
 
     private final ReservaRepository reservaRepository;
     private final ServicioViaje servicioViaje;
+    private final ServicioViajero servicioViajero;
 
     @Autowired
-    public ServicioReservaImpl(ReservaRepository reservaRepository, ServicioViaje servicioViaje) {
+    public ServicioReservaImpl(ReservaRepository reservaRepository, ServicioViaje servicioViaje, ServicioViajero servicioViajero) {
         this.reservaRepository = reservaRepository;
         this.servicioViaje = servicioViaje;
+        this.servicioViajero = servicioViajero;
     }
 
     @Override
-    public Reserva solicitarReserva(Viaje viaje, Viajero viajero) throws ReservaYaExisteException, SinAsientosDisponiblesException, ViajeYaIniciadoException, DatoObligatorioException {
+    public Reserva solicitarReserva(Viaje viaje, Viajero viajero) throws ReservaYaExisteException, SinAsientosDisponiblesException, ViajeYaIniciadoException, DatoObligatorioException, ViajeNoEncontradoException, NotFoundException, UsuarioNoAutorizadoException, UsuarioInexistente {
         // Validar datos obligatorios
         validarDatosObligatorios(viaje, viajero);
 
@@ -43,10 +46,14 @@ public class ServicioReservaImpl implements ServicioReserva {
         // Validar que el viaje no haya iniciado
         validarViajeNoIniciado(viaje);
 
-        // Crear y guardar la reserva
+        // Recargar entidades para asegurar que estén managed en la sesión actual
+        Viaje viajeManaged = servicioViaje.obtenerViajePorId(viaje.getId());
+        Viajero viajeroManaged = servicioViajero.obtenerViajero(viajero.getId());
+
+        // Crear y guardar la reserva con entidades managed
         Reserva reserva = new Reserva();
-        reserva.setViaje(viaje);
-        reserva.setViajero(viajero);
+        reserva.setViaje(viajeManaged);
+        reserva.setViajero(viajeroManaged);
         reserva.setEstado(EstadoReserva.PENDIENTE);
         reserva.setFechaSolicitud(LocalDateTime.now());
 

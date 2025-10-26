@@ -99,7 +99,7 @@
                                             </div>
                                             <div>
                                                 <p class="mb-0 info-label">Origen</p>
-                                                <p class="mb-0 info-value" th:text="${viaje.origen != null ? viaje.origen.nombre : 'No especificado'}"></p>
+                                                <p class="mb-0 info-value" th:text="${viaje.origenNombre}"></p>
                                             </div>
                                         </div>
                                     </div>
@@ -110,7 +110,7 @@
                                             </div>
                                             <div>
                                                 <p class="mb-0 info-label">Destino</p>
-                                                <p class="mb-0 info-value" th:text="${viaje.destino != null ? viaje.destino.nombre : 'No especificado'}"></p>
+                                                <p class="mb-0 info-value" th:text="${viaje.destinoNombre}"></p>
                                             </div>
                                         </div>
                                     </div>
@@ -121,7 +121,7 @@
                                             </div>
                                             <div>
                                                 <p class="mb-0 info-label">Fecha de Salida</p>
-                                                <p class="mb-0 info-value" th:text="${#temporals.format(viaje.fechaHoraDeSalida, 'dd/MM/yyyy HH:mm')}"></p>
+                                                <p class="mb-0 info-value" th:text="${viaje.fechaHoraDeSalida}"></p>
                                             </div>
                                         </div>
                                     </div>
@@ -147,14 +147,14 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-6" th:if="${viaje.conductor != null}">
+                                    <div class="col-md-6">
                                         <div class="d-flex align-items-center mb-3">
                                             <div class="me-3" style="color: #E16A3D;">
                                                 <i class="fas fa-user-circle fa-lg"></i>
                                             </div>
                                             <div>
                                                 <p class="mb-0 info-label">Conductor</p>
-                                                <p class="mb-0 info-value" th:text="${viaje.conductor.nombre}"></p>
+                                                <p class="mb-0 info-value" th:text="${viaje.conductorNombre}"></p>
                                             </div>
                                         </div>
                                     </div>
