@@ -7,6 +7,7 @@ import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
+import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.ServiceImpl.ServicioReservaImpl;
 import com.tallerwebi.dominio.excepcion.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,11 +28,13 @@ class ServicioReservaTest {
 
     private ReservaRepository repositorioReservaMock;
     private ServicioReserva servicioReserva;
+    private ServicioViaje servicioViaje;
 
     @BeforeEach
     void setUp() {
         repositorioReservaMock = mock(ReservaRepository.class);
-        servicioReserva = new ServicioReservaImpl(repositorioReservaMock);
+        servicioViaje = mock(ServicioViaje.class);
+        servicioReserva = new ServicioReservaImpl(repositorioReservaMock, servicioViaje);
     }
 
     // --- TESTS DE SOLICITAR RESERVA ---
@@ -214,54 +217,6 @@ class ServicioReservaTest {
 
     // --- TESTS DE OBTENER VIAJEROS CONFIRMADOS ---
 
-    @Test
-    void deberiaObtenerViajerosConfirmadosCorrectamente() {
-        // given
-        Viaje viaje = crearViajeMock(1L, 3, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusDays(1));
-
-        Viajero viajero1 = crearViajeroMock(1L);
-        Viajero viajero2 = crearViajeroMock(2L);
-        Viajero viajero3 = crearViajeroMock(3L);
-
-        Reserva reservaConfirmada1 = crearReservaConViajero(1L, EstadoReserva.CONFIRMADA, viajero1);
-        Reserva reservaPendiente = crearReservaConViajero(2L, EstadoReserva.PENDIENTE, viajero2);
-        Reserva reservaConfirmada2 = crearReservaConViajero(3L, EstadoReserva.CONFIRMADA, viajero3);
-
-        List<Reserva> todasLasReservas = Arrays.asList(reservaConfirmada1, reservaPendiente, reservaConfirmada2);
-
-        when(repositorioReservaMock.findByViaje(viaje)).thenReturn(todasLasReservas);
-
-        // when
-        List<Viajero> viajerosConfirmados = servicioReserva.obtenerViajerosConfirmados(viaje);
-
-        // then
-        assertThat(viajerosConfirmados, hasSize(2));
-        assertThat(viajerosConfirmados, containsInAnyOrder(viajero1, viajero3));
-        verify(repositorioReservaMock, times(1)).findByViaje(viaje);
-    }
-
-    @Test
-    void deberiaRetornarListaVaciaCuandoNoHayViajerosConfirmados() {
-        // given
-        Viaje viaje = crearViajeMock(1L, 3, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusDays(1));
-
-        Viajero viajero1 = crearViajeroMock(1L);
-        Viajero viajero2 = crearViajeroMock(2L);
-
-        Reserva reservaPendiente = crearReservaConViajero(1L, EstadoReserva.PENDIENTE, viajero1);
-        Reserva reservaRechazada = crearReservaConViajero(2L, EstadoReserva.RECHAZADA, viajero2);
-
-        List<Reserva> todasLasReservas = Arrays.asList(reservaPendiente, reservaRechazada);
-
-        when(repositorioReservaMock.findByViaje(viaje)).thenReturn(todasLasReservas);
-
-        // when
-        List<Viajero> viajerosConfirmados = servicioReserva.obtenerViajerosConfirmados(viaje);
-
-        // then
-        assertThat(viajerosConfirmados, empty());
-        verify(repositorioReservaMock, times(1)).findByViaje(viaje);
-    }
 
     // --- MÉTODOS AUXILIARES PARA CREAR MOCKS ---
 

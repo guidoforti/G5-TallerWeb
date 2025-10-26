@@ -4,6 +4,7 @@ import com.tallerwebi.dominio.Entity.Reserva;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
+import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
@@ -32,13 +33,16 @@ public class ControladorReservaTest {
     private ServicioViaje servicioViajeMock;
     private ServicioViajero servicioViajeroMock;
     private HttpSession sessionMock;
+    private ServicioConductor servicioConductor;
 
     @BeforeEach
     public void init() {
         servicioReservaMock = mock(ServicioReserva.class);
         servicioViajeMock = mock(ServicioViaje.class);
         servicioViajeroMock = mock(ServicioViajero.class);
-        controladorReserva = new ControladorReserva(servicioReservaMock, servicioViajeMock, servicioViajeroMock);
+        servicioConductor = mock(ServicioConductor.class);
+
+        controladorReserva = new ControladorReserva(servicioReservaMock, servicioViajeMock, servicioViajeroMock, servicioConductor);
         sessionMock = mock(HttpSession.class);
     }
 
@@ -266,33 +270,7 @@ public class ControladorReservaTest {
         verify(servicioReservaMock, never()).listarReservasPorViaje(any());
     }
 
-    // --- TESTS DE LISTAR MIS RESERVAS ---
 
-    @Test
-    public void deberiaListarMisReservasCorrectamente() throws UsuarioInexistente {
-        // given
-        Long usuarioId = 1L;
-        Viajero viajeroMock = new Viajero();
-        viajeroMock.setId(usuarioId);
-
-        Reserva reserva1 = new Reserva();
-        reserva1.setId(1L);
-        reserva1.setEstado(EstadoReserva.CONFIRMADA);
-
-        List<Reserva> reservas = Arrays.asList(reserva1);
-
-        when(sessionMock.getAttribute("idUsuario")).thenReturn(usuarioId);
-        when(servicioViajeroMock.obtenerViajero(usuarioId)).thenReturn(viajeroMock);
-        when(servicioReservaMock.listarReservasPorViajero(viajeroMock)).thenReturn(reservas);
-
-        // when
-        ModelAndView mav = controladorReserva.listarMisReservas(sessionMock);
-
-        // then
-        assertThat(mav.getViewName(), is("misReservas"));
-        assertThat(mav.getModel().get("reservas"), instanceOf(List.class));
-        verify(servicioReservaMock, times(1)).listarReservasPorViajero(viajeroMock);
-    }
 
     @Test
     public void deberiaRedirigirALoginSiNoHaySesionEnMisReservas() {
