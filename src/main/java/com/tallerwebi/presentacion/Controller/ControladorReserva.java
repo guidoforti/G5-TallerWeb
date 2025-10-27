@@ -358,7 +358,6 @@ public class ControladorReserva {
      * POST /reserva/marcarAsistencia
      */
     @PostMapping("/marcarAsistencia")
-    @Transactional(readOnly = true)
     public ModelAndView marcarAsistencia(@ModelAttribute MarcarAsistenciaInputDTO inputDTO,
                                          HttpSession session) {
         ModelMap model = new ModelMap();

@@ -190,7 +190,12 @@ public class ServicioReservaImpl implements ServicioReserva {
         }
 
         // Obtener reservas confirmadas
-        return reservaRepository.findConfirmadasByViaje(viaje);
+        List<Reserva> reservasConfirmadas = reservaRepository.findConfirmadasByViaje(viaje);
+
+        // Inicializar viajeros lazy para evitar LazyInitializationException en la capa de presentación
+        reservasConfirmadas.forEach(reserva -> org.hibernate.Hibernate.initialize(reserva.getViajero()));
+
+        return reservasConfirmadas;
     }
 
     @Override
