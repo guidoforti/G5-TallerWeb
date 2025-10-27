@@ -15,6 +15,18 @@
                 <div class="card-body">
                     <h4 class="fw-bold text-dark text-center">Mis viajes publicados</h4>
 
+                    <!-- Error message (flash attribute from redirect) -->
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                        <span th:text="${error}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <!-- Success/info message (flash attribute from redirect) -->
+                    <div th:if="${mensaje}" class="alert alert-info alert-dismissible fade show mt-3" role="alert">
+                        <span th:text="${mensaje}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
                     <div th:if="${listaViajes.isEmpty()}">
                         <p class="text-center text-muted mt-3">No tenés viajes publicados.</p>
                     </div>

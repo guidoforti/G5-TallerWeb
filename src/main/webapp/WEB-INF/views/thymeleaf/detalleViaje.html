@@ -197,6 +197,13 @@
                                 <i class="fas fa-ticket-alt me-2"></i> Solicitar Reserva
                             </a>
 
+                            <!-- Botón Ver Viajeros Confirmados - Solo visible para CONDUCTOR -->
+                            <a th:if="${userRole != null && userRole == 'CONDUCTOR'}"
+                               th:href="@{/reserva/viajerosConfirmados(viajeId=${viajeId})}"
+                               class="btn btn-unrumbo">
+                                <i class="fas fa-users me-2"></i> Ver Viajeros Confirmados
+                            </a>
+
                             <a th:href="@{/viaje/listar}" class="btn btn-outline-unrumbo">
                                 <i class="fas fa-arrow-left me-2"></i> Volver a Mis Viajes
                             </a>

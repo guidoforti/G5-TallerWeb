@@ -4,6 +4,7 @@ import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Reserva;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.Viajero;
+import com.tallerwebi.dominio.Enums.EstadoAsistencia;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
@@ -223,8 +224,253 @@ class ServicioReservaTest {
         verify(repositorioReservaMock, times(1)).findById(reservaId);
     }
 
-    // --- TESTS DE OBTENER VIAJEROS CONFIRMADOS ---
+    // --- TESTS DE LISTAR VIAJEROS CONFIRMADOS ---
 
+    @Test
+    void deberiaListarViajerosConfirmadosCorrectamente() throws Exception {
+        // given
+        Long viajeId = 1L;
+        Long conductorId = 1L;
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = crearViajeMock(viajeId, 2, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusDays(1));
+        viaje.setConductor(conductor);
+
+        Viajero viajero1 = crearViajeroMock(1L);
+        viajero1.setNombre("Juan Perez");
+        viajero1.setEmail("juan@example.com");
+
+        Viajero viajero2 = crearViajeroMock(2L);
+        viajero2.setNombre("Maria Lopez");
+        viajero2.setEmail("maria@example.com");
+
+        Reserva reserva1 = crearReservaConViajero(1L, EstadoReserva.CONFIRMADA, viajero1);
+        reserva1.setViaje(viaje);
+
+        Reserva reserva2 = crearReservaConViajero(2L, EstadoReserva.CONFIRMADA, viajero2);
+        reserva2.setViaje(viaje);
+
+        List<Reserva> reservasConfirmadas = Arrays.asList(reserva1, reserva2);
+
+        when(servicioViaje.obtenerViajePorId(viajeId)).thenReturn(viaje);
+        when(repositorioReservaMock.findConfirmadasByViaje(viaje)).thenReturn(reservasConfirmadas);
+
+        // when
+        List<Reserva> resultado = servicioReserva.listarViajerosConfirmados(viajeId, conductorId);
+
+        // then
+        assertThat(resultado, hasSize(2));
+        assertThat(resultado.get(0).getViajero().getNombre(), is("Juan Perez"));
+        assertThat(resultado.get(1).getViajero().getNombre(), is("Maria Lopez"));
+        verify(servicioViaje, times(1)).obtenerViajePorId(viajeId);
+        verify(repositorioReservaMock, times(1)).findConfirmadasByViaje(viaje);
+    }
+
+    @Test
+    void deberiaLanzarExcepcionSiConductorNoEsDuenioDelViajeAlListarViajeros() throws Exception {
+        // given
+        Long viajeId = 1L;
+        Long conductorId = 1L;
+        Long otroConductorId = 2L;
+
+        Conductor otroConductor = new Conductor();
+        otroConductor.setId(otroConductorId);
+
+        Viaje viaje = crearViajeMock(viajeId, 2, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusDays(1));
+        viaje.setConductor(otroConductor);
+
+        when(servicioViaje.obtenerViajePorId(viajeId)).thenReturn(viaje);
+
+        // when & then
+        assertThrows(UsuarioNoAutorizadoException.class, () -> {
+            servicioReserva.listarViajerosConfirmados(viajeId, conductorId);
+        });
+
+        verify(repositorioReservaMock, never()).findConfirmadasByViaje(any());
+    }
+
+    @Test
+    void deberiaLanzarExcepcionSiViajeNoExisteAlListarViajeros() throws Exception {
+        // given
+        Long viajeId = 999L;
+        Long conductorId = 1L;
+
+        when(servicioViaje.obtenerViajePorId(viajeId)).thenThrow(new ViajeNoEncontradoException("No se encontró el viaje"));
+
+        // when & then
+        assertThrows(ViajeNoEncontradoException.class, () -> {
+            servicioReserva.listarViajerosConfirmados(viajeId, conductorId);
+        });
+
+        verify(repositorioReservaMock, never()).findConfirmadasByViaje(any());
+    }
+
+    // --- TESTS DE MARCAR ASISTENCIA ---
+
+    @Test
+    void deberiaMarcarAsistenciaComoPresente() throws Exception {
+        // given
+        Long reservaId = 1L;
+        Long conductorId = 1L;
+        String asistenciaValor = "PRESENTE";
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = crearViajeMock(1L, 2, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusMinutes(20)); // 20 min antes
+        viaje.setConductor(conductor);
+
+        Viajero viajero = crearViajeroMock(1L);
+        Reserva reserva = crearReservaConViajero(reservaId, EstadoReserva.CONFIRMADA, viajero);
+        reserva.setViaje(viaje);
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+
+        // when
+        servicioReserva.marcarAsistencia(reservaId, conductorId, asistenciaValor);
+
+        // then
+        assertThat(reserva.getAsistencia().name(), is("PRESENTE"));
+        verify(repositorioReservaMock, times(1)).update(reserva);
+    }
+
+    @Test
+    void deberiaMarcarAsistenciaComoAusente() throws Exception {
+        // given
+        Long reservaId = 1L;
+        Long conductorId = 1L;
+        String asistenciaValor = "AUSENTE";
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = crearViajeMock(1L, 2, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusMinutes(20));
+        viaje.setConductor(conductor);
+
+        Viajero viajero = crearViajeroMock(1L);
+        Reserva reserva = crearReservaConViajero(reservaId, EstadoReserva.CONFIRMADA, viajero);
+        reserva.setViaje(viaje);
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+
+        // when
+        servicioReserva.marcarAsistencia(reservaId, conductorId, asistenciaValor);
+
+        // then
+        assertThat(reserva.getAsistencia().name(), is("AUSENTE"));
+        verify(repositorioReservaMock, times(1)).update(reserva);
+    }
+
+    @Test
+    void deberiaLanzarExcepcionSiIntentaMarcarAsistenciaAntesDe30Minutos() {
+        // given
+        Long reservaId = 1L;
+        Long conductorId = 1L;
+        String asistenciaValor = "PRESENTE";
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = crearViajeMock(1L, 2, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusHours(2)); // 2 horas antes
+        viaje.setConductor(conductor);
+
+        Viajero viajero = crearViajeroMock(1L);
+        Reserva reserva = crearReservaConViajero(reservaId, EstadoReserva.CONFIRMADA, viajero);
+        reserva.setViaje(viaje);
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+
+        // when & then
+        assertThrows(AccionNoPermitidaException.class, () -> {
+            servicioReserva.marcarAsistencia(reservaId, conductorId, asistenciaValor);
+        });
+
+        verify(repositorioReservaMock, never()).update(any());
+    }
+
+    @Test
+    void deberiaLanzarExcepcionSiReservaNoEstaConfirmadaAlMarcarAsistencia() {
+        // given
+        Long reservaId = 1L;
+        Long conductorId = 1L;
+        String asistenciaValor = "PRESENTE";
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = crearViajeMock(1L, 2, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusMinutes(20));
+        viaje.setConductor(conductor);
+
+        Viajero viajero = crearViajeroMock(1L);
+        Reserva reserva = crearReservaConViajero(reservaId, EstadoReserva.PENDIENTE, viajero); // No confirmada
+        reserva.setViaje(viaje);
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+
+        // when & then
+        assertThrows(ReservaYaExisteException.class, () -> {
+            servicioReserva.marcarAsistencia(reservaId, conductorId, asistenciaValor);
+        });
+
+        verify(repositorioReservaMock, never()).update(any());
+    }
+
+    @Test
+    void deberiaLanzarExcepcionSiConductorNoEsDuenioDelViajeAlMarcarAsistencia() {
+        // given
+        Long reservaId = 1L;
+        Long conductorId = 1L;
+        Long otroConductorId = 2L;
+        String asistenciaValor = "PRESENTE";
+
+        Conductor otroConductor = new Conductor();
+        otroConductor.setId(otroConductorId);
+
+        Viaje viaje = crearViajeMock(1L, 2, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusMinutes(20));
+        viaje.setConductor(otroConductor);
+
+        Viajero viajero = crearViajeroMock(1L);
+        Reserva reserva = crearReservaConViajero(reservaId, EstadoReserva.CONFIRMADA, viajero);
+        reserva.setViaje(viaje);
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+
+        // when & then
+        assertThrows(UsuarioNoAutorizadoException.class, () -> {
+            servicioReserva.marcarAsistencia(reservaId, conductorId, asistenciaValor);
+        });
+
+        verify(repositorioReservaMock, never()).update(any());
+    }
+
+    @Test
+    void deberiaLanzarExcepcionSiAsistenciaEsInvalida() {
+        // given
+        Long reservaId = 1L;
+        Long conductorId = 1L;
+        String asistenciaInvalida = "INVALIDO";
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = crearViajeMock(1L, 2, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusMinutes(20));
+        viaje.setConductor(conductor);
+
+        Viajero viajero = crearViajeroMock(1L);
+        Reserva reserva = crearReservaConViajero(reservaId, EstadoReserva.CONFIRMADA, viajero);
+        reserva.setViaje(viaje);
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+
+        // when & then
+        assertThrows(DatoObligatorioException.class, () -> {
+            servicioReserva.marcarAsistencia(reservaId, conductorId, asistenciaInvalida);
+        });
+
+        verify(repositorioReservaMock, never()).update(any());
+    }
 
     // --- TESTS DE CONFIRMAR RESERVA ---
 

@@ -3,6 +3,7 @@ package com.tallerwebi.infraestructura;
 import com.tallerwebi.dominio.Entity.Reserva;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.Viajero;
+import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -65,5 +66,15 @@ public class RepositorioReservaImpl implements ReservaRepository {
     @Override
     public void update(Reserva reserva) {
         sessionFactory.getCurrentSession().update(reserva);
+    }
+
+    @Override
+    public List<Reserva> findConfirmadasByViaje(Viaje viaje) {
+        String hql = "SELECT r FROM Reserva r WHERE r.viaje.id = :viajeId AND r.estado = :estado ORDER BY r.fechaSolicitud ASC";
+        return sessionFactory.getCurrentSession()
+                .createQuery(hql, Reserva.class)
+                .setParameter("viajeId", viaje.getId())
+                .setParameter("estado", EstadoReserva.CONFIRMADA)
+                .getResultList();
     }
 }

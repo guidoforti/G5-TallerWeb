@@ -1,5 +1,7 @@
 package com.tallerwebi.dominio.Entity;
 
+import com.tallerwebi.dominio.Enums.EstadoAsistencia;
+import com.tallerwebi.dominio.Enums.EstadoPago;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -38,4 +40,12 @@ public class Reserva {
 
     @Column(name = "motivo_rechazo")
     private String motivoRechazo;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado_pago", nullable = false)
+    private EstadoPago estadoPago = EstadoPago.NO_PAGADO;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "asistencia", nullable = false)
+    private EstadoAsistencia asistencia = EstadoAsistencia.NO_MARCADO;
 }
