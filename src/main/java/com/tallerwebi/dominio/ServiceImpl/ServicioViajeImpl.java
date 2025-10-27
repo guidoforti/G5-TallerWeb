@@ -3,12 +3,11 @@ package com.tallerwebi.dominio.ServiceImpl;
 import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.*;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
+import com.tallerwebi.dominio.IRepository.RepositorioParada;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
-import com.tallerwebi.dominio.IServicio.ServicioCiudad;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
-import com.tallerwebi.presentacion.DTO.InputsDTO.ViajeInputDTO;
 import com.tallerwebi.dominio.excepcion.*;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -29,12 +27,14 @@ public class ServicioViajeImpl implements ServicioViaje {
     private ViajeRepository viajeRepository;
     private ServicioConductor servicioConductor;
     private ServicioVehiculo servicioVehiculo;
+    private RepositorioParada repositorioParada;
 
     @Autowired
-    public ServicioViajeImpl(ViajeRepository viajeRepository, ServicioConductor servicioConductor, ServicioVehiculo servicioVehiculo) {
+    public ServicioViajeImpl(ViajeRepository viajeRepository, ServicioConductor servicioConductor, ServicioVehiculo servicioVehiculo, RepositorioParada repositorioParada) {
         this.viajeRepository = viajeRepository;
         this.servicioConductor = servicioConductor;
         this.servicioVehiculo = servicioVehiculo;
+        this.repositorioParada = repositorioParada;
     }
 
     @Override
@@ -42,6 +42,7 @@ public class ServicioViajeImpl implements ServicioViaje {
         return viajeRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("No se encontró el viaje"));
     }
+
     @Override
     public Viaje obtenerDetalleDeViaje(Long id) throws NotFoundException {
         Viaje viaje = viajeRepository.findById(id)
@@ -53,7 +54,7 @@ public class ServicioViajeImpl implements ServicioViaje {
         Hibernate.initialize(viaje.getVehiculo());
 
 
-        Hibernate.initialize(viaje.getViajeros());
+        Hibernate.initialize(viaje.getReservas());
         Hibernate.initialize(viaje.getParadas());
 
 
@@ -67,39 +68,32 @@ public class ServicioViajeImpl implements ServicioViaje {
     @Override
     @Transactional
     public void modificarViaje(Viaje viaje, List<Parada> paradas) throws BadRequestException {
-        if (viaje == null) {
-            throw new BadRequestException("El viaje no puede ser nulo");
-        }
-
-        // Obtener el viaje existente
+        // 1. Obtener el viaje existente
         Viaje viajeExistente = viajeRepository.findById(viaje.getId())
                 .orElseThrow(() -> new BadRequestException("El viaje no existe"));
 
-        // Validar estado
-        if (!viajeExistente.getEstado().equals(EstadoDeViaje.DISPONIBLE)) {
-            throw new BadRequestException("El viaje debe estar disponible para ser modificado");
-        }
-
-        // Validar asientos
-        if (viaje.getAsientosDisponibles() > viaje.getVehiculo().getAsientosTotales()) {
-            throw new BadRequestException("Los asientos disponibles no pueden ser mayores a los asientos totales del vehículo");
-        }
-
-        // Actualizar campos básicos
-        viajeExistente.setOrigen(viaje.getOrigen());
-        viajeExistente.setDestino(viaje.getDestino());
-        viajeExistente.setVehiculo(viaje.getVehiculo());
+        // 2. Actualizar campos básicos
         viajeExistente.setFechaHoraDeSalida(viaje.getFechaHoraDeSalida());
         viajeExistente.setPrecio(viaje.getPrecio());
-        viajeExistente.setAsientosDisponibles(viaje.getAsientosDisponibles());
 
-        // Actualizar paradas
+        // 3. Limpiar paradas existentes
         viajeExistente.getParadas().clear();
+
+        // 4. Agregar nuevas paradas
         if (paradas != null) {
-            viajeExistente.getParadas().addAll(paradas);
+            for (Parada parada : paradas) {
+                // Crear nueva instancia para evitar problemas de referencia
+                Parada nuevaParada = new Parada();
+                nuevaParada.setCiudad(parada.getCiudad());
+                nuevaParada.setOrden(parada.getOrden());
+                nuevaParada.setViaje(viajeExistente);  // Establecer la relación
+                viajeExistente.agregarParada(nuevaParada);
+            }
         }
 
+        // 5. Guardar cambios
         viajeRepository.modificarViaje(viajeExistente);
+
     }
 
     @Override
@@ -140,24 +134,24 @@ public class ServicioViajeImpl implements ServicioViaje {
         int asientosMaximos = vehiculo.getAsientosTotales() - 1;
         if (viaje.getAsientosDisponibles() > asientosMaximos) {
             throw new AsientosDisponiblesMayorQueTotalesDelVehiculoException(
-                "Los asientos disponibles no pueden ser mayores a " + asientosMaximos +
-                " (total del vehículo menos el asiento del conductor)"
+                    "Los asientos disponibles no pueden ser mayores a " + asientosMaximos +
+                            " (total del vehículo menos el asiento del conductor)"
             );
         }
 
         // Validar que no exista un viaje duplicado en estado DISPONIBLE o COMPLETO
         List<EstadoDeViaje> estadosProhibidos = Arrays.asList(EstadoDeViaje.DISPONIBLE, EstadoDeViaje.COMPLETO);
         List<Viaje> viajesDuplicados = viajeRepository.findByOrigenYDestinoYConductorYEstadoIn(
-            viaje.getOrigen(),
-            viaje.getDestino(),
-            conductor,
-            estadosProhibidos
+                viaje.getOrigen(),
+                viaje.getDestino(),
+                conductor,
+                estadosProhibidos
         );
 
         if (!viajesDuplicados.isEmpty()) {
             throw new ViajeDuplicadoException(
-                "Ya tenés un viaje publicado con el mismo origen y destino. " +
-                "Por favor, cancelá o finalizá el viaje existente antes de crear uno nuevo."
+                    "Ya tenés un viaje publicado con el mismo origen y destino. " +
+                            "Por favor, cancelá o finalizá el viaje existente antes de crear uno nuevo."
             );
         }
 
@@ -205,26 +199,26 @@ public class ServicioViajeImpl implements ServicioViaje {
     @Override
     public void cancelarViaje(Long id, Usuario usuarioEnSesion) throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeNoCancelableException {
         // valido que el rol sea de conductor primero que todo
-        if(usuarioEnSesion.getRol() == null || !usuarioEnSesion.getRol().equalsIgnoreCase("CONDUCTOR")){
+        if (usuarioEnSesion.getRol() == null || !usuarioEnSesion.getRol().equalsIgnoreCase("CONDUCTOR")) {
             throw new UsuarioNoAutorizadoException("Solo los conductores pueden cancelar viajes");
         }
 
         //busco viaje por id
         Optional<Viaje> viajeOptional = viajeRepository.findById(id);
         if (viajeOptional.isEmpty()) {
-        throw new ViajeNoEncontradoException("No se encontró un viaje con ese ID");
+            throw new ViajeNoEncontradoException("No se encontró un viaje con ese ID");
         }
 
         //Esta linea obtiene el objeto viaje
-          Viaje viaje = viajeOptional.get();
+        Viaje viaje = viajeOptional.get();
 
         //el viaje debe pertenecer al conductor
-        if(!viaje.getConductor().getId().equals(usuarioEnSesion.getId())){
+        if (!viaje.getConductor().getId().equals(usuarioEnSesion.getId())) {
             throw new UsuarioNoAutorizadoException("El viaje debe pertenecer al conductor");
         }
 
         //valido el estado del viaje
-        if(!(viaje.getEstado() == EstadoDeViaje.DISPONIBLE || viaje.getEstado() == EstadoDeViaje.COMPLETO)){
+        if (!(viaje.getEstado() == EstadoDeViaje.DISPONIBLE || viaje.getEstado() == EstadoDeViaje.COMPLETO)) {
             throw new ViajeNoCancelableException("El viaje debe estar en estado DISPONIBLE o COMPLETO para cancelarse");
         }
 

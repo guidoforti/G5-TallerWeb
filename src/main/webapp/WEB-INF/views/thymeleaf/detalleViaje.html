@@ -39,6 +39,17 @@
                 background-color: #cf5930;
                 color: white;
             }
+            .btn-outline-unrumbo {
+                border: 2px solid #E16A3D;
+                color: #E16A3D;
+                background-color: white;
+                font-weight: 500;
+                padding: 0.5rem 1.5rem;
+            }
+            .btn-outline-unrumbo:hover {
+                background-color: #E16A3D;
+                color: white;
+            }
             .section-title {
                 color: #E16A3D;
                 font-weight: 600;
@@ -178,8 +189,15 @@
                         </div>
 
                         <!-- Botones de acción -->
-                        <div class="d-flex justify-content-center mt-5">
-                            <a th:href="@{/viaje/listar}" class="btn btn-unrumbo">
+                        <div class="d-flex justify-content-center gap-3 mt-5">
+                            <!-- Botón Solicitar Reserva - Solo visible para VIAJERO -->
+                            <a th:if="${userRole != null && userRole == 'VIAJERO'}"
+                               th:href="@{/reserva/solicitar(viajeId=${viajeId})}"
+                               class="btn btn-unrumbo">
+                                <i class="fas fa-ticket-alt me-2"></i> Solicitar Reserva
+                            </a>
+
+                            <a th:href="@{/viaje/listar}" class="btn btn-outline-unrumbo">
                                 <i class="fas fa-arrow-left me-2"></i> Volver a Mis Viajes
                             </a>
                         </div>

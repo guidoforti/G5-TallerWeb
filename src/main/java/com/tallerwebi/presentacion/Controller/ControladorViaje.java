@@ -11,6 +11,7 @@ import com.tallerwebi.dominio.IServicio.ServicioNominatim;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
+import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
@@ -25,6 +26,8 @@ import com.tallerwebi.dominio.excepcion.NominatimResponseException;
 import com.tallerwebi.dominio.excepcion.NotFoundException;
 import com.tallerwebi.presentacion.DTO.NominatimResponse;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.DetalleViajeOutputDTO;
+import com.tallerwebi.presentacion.DTO.ViajeroDTO;
+import com.tallerwebi.dominio.Entity.Viajero;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -46,18 +49,21 @@ public class ControladorViaje {
     private final ServicioNominatim servicioNominatim;
     private final ServicioCiudad servicioCiudad;
     private final ServicioConductor servicioConductor;
+    private final ServicioReserva servicioReserva;
 
     @Autowired
     public ControladorViaje(ServicioViaje servicioViaje,
                             ServicioVehiculo servicioVehiculo,
                             ServicioNominatim servicioNominatim,
                             ServicioCiudad servicioCiudad,
-                            ServicioConductor servicioConductor) {
+                            ServicioConductor servicioConductor,
+                            ServicioReserva servicioReserva) {
         this.servicioViaje = servicioViaje;
         this.servicioVehiculo = servicioVehiculo;
         this.servicioNominatim = servicioNominatim;
         this.servicioCiudad = servicioCiudad;
         this.servicioConductor = servicioConductor;
+        this.servicioReserva = servicioReserva;
     }
 
 
@@ -331,6 +337,13 @@ public class ControladorViaje {
     @GetMapping("/detalle")
     public ModelAndView verDetalleDeUnViaje(HttpSession httpSession, @RequestParam("id") Long id) {
         ModelMap model = new ModelMap();
+
+        // Pasar el rol del usuario a la vista
+        Object rol = httpSession.getAttribute("ROL");
+        if (rol != null) {
+            model.put("userRole", rol.toString());
+        }
+
        /* Object rol = httpSession.getAttribute("rol");
         if (rol == null || !rol.equals("CONDUCTOR")) {
             UsuarioNoAutorizadoException e = new UsuarioNoAutorizadoException("Debe ser un usuario conductor para ver detalles de un viaje");
@@ -339,11 +352,19 @@ public class ControladorViaje {
         } */
         try {
             Viaje viaje = servicioViaje.obtenerDetalleDeViaje(id);
-            DetalleViajeOutputDTO detalleViajeOutputDTO = new DetalleViajeOutputDTO(viaje);
+
+            // Obtener viajeros confirmados a través de ServicioReserva
+            List<Viajero> viajerosConfirmados = servicioReserva.obtenerViajerosConfirmados(viaje);
+            List<ViajeroDTO> viajerosDTO = viajerosConfirmados.stream()
+                    .map(ViajeroDTO::new)
+                    .collect(Collectors.toList());
+
+            DetalleViajeOutputDTO detalleViajeOutputDTO = new DetalleViajeOutputDTO(viaje, viajerosDTO);
             model.put("detalle", detalleViajeOutputDTO);
+            model.put("viajeId", id);  // Pasar el ID del viaje para el botón de reserva
             return new ModelAndView("detalleViaje", model);
 
-        } catch (NotFoundException e) {
+        } catch (NotFoundException | ViajeNoEncontradoException | UsuarioNoAutorizadoException e) {
             model.put("error", e.getMessage());
             return new ModelAndView("detalleViaje", model);
         }

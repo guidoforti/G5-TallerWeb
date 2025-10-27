@@ -45,7 +45,7 @@ public class RepositorioViajeroTest {
         viajeroBase.setContrasenia("securePass1");
         viajeroBase.setRol("VIAJERO");
         viajeroBase.setActivo(true);
-        viajeroBase.setViajes(new ArrayList<>());
+        viajeroBase.setReservas(new ArrayList<>());
 
         repositorioUsuario.guardar(viajeroBase);
     }

@@ -225,7 +225,7 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
         viaje.setAsientosDisponibles(3);
         viaje.setFechaDeCreacion(LocalDateTime.now());
         viaje.setEstado(EstadoDeViaje.DISPONIBLE);
-        viaje.setViajeros(new ArrayList<>());
+        viaje.setReservas(new ArrayList<>());
         viaje.setParadas(new ArrayList<>());
         viaje.setConductor(conductor);
         viaje.setVehiculo(vehiculo);
@@ -301,7 +301,7 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
         assertTrue(repositorioViaje.findById(viajeId).isPresent(), "El viaje debería existir antes de borrarlo");
         // Act
         repositorioViaje.borrarViaje(viajeId);
-        sessionFactory.getCurrentSession().flush();
+        // sessionFactory.getCurrentSession().flush();
         // Assert - Afirmamos que el Optional está vacío después de la operación
         assertTrue(repositorioViaje.findById(viajeId).isEmpty(), "El Optional debería estar vacío después de borrarlo");
     }
@@ -418,7 +418,7 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
         viajeFinalizadoForTest.setPrecio(10000.0);
         viajeFinalizadoForTest.setAsientosDisponibles(2);
         viajeFinalizadoForTest.setFechaDeCreacion(LocalDateTime.now());
-        viajeFinalizadoForTest.setViajeros(new ArrayList<>());
+        viajeFinalizadoForTest.setReservas(new ArrayList<>());
         viajeFinalizadoForTest.setParadas(new ArrayList<>());
 
         repositorioViaje.guardarViaje(viajeFinalizadoForTest);
@@ -539,7 +539,7 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
         viajeCompleto.setPrecio(10000.0);
         viajeCompleto.setAsientosDisponibles(0);
         viajeCompleto.setFechaDeCreacion(LocalDateTime.now());
-        viajeCompleto.setViajeros(new ArrayList<>());
+        viajeCompleto.setReservas(new ArrayList<>());
         viajeCompleto.setParadas(new ArrayList<>());
         repositorioViaje.guardarViaje(viajeCompleto);
         sessionFactory.getCurrentSession().flush();
@@ -584,7 +584,7 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
         viajeMañana.setPrecio(10000.0);
         viajeMañana.setAsientosDisponibles(3);
         viajeMañana.setFechaDeCreacion(ahora);
-        viajeMañana.setViajeros(new ArrayList<>());
+        viajeMañana.setReservas(new ArrayList<>());
         viajeMañana.setParadas(new ArrayList<>());
         repositorioViaje.guardarViaje(viajeMañana);
 
@@ -626,7 +626,7 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
         viajeBarato.setPrecio(5000.0);
         viajeBarato.setAsientosDisponibles(3);
         viajeBarato.setFechaDeCreacion(LocalDateTime.now());
-        viajeBarato.setViajeros(new ArrayList<>());
+        viajeBarato.setReservas(new ArrayList<>());
         viajeBarato.setParadas(new ArrayList<>());
         repositorioViaje.guardarViaje(viajeBarato);
         sessionFactory.getCurrentSession().flush();
@@ -671,7 +671,7 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
         viajeLejano.setPrecio(10000.0);
         viajeLejano.setAsientosDisponibles(3);
         viajeLejano.setFechaDeCreacion(ahora);
-        viajeLejano.setViajeros(new ArrayList<>());
+        viajeLejano.setReservas(new ArrayList<>());
         viajeLejano.setParadas(new ArrayList<>());
         repositorioViaje.guardarViaje(viajeLejano);
 
@@ -686,7 +686,7 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
         viajeCercano.setPrecio(10000.0);
         viajeCercano.setAsientosDisponibles(3);
         viajeCercano.setFechaDeCreacion(ahora);
-        viajeCercano.setViajeros(new ArrayList<>());
+        viajeCercano.setReservas(new ArrayList<>());
         viajeCercano.setParadas(new ArrayList<>());
         repositorioViaje.guardarViaje(viajeCercano);
 

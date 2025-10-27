@@ -7,6 +7,7 @@ import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.Enums.EstadoVerificacion;
+import com.tallerwebi.dominio.IRepository.RepositorioParada;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
@@ -45,13 +46,15 @@ class ServicioViajeTest {
     private ServicioConductor servicioConductorMock;
     private ServicioVehiculo servicioVehiculoMock;
     private ServicioViaje servicioViaje;
+    private RepositorioParada repositorioParada;
 
     @BeforeEach
     void setUp() {
         viajeRepositoryMock = mock(ViajeRepository.class);
         servicioConductorMock = mock(ServicioConductor.class);
         servicioVehiculoMock = mock(ServicioVehiculo.class);
-        servicioViaje = new ServicioViajeImpl(viajeRepositoryMock, servicioConductorMock, servicioVehiculoMock);
+        repositorioParada = mock(RepositorioParada.class);
+        servicioViaje = new ServicioViajeImpl(viajeRepositoryMock, servicioConductorMock, servicioVehiculoMock , repositorioParada);
     }
 
     private Viaje crearViajeDeTest() {
@@ -64,7 +67,7 @@ class ServicioViajeTest {
         viaje.setAsientosDisponibles(3);
         viaje.setFechaDeCreacion(LocalDateTime.now());
         viaje.setEstado(EstadoDeViaje.DISPONIBLE);
-        viaje.setViajeros(new ArrayList<>());
+        viaje.setReservas(new ArrayList<>());
         viaje.setParadas(new ArrayList<>());
         viaje.setOrigen(origen);
         viaje.setDestino(destino);
@@ -107,7 +110,7 @@ class ServicioViajeTest {
         assertThat(viajeGuardado.getPrecio(), equalTo(1500.0));
         assertThat(viajeGuardado.getEstado(), equalTo(EstadoDeViaje.DISPONIBLE));
         assertThat(viajeGuardado.getFechaDeCreacion(), notNullValue());
-        assertThat(viajeGuardado.getViajeros(), empty());
+        assertThat(viajeGuardado.getReservas(), empty());
         assertThat(viajeGuardado.getParadas(), empty());
     }
 
@@ -812,7 +815,7 @@ conductor.setRol("CONDUCTOR");
         assertThat(Hibernate.isInitialized(resultado.getOrigen()), is(true));
         assertThat(Hibernate.isInitialized(resultado.getDestino()), is(true));
         assertThat(Hibernate.isInitialized(resultado.getVehiculo()), is(true));
-        assertThat(Hibernate.isInitialized(resultado.getViajeros()), is(true));
+        assertThat(Hibernate.isInitialized(resultado.getReservas()), is(true));
         assertThat(Hibernate.isInitialized(resultado.getParadas()), is(true));
         // Verificar inicialización de relaciones anidadas
         for (Parada parada : resultado.getParadas()) {
@@ -881,7 +884,7 @@ conductor.setRol("CONDUCTOR");
         viaje.setAsientosDisponibles(3);
         viaje.setFechaDeCreacion(LocalDateTime.now());
         viaje.setEstado(EstadoDeViaje.DISPONIBLE);
-        viaje.setViajeros(Arrays.asList(viajero1, viajero2));
+        viaje.setReservas(new ArrayList<>());  // Reservas manejadas por la relación
         viaje.setParadas(Collections.singletonList(parada));
 
         // Establecer la relación bidireccional

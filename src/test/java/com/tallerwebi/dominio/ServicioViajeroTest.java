@@ -45,7 +45,7 @@ class ServicioViajeroTest {
         v.setEdad(30);
         v.setEmail("ana@mail.com");
         v.setContrasenia("123");
-        v.setViajes(new ArrayList<>());
+        v.setReservas(new ArrayList<>());
         // El rol y activo se setean DENTRO del servicio
 
         // Simulamos que el ServicioLogin NO lanza UsuarioExistente, lo que implica registro exitoso
@@ -71,7 +71,7 @@ class ServicioViajeroTest {
         nuevo.setEdad(30);
         nuevo.setEmail("ana@mail.com");
         nuevo.setContrasenia("123");
-        nuevo.setViajes(new ArrayList<>());
+        nuevo.setReservas(new ArrayList<>());
 
         // El ServicioLogin debe lanzar la excepción para simular que el email ya existe
         doThrow(new UsuarioExistente("Ya existe un usuario con ese email"))
