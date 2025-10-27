@@ -358,6 +358,7 @@ public class ControladorReserva {
      * POST /reserva/marcarAsistencia
      */
     @PostMapping("/marcarAsistencia")
+    @Transactional(readOnly = true)
     public ModelAndView marcarAsistencia(@ModelAttribute MarcarAsistenciaInputDTO inputDTO,
                                          HttpSession session) {
         ModelMap model = new ModelMap();
@@ -369,10 +370,17 @@ public class ControladorReserva {
         }
 
         Long conductorId = (Long) conductorIdObj;
+        Long viajeId = null;
 
         try {
+            // Primero obtenemos el viajeId antes de intentar marcar asistencia
+            Reserva reserva = servicioReserva.obtenerReservaPorId(inputDTO.getReservaId());
+            viajeId = reserva.getViaje().getId();
+
+            // Intentar marcar asistencia
             servicioReserva.marcarAsistencia(inputDTO.getReservaId(), conductorId, inputDTO.getAsistencia());
             model.put("mensaje", "Asistencia marcada exitosamente");
+
         } catch (NotFoundException e) {
             model.put("error", "No se encontró la reserva");
         } catch (UsuarioNoAutorizadoException e) {
@@ -385,12 +393,36 @@ public class ControladorReserva {
             model.put("error", "Valor de asistencia inválido");
         }
 
-        // Obtener viajeId de la reserva para redirigir
+        // Si no pudimos obtener el viajeId, redirigir a misReservas
+        if (viajeId == null) {
+            return new ModelAndView("redirect:/reserva/misReservas");
+        }
+
+        // Recargar la vista con los datos actualizados
         try {
-            Reserva reserva = servicioReserva.obtenerReservaPorId(inputDTO.getReservaId());
-            return new ModelAndView("redirect:/reserva/viajerosConfirmados?viajeId=" + reserva.getViaje().getId(), model);
-        } catch (NotFoundException e) {
-            return new ModelAndView("redirect:/reserva/misReservas", model);
+            Viaje viaje = servicioViaje.obtenerViajePorId(viajeId);
+            List<Reserva> reservasConfirmadas = servicioReserva.listarViajerosConfirmados(viajeId, conductorId);
+
+            // Convertir a DTOs
+            List<ViajeroConfirmadoDTO> viajerosDTO = reservasConfirmadas.stream()
+                    .map(ViajeroConfirmadoDTO::new)
+                    .collect(Collectors.toList());
+
+            // Agregar información del viaje al modelo (formateada para la vista)
+            model.put("viajeId", viaje.getId());
+            model.put("origenNombre", viaje.getOrigen() != null ? viaje.getOrigen().getNombre() : "N/A");
+            model.put("destinoNombre", viaje.getDestino() != null ? viaje.getDestino().getNombre() : "N/A");
+            model.put("fechaSalida", viaje.getFechaHoraDeSalida() != null
+                    ? viaje.getFechaHoraDeSalida().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                    : "N/A");
+            model.put("precio", viaje.getPrecio() != null ? viaje.getPrecio() : 0.0);
+            model.put("viajeros", viajerosDTO);
+
+            return new ModelAndView("viajerosConfirmados", model);
+
+        } catch (ViajeNoEncontradoException | NotFoundException | UsuarioNoAutorizadoException e) {
+            model.put("error", "Error al recargar datos: " + e.getMessage());
+            return new ModelAndView("redirect:/reserva/misReservas");
         }
     }
 }
