@@ -50,21 +50,21 @@
             <div class="col-md-6">
                 <p class="mb-1">
                     <i class="bi bi-geo-alt-fill me-2"></i>
-                    <strong>Origen:</strong> <span th:text="${viaje.origen.nombre}"></span>
+                    <strong>Origen:</strong> <span th:text="${origenNombre}"></span>
                 </p>
                 <p class="mb-1">
                     <i class="bi bi-geo-fill me-2"></i>
-                    <strong>Destino:</strong> <span th:text="${viaje.destino.nombre}"></span>
+                    <strong>Destino:</strong> <span th:text="${destinoNombre}"></span>
                 </p>
             </div>
             <div class="col-md-6">
                 <p class="mb-1">
                     <i class="bi bi-calendar-event me-2"></i>
-                    <strong>Fecha:</strong> <span th:text="${#temporals.format(viaje.fechaHoraDeSalida, 'dd/MM/yyyy HH:mm')}"></span>
+                    <strong>Fecha:</strong> <span th:text="${fechaSalida}"></span>
                 </p>
                 <p class="mb-1">
                     <i class="bi bi-currency-dollar me-2"></i>
-                    <strong>Precio:</strong> $<span th:text="${viaje.precio}"></span>
+                    <strong>Precio:</strong> $<span th:text="${precio}"></span>
                 </p>
             </div>
         </div>
@@ -172,8 +172,6 @@
         <strong>Nota:</strong> La asistencia solo puede marcarse desde 30 minutos antes de la salida del viaje.
     </div>
 </main>
-
-<footer th:replace="fragments/fragments :: footer"></footer>
 
 <!-- Bootstrap Bundle with Popper -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>

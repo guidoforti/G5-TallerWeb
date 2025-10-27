@@ -333,7 +333,14 @@ public class ControladorReserva {
                     .map(ViajeroConfirmadoDTO::new)
                     .collect(Collectors.toList());
 
-            model.put("viaje", viaje);
+            // Agregar información del viaje al modelo (formateada para la vista)
+            model.put("viajeId", viaje.getId());
+            model.put("origenNombre", viaje.getOrigen() != null ? viaje.getOrigen().getNombre() : "N/A");
+            model.put("destinoNombre", viaje.getDestino() != null ? viaje.getDestino().getNombre() : "N/A");
+            model.put("fechaSalida", viaje.getFechaHoraDeSalida() != null
+                    ? viaje.getFechaHoraDeSalida().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                    : "N/A");
+            model.put("precio", viaje.getPrecio() != null ? viaje.getPrecio() : 0.0);
             model.put("viajeros", viajerosDTO);
             return new ModelAndView("viajerosConfirmados", model);
 
