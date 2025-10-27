@@ -85,7 +85,12 @@ public class ServicioReservaImpl implements ServicioReserva {
     @Override
     public List<Viajero> obtenerViajerosConfirmados(Viaje viaje) throws ViajeNoEncontradoException, NotFoundException, UsuarioNoAutorizadoException {
         Viaje viajeConfirmado  = servicioViaje.obtenerViajePorId(viaje.getId());
-        return reservaRepository.findByViaje(viajeConfirmado).stream()
+        List<Reserva> reservas = reservaRepository.findByViaje(viajeConfirmado);
+
+        // Inicializar viajeros lazy para evitar LazyInitializationException
+        reservas.forEach(reserva -> org.hibernate.Hibernate.initialize(reserva.getViajero()));
+
+        return reservas.stream()
                 .filter(reserva -> reserva.getEstado() == EstadoReserva.CONFIRMADA)
                 .map(Reserva::getViajero)
                 .collect(Collectors.toList());
