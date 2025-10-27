@@ -63,7 +63,12 @@ public class ServicioReservaImpl implements ServicioReserva {
 
     @Override
     public List<Reserva> listarReservasPorViaje(Viaje viaje) {
-        return reservaRepository.findByViaje(viaje);
+        List<Reserva> reservas = reservaRepository.findByViaje(viaje);
+
+        // Inicializar viajeros lazy para evitar LazyInitializationException en la capa de presentación
+        reservas.forEach(reserva -> org.hibernate.Hibernate.initialize(reserva.getViajero()));
+
+        return reservas;
     }
 
     @Override
