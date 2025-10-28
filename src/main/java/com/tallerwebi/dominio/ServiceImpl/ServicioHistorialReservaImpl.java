@@ -3,6 +3,11 @@ package com.tallerwebi.dominio.ServiceImpl;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.transaction.Transactional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.IRepository.RepositorioHistorialReserva;

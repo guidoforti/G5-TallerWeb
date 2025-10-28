@@ -7,8 +7,6 @@ import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
 import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.HistorialReservaDTO;
 
-
-
 public interface ServicioHistorialReserva {
     
     /**
