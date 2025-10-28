@@ -23,69 +23,51 @@ public class HistorialReservaDTO {
     private String emailViajero;
     private String nombreConductor;
     private LocalDateTime fechaEvento;
-    private EstadoReserva estadoFinal;
+    private EstadoReserva estadoAnterior;
+    private EstadoReserva estadoNuevo;
     
-    /* 
-    private Long id;
-    private Long reservaId;
-    private String nombreViajero;
-    private String origenViaje;
-    private String destinoViaje;
-    private String estadoAnterior;
-    private String estadoNuevo;
-    private String motivo;
-    private String fechaCambio;
-    */
+    public HistorialReservaDTO(HistorialReserva historial) {
+    this.id = historial != null ? historial.getId() : null;
 
-    /**
-     * Constructor que convierte una entidad HistorialReserva en DTO.
-     * Null-safe y con formato legible.
-     */
-   /*
-   public HistorialReservaDTO(HistorialReserva historial) {
-        this.id = historial.getId();
-
-        if (historial.getReserva() != null) {
-            this.reservaId = historial.getReserva().getId();
-
-            if (historial.getReserva().getViajero() != null) {
-                this.nombreViajero = historial.getReserva().getViajero().getNombre();
-            } else {
-                this.nombreViajero = "Sin viajero";
-            }
-
-            if (historial.getReserva().getViaje() != null) {
-                this.origenViaje = historial.getReserva().getViaje().getOrigen() != null
-                        ? historial.getReserva().getViaje().getOrigen().getNombre()
-                        : "Sin origen";
-                this.destinoViaje = historial.getReserva().getViaje().getDestino() != null
-                        ? historial.getReserva().getViaje().getDestino().getNombre()
-                        : "Sin destino";
-            } else {
-                this.origenViaje = "Sin origen";
-                this.destinoViaje = "Sin destino";
-            }
-
-        } else {
-            this.reservaId = null;
-            this.nombreViajero = "Sin viajero";
-            this.origenViaje = "Sin origen";
-            this.destinoViaje = "Sin destino";
-        }
-
-        this.estadoAnterior = historial.getEstadoAnterior() != null
-                ? historial.getEstadoAnterior()
-                : "SIN_ESTADO";
-
-        this.estadoNuevo = historial.getEstadoNuevo() != null
-                ? historial.getEstadoNuevo()
-                : "SIN_ESTADO";
-
-        this.motivo = historial.getMotivo() != null ? historial.getMotivo() : "Sin motivo";
-
-        this.fechaCambio = historial.getFechaCambio() != null
-                ? historial.getFechaCambio().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
-                : "Sin fecha";
+    // Información del viaje
+    if (historial != null && historial.getReserva() != null && historial.getReserva().getViaje() != null) {
+        this.idViaje = historial.getReserva().getViaje().getId();
+    } else {
+        this.idViaje = null;
     }
-    */ 
+
+    // Información del viajero
+    if (historial != null && historial.getReserva() != null && historial.getReserva().getViajero() != null) {
+        this.nombreViajero = historial.getReserva().getViajero().getNombre() != null
+                ? historial.getReserva().getViajero().getNombre()
+                : "Sin nombre";
+        this.emailViajero = historial.getReserva().getViajero().getEmail() != null
+                ? historial.getReserva().getViajero().getEmail()
+                : "Sin email";
+    } else {
+        this.nombreViajero = "Sin nombre";
+        this.emailViajero = "Sin email";
+    }
+
+    // Información del conductor
+    if (historial != null && historial.getConductor() != null) {
+        this.nombreConductor = historial.getConductor().getNombre() != null
+                ? historial.getConductor().getNombre()
+                : "Sin nombre";
+    } else {
+        this.nombreConductor = "Sin conductor";
+    }
+
+    // Fecha del evento (formateada)
+    if (historial != null && historial.getFechaEvento() != null) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        this.fechaEvento = historial.getFechaEvento();
+    } else {
+        this.fechaEvento = null;
+    }
+
+    // Estados (anterior y nuevo)
+    this.estadoAnterior = historial != null ? historial.getEstadoAnterior() : null;
+    this.estadoNuevo = historial != null ? historial.getEstadoNuevo() : null;
+    }
 }
