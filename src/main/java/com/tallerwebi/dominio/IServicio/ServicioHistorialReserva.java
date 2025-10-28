@@ -22,4 +22,5 @@ public interface ServicioHistorialReserva {
      */
 
      List<HistorialReservaDTO> obtenerHistorialPorViaje(Long idViaje, Usuario usuarioEnSesion) throws ViajeNoEncontradoException, UsuarioNoAutorizadoException; 
+
 }
