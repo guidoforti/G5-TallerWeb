@@ -15,8 +15,6 @@
                 vertical-align: baseline;
                 border-radius: 0.375rem;
             }
-
-            /* [🟢 AÑADIDO] Estilo para asegurar el texto negro en badges claros (como el amarillo) */
             .badge.text-dark {
                  color: #000 !important;
             }
@@ -70,7 +68,9 @@
                             <tr th:each="evento : ${historialReservas}">
 
                                 <td>
-                                    <span th:text="${#temporals.format(evento.fechaEvento, 'dd/MM/yyyy HH:mm')}"></span>
+                                        <span th:text="${evento.fechaEvento}"
+                                              th:class="${#strings.equals(evento.fechaEvento, 'N/A') ? 'text-danger fw-bold' : ''}">
+        </span>
                                 </td>
 
                                 <td>

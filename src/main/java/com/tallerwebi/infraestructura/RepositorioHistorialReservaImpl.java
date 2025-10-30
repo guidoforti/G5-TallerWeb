@@ -21,7 +21,7 @@ public class RepositorioHistorialReservaImpl implements RepositorioHistorialRese
 
     @Override
     public List<HistorialReserva> findByViaje(Viaje viaje) {
-        String hql = "FROM HistorialReserva hr WHERE hr.reserva.viaje.id = :viajeId ORDER BY hr.fechaEvento ASC";
+        String hql = "FROM HistorialReserva hr WHERE hr.viaje.id = :viajeId ORDER BY hr.fechaEvento ASC";
 
         return sessionFactory.getCurrentSession()
                 .createQuery(hql, HistorialReserva.class)
@@ -31,7 +31,7 @@ public class RepositorioHistorialReservaImpl implements RepositorioHistorialRese
 
     @Override
     public Optional<HistorialReserva> findByViajeId(Long idViaje) {
-        String hql = "FROM HistorialReserva hr WHERE hr.reserva.viaje.id = :viajeId";
+        String hql = "FROM HistorialReserva hr WHERE hr.viaje.id = :viajeId";
         
         List<HistorialReserva> resultados = sessionFactory.getCurrentSession()
                 .createQuery(hql, HistorialReserva.class)

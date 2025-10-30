@@ -7,7 +7,9 @@ import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Enums.EstadoAsistencia;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
+import com.tallerwebi.dominio.IRepository.RepositorioHistorialReserva;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
+import com.tallerwebi.dominio.IServicio.ServicioHistorialReserva;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
@@ -33,13 +35,15 @@ class ServicioReservaTest {
     private ServicioReserva servicioReserva;
     private ServicioViaje servicioViaje;
     private ServicioViajero servicioViajero;
+    private RepositorioHistorialReserva repositorioHistorialReserva;
 
     @BeforeEach
     void setUp() {
         repositorioReservaMock = mock(ReservaRepository.class);
         servicioViaje = mock(ServicioViaje.class);
         servicioViajero = mock(ServicioViajero.class);
-        servicioReserva = new ServicioReservaImpl(repositorioReservaMock, servicioViaje, servicioViajero);
+        repositorioHistorialReserva = mock(RepositorioHistorialReserva.class);
+        servicioReserva = new ServicioReservaImpl(repositorioReservaMock, servicioViaje, servicioViajero, repositorioHistorialReserva);
     }
 
     // --- TESTS DE SOLICITAR RESERVA ---
