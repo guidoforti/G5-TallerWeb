@@ -3,6 +3,7 @@ package com.tallerwebi.presentacion;
 import com.tallerwebi.dominio.Entity.Reserva;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.Viajero;
+import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
@@ -543,5 +544,158 @@ public class ControladorReservaTest {
         assertThat(mav.getModel().get("error"), is("No tienes permiso"));
         assertThat(mav.getModel().get("rechazoDTO"), is(rechazoDTO));
         verify(servicioReservaMock, times(1)).rechazarReserva(rechazoDTO.getReservaId(), conductorId, rechazoDTO.getMotivo());
+    }
+
+    // --- TESTS DE LISTAR RESERVAS PENDIENTES Y RECHAZADAS (VIAJERO) ---
+
+    @Test
+    public void deberiaMostrarReservasPendientesYRechazadasCuandoViajeroLogueado() throws Exception {
+        // given
+        Long viajeroId = 1L;
+        List<Reserva> reservas = Arrays.asList(new Reserva(), new Reserva());
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(viajeroId);
+        when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
+        when(servicioReservaMock.listarReservasPendientesYRechazadas(viajeroId)).thenReturn(reservas);
+
+        // when
+        ModelAndView mav = controladorReserva.listarReservasPendientesYRechazadas(sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("misReservasPendientes"));
+        assertThat(mav.getModel().get("reservasPendientes"), notNullValue());
+        assertThat(mav.getModel().get("reservasRechazadas"), notNullValue());
+        verify(servicioReservaMock, times(1)).listarReservasPendientesYRechazadas(viajeroId);
+    }
+
+    @Test
+    public void deberiaRedirigirALoginSiNoHaySesionEnReservasPendientes() throws Exception {
+        // given
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(null);
+
+        // when
+        ModelAndView mav = controladorReserva.listarReservasPendientesYRechazadas(sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("redirect:/login"));
+        verify(servicioReservaMock, never()).listarReservasPendientesYRechazadas(anyLong());
+    }
+
+    @Test
+    public void deberiaRedirigirALoginSiRolNoEsViajeroEnReservasPendientes() throws Exception {
+        // given
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
+        when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR");
+
+        // when
+        ModelAndView mav = controladorReserva.listarReservasPendientesYRechazadas(sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("redirect:/login"));
+        verify(servicioReservaMock, never()).listarReservasPendientesYRechazadas(anyLong());
+    }
+
+    @Test
+    public void deberiaMostrarErrorSiViajeroNoExisteEnReservasPendientes() throws Exception {
+        // given
+        Long viajeroId = 999L;
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(viajeroId);
+        when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
+        when(servicioReservaMock.listarReservasPendientesYRechazadas(viajeroId))
+                .thenThrow(new UsuarioInexistente("No se encontró el viajero"));
+
+        // when
+        ModelAndView mav = controladorReserva.listarReservasPendientesYRechazadas(sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("error"));
+        assertThat(mav.getModel().get("error"), is("No se encontró el viajero"));
+        verify(servicioReservaMock, times(1)).listarReservasPendientesYRechazadas(viajeroId);
+    }
+
+    // --- TESTS DE LISTAR MIS VIAJES (VIAJERO) ---
+
+    @Test
+    public void deberiaMostrarMisViajesCuandoViajeroLogueado() throws Exception {
+        // given
+        Long viajeroId = 1L;
+
+        // Crear viajes con estados para categorización
+        Viaje viajeProximo = new Viaje();
+        viajeProximo.setEstado(EstadoDeViaje.DISPONIBLE);
+        viajeProximo.setFechaHoraDeSalida(java.time.LocalDateTime.now().plusDays(1));
+
+        Viaje viajeEnCurso = new Viaje();
+        viajeEnCurso.setEstado(EstadoDeViaje.EN_CURSO);
+        viajeEnCurso.setFechaHoraDeSalida(java.time.LocalDateTime.now());
+
+        Reserva reserva1 = new Reserva();
+        reserva1.setViaje(viajeProximo);
+
+        Reserva reserva2 = new Reserva();
+        reserva2.setViaje(viajeEnCurso);
+
+        List<Reserva> reservas = Arrays.asList(reserva1, reserva2);
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(viajeroId);
+        when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
+        when(servicioReservaMock.listarViajesConfirmadosPorViajero(viajeroId)).thenReturn(reservas);
+
+        // when
+        ModelAndView mav = controladorReserva.listarMisViajes(sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("misViajes"));
+        assertThat(mav.getModel().get("viajesProximos"), notNullValue());
+        assertThat(mav.getModel().get("viajesEnCurso"), notNullValue());
+        assertThat(mav.getModel().get("viajesFinalizados"), notNullValue());
+        verify(servicioReservaMock, times(1)).listarViajesConfirmadosPorViajero(viajeroId);
+    }
+
+    @Test
+    public void deberiaRedirigirALoginSiNoHaySesionEnMisViajes() throws Exception {
+        // given
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(null);
+
+        // when
+        ModelAndView mav = controladorReserva.listarMisViajes(sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("redirect:/login"));
+        verify(servicioReservaMock, never()).listarViajesConfirmadosPorViajero(anyLong());
+    }
+
+    @Test
+    public void deberiaRedirigirALoginSiRolNoEsViajeroEnMisViajes() throws Exception {
+        // given
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
+        when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR");
+
+        // when
+        ModelAndView mav = controladorReserva.listarMisViajes(sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("redirect:/login"));
+        verify(servicioReservaMock, never()).listarViajesConfirmadosPorViajero(anyLong());
+    }
+
+    @Test
+    public void deberiaMostrarErrorSiViajeroNoExisteEnMisViajes() throws Exception {
+        // given
+        Long viajeroId = 999L;
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(viajeroId);
+        when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
+        when(servicioReservaMock.listarViajesConfirmadosPorViajero(viajeroId))
+                .thenThrow(new UsuarioInexistente("No se encontró el viajero"));
+
+        // when
+        ModelAndView mav = controladorReserva.listarMisViajes(sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("error"));
+        assertThat(mav.getModel().get("error"), is("No se encontró el viajero"));
+        verify(servicioReservaMock, times(1)).listarViajesConfirmadosPorViajero(viajeroId);
     }
 }

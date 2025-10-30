@@ -3,6 +3,7 @@ package com.tallerwebi.dominio.IRepository;
 import com.tallerwebi.dominio.Entity.Reserva;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.Viajero;
+import com.tallerwebi.dominio.Enums.EstadoReserva;
 
 import java.util.List;
 import java.util.Optional;
@@ -57,5 +58,21 @@ public interface ReservaRepository {
      * @return Lista de reservas confirmadas
      */
     List<Reserva> findConfirmadasByViaje(Viaje viaje);
+
+    /**
+     * Busca todas las reservas de un viajero filtradas por estados específicos
+     * ordenadas por fecha de salida del viaje (ASC - más cercano primero)
+     * @param viajero El viajero
+     * @param estados Lista de estados a filtrar (ej: PENDIENTE, RECHAZADA)
+     * @return Lista de reservas ordenadas por fecha de salida del viaje
+     */
+    List<Reserva> findByViajeroAndEstadoInOrderByViajesFechaSalidaAsc(Viajero viajero, List<EstadoReserva> estados);
+
+    /**
+     * Busca todos los viajes confirmados de un viajero (reservas con estado CONFIRMADA)
+     * @param viajero El viajero
+     * @return Lista de reservas confirmadas
+     */
+    List<Reserva> findViajesConfirmadosPorViajero(Viajero viajero);
 
 }
