@@ -348,4 +348,88 @@ public class RepositorioReservaTest {
             assertThat(reserva.getEstado(), isIn(List.of(EstadoReserva.PENDIENTE, EstadoReserva.RECHAZADA)));
         }
     }
+
+    @Test
+    public void deberiaBuscarViajesConfirmadosPorViajero() {
+        // given
+        Viaje viaje1 = sessionFactory.getCurrentSession().get(Viaje.class, 1L);
+        Viaje viaje2 = sessionFactory.getCurrentSession().get(Viaje.class, 2L);
+        Viajero viajero = sessionFactory.getCurrentSession().get(Viajero.class, 4L);
+
+        // Crear reservas confirmadas
+        Reserva reservaConfirmada1 = new Reserva();
+        reservaConfirmada1.setViaje(viaje1);
+        reservaConfirmada1.setViajero(viajero);
+        reservaConfirmada1.setFechaSolicitud(LocalDateTime.now());
+        reservaConfirmada1.setEstado(EstadoReserva.CONFIRMADA);
+
+        Reserva reservaConfirmada2 = new Reserva();
+        reservaConfirmada2.setViaje(viaje2);
+        reservaConfirmada2.setViajero(viajero);
+        reservaConfirmada2.setFechaSolicitud(LocalDateTime.now());
+        reservaConfirmada2.setEstado(EstadoReserva.CONFIRMADA);
+
+        repositorioReserva.save(reservaConfirmada1);
+        repositorioReserva.save(reservaConfirmada2);
+        sessionFactory.getCurrentSession().flush();
+
+        // when
+        List<Reserva> reservas = repositorioReserva.findViajesConfirmadosPorViajero(viajero);
+
+        // then
+        assertThat(reservas, hasSize(2));
+        assertThat(reservas.get(0).getEstado(), is(EstadoReserva.CONFIRMADA));
+        assertThat(reservas.get(1).getEstado(), is(EstadoReserva.CONFIRMADA));
+    }
+
+    @Test
+    public void deberiaRetornarListaVaciaCuandoNoHayReservasConfirmadas() {
+        // given
+        Viajero viajero = sessionFactory.getCurrentSession().get(Viajero.class, 4L);
+
+        // when
+        List<Reserva> reservas = repositorioReserva.findViajesConfirmadosPorViajero(viajero);
+
+        // then
+        assertThat(reservas, hasSize(0));
+    }
+
+    @Test
+    public void deberiaFiltrarSoloReservasConfirmadasYNoOtrosEstados() {
+        // given
+        Viaje viaje1 = sessionFactory.getCurrentSession().get(Viaje.class, 1L);
+        Viaje viaje2 = sessionFactory.getCurrentSession().get(Viaje.class, 2L);
+        Viaje viaje3 = sessionFactory.getCurrentSession().get(Viaje.class, 3L);
+        Viajero viajero = sessionFactory.getCurrentSession().get(Viajero.class, 4L);
+
+        Reserva reservaConfirmada = new Reserva();
+        reservaConfirmada.setViaje(viaje1);
+        reservaConfirmada.setViajero(viajero);
+        reservaConfirmada.setFechaSolicitud(LocalDateTime.now());
+        reservaConfirmada.setEstado(EstadoReserva.CONFIRMADA);
+
+        Reserva reservaPendiente = new Reserva();
+        reservaPendiente.setViaje(viaje2);
+        reservaPendiente.setViajero(viajero);
+        reservaPendiente.setFechaSolicitud(LocalDateTime.now());
+        reservaPendiente.setEstado(EstadoReserva.PENDIENTE);
+
+        Reserva reservaRechazada = new Reserva();
+        reservaRechazada.setViaje(viaje3);
+        reservaRechazada.setViajero(viajero);
+        reservaRechazada.setFechaSolicitud(LocalDateTime.now());
+        reservaRechazada.setEstado(EstadoReserva.RECHAZADA);
+
+        repositorioReserva.save(reservaConfirmada);
+        repositorioReserva.save(reservaPendiente);
+        repositorioReserva.save(reservaRechazada);
+        sessionFactory.getCurrentSession().flush();
+
+        // when
+        List<Reserva> reservas = repositorioReserva.findViajesConfirmadosPorViajero(viajero);
+
+        // then
+        assertThat(reservas, hasSize(1));
+        assertThat(reservas.get(0).getEstado(), is(EstadoReserva.CONFIRMADA));
+    }
 }

@@ -90,4 +90,16 @@ public class RepositorioReservaImpl implements ReservaRepository {
                 .setParameter("estados", estados)
                 .getResultList();
     }
+
+    @Override
+    public List<Reserva> findViajesConfirmadosPorViajero(Viajero viajero) {
+        String hql = "SELECT r FROM Reserva r " +
+                "WHERE r.viajero.id = :viajeroId " +
+                "AND r.estado = :estado";
+        return sessionFactory.getCurrentSession()
+                .createQuery(hql, Reserva.class)
+                .setParameter("viajeroId", viajero.getId())
+                .setParameter("estado", EstadoReserva.CONFIRMADA)
+                .getResultList();
+    }
 }

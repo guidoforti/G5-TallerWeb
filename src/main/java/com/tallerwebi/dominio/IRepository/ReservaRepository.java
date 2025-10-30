@@ -68,4 +68,11 @@ public interface ReservaRepository {
      */
     List<Reserva> findByViajeroAndEstadoInOrderByViajesFechaSalidaAsc(Viajero viajero, List<EstadoReserva> estados);
 
+    /**
+     * Busca todos los viajes confirmados de un viajero (reservas con estado CONFIRMADA)
+     * @param viajero El viajero
+     * @return Lista de reservas confirmadas
+     */
+    List<Reserva> findViajesConfirmadosPorViajero(Viajero viajero);
+
 }

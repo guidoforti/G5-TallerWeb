@@ -124,4 +124,13 @@ public interface ServicioReserva {
      * @throws UsuarioInexistente Si no se encuentra el viajero
      */
     List<Reserva> listarReservasPendientesYRechazadas(Long viajeroId) throws UsuarioInexistente;
+
+    /**
+     * Lista todos los viajes confirmados de un viajero (reservas con estado CONFIRMADA)
+     *
+     * @param viajeroId El ID del viajero
+     * @return Lista de reservas confirmadas
+     * @throws UsuarioInexistente Si no se encuentra el viajero
+     */
+    List<Reserva> listarViajesConfirmadosPorViajero(Long viajeroId) throws UsuarioInexistente;
 }
