@@ -22,30 +22,6 @@ public class RepositorioConductorImpl implements RepositorioConductor {
     }
 
     @Override
-    public Optional<Conductor> buscarPorEmailYContrasenia(String email, String contrasenia) {
-
-
-            String hql = "SELECT c FROM Conductor c WHERE c.email= :email AND c.contrasenia= :contrasenia";
-            Conductor conductor = this.sessionFactory.getCurrentSession().createQuery(hql, Conductor.class)
-                    .setParameter("email", email)
-                    .setParameter("contrasenia", contrasenia)
-                    .uniqueResult();
-
-            return  Optional.ofNullable(conductor);
-
-    }
-
-    @Override
-    public Optional<Conductor> buscarPorEmail(String email) {
-        String hql = "SELECT c FROM Conductor c WHERE email = :email";
-        Conductor conductor = this.sessionFactory.getCurrentSession().createQuery(hql, Conductor.class)
-                .setParameter("email", email)
-                .uniqueResult();
-
-        return Optional.ofNullable(conductor);
-    }
-
-    @Override
     public Optional<Conductor> buscarPorId(Long id) {
         String hql = "SELECT c FROM Conductor c WHERE id = :id";
         Conductor conductor = this.sessionFactory.getCurrentSession().createQuery(hql, Conductor.class)
@@ -55,9 +31,5 @@ public class RepositorioConductorImpl implements RepositorioConductor {
         return Optional.ofNullable(conductor);
     }
 
-    @Override
-    public Conductor guardarConductor(Conductor conductor) {
-        this.sessionFactory.getCurrentSession().save(conductor);
-        return conductor;
-    }
+
 }

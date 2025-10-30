@@ -2,11 +2,14 @@ package com.tallerwebi.dominio.IRepository;
 
 import com.tallerwebi.dominio.Entity.Usuario;
 
+import java.util.Optional;
+
 public interface RepositorioUsuario {
 
-    Usuario buscarUsuario(String email, String password);
-    void guardar(Usuario usuario);
-    Usuario buscar(String email);
-    void modificar(Usuario usuario);
+    Optional <Usuario> buscarUsuario(String email, String contrasenia);
+    Usuario guardar(Usuario usuario);
+    Optional <Usuario> buscarPorEmail(String email);
+    void modificarUsuario(Usuario usuario);
+
 }
 

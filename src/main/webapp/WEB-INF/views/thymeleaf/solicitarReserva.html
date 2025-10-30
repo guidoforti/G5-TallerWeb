@@ -1,0 +1,215 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/fragments :: head('UnRumbo - Solicitar Reserva')">
+    <th:block th:fragment="extra">
+        <style>
+            .card {
+                border: none;
+                border-radius: 10px;
+                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+                margin-bottom: 1.5rem;
+            }
+            .card-header {
+                background-color: #E16A3D;
+                color: white;
+                font-weight: 600;
+                border: none;
+                border-radius: 10px 10px 0 0 !important;
+                padding: 0.75rem 1.25rem;
+            }
+            .card-body {
+                padding: 1.5rem;
+            }
+            .info-label {
+                color: #6c757d;
+                font-weight: 500;
+                font-size: 0.9rem;
+            }
+            .info-value {
+                color: #212529;
+                font-weight: 600;
+                font-size: 1.1rem;
+            }
+            .btn-unrumbo {
+                background-color: #E16A3D;
+                border: none;
+                color: white;
+                font-weight: 500;
+                padding: 0.75rem 2rem;
+                border-radius: 5px;
+            }
+            .btn-unrumbo:hover {
+                background-color: #cf5930;
+                color: white;
+            }
+            .btn-outline-unrumbo {
+                border: 2px solid #E16A3D;
+                color: #E16A3D;
+                font-weight: 500;
+                padding: 0.75rem 2rem;
+                border-radius: 5px;
+                background-color: white;
+            }
+            .btn-outline-unrumbo:hover {
+                background-color: #E16A3D;
+                color: white;
+            }
+            .confirmation-box {
+                background-color: #f8f9fa;
+                border-left: 4px solid #E16A3D;
+                padding: 1.5rem;
+                border-radius: 5px;
+            }
+        </style>
+    </th:block>
+</head>
+
+<body>
+<nav th:replace="fragments/fragments :: navbar"></nav>
+
+<main role="main" class="container" style="margin-top: 120px; margin-bottom: 50px;">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-dark mb-3">Solicitar Reserva</h2>
+                        <div class="divider mx-auto" style="width: 80px; height: 3px; background-color: #E16A3D;"></div>
+                    </div>
+
+                    <!-- Error alert -->
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Error:</strong> <span th:text="${error}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <!-- Trip details -->
+                    <div th:if="${viaje}">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-car me-2"></i>Detalles del Viaje</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="me-3" style="color: #E16A3D;">
+                                                <i class="fas fa-map-marker-alt fa-lg"></i>
+                                            </div>
+                                            <div>
+                                                <p class="mb-0 info-label">Origen</p>
+                                                <p class="mb-0 info-value" th:text="${viaje.origenNombre}"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="me-3" style="color: #E16A3D;">
+                                                <i class="fas fa-flag-checkered fa-lg"></i>
+                                            </div>
+                                            <div>
+                                                <p class="mb-0 info-label">Destino</p>
+                                                <p class="mb-0 info-value" th:text="${viaje.destinoNombre}"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="me-3" style="color: #E16A3D;">
+                                                <i class="fas fa-calendar-alt fa-lg"></i>
+                                            </div>
+                                            <div>
+                                                <p class="mb-0 info-label">Fecha de Salida</p>
+                                                <p class="mb-0 info-value" th:text="${viaje.fechaHoraDeSalida}"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="me-3" style="color: #E16A3D;">
+                                                <i class="fas fa-dollar-sign fa-lg"></i>
+                                            </div>
+                                            <div>
+                                                <p class="mb-0 info-label">Precio</p>
+                                                <p class="mb-0 info-value" th:text="'$' + ${#numbers.formatDecimal(viaje.precio, 0, 'COMMA', 2, 'POINT')}"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="me-3" style="color: #E16A3D;">
+                                                <i class="fas fa-user-friends fa-lg"></i>
+                                            </div>
+                                            <div>
+                                                <p class="mb-0 info-label">Asientos Disponibles</p>
+                                                <p class="mb-0 info-value" th:text="${viaje.asientosDisponibles}"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="me-3" style="color: #E16A3D;">
+                                                <i class="fas fa-user-circle fa-lg"></i>
+                                            </div>
+                                            <div>
+                                                <p class="mb-0 info-label">Conductor</p>
+                                                <p class="mb-0 info-value" th:text="${viaje.conductorNombre}"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Confirmation box -->
+                        <div class="confirmation-box mb-4">
+                            <h5 class="mb-3" style="color: #E16A3D;">
+                                <i class="fas fa-info-circle me-2"></i>Confirmar Solicitud
+                            </h5>
+                            <p class="mb-2">Al confirmar, tu solicitud de reserva será enviada al conductor.</p>
+                            <p class="mb-0 text-muted small">
+                                <i class="fas fa-clock me-1"></i>
+                                El conductor revisará tu solicitud y podrá aceptarla o rechazarla.
+                                Recibirás una notificación con la decisión.
+                            </p>
+                        </div>
+
+                        <!-- Reservation form -->
+                        <form th:action="@{/reserva/solicitar}" method="post" th:object="${solicitud}">
+                            <input type="hidden" th:field="*{viajeId}" th:value="${viaje.id}"/>
+                            <input type="hidden" th:field="*{viajeroId}" th:value="${session.idUsuario}"/>
+
+                            <div class="d-flex justify-content-between gap-3 mt-4">
+                                <a th:href="@{/viaje/buscar}" class="btn btn-outline-unrumbo flex-fill">
+                                    <i class="fas fa-arrow-left me-2"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-unrumbo flex-fill">
+                                    <i class="fas fa-check me-2"></i>Confirmar Solicitud
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- No trip found -->
+                    <div th:unless="${viaje}" class="text-center py-5">
+                        <i class="fas fa-exclamation-circle fa-3x mb-3" style="color: #E16A3D;"></i>
+                        <h4 class="mb-3">Viaje no encontrado</h4>
+                        <p class="text-muted mb-4">El viaje que intentas reservar no existe o no está disponible.</p>
+                        <a th:href="@{/viaje/buscar}" class="btn btn-unrumbo">
+                            <i class="fas fa-search me-2"></i>Buscar Viajes
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Bootstrap JS and dependencies -->
+<script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+<!-- Font Awesome for icons -->
+<script src="https://kit.fontawesome.com/your-code.js" crossorigin="anonymous"></script>
+
+</body>
+</html>

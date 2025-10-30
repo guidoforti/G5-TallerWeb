@@ -50,7 +50,7 @@ public class ViajeInputDTO {
         viaje.setAsientosDisponibles(this.asientosDisponibles);
         viaje.setFechaDeCreacion(LocalDateTime.now());
         viaje.setEstado(EstadoDeViaje.DISPONIBLE);
-        viaje.setViajeros(new ArrayList<>());
+        viaje.setReservas(new ArrayList<>());
 
         // Setear ciudades resueltas por el controlador
         viaje.setOrigen(origen);

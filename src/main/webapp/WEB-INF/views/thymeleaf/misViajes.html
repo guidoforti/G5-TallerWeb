@@ -1,0 +1,306 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/fragments :: head('UnRumbo - Mis Viajes')">
+    <th:block th:fragment="extra">
+        <style>
+            .viaje-card {
+                transition: transform 0.2s, box-shadow 0.2s;
+                border: 1px solid #e9ecef;
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            .viaje-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            }
+            .estado-badge {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                font-size: 0.75rem;
+                padding: 0.25rem 0.5rem;
+                border-radius: 1rem;
+            }
+            .ruta-info {
+                border-left: 3px solid #E16A3D;
+                padding-left: 1rem;
+            }
+            .text-unrumbo {
+                color: #E16A3D;
+            }
+            .bg-unrumbo {
+                background-color: #E16A3D;
+            }
+            .section-title {
+                border-bottom: 3px solid #E16A3D;
+                padding-bottom: 0.5rem;
+                margin-bottom: 1.5rem;
+            }
+        </style>
+    </th:block>
+</head>
+
+<body>
+<nav th:replace="fragments/fragments :: navbar"></nav>
+
+<main role="main" class="container py-4" style="margin-top: 100px;">
+    <div class="row mb-4">
+        <div class="col-12">
+            <!-- Botón de regreso -->
+            <div class="mb-3">
+                <a th:href="@{/viajero/home}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Volver al Home
+                </a>
+            </div>
+
+            <h2 class="fw-bold">Mis Viajes</h2>
+            <p class="text-muted">Consulta tus viajes confirmados por su estado</p>
+        </div>
+    </div>
+
+    <!-- SECCIÓN VIAJES PRÓXIMOS -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h4 class="section-title text-primary">
+                <i class="bi bi-calendar-check me-2"></i>Viajes Próximos
+            </h4>
+
+            <div class="row" th:if="${not #lists.isEmpty(viajesProximos)}">
+                <div class="col-12 mb-4" th:each="viaje : ${viajesProximos}">
+                    <div class="card viaje-card">
+                        <div class="card-body position-relative">
+                            <!-- Estado del viaje -->
+                            <span class="badge bg-primary estado-badge">
+                                <i class="bi bi-calendar-check me-1"></i> Próximo
+                            </span>
+
+                            <div class="row align-items-center">
+                                <!-- Columna izquierda: Información del viaje -->
+                                <div class="col-md-7 ruta-info">
+                                    <div class="d-flex flex-column">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-geo-alt-fill text-danger me-2"></i>
+                                            <strong>Origen:</strong>
+                                            <span class="ms-2" th:text="${viaje.origenNombre}">Origen</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-geo-fill text-success me-2"></i>
+                                            <strong>Destino:</strong>
+                                            <span class="ms-2" th:text="${viaje.destinoNombre}">Destino</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-calendar3 me-2 text-unrumbo"></i>
+                                            <strong>Fecha:</strong>
+                                            <span class="ms-2" th:text="${viaje.fechaSalida}">Fecha y hora</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-person me-2 text-info"></i>
+                                            <strong>Conductor:</strong>
+                                            <span class="ms-2" th:text="${viaje.conductorNombre}">Conductor</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-people-fill me-2 text-warning"></i>
+                                            <strong>Asientos ocupados:</strong>
+                                            <span class="ms-2 fw-bold" th:text="${viaje.asientosOcupados}">0</span>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-currency-dollar me-2 text-success"></i>
+                                            <strong>Precio:</strong>
+                                            <span class="ms-2 fw-bold text-success" th:text="'$' + ${viaje.precio}">$0</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Columna derecha: Acciones -->
+                                <div class="col-md-5 d-flex flex-column justify-content-center align-items-end">
+                                    <a th:href="@{/viaje/detalle(id=${viaje.viajeId})}"
+                                       class="btn btn-outline-primary">
+                                        <i class="bi bi-eye me-1"></i> Ver detalles
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mensaje cuando no hay viajes próximos -->
+            <div class="row" th:if="${#lists.isEmpty(viajesProximos)}">
+                <div class="col-12 text-center py-4">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <i class="bi bi-inbox display-4 text-muted mb-3"></i>
+                            <h5 class="text-muted">No tenés viajes próximos.</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN VIAJES EN CURSO -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h4 class="section-title text-success">
+                <i class="bi bi-arrow-right-circle me-2"></i>Viajes en Curso
+            </h4>
+
+            <div class="row" th:if="${not #lists.isEmpty(viajesEnCurso)}">
+                <div class="col-12 mb-4" th:each="viaje : ${viajesEnCurso}">
+                    <div class="card viaje-card">
+                        <div class="card-body position-relative">
+                            <!-- Estado del viaje -->
+                            <span class="badge bg-success estado-badge">
+                                <i class="bi bi-arrow-right-circle me-1"></i> En Curso
+                            </span>
+
+                            <div class="row align-items-center">
+                                <!-- Columna izquierda: Información del viaje -->
+                                <div class="col-md-7 ruta-info">
+                                    <div class="d-flex flex-column">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-geo-alt-fill text-danger me-2"></i>
+                                            <strong>Origen:</strong>
+                                            <span class="ms-2" th:text="${viaje.origenNombre}">Origen</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-geo-fill text-success me-2"></i>
+                                            <strong>Destino:</strong>
+                                            <span class="ms-2" th:text="${viaje.destinoNombre}">Destino</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-calendar3 me-2 text-unrumbo"></i>
+                                            <strong>Fecha:</strong>
+                                            <span class="ms-2" th:text="${viaje.fechaSalida}">Fecha y hora</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-person me-2 text-info"></i>
+                                            <strong>Conductor:</strong>
+                                            <span class="ms-2" th:text="${viaje.conductorNombre}">Conductor</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-people-fill me-2 text-warning"></i>
+                                            <strong>Asientos ocupados:</strong>
+                                            <span class="ms-2 fw-bold" th:text="${viaje.asientosOcupados}">0</span>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-currency-dollar me-2 text-success"></i>
+                                            <strong>Precio:</strong>
+                                            <span class="ms-2 fw-bold text-success" th:text="'$' + ${viaje.precio}">$0</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Columna derecha: Acciones -->
+                                <div class="col-md-5 d-flex flex-column justify-content-center align-items-end">
+                                    <a th:href="@{/viaje/detalle(id=${viaje.viajeId})}"
+                                       class="btn btn-outline-primary">
+                                        <i class="bi bi-eye me-1"></i> Ver detalles
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mensaje cuando no hay viajes en curso -->
+            <div class="row" th:if="${#lists.isEmpty(viajesEnCurso)}">
+                <div class="col-12 text-center py-4">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <i class="bi bi-inbox display-4 text-muted mb-3"></i>
+                            <h5 class="text-muted">No tenés viajes en curso.</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN VIAJES FINALIZADOS -->
+    <div class="row">
+        <div class="col-12">
+            <h4 class="section-title text-secondary">
+                <i class="bi bi-check-circle me-2"></i>Viajes Finalizados
+            </h4>
+
+            <div class="row" th:if="${not #lists.isEmpty(viajesFinalizados)}">
+                <div class="col-12 mb-4" th:each="viaje : ${viajesFinalizados}">
+                    <div class="card viaje-card">
+                        <div class="card-body position-relative">
+                            <!-- Estado del viaje -->
+                            <span class="badge bg-secondary estado-badge">
+                                <i class="bi bi-check-circle me-1"></i> Finalizado
+                            </span>
+
+                            <div class="row align-items-center">
+                                <!-- Columna izquierda: Información del viaje -->
+                                <div class="col-md-7 ruta-info">
+                                    <div class="d-flex flex-column">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-geo-alt-fill text-danger me-2"></i>
+                                            <strong>Origen:</strong>
+                                            <span class="ms-2" th:text="${viaje.origenNombre}">Origen</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-geo-fill text-success me-2"></i>
+                                            <strong>Destino:</strong>
+                                            <span class="ms-2" th:text="${viaje.destinoNombre}">Destino</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-calendar3 me-2 text-unrumbo"></i>
+                                            <strong>Fecha:</strong>
+                                            <span class="ms-2" th:text="${viaje.fechaSalida}">Fecha y hora</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-person me-2 text-info"></i>
+                                            <strong>Conductor:</strong>
+                                            <span class="ms-2" th:text="${viaje.conductorNombre}">Conductor</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-people-fill me-2 text-warning"></i>
+                                            <strong>Asientos ocupados:</strong>
+                                            <span class="ms-2 fw-bold" th:text="${viaje.asientosOcupados}">0</span>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-currency-dollar me-2 text-success"></i>
+                                            <strong>Precio:</strong>
+                                            <span class="ms-2 fw-bold text-success" th:text="'$' + ${viaje.precio}">$0</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Columna derecha: Acciones -->
+                                <div class="col-md-5 d-flex flex-column justify-content-center align-items-end">
+                                    <a th:href="@{/viaje/detalle(id=${viaje.viajeId})}"
+                                       class="btn btn-outline-primary">
+                                        <i class="bi bi-eye me-1"></i> Ver detalles
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mensaje cuando no hay viajes finalizados -->
+            <div class="row" th:if="${#lists.isEmpty(viajesFinalizados)}">
+                <div class="col-12 text-center py-4">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <i class="bi bi-inbox display-4 text-muted mb-3"></i>
+                            <h5 class="text-muted">No tenés viajes finalizados.</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Scripts -->
+<script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/webjars/bootstrap-icons/1.10.0/font/bootstrap-icons.css}"></script>
+</body>
+</html>

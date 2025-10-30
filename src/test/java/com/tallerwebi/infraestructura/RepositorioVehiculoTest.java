@@ -14,6 +14,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
@@ -111,9 +113,18 @@ public class RepositorioVehiculoTest {
     @Test
     public void deberiaRetornarListaVaciaSiConductorNoTieneVehiculos() {
         // Arrange: Creamos un conductor que NO tiene vehículos
-        Conductor conductorSinVehiculos = new Conductor(null, "Sin Autos", "sin@autos.com", "pass", null, null, null);
-        sessionFactory.getCurrentSession().save(conductorSinVehiculos);
-        Long idSinVehiculos = conductorSinVehiculos.getId();
+        Conductor conductor = new Conductor();
+        conductor.setId(1L);
+        conductor.setNombre("Juan");
+        conductor.setEmail("juan@test.com");
+        conductor.setContrasenia("pass");
+        conductor.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(30)); // O la fecha que corresponda
+        conductor.setViajes(new ArrayList<>());
+        conductor.setVehiculos(null);
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true);
+        sessionFactory.getCurrentSession().save(conductor);
+        Long idSinVehiculos = conductor.getId();
 
         List<Vehiculo> lista = repositorioVehiculo.obtenerVehiculosParaConductor(idSinVehiculos);
 

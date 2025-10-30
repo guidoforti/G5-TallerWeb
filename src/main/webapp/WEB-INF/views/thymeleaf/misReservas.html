@@ -1,0 +1,227 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/fragments :: head('UnRumbo - Mis Reservas')">
+    <th:block th:fragment="extra">
+        <style>
+            .reserva-card {
+                transition: transform 0.2s, box-shadow 0.2s;
+                border: 1px solid #e9ecef;
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            .reserva-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            }
+            .pasajero-avatar {
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 3px solid #fff;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .estado-badge {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                font-size: 0.75rem;
+                padding: 0.25rem 0.5rem;
+                border-radius: 1rem;
+            }
+            .btn-accion {
+                min-width: 100px;
+                margin: 0.25rem 0;
+            }
+            .ruta-info {
+                border-left: 3px solid #E16A3D;
+                padding-left: 1rem;
+            }
+            .text-unrumbo {
+                color: #E16A3D;
+            }
+            .bg-unrumbo {
+                background-color: #E16A3D;
+            }
+        </style>
+    </th:block>
+</head>
+
+<body>
+<nav th:replace="fragments/fragments :: navbar"></nav>
+
+<main role="main" class="container py-4" style="margin-top: 100px;">
+    <div class="row mb-4">
+        <div class="col-12">
+            <!-- Botón de regreso -->
+            <div class="mb-3">
+                <a th:href="@{/conductor/home}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Volver al Home
+                </a>
+            </div>
+
+            <h2 class="fw-bold">Mis Reservas</h2>
+            <p class="text-muted">Gestiona las solicitudes de viaje de los pasajeros</p>
+
+            <!-- Mensaje de éxito -->
+            <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                <span th:text="${mensaje}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <!-- Mensaje de error -->
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Error:</strong> <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" th:if="${not #lists.isEmpty(reservas)}">
+        <div class="col-12 mb-4" th:each="reserva : ${reservas}">
+            <div class="card reserva-card mb-3">
+                <div class="card-body position-relative">
+                    <!-- Estado de la reserva -->
+                    <span th:if="${reserva.estado == 'PENDIENTE'}" class="badge bg-warning text-dark estado-badge">
+                        <i class="bi bi-clock me-1"></i> Pendiente
+                    </span>
+                    <span th:if="${reserva.estado == 'CONFIRMADA'}" class="badge bg-success estado-badge">
+                        <i class="bi bi-check-circle me-1"></i> Confirmada
+                    </span>
+                    <span th:if="${reserva.estado == 'RECHAZADA'}" class="badge bg-danger estado-badge">
+                        <i class="bi bi-x-circle me-1"></i> Rechazada
+                    </span>
+
+                    <div class="row align-items-center">
+                        <!-- Columna izquierda: Información del pasajero -->
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <img th:src="@{/img/avatar-default.png}"
+                                         alt="Foto de perfil"
+                                         class="pasajero-avatar">
+                                </div>
+                                <div>
+                                    <h5 class="mb-1 fw-bold" th:text="${reserva.viajeroNombre}">Nombre del Pasajero</h5>
+                                    <div class="d-flex align-items-center mb-1">
+                                        <i class="bi bi-star-fill text-warning me-1"></i>
+                                        <span class="text-muted small">4.8 (24 viajes)</span>
+                                    </div>
+                                    <span class="badge bg-light text-dark" th:text="'Solicitado: ' + ${reserva.fechaSolicitud}"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Columna central: Información del viaje -->
+                        <div class="col-md-4 ruta-info">
+                            <div class="d-flex flex-column">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-geo-alt-fill text-danger me-2"></i>
+                                    <span th:text="${reserva.origenViaje}">Origen</span>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-geo-fill text-success me-2"></i>
+                                    <span th:text="${reserva.destinoViaje}">Destino</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-calendar3 me-2 text-unrumbo"></i>
+                                    <span th:text="${reserva.fechaSalidaViaje}">Fecha y hora</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Columna derecha: Acciones -->
+                        <div class="col-md-4 d-flex flex-column justify-content-center align-items-end">
+                            <!-- Solo mostrar botones si está PENDIENTE -->
+                            <div class="d-flex flex-column w-100" th:if="${reserva.estado == 'PENDIENTE'}">
+                                <!-- Botón Aceptar -->
+                                <button type="button"
+                                        class="btn btn-outline-success btn-accion mb-2"
+                                        data-bs-toggle="modal"
+                                        th:data-bs-target="'#confirmarModal' + ${reserva.id}">
+                                    <i class="bi bi-check-lg me-1"></i> Aceptar
+                                </button>
+
+                                <!-- Botón Rechazar -->
+                                <a th:href="@{/reserva/rechazar(reservaId=${reserva.id})}"
+                                   class="btn btn-outline-danger btn-accion text-decoration-none">
+                                    <i class="bi bi-x-lg me-1"></i> Rechazar
+                                </a>
+                            </div>
+
+                            <!-- Botón Ver Viajeros Confirmados (siempre visible) -->
+                            <a th:href="@{/reserva/viajerosConfirmados(viajeId=${reserva.viajeId})}"
+                               class="btn btn-outline-primary btn-accion text-decoration-none mt-2">
+                                <i class="bi bi-people me-1"></i> Ver Viajeros
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Mensaje opcional -->
+                    <div class="mt-3 p-2 bg-light rounded" th:if="${reserva.motivoRechazo != null}">
+                        <p class="mb-0 small">
+                            <strong>Motivo del rechazo:</strong>
+                            <span th:text="${reserva.motivoRechazo}">Motivo del rechazo</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de confirmación para aceptar reserva -->
+            <div class="modal fade" th:id="'confirmarModal' + ${reserva.id}" tabindex="-1" aria-labelledby="confirmarModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title" id="confirmarModalLabel">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Confirmar Reserva
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>¿Estás seguro de que deseas <strong>aceptar</strong> la reserva de <strong th:text="${reserva.viajeroNombre}">Viajero</strong>?</p>
+                            <div class="alert alert-info mb-0">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <small>Esta acción confirmará la reserva y reducirá en 1 los asientos disponibles del viaje.</small>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-lg me-1"></i>
+                                Cancelar
+                            </button>
+                            <form th:action="@{/reserva/confirmar}" method="post" style="display: inline;">
+                                <input type="hidden" name="reservaId" th:value="${reserva.id}" />
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-lg me-1"></i>
+                                    Sí, Aceptar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mensaje cuando no hay reservas -->
+    <div class="row" th:if="${#lists.isEmpty(reservas)}">
+        <div class="col-12 text-center py-5">
+            <div class="card border-0">
+                <div class="card-body">
+                    <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+                    <h4 class="text-muted">No tienes reservas pendientes</h4>
+                    <p class="text-muted">Cuando los pasajeros soliciten un viaje, aparecerán aquí.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Scripts -->
+<script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/webjars/bootstrap-icons/1.10.0/font/bootstrap-icons.css}"></script>
+</body>
+</html>

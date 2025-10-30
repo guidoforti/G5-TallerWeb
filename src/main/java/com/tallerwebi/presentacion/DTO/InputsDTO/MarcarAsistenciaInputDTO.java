@@ -5,12 +5,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
 @Setter
-public class ConductorLoginInputDTO {
+@NoArgsConstructor
+@AllArgsConstructor
+public class MarcarAsistenciaInputDTO {
 
-    private String usuario;
-    private String contrasenia;
+    private Long reservaId;
+    private String asistencia; // "PRESENTE" or "AUSENTE"
 }

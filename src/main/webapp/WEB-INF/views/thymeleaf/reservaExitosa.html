@@ -1,0 +1,207 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/fragments :: head('UnRumbo - Reserva Solicitada')">
+    <th:block th:fragment="extra">
+        <style>
+            .card {
+                border: none;
+                border-radius: 10px;
+                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+                margin-bottom: 1.5rem;
+            }
+            .card-header {
+                background-color: #E16A3D;
+                color: white;
+                font-weight: 600;
+                border: none;
+                border-radius: 10px 10px 0 0 !important;
+                padding: 0.75rem 1.25rem;
+            }
+            .card-body {
+                padding: 1.5rem;
+            }
+            .info-label {
+                color: #6c757d;
+                font-weight: 500;
+                font-size: 0.9rem;
+            }
+            .info-value {
+                color: #212529;
+                font-weight: 400;
+            }
+            .btn-unrumbo {
+                background-color: #E16A3D;
+                border: none;
+                color: white;
+                font-weight: 500;
+                padding: 0.75rem 2rem;
+                border-radius: 5px;
+            }
+            .btn-unrumbo:hover {
+                background-color: #cf5930;
+                color: white;
+            }
+            .btn-outline-unrumbo {
+                border: 2px solid #E16A3D;
+                color: #E16A3D;
+                font-weight: 500;
+                padding: 0.75rem 2rem;
+                border-radius: 5px;
+                background-color: white;
+            }
+            .btn-outline-unrumbo:hover {
+                background-color: #E16A3D;
+                color: white;
+            }
+            .success-icon {
+                width: 80px;
+                height: 80px;
+                background-color: #28a745;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 1.5rem;
+            }
+            .status-badge {
+                display: inline-block;
+                padding: 0.5rem 1rem;
+                border-radius: 20px;
+                font-weight: 600;
+                font-size: 0.9rem;
+            }
+            .status-pendiente {
+                background-color: #fff3cd;
+                color: #856404;
+            }
+        </style>
+    </th:block>
+</head>
+
+<body>
+<nav th:replace="fragments/fragments :: navbar"></nav>
+
+<main role="main" class="container" style="margin-top: 120px; margin-bottom: 50px;">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+                    <!-- Success icon -->
+                    <div class="success-icon">
+                        <i class="fas fa-check fa-3x text-white"></i>
+                    </div>
+
+                    <!-- Success message -->
+                    <div class="text-center mb-4">
+                        <h2 class="fw-bold text-dark mb-3">Solicitud Enviada</h2>
+                        <div class="divider mx-auto mb-3" style="width: 80px; height: 3px; background-color: #E16A3D;"></div>
+                        <p class="lead text-muted" th:text="${mensaje}">
+                            Reserva solicitada exitosamente. Está en estado PENDIENTE.
+                        </p>
+                    </div>
+
+                    <!-- Reservation details -->
+                    <div th:if="${reserva}" class="mt-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-ticket-alt me-2"></i>Detalles de tu Reserva</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                            <div>
+                                                <p class="mb-0 info-label">Estado de la Reserva</p>
+                                            </div>
+                                            <div>
+                                                <span class="status-badge status-pendiente" th:text="${reserva.estado}">
+                                                    PENDIENTE
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-start mb-3">
+                                            <div class="me-3" style="color: #E16A3D;">
+                                                <i class="fas fa-map-marker-alt fa-lg"></i>
+                                            </div>
+                                            <div>
+                                                <p class="mb-1 info-label">Origen</p>
+                                                <p class="mb-0 info-value" th:text="${reserva.origenViaje}"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-start mb-3">
+                                            <div class="me-3" style="color: #E16A3D;">
+                                                <i class="fas fa-flag-checkered fa-lg"></i>
+                                            </div>
+                                            <div>
+                                                <p class="mb-1 info-label">Destino</p>
+                                                <p class="mb-0 info-value" th:text="${reserva.destinoViaje}"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-start mb-3">
+                                            <div class="me-3" style="color: #E16A3D;">
+                                                <i class="fas fa-calendar-alt fa-lg"></i>
+                                            </div>
+                                            <div>
+                                                <p class="mb-1 info-label">Fecha de Salida</p>
+                                                <p class="mb-0 info-value" th:text="${reserva.fechaSalidaViaje}"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-start mb-3">
+                                            <div class="me-3" style="color: #E16A3D;">
+                                                <i class="fas fa-clock fa-lg"></i>
+                                            </div>
+                                            <div>
+                                                <p class="mb-1 info-label">Fecha de Solicitud</p>
+                                                <p class="mb-0 info-value" th:text="${reserva.fechaSolicitud}"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Information box -->
+                                <div class="alert alert-info mt-4 mb-0" role="alert">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Próximos pasos:</strong>
+                                    <p class="mb-0 mt-2">
+                                        El conductor revisará tu solicitud y te notificará su decisión.
+                                        Puedes ver el estado de tus reservas en la sección "Mis Reservas".
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="d-flex justify-content-center gap-3 mt-4">
+                        <a th:href="@{/reserva/misReservasPendientes}" class="btn btn-outline-unrumbo">
+                        <i class="fas fa-list me-2"></i>Ver Mis Reservas
+                        </a>
+                        <a th:href="@{/viaje/buscar}" class="btn btn-unrumbo">
+                            <i class="fas fa-search me-2"></i>Buscar Más Viajes
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Bootstrap JS and dependencies -->
+<script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+<!-- Font Awesome for icons -->
+<script src="https://kit.fontawesome.com/your-code.js" crossorigin="anonymous"></script>
+
+</body>
+</html>

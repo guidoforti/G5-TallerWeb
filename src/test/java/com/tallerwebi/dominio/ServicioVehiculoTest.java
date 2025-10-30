@@ -105,14 +105,16 @@ public class ServicioVehiculoTest {
 
     @Test
     void guardarVehiculoCorrectamente() throws PatenteDuplicadaException, NotFoundException {
-        Conductor conductor = new Conductor(
-                1L,
-                "Ana",
-                "ana@mail.com",
-                "123",
-                null,
-                new ArrayList<>(),
-                new ArrayList<>());
+        Conductor conductor = new Conductor();
+        conductor.setId(1L);
+        conductor.setNombre("Ana");
+        conductor.setEmail("ana@mail.com");
+        conductor.setContrasenia("123");
+        conductor.setFechaDeVencimientoLicencia(null); // O la fecha que corresponda
+        conductor.setViajes(new ArrayList<>());
+        conductor.setVehiculos(new ArrayList<>());
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true);
         Vehiculo vehiculo = new Vehiculo(
                 null,
                 "ABC123",
@@ -143,14 +145,16 @@ public class ServicioVehiculoTest {
 
     @Test
     void guardarVehiculo_PatenteDuplicada_LanzaExcepcion() {
-        Conductor conductor = new Conductor(
-                1L,
-                "Ana",
-                "ana@mail.com",
-                "123",
-                null,
-                new ArrayList<>(),
-                new ArrayList<>());
+        Conductor conductor = new Conductor();
+        conductor.setId(1L);
+        conductor.setNombre("Ana");
+        conductor.setEmail("ana@mail.com");
+        conductor.setContrasenia("123");
+        conductor.setFechaDeVencimientoLicencia(null); // O la fecha que corresponda
+        conductor.setViajes(new ArrayList<>());
+        conductor.setVehiculos(new ArrayList<>());
+        conductor.setRol("CONDUCTOR");
+        conductor.setActivo(true);
         Vehiculo vehiculoDuplicado = new Vehiculo(
                 null,
                 "ABC123",

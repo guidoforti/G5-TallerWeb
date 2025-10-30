@@ -37,10 +37,12 @@ public class ControladorVehiculo {
 
 
     @GetMapping("/registrar")
-    public ModelAndView mostrarFormularioDeRegistroVehiculo(HttpSession session) throws UsuarioNoAutorizadoException {
+    public ModelAndView mostrarFormularioDeRegistroVehiculo(HttpSession session) {
         ModelMap model = new ModelMap();
-        Object rol = (session != null) ? session.getAttribute("rol") : null;
-        if (rol == null || !rol.equals("CONDUCTOR")) {
+        Object rol = (session != null) ? session.getAttribute("ROL") : null;
+        Object usuarioId = (session != null) ? session.getAttribute("idUsuario") : null;
+
+        if (rol == null || !rol.equals("CONDUCTOR") || usuarioId == null) {
             Exception e = new UsuarioNoAutorizadoException("no tienes permisos para acceder a este recurso");
             model.put("error", e.getMessage());
             return new ModelAndView("usuarioNoAutorizado", model);
@@ -53,22 +55,31 @@ public class ControladorVehiculo {
     @PostMapping("/registrar")
     public ModelAndView registrarVehiculo(@ModelAttribute("vehiculoInputDTO") VehiculoInputDTO vehiculoInputDTO, HttpSession session) {
         ModelMap model = new ModelMap();
-        Object rol = (session != null) ? session.getAttribute("rol") : null;
-        if (rol == null || !rol.equals("CONDUCTOR")) {
+
+        Object rol = (session != null) ? session.getAttribute("ROL") : null;
+        Object usuarioIdObj = (session != null) ? session.getAttribute("idUsuario") : null;
+
+        if (rol == null || !rol.equals("CONDUCTOR") || usuarioIdObj == null) {
             Exception e = new UsuarioNoAutorizadoException("no tienes permisos para acceder a este recurso");
             model.put("error", e.getMessage());
             return new ModelAndView("usuarioNoAutorizado", model);
         }
+
+        Long conductorId = (Long) usuarioIdObj; // ID del conductor en sesión
+
         try {
-            Conductor conductor = servicioConductor.obtenerConductor((Long) session.getAttribute("usuarioId"));
+            // CORREGIDO: Usamos la variable 'conductorId' que proviene de "idUsuario"
+            Conductor conductor = servicioConductor.obtenerConductor(conductorId);
 
             Vehiculo vehiculo = servicioVehiculo.guardarVehiculo(vehiculoInputDTO.toEntity(conductor));
 
             VehiculoOutputDTO vehiculoOutputDTO = new VehiculoOutputDTO(vehiculo);
             model.put("vehiculoOutPutDTO", vehiculoOutputDTO);
+            // NOTA: Se recomienda devolver a /vehiculos/listar (o similar) para ver la lista de vehículos, o /conductor/home
             return new ModelAndView("redirect:/conductor/home", model);
         } catch (PatenteDuplicadaException | UsuarioInexistente | NotFoundException  e) {
             model.put("error", e.getMessage());
+            model.put("vehiculoInputDTO", vehiculoInputDTO); // Mantener datos para el reintento
             return new ModelAndView("registrarVehiculo", model);
         }
     }

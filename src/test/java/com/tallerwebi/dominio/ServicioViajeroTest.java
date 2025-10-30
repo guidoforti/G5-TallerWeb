@@ -2,15 +2,16 @@ package com.tallerwebi.dominio;
 
 import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.IRepository.RepositorioViajero;
+import com.tallerwebi.dominio.IServicio.ServicioLogin; // Usado para el registro centralizado
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
 import com.tallerwebi.dominio.ServiceImpl.ServicioViajeroImpl;
-import com.tallerwebi.dominio.excepcion.CredencialesInvalidas;
 import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.EdadInvalidaException;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -25,115 +26,144 @@ class ServicioViajeroTest {
 
     private RepositorioViajero repositorioMock;
     private ServicioViajero servicio;
+    private ServicioLogin servicioLoginMock; // Renombrado a servicioLoginMock para claridad
 
     @BeforeEach
     void setUp() {
         repositorioMock = mock(RepositorioViajero.class);
-        servicio = new ServicioViajeroImpl(repositorioMock);
+        servicioLoginMock = Mockito.mock(ServicioLogin.class); // Mock para el servicio centralizado
+        servicio = new ServicioViajeroImpl(repositorioMock, servicioLoginMock);
     }
 
-    @Test
-    void deberiaValidarLoginCorrecto() throws CredencialesInvalidas {
-        Viajero v = new Viajero(1L, "Lucas",25, "lucas@mail.com", "pass", new ArrayList<>());
-
-        when(repositorioMock.buscarPorEmailYContrasenia(v.getEmail(), v.getContrasenia()))
-                .thenReturn(Optional.of(v));
-
-        Viajero resultado = servicio.login(v.getEmail(), v.getContrasenia());
-
-        assertThat(resultado.getNombre(), equalTo(v.getNombre()));
-    }
-
-    @Test
-    void noDeberiaValidarLoginSiCredencialesInvalidas() {
-        when(repositorioMock.buscarPorEmailYContrasenia("lucas@mail.com", "pass"))
-                .thenReturn(Optional.empty());
-
-        assertThrows(CredencialesInvalidas.class,
-                () -> servicio.login("lucas@mail.com", "pass"));
-    }
 
     @Test
     void deberiaRegistrarViajeroSiNoExiste() throws UsuarioExistente, EdadInvalidaException, DatoObligatorioException {
-        Viajero nuevo = new Viajero(null, "Ana", 30, "123", "ana@mail.com", new ArrayList<>());
+        // Arrange
+        Viajero v = new Viajero();
+        v.setId(null);
+        v.setNombre("Ana");
+        v.setEdad(30);
+        v.setEmail("ana@mail.com");
+        v.setContrasenia("123");
+        v.setReservas(new ArrayList<>());
+        // El rol y activo se setean DENTRO del servicio
 
-        when(repositorioMock.buscarPorEmail(nuevo.getEmail()))
-                .thenReturn(Optional.empty());
+        // Simulamos que el ServicioLogin NO lanza UsuarioExistente, lo que implica registro exitoso
+        doNothing().when(servicioLoginMock).registrar(any(Viajero.class));
 
-        servicio.registrar(nuevo);
+        // Act
+        servicio.registrar(v);
 
-        verify(repositorioMock, times(1)).guardarViajero(nuevo);
+        // Assert
+        // Verificamos que se llama al método centralizado de registro
+        verify(servicioLoginMock, times(1)).registrar(v);
+        // Verificamos que se asignaron los campos de Usuario dentro del servicio
+        assertThat(v.getRol(), equalTo("VIAJERO"));
+        assertThat(v.getActivo(), equalTo(true));
     }
 
     @Test
-    void noDeberiaRegistrarSiUsuarioYaExiste() {
-        Viajero existente = new Viajero(1L, "Ana", 30, "123", "ana@mail.com" , new ArrayList<>());
+    void noDeberiaRegistrarSiUsuarioYaExiste() throws UsuarioExistente {
+        // Arrange
+        Viajero nuevo = new Viajero();
+        nuevo.setId(null);
+        nuevo.setNombre("Ana");
+        nuevo.setEdad(30);
+        nuevo.setEmail("ana@mail.com");
+        nuevo.setContrasenia("123");
+        nuevo.setReservas(new ArrayList<>());
 
-        when(repositorioMock.buscarPorEmail(existente.getEmail()))
-                .thenReturn(Optional.of(existente));
+        // El ServicioLogin debe lanzar la excepción para simular que el email ya existe
+        doThrow(new UsuarioExistente("Ya existe un usuario con ese email"))
+                .when(servicioLoginMock).registrar(any(Viajero.class));
 
-        Viajero nuevo = new Viajero(null, "Ana", 30, "123", "ana@mail.com", new ArrayList<>());
-
+        // Act & Assert
         assertThrows(UsuarioExistente.class,
                 () -> servicio.registrar(nuevo));
 
-        verify(repositorioMock, never()).guardarViajero(any(Viajero.class));
+        // Verificamos que el repositorio de rol NO fue llamado
+        verify(repositorioMock, never()).buscarPorId(anyLong());
     }
 
+    // --- Los tests de validación de negocio (Nombre, Edad) siguen siendo válidos ---
+    // Ya que la validación ocurre ANTES de llamar a servicioLoginMock.registrar()
+
     @Test
-    void noDeberiaRegistrarSiNombreEsNulo() {
-        Viajero sinNombre = new Viajero(null, null, 25, "123", "ana@mail.com", new ArrayList<>());
+    void noDeberiaRegistrarSiNombreEsNulo() throws UsuarioExistente {
+        // ... (el código del test no cambia)
+        Viajero sinNombre = new Viajero();
+        sinNombre.setNombre(null);
+        sinNombre.setEdad(25);
+        // ... (otros campos)
 
         assertThrows(DatoObligatorioException.class,
                 () -> servicio.registrar(sinNombre));
 
-        verify(repositorioMock, never()).guardarViajero(any());
+        // Verificamos que NUNCA se llama al servicio de login
+        verify(servicioLoginMock, never()).registrar(any());
     }
 
     @Test
-    void noDeberiaRegistrarSiNombreEsVacio() {
-        Viajero sinNombre = new Viajero(null, "   ", 24, "123", "ana@mail.com", new ArrayList<>());
+    void noDeberiaRegistrarSiNombreEsVacio() throws UsuarioExistente {
+        // ... (el código del test no cambia)
+        Viajero sinNombre = new Viajero();
+        sinNombre.setNombre(" ");
+        sinNombre.setEdad(25);
+        // ... (otros campos)
 
         assertThrows(DatoObligatorioException.class,
                 () -> servicio.registrar(sinNombre));
 
-        verify(repositorioMock, never()).guardarViajero(any());
+        verify(servicioLoginMock, never()).registrar(any());
     }
 
     @Test
-    void noDeberiaRegistrarSiEdadEsNula() {
-        Viajero sinEdad = new Viajero(null, "Ana", null, "123", "ana@mail.com", new ArrayList<>());
+    void noDeberiaRegistrarSiEdadEsNula() throws UsuarioExistente {
+        // ... (el código del test no cambia)
+        Viajero sinEdad = new Viajero();
+        sinEdad.setNombre("Ana");
+        sinEdad.setEdad(null);
 
         assertThrows(EdadInvalidaException.class,
                 () -> servicio.registrar(sinEdad));
 
-        verify(repositorioMock, never()).guardarViajero(any());
+        verify(servicioLoginMock, never()).registrar(any());
     }
 
     @Test
-    void noDeberiaRegistrarSiEdadEsMenorA18() {
-        Viajero menor = new Viajero(null, "Ana", 17, "123", "ana@mail.com", new ArrayList<>());
+    void noDeberiaRegistrarSiEdadEsMenorA18() throws UsuarioExistente {
+        // ... (el código del test no cambia)
+        Viajero menor = new Viajero();
+        menor.setNombre("Ana");
+        menor.setEdad(17);
 
         assertThrows(EdadInvalidaException.class,
                 () -> servicio.registrar(menor));
 
-        verify(repositorioMock, never()).guardarViajero(any());
+        verify(servicioLoginMock, never()).registrar(any());
     }
 
     @Test
-    void noDeberiaRegistrarSiEdadEsMayorA120() {
-        Viajero anciano = new Viajero(null, "Ana", 121, "123", "ana@mail.com", new ArrayList<>());
+    void noDeberiaRegistrarSiEdadEsMayorA120() throws UsuarioExistente {
+        // ... (el código del test no cambia)
+        Viajero anciano = new Viajero();
+        anciano.setNombre("Ana");
+        anciano.setEdad(121);
 
         assertThrows(EdadInvalidaException.class,
                 () -> servicio.registrar(anciano));
 
-        verify(repositorioMock, never()).guardarViajero(any());
+        verify(servicioLoginMock, never()).registrar(any());
     }
+
+    // --- Los tests de obtenerViajero (Buscar por ID) siguen siendo válidos ---
+    // Ya que RepositorioViajero SÍ mantiene el método buscarPorId(Long id)
 
     @Test
     void obtenerViajero_existente_deberiaRetornarViajero() throws UsuarioInexistente {
         Long id = 1L;
-        Viajero esperado = new Viajero(id, "Lucas", 27, "pass", "lucas@mail.com", new ArrayList<>());
+        Viajero esperado = new Viajero();
+        // ... (setup de esperado)
         when(repositorioMock.buscarPorId(id)).thenReturn(Optional.of(esperado));
 
         Viajero resultado = servicio.obtenerViajero(id);

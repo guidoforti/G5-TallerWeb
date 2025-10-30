@@ -2,7 +2,6 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="fragments/fragments :: head('UnRumbo - Mis Viajes')">
     <th:block th:fragment="extra">
-        <!-- Extra en el head si es necesario -->
     </th:block>
 </head>
 
@@ -16,6 +15,18 @@
                 <div class="card-body">
                     <h4 class="fw-bold text-dark text-center">Mis viajes publicados</h4>
 
+                    <!-- Error message (flash attribute from redirect) -->
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                        <span th:text="${error}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <!-- Success/info message (flash attribute from redirect) -->
+                    <div th:if="${mensaje}" class="alert alert-info alert-dismissible fade show mt-3" role="alert">
+                        <span th:text="${mensaje}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
                     <div th:if="${listaViajes.isEmpty()}">
                         <p class="text-center text-muted mt-3">No tenés viajes publicados.</p>
                     </div>
@@ -23,47 +34,49 @@
                     <div th:if="${!listaViajes.isEmpty()}">
                         <table class="table table-bordered table-hover mt-4">
                             <thead class="table-light">
-                                <tr>
-                                    <th>Origen</th>
-                                    <th>Destino</th>
-                                    <th>Fecha de salida</th>
-                                    <th>Vehículo</th>
-                                    <th>Asientos disponibles</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
+                            <tr>
+                                <th>Origen</th>
+                                <th>Destino</th>
+                                <th>Fecha de salida</th>
+                                <th>Vehículo</th>
+                                <th>Asientos disponibles</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
                             </thead>
                             <tbody>
-                                <tr th:each="viaje : ${listaViajes}">
-                                    <td th:text="${viaje.origen}"></td>
-                                    <td th:text="${viaje.destino}"></td>
-                                    <td th:text="${viaje.fechaSalida}"></td>
-                                    <td th:text="${viaje.vehiculo}"></td>
-                                    <td th:text="${viaje.asientosDisponibles}"></td>
-                                    <td th:text="${viaje.estado}"></td>
-                                    <td>
+                            <tr th:each="viaje : ${listaViajes}">
+                                <td th:text="${viaje.origen}"></td>
+                                <td th:text="${viaje.destino}"></td>
+                                <td th:text="${viaje.fechaSalida}"></td>
+                                <td th:text="${viaje.vehiculo}"></td>
+                                <td th:text="${viaje.asientosDisponibles}"></td>
+                                <td th:text="${viaje.estado}"></td>
+                                <td>
+                                    <a th:href="@{/viaje/detalle(id=${viaje.id})}"
+                                       class="btn btn-sm btn-outline-info me-1">
+                                        Ver detalle
+                                    </a>
 
-                                        <a th:href="@{/viaje/detalle(id=${viaje.id})}"
-                                           class="btn btn-sm btn-outline-info me-1">
-                                            Ver detalle
-                                        </a>
+                                    <a th:if="${viaje.estado == 'DISPONIBLE'}"
+                                       th:href="@{/viaje/editar/{id}(id=${viaje.id})}"
+                                       class="btn btn-sm btn-outline-primary me-1">Editar viaje</a>
 
-                                        <a th:if="${viaje.estado == 'DISPONIBLE'}"
-                                           th:href="@{'/viaje/editar/' + ${viaje.id}}" 
-                                           class="btn btn-sm btn-outline-primary me-1">Editar viaje</a>
 
-                                        <a th:if="${viaje.estado == 'DISPONIBLE' or viaje.estado == 'COMPLETO'}"
-                                           th:href="@{'/viaje/cancelarViaje/' + ${viaje.id}}" 
-                                           class="btn btn-sm btn-outline-danger">Cancelar viaje</a>
+                                    <a th:if="${viaje.estado == 'DISPONIBLE' or viaje.estado == 'COMPLETO'}"
+                                       th:href="@{'/viaje/cancelarViaje/' + ${viaje.id}}"
+                                       class="btn btn-sm btn-outline-danger">Cancelar viaje</a>
 
-                                    </td>
-                                </tr>
+                                </td>
+                            </tr>
                             </tbody>
                         </table>
                     </div>
 
                     <div class="text-center mt-4">
-                        <a th:href="@{/viaje/publicar}" class="btn btn-unrumbo text-white fw-bold">Publicar nuevo viaje</a>
+                        <a th:href="@{/viaje/publicar}" class="btn btn-unrumbo text-white fw-bold me-2">Publicar nuevo viaje</a>
+
+                        <a th:href="@{/conductor/home}" class="btn btn-secondary fw-bold">Volver al Home</a>
                     </div>
                 </div>
             </div>

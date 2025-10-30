@@ -1,59 +1,96 @@
-INSERT INTO Usuario(id, email, password, rol, activo) VALUES(null, 'test@unlam.edu.ar', 'test', 'ADMIN', true);
+-- POBLADO DE DATOS DE PRUEBA (JOINED INHERITANCE)
 
--- Insertar un conductor de prueba
--- Campos: id, nombre, email, contrasenia, fechaDeVencimientoLicencia
-INSERT INTO conductor (id, nombre, email, contrasenia, fecha_de_vencimiento_licencia)
-VALUES (1, 'Juan Pérez', 'juan.perez@unlam.edu.ar', 'password123', '2026-12-31');
+-- 1️⃣ USUARIO ADMINISTRADOR (ID 1)
+INSERT INTO usuario (id, email, contrasenia, nombre, rol, activo)
+VALUES (1, 'test@unlam.edu.ar', 'test', 'Admin Test', 'ADMIN', TRUE);
 
--- Insertar varios vehículos para el conductor
--- Campos: id, patente, Modelo, anio, asientosTotales, estadoVerificacion (0=PENDIENTE, 1=VERIFICADO, 2=NO_CARGADO), conductor_id
-INSERT INTO vehiculo (id, patente, Modelo, anio, asientos_totales, estado_verificacion, conductor_id)
-VALUES (1, 'ABC123', 'Toyota Corolla', '2020', 5, 1, 1);
+-- 2️⃣ USUARIO CONDUCTOR (ID 2)
+-- La inserción debe ir primero a la tabla base
+INSERT INTO usuario (id, email, contrasenia, nombre, rol, activo)
+VALUES (2, 'juan.perez@unlam.edu.ar', 'password123', 'Juan Pérez', 'CONDUCTOR', TRUE);
 
-INSERT INTO vehiculo (id, patente, Modelo, anio, asientos_totales, estado_verificacion, conductor_id)
-VALUES (2, 'DEF456', 'Honda Civic', '2019', 5, 1, 1);
+-- 3️⃣ CONDUCTOR ESPECÍFICO (JOINED)
+-- Se inserta en la tabla específica usando el ID del usuario conductor (ID 2)
+-- CAMBIO: fechaDeVencimientoLicencia → fecha_de_vencimiento_licencia
+INSERT INTO conductor (usuario_id, fecha_de_vencimiento_licencia)
+VALUES (2, '2026-12-31');
 
-INSERT INTO vehiculo (id, patente, Modelo, anio, asientos_totales, estado_verificacion, conductor_id)
-VALUES (3, 'GHI789', 'Volkswagen Vento', '2021', 5, 1, 1);
+-- 4️⃣ VEHÍCULOS (Referenciando el conductor_id=2)
+-- CAMBIO: asientosTotales → asientos_totales
+-- CAMBIO: estadoVerificacion → estado_verificacion
+-- CAMBIO: Modelo → modelo (para mantener consistencia)
+INSERT INTO vehiculo (id, patente, modelo, anio, asientos_totales, estado_verificacion, conductor_id)
+VALUES (1, 'ABC123', 'Toyota Corolla', '2020', 5, 1, 2);
 
-INSERT INTO vehiculo (id, patente, Modelo, anio, asientos_totales, estado_verificacion, conductor_id)
-VALUES (4, 'JKL012', 'Ford Focus', '2018', 5, 0, 1);
+INSERT INTO vehiculo (id, patente, modelo, anio, asientos_totales, estado_verificacion, conductor_id)
+VALUES (2, 'DEF456', 'Honda Civic', '2019', 5, 1, 2);
 
-INSERT INTO vehiculo (id, patente, Modelo, anio, asientos_totales, estado_verificacion, conductor_id)
-VALUES (5, 'MNO345', 'Chevrolet Cruze', '2022', 5, 1, 1);
+INSERT INTO vehiculo (id, patente, modelo, anio, asientos_totales, estado_verificacion, conductor_id)
+VALUES (3, 'GHI789', 'Volkswagen Vento', '2021', 5, 1, 2);
 
--- Inserts para tu archivo data.sql (versión sin acentos)
+INSERT INTO vehiculo (id, patente, modelo, anio, asientos_totales, estado_verificacion, conductor_id)
+VALUES (4, 'JKL012', 'Ford Focus', '2018', 5, 0, 2);
 
--- 1. CIUDADES
-INSERT INTO ciudad (nombre, latitud, longitud) VALUES ('Ramos Mejia', -34.65, -58.56);
-INSERT INTO ciudad (nombre, latitud, longitud) VALUES ('Lujan', -34.57, -59.10);
-INSERT INTO ciudad (nombre, latitud, longitud) VALUES ('Moron', -34.653, -58.619);
+INSERT INTO vehiculo (id, patente, modelo, anio, asientos_totales, estado_verificacion, conductor_id)
+VALUES (5, 'MNO345', 'Chevrolet Cruze', '2022', 5, 1, 2);
 
+-- 5️⃣ USUARIO VIAJERO (ID 3)
+-- La inserción debe ir primero a la tabla base
+INSERT INTO usuario (id, email, contrasenia, nombre, rol, activo)
+VALUES (3, 'maria.gomez@unlam.edu.ar', 'viajero123', 'María Gómez', 'VIAJERO', TRUE);
 
--- 2. CONDUCTOR
-INSERT INTO conductor (nombre, email, contrasenia, fecha_de_vencimiento_licencia) VALUES ('Carlos Rodriguez', 'carlos.conductor@example.com', 'pass123', '2026-12-31');
+-- 6️⃣ VIAJERO ESPECÍFICO (JOINED)
+-- Se inserta en la tabla específica usando el ID del usuario viajero (ID 3)
+INSERT INTO viajero (usuario_id, edad)
+VALUES (3, 28);
 
+-- 7️⃣ CIUDADES (Coordinates from Nominatim API)
+INSERT INTO ciudad (id, nombre, latitud, longitud)
+VALUES (1, 'Buenos Aires', -34.6095579, -58.3887904);
 
--- 3. VEHICULO
--- NOTA: El estado 'estadoVerificacion' es un Enum. JPA por defecto lo guarda como un numero (ordinal).
--- Suponiendo que el primer valor del enum EstadoVerificacion es 'APROBADO' (indice 0).
-INSERT INTO vehiculo (patente, modelo, anio, asientos_totales, estado_verificacion) VALUES ('AE789BC', 'Toyota Corolla', '2021', 4, 0);
+INSERT INTO ciudad (id, nombre, latitud, longitud)
+VALUES (2, 'Córdoba', -31.4166867, -64.1834193);
 
+INSERT INTO ciudad (id, nombre, latitud, longitud)
+VALUES (3, 'Rosario', -32.9593609, -60.6617024);
 
--- 4. VIAJEROS
-INSERT INTO viajero (nombre, edad, email, contrasenia) VALUES ('Ana Fuentes', 28, 'ana.viajera@example.com', 'pass456');
-INSERT INTO viajero (nombre, edad, email, contrasenia) VALUES ('Luis Torres', 35, 'luis.viajero@example.com', 'pass789');
+INSERT INTO ciudad (id, nombre, latitud, longitud)
+VALUES (4, 'Ciudad de Mendoza', -32.8894155, -68.8446177);
 
+-- 8️⃣ VIAJES DE PRUEBA
+-- Estado: 0=DISPONIBLE, 1=COMPLETO, 2=FINALIZADO, 3=CANCELADO
+-- Viaje 1: Buenos Aires → Córdoba (DISPONIBLE, futuro)
+INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion, version)
+VALUES (1, 1, 2, 2, 1, '2025-10-30 08:00:00', 3, 5000.00, 0, CURRENT_TIMESTAMP, 0);
 
--- 5. VIAJE
--- El estado 'DISPONIBLE' es un Enum. Por defecto JPA lo guarda como un String.
-INSERT INTO viaje (conductor_id, vehiculo_id, origen_id, destino_id, fecha_hora_de_salida, precio, asientos_disponibles, fecha_de_creacion, estado) VALUES (1, 1, 1, 2, '2025-11-10 08:30:00', 2500.00, 1, CURRENT_TIMESTAMP, 1);
+-- Viaje 2: Buenos Aires → Rosario (DISPONIBLE, futuro)
+INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion, version)
+VALUES (2, 1, 3, 2, 2, '2025-11-01 10:00:00', 4, 3500.00, 0, CURRENT_TIMESTAMP, 0);
 
+-- Viaje 3: Córdoba → Buenos Aires (COMPLETO, futuro)
+INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion, version)
+VALUES (3, 2, 1, 2, 3, '2025-11-05 14:00:00', 0, 4800.00, 1, CURRENT_TIMESTAMP, 0);
 
--- 6. PARADAS
-INSERT INTO parada (viaje_id, ciudad_id, orden) VALUES (1, 3, 1);
+-- Viaje 4: Buenos Aires → Ciudad de Mendoza (DISPONIBLE, futuro, más caro)
+INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion, version)
+VALUES (4, 1, 4, 2, 5, '2025-11-10 06:00:00', 2, 12000.00, 0, CURRENT_TIMESTAMP, 0);
 
+-- Viaje 5: Buenos Aires → Córdoba (FINALIZADO, pasado)
+INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion, version)
+VALUES (5, 1, 2, 2, 1, '2025-10-20 09:00:00', 0, 4500.00, 2, CURRENT_TIMESTAMP, 0);
 
--- 7. TABLA INTERMEDIA (viaje_viajero)
-INSERT INTO viaje_viajero (viaje_id, viajero_id) VALUES (1, 1);
-INSERT INTO viaje_viajero (viaje_id, viajero_id) VALUES (1, 2);
+-- 9️⃣ RESERVAS DE PRUEBA
+-- Estados: 0=PENDIENTE, 1=CONFIRMADA, 2=RECHAZADA, 3=CANCELADA_POR_VIAJERO
+-- EstadoPago: NO_PAGADO, PAGADO
+-- EstadoAsistencia: NO_MARCADO, PRESENTE, AUSENTE
+-- Reserva del viajero María Gómez (ID 3) para algunos viajes
+INSERT INTO reserva (id, viaje_id, viajero_id, fecha_solicitud, estado, motivo_rechazo, estado_pago, asistencia)
+VALUES (1, 1, 3, '2025-10-25 10:00:00', 0, NULL, 'NO_PAGADO', 'NO_MARCADO');  -- PENDIENTE para viaje a Córdoba
+
+INSERT INTO reserva (id, viaje_id, viajero_id, fecha_solicitud, estado, motivo_rechazo, estado_pago, asistencia)
+VALUES (2, 5, 3, '2025-10-19 15:00:00', 1, NULL, 'PAGADO', 'PRESENTE');  -- CONFIRMADA para viaje finalizado
+
+-- 10️⃣ NUEVA RESERVA PARA EL VIAJE 2 (Buenos Aires → Rosario)
+-- Insertar la reserva con estado PENDIENTE (0)
+INSERT INTO reserva (id, viaje_id, viajero_id, fecha_solicitud, estado, motivo_rechazo, estado_pago, asistencia)
+VALUES (3, 2, 3, CURRENT_TIMESTAMP, 0, NULL, 'NO_PAGADO', 'NO_MARCADO');
