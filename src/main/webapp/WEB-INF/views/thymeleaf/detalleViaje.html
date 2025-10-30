@@ -198,11 +198,17 @@
                             </a>
 
                             <!-- Botón Ver Viajeros Confirmados - Solo visible para CONDUCTOR -->
-                            <a th:if="${userRole != null && userRole == 'CONDUCTOR'}"
-                               th:href="@{/reserva/viajerosConfirmados(viajeId=${viajeId})}"
-                               class="btn btn-unrumbo">
-                                <i class="fas fa-users me-2"></i> Ver Viajeros Confirmados
-                            </a>
+                            <th:block th:if="${userRole != null && userRole == 'CONDUCTOR'}">
+                                <a th:href="@{/reserva/viajerosConfirmados(viajeId=${viajeId})}"
+                                   class="btn btn-unrumbo">
+                                    <i class="fas fa-users me-2"></i> Ver Viajeros Confirmados
+                                </a>
+
+                                <a th:href="@{/historial/viaje(idViaje=${viajeId})}"
+                                   class="btn btn-outline-unrumbo">
+                                    <i class="fas fa-history me-2"></i> Ver Historial de Decisiones
+                                </a>
+                            </th:block>
 
                             <a th:href="@{/viaje/listar}" class="btn btn-outline-unrumbo">
                                 <i class="fas fa-arrow-left me-2"></i> Volver a Mis Viajes

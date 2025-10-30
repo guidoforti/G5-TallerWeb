@@ -2,6 +2,7 @@ package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Usuario;
+import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioHistorialReserva;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.HistorialReservaDTO;
 import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
@@ -26,6 +27,7 @@ public class ControladorHistorialReservaTest {
 
     private ControladorHistorialReserva historialReservaController;
     private ServicioHistorialReserva servicioHistorialReservaMock;
+    private ServicioConductor servicioConductorMock;
     private HttpSession sessionMock;
     
     private final Long ID_VIAJE = 10L;
@@ -35,10 +37,11 @@ public class ControladorHistorialReservaTest {
     void setUp() {
         // Inicialización de mocks
         servicioHistorialReservaMock = mock(ServicioHistorialReserva.class);
+        servicioConductorMock = mock(ServicioConductor.class);
         sessionMock = mock(HttpSession.class);
         
         // Inicialización del controlador
-        historialReservaController = new ControladorHistorialReserva(servicioHistorialReservaMock);
+        historialReservaController = new ControladorHistorialReserva(servicioHistorialReservaMock, servicioConductorMock);
     }
     
     // --- Casos de Éxito ---
