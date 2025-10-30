@@ -4,6 +4,8 @@ import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Reserva;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.Viajero;
+import com.tallerwebi.dominio.Enums.EstadoDeViaje;
+import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
@@ -12,7 +14,9 @@ import com.tallerwebi.dominio.excepcion.*;
 import com.tallerwebi.presentacion.DTO.InputsDTO.MarcarAsistenciaInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.RechazoReservaInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.SolicitudReservaInputDTO;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.ReservaPendienteRechazadaDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ReservaVistaDTO;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeConfirmadoViajeroDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeReservaSolicitudDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeroConfirmadoDTO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -480,6 +484,126 @@ public class ControladorReserva {
         } catch (ViajeNoEncontradoException | NotFoundException | UsuarioNoAutorizadoException e) {
             model.put("error", "Error al recargar datos: " + e.getMessage());
             return new ModelAndView("redirect:/reserva/misReservas");
+        }
+    }
+
+    /**
+     * Lista las reservas pendientes y rechazadas del viajero logueado
+     * GET /reserva/misReservasPendientes
+     */
+    @GetMapping("/misReservasPendientes")
+    public ModelAndView listarReservasPendientesYRechazadas(HttpSession session) {
+        ModelMap model = new ModelMap();
+
+        // Validar sesión
+        Object usuarioIdObj = session.getAttribute("idUsuario");
+        Object rol = session.getAttribute("ROL");
+
+        if (usuarioIdObj == null || !"VIAJERO".equals(rol)) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        Long viajeroId = (Long) usuarioIdObj;
+
+        try {
+            // Obtener todas las reservas pendientes y rechazadas del viajero
+            List<Reserva> reservas = servicioReserva.listarReservasPendientesYRechazadas(viajeroId);
+
+            // Separar en dos listas: pendientes y rechazadas
+            List<Reserva> reservasPendientes = reservas.stream()
+                    .filter(r -> r.getEstado() == EstadoReserva.PENDIENTE)
+                    .collect(Collectors.toList());
+
+            List<Reserva> reservasRechazadas = reservas.stream()
+                    .filter(r -> r.getEstado() == EstadoReserva.RECHAZADA)
+                    .collect(Collectors.toList());
+
+            // Convertir a DTOs
+            List<ReservaPendienteRechazadaDTO> pendientesDTO = reservasPendientes.stream()
+                    .map(ReservaPendienteRechazadaDTO::new)
+                    .collect(Collectors.toList());
+
+            List<ReservaPendienteRechazadaDTO> rechazadasDTO = reservasRechazadas.stream()
+                    .map(ReservaPendienteRechazadaDTO::new)
+                    .collect(Collectors.toList());
+
+            model.put("reservasPendientes", pendientesDTO);
+            model.put("reservasRechazadas", rechazadasDTO);
+
+            return new ModelAndView("misReservasPendientes", model);
+
+        } catch (UsuarioInexistente e) {
+            model.put("error", e.getMessage());
+            return new ModelAndView("error", model);
+        }
+    }
+
+    /**
+     * Lista todos los viajes confirmados del viajero logueado
+     * organizados por su estado temporal (Próximos, En curso, Finalizados)
+     * GET /reserva/misViajes
+     */
+    @GetMapping("/misViajes")
+    public ModelAndView listarMisViajes(HttpSession session) {
+        ModelMap model = new ModelMap();
+
+        // Validar sesión
+        Object usuarioIdObj = session.getAttribute("idUsuario");
+        Object rol = session.getAttribute("ROL");
+
+        if (usuarioIdObj == null || !"VIAJERO".equals(rol)) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        Long viajeroId = (Long) usuarioIdObj;
+
+        try {
+            // Obtener todas las reservas confirmadas del viajero
+            List<Reserva> reservas = servicioReserva.listarViajesConfirmadosPorViajero(viajeroId);
+
+            // Categorizar por estado del viaje:
+            // Próximos: DISPONIBLE, COMPLETO
+            // En curso: EN_CURSO
+            // Finalizados: FINALIZADO, CANCELADO
+            List<Reserva> viajesProximos = reservas.stream()
+                    .filter(r -> r.getViaje().getEstado() == EstadoDeViaje.DISPONIBLE ||
+                                 r.getViaje().getEstado() == EstadoDeViaje.COMPLETO)
+                    .sorted((r1, r2) -> r1.getViaje().getFechaHoraDeSalida().compareTo(r2.getViaje().getFechaHoraDeSalida()))
+                    .collect(Collectors.toList());
+
+            List<Reserva> viajesEnCurso = reservas.stream()
+                    .filter(r -> r.getViaje().getEstado() == EstadoDeViaje.EN_CURSO)
+                    .sorted((r1, r2) -> r1.getViaje().getFechaHoraDeSalida().compareTo(r2.getViaje().getFechaHoraDeSalida()))
+                    .collect(Collectors.toList());
+
+            List<Reserva> viajesFinalizados = reservas.stream()
+                    .filter(r -> r.getViaje().getEstado() == EstadoDeViaje.FINALIZADO ||
+                                 r.getViaje().getEstado() == EstadoDeViaje.CANCELADO)
+                    .sorted((r1, r2) -> r2.getViaje().getFechaHoraDeSalida().compareTo(r1.getViaje().getFechaHoraDeSalida()))
+                    .collect(Collectors.toList());
+
+            // Convertir a DTOs
+            List<ViajeConfirmadoViajeroDTO> proximosDTO = viajesProximos.stream()
+                    .map(ViajeConfirmadoViajeroDTO::new)
+                    .collect(Collectors.toList());
+
+            List<ViajeConfirmadoViajeroDTO> enCursoDTO = viajesEnCurso.stream()
+                    .map(ViajeConfirmadoViajeroDTO::new)
+                    .collect(Collectors.toList());
+
+            List<ViajeConfirmadoViajeroDTO> finalizadosDTO = viajesFinalizados.stream()
+                    .map(ViajeConfirmadoViajeroDTO::new)
+                    .collect(Collectors.toList());
+
+            model.put("viajesProximos", proximosDTO);
+            model.put("viajesEnCurso", enCursoDTO);
+            model.put("viajesFinalizados", finalizadosDTO);
+
+            return new ModelAndView("misViajes", model);
+
+        } catch (UsuarioInexistente e) {
+            model.put("error", e.getMessage());
+            return new ModelAndView("error", model);
         }
     }
 }

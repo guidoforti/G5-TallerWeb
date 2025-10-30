@@ -253,4 +253,183 @@ public class RepositorioReservaTest {
         assertThat(reservaRecuperada.get().getEstado(), is(EstadoReserva.RECHAZADA));
         assertThat(reservaRecuperada.get().getMotivoRechazo(), is("No hay espacio suficiente para equipaje"));
     }
+
+    @Test
+    public void deberiaBuscarReservasPorViajeroYEstadosOrdenadasPorFechaSalidaDelViaje() {
+        // given
+        Viaje viaje1 = sessionFactory.getCurrentSession().get(Viaje.class, 1L);
+        Viaje viaje2 = sessionFactory.getCurrentSession().get(Viaje.class, 2L);
+        Viajero viajero = sessionFactory.getCurrentSession().get(Viajero.class, 4L);
+
+        // Crear reservas con diferentes estados y fechas de viaje
+        Reserva reservaPendiente = new Reserva();
+        reservaPendiente.setViaje(viaje1);  // Viaje con fecha 2025-10-05 (más lejana según dataTest.sql)
+        reservaPendiente.setViajero(viajero);
+        reservaPendiente.setFechaSolicitud(LocalDateTime.now());
+        reservaPendiente.setEstado(EstadoReserva.PENDIENTE);
+
+        Reserva reservaRechazada = new Reserva();
+        reservaRechazada.setViaje(viaje2);  // Viaje con fecha 2025-09-25 (más cercana según dataTest.sql)
+        reservaRechazada.setViajero(viajero);
+        reservaRechazada.setFechaSolicitud(LocalDateTime.now());
+        reservaRechazada.setEstado(EstadoReserva.RECHAZADA);
+        reservaRechazada.setMotivoRechazo("No hay espacio");
+
+        repositorioReserva.save(reservaPendiente);
+        repositorioReserva.save(reservaRechazada);
+        sessionFactory.getCurrentSession().flush();
+
+        // when
+        List<EstadoReserva> estados = List.of(EstadoReserva.PENDIENTE, EstadoReserva.RECHAZADA);
+        List<Reserva> reservas = repositorioReserva.findByViajeroAndEstadoInOrderByViajesFechaSalidaAsc(viajero, estados);
+
+        // then
+        assertThat(reservas, hasSize(2));
+        // Verificar que están ordenadas por fecha de salida del viaje (ASC - más cercano primero)
+        // viaje2 tiene fecha 2025-09-25, viaje1 tiene fecha 2025-10-05
+        assertThat(reservas.get(0).getEstado(), is(EstadoReserva.RECHAZADA));
+        assertThat(reservas.get(0).getViaje().getId(), is(viaje2.getId()));
+        assertThat(reservas.get(1).getEstado(), is(EstadoReserva.PENDIENTE));
+        assertThat(reservas.get(1).getViaje().getId(), is(viaje1.getId()));
+    }
+
+    @Test
+    public void deberiaRetornarListaVaciaCuandoNoHayReservasPorViajeroYEstados() {
+        // given
+        Viajero viajero = sessionFactory.getCurrentSession().get(Viajero.class, 4L);
+        List<EstadoReserva> estados = List.of(EstadoReserva.PENDIENTE, EstadoReserva.RECHAZADA);
+
+        // when
+        List<Reserva> reservas = repositorioReserva.findByViajeroAndEstadoInOrderByViajesFechaSalidaAsc(viajero, estados);
+
+        // then
+        assertThat(reservas, hasSize(0));
+    }
+
+    @Test
+    public void deberiaFiltrarCorrectamenteSoloPendientesYRechazadas() {
+        // given
+        Viaje viaje1 = sessionFactory.getCurrentSession().get(Viaje.class, 1L);
+        Viaje viaje2 = sessionFactory.getCurrentSession().get(Viaje.class, 2L);
+        Viaje viaje3 = sessionFactory.getCurrentSession().get(Viaje.class, 3L);
+        Viajero viajero = sessionFactory.getCurrentSession().get(Viajero.class, 4L);
+
+        Reserva reservaPendiente = new Reserva();
+        reservaPendiente.setViaje(viaje1);
+        reservaPendiente.setViajero(viajero);
+        reservaPendiente.setFechaSolicitud(LocalDateTime.now());
+        reservaPendiente.setEstado(EstadoReserva.PENDIENTE);
+
+        Reserva reservaConfirmada = new Reserva();
+        reservaConfirmada.setViaje(viaje2);
+        reservaConfirmada.setViajero(viajero);
+        reservaConfirmada.setFechaSolicitud(LocalDateTime.now());
+        reservaConfirmada.setEstado(EstadoReserva.CONFIRMADA);
+
+        Reserva reservaRechazada = new Reserva();
+        reservaRechazada.setViaje(viaje3);
+        reservaRechazada.setViajero(viajero);
+        reservaRechazada.setFechaSolicitud(LocalDateTime.now());
+        reservaRechazada.setEstado(EstadoReserva.RECHAZADA);
+
+        repositorioReserva.save(reservaPendiente);
+        repositorioReserva.save(reservaConfirmada);
+        repositorioReserva.save(reservaRechazada);
+        sessionFactory.getCurrentSession().flush();
+
+        // when
+        List<EstadoReserva> estados = List.of(EstadoReserva.PENDIENTE, EstadoReserva.RECHAZADA);
+        List<Reserva> reservas = repositorioReserva.findByViajeroAndEstadoInOrderByViajesFechaSalidaAsc(viajero, estados);
+
+        // then
+        assertThat(reservas, hasSize(2));
+        // Verificar que NO incluye la reserva confirmada
+        for (Reserva reserva : reservas) {
+            assertThat(reserva.getEstado(), isIn(List.of(EstadoReserva.PENDIENTE, EstadoReserva.RECHAZADA)));
+        }
+    }
+
+    @Test
+    public void deberiaBuscarViajesConfirmadosPorViajero() {
+        // given
+        Viaje viaje1 = sessionFactory.getCurrentSession().get(Viaje.class, 1L);
+        Viaje viaje2 = sessionFactory.getCurrentSession().get(Viaje.class, 2L);
+        Viajero viajero = sessionFactory.getCurrentSession().get(Viajero.class, 4L);
+
+        // Crear reservas confirmadas
+        Reserva reservaConfirmada1 = new Reserva();
+        reservaConfirmada1.setViaje(viaje1);
+        reservaConfirmada1.setViajero(viajero);
+        reservaConfirmada1.setFechaSolicitud(LocalDateTime.now());
+        reservaConfirmada1.setEstado(EstadoReserva.CONFIRMADA);
+
+        Reserva reservaConfirmada2 = new Reserva();
+        reservaConfirmada2.setViaje(viaje2);
+        reservaConfirmada2.setViajero(viajero);
+        reservaConfirmada2.setFechaSolicitud(LocalDateTime.now());
+        reservaConfirmada2.setEstado(EstadoReserva.CONFIRMADA);
+
+        repositorioReserva.save(reservaConfirmada1);
+        repositorioReserva.save(reservaConfirmada2);
+        sessionFactory.getCurrentSession().flush();
+
+        // when
+        List<Reserva> reservas = repositorioReserva.findViajesConfirmadosPorViajero(viajero);
+
+        // then
+        assertThat(reservas, hasSize(2));
+        assertThat(reservas.get(0).getEstado(), is(EstadoReserva.CONFIRMADA));
+        assertThat(reservas.get(1).getEstado(), is(EstadoReserva.CONFIRMADA));
+    }
+
+    @Test
+    public void deberiaRetornarListaVaciaCuandoNoHayReservasConfirmadas() {
+        // given
+        Viajero viajero = sessionFactory.getCurrentSession().get(Viajero.class, 4L);
+
+        // when
+        List<Reserva> reservas = repositorioReserva.findViajesConfirmadosPorViajero(viajero);
+
+        // then
+        assertThat(reservas, hasSize(0));
+    }
+
+    @Test
+    public void deberiaFiltrarSoloReservasConfirmadasYNoOtrosEstados() {
+        // given
+        Viaje viaje1 = sessionFactory.getCurrentSession().get(Viaje.class, 1L);
+        Viaje viaje2 = sessionFactory.getCurrentSession().get(Viaje.class, 2L);
+        Viaje viaje3 = sessionFactory.getCurrentSession().get(Viaje.class, 3L);
+        Viajero viajero = sessionFactory.getCurrentSession().get(Viajero.class, 4L);
+
+        Reserva reservaConfirmada = new Reserva();
+        reservaConfirmada.setViaje(viaje1);
+        reservaConfirmada.setViajero(viajero);
+        reservaConfirmada.setFechaSolicitud(LocalDateTime.now());
+        reservaConfirmada.setEstado(EstadoReserva.CONFIRMADA);
+
+        Reserva reservaPendiente = new Reserva();
+        reservaPendiente.setViaje(viaje2);
+        reservaPendiente.setViajero(viajero);
+        reservaPendiente.setFechaSolicitud(LocalDateTime.now());
+        reservaPendiente.setEstado(EstadoReserva.PENDIENTE);
+
+        Reserva reservaRechazada = new Reserva();
+        reservaRechazada.setViaje(viaje3);
+        reservaRechazada.setViajero(viajero);
+        reservaRechazada.setFechaSolicitud(LocalDateTime.now());
+        reservaRechazada.setEstado(EstadoReserva.RECHAZADA);
+
+        repositorioReserva.save(reservaConfirmada);
+        repositorioReserva.save(reservaPendiente);
+        repositorioReserva.save(reservaRechazada);
+        sessionFactory.getCurrentSession().flush();
+
+        // when
+        List<Reserva> reservas = repositorioReserva.findViajesConfirmadosPorViajero(viajero);
+
+        // then
+        assertThat(reservas, hasSize(1));
+        assertThat(reservas.get(0).getEstado(), is(EstadoReserva.CONFIRMADA));
+    }
 }

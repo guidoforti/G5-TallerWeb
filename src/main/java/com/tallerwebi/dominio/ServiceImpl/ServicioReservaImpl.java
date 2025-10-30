@@ -271,6 +271,7 @@ public class ServicioReservaImpl implements ServicioReserva {
         registrarHistorial(reserva, estadoAnterior, conductor);
         reservaRepository.update(reserva);
     }
+
     private void registrarHistorial(Reserva reserva, EstadoReserva estadoAnterior, Usuario usuarioQueRealizaLaAccion) {
         HistorialReserva historial = new HistorialReserva();
         historial.setReserva(reserva);
@@ -282,5 +283,49 @@ public class ServicioReservaImpl implements ServicioReserva {
         historial.setEstadoNuevo(reserva.getEstado()); // El estado nuevo ya está seteado en la Reserva
 
         repositorioHistorialReserva.save(historial);
+    }
+
+    @Override
+    public List<Reserva> listarReservasPendientesYRechazadas(Long viajeroId) throws UsuarioInexistente {
+        // Obtener el viajero y validar que existe
+        Viajero viajero = servicioViajero.obtenerViajero(viajeroId);
+
+        // Definir los estados a buscar
+        List<EstadoReserva> estados = List.of(EstadoReserva.PENDIENTE, EstadoReserva.RECHAZADA);
+
+        // Obtener las reservas filtradas y ordenadas por fecha de salida del viaje
+        List<Reserva> reservas = reservaRepository.findByViajeroAndEstadoInOrderByViajesFechaSalidaAsc(viajero, estados);
+
+        // Inicializar lazy loads para evitar LazyInitializationException
+        reservas.forEach(reserva -> {
+            if (reserva.getViaje() != null) {
+                org.hibernate.Hibernate.initialize(reserva.getViaje().getOrigen());
+                org.hibernate.Hibernate.initialize(reserva.getViaje().getDestino());
+                org.hibernate.Hibernate.initialize(reserva.getViaje().getConductor());
+            }
+        });
+
+        return reservas;
+    }
+
+    @Override
+    public List<Reserva> listarViajesConfirmadosPorViajero(Long viajeroId) throws UsuarioInexistente {
+        // Obtener el viajero y validar que existe
+        Viajero viajero = servicioViajero.obtenerViajero(viajeroId);
+
+        // Obtener todas las reservas confirmadas del viajero
+        List<Reserva> reservas = reservaRepository.findViajesConfirmadosPorViajero(viajero);
+
+        // Inicializar lazy loads para evitar LazyInitializationException
+        reservas.forEach(reserva -> {
+            if (reserva.getViaje() != null) {
+                org.hibernate.Hibernate.initialize(reserva.getViaje().getOrigen());
+                org.hibernate.Hibernate.initialize(reserva.getViaje().getDestino());
+                org.hibernate.Hibernate.initialize(reserva.getViaje().getConductor());
+                org.hibernate.Hibernate.initialize(reserva.getViaje().getVehiculo());
+            }
+        });
+
+        return reservas;
     }
 }

@@ -730,6 +730,158 @@ class ServicioReservaTest {
         verify(repositorioReservaMock, never()).update(any());
     }
 
+    // --- TESTS DE LISTAR RESERVAS PENDIENTES Y RECHAZADAS ---
+
+    @Test
+    void deberiaListarReservasPendientesYRechazadasCorrectamente() throws Exception {
+        // given
+        Long viajeroId = 1L;
+        Viajero viajero = crearViajeroMock(viajeroId);
+
+        Viaje viaje1 = crearViajeMock(1L, 3, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusDays(1));
+        Viaje viaje2 = crearViajeMock(2L, 2, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusDays(2));
+
+        Reserva reservaPendiente = crearReservaMock(1L, EstadoReserva.PENDIENTE);
+        reservaPendiente.setViaje(viaje1);
+        reservaPendiente.setViajero(viajero);
+
+        Reserva reservaRechazada = crearReservaMock(2L, EstadoReserva.RECHAZADA);
+        reservaRechazada.setViaje(viaje2);
+        reservaRechazada.setViajero(viajero);
+        reservaRechazada.setMotivoRechazo("No hay espacio");
+
+        List<Reserva> reservas = Arrays.asList(reservaPendiente, reservaRechazada);
+
+        when(servicioViajero.obtenerViajero(viajeroId)).thenReturn(viajero);
+        when(repositorioReservaMock.findByViajeroAndEstadoInOrderByViajesFechaSalidaAsc(eq(viajero), any()))
+                .thenReturn(reservas);
+
+        // when
+        List<Reserva> resultado = servicioReserva.listarReservasPendientesYRechazadas(viajeroId);
+
+        // then
+        assertThat(resultado, hasSize(2));
+        assertThat(resultado.get(0).getEstado(), is(EstadoReserva.PENDIENTE));
+        assertThat(resultado.get(1).getEstado(), is(EstadoReserva.RECHAZADA));
+        verify(servicioViajero, times(1)).obtenerViajero(viajeroId);
+        verify(repositorioReservaMock, times(1))
+                .findByViajeroAndEstadoInOrderByViajesFechaSalidaAsc(eq(viajero), any());
+    }
+
+    @Test
+    void deberiaRetornarListaVaciaCuandoNoHayReservasPendientesNiRechazadas() throws Exception {
+        // given
+        Long viajeroId = 1L;
+        Viajero viajero = crearViajeroMock(viajeroId);
+
+        when(servicioViajero.obtenerViajero(viajeroId)).thenReturn(viajero);
+        when(repositorioReservaMock.findByViajeroAndEstadoInOrderByViajesFechaSalidaAsc(eq(viajero), any()))
+                .thenReturn(Arrays.asList());
+
+        // when
+        List<Reserva> resultado = servicioReserva.listarReservasPendientesYRechazadas(viajeroId);
+
+        // then
+        assertThat(resultado, hasSize(0));
+        verify(servicioViajero, times(1)).obtenerViajero(viajeroId);
+        verify(repositorioReservaMock, times(1))
+                .findByViajeroAndEstadoInOrderByViajesFechaSalidaAsc(eq(viajero), any());
+    }
+
+    @Test
+    void deberiaLanzarExcepcionCuandoViajeroNoExiste() throws UsuarioInexistente {
+        // given
+        Long viajeroId = 999L;
+
+        when(servicioViajero.obtenerViajero(viajeroId))
+                .thenThrow(new UsuarioInexistente("No se encontró el viajero con id: " + viajeroId));
+
+        // when & then
+        assertThrows(UsuarioInexistente.class, () -> {
+            servicioReserva.listarReservasPendientesYRechazadas(viajeroId);
+        });
+
+        verify(servicioViajero, times(1)).obtenerViajero(viajeroId);
+        verify(repositorioReservaMock, never())
+                .findByViajeroAndEstadoInOrderByViajesFechaSalidaAsc(any(), any());
+    }
+
+    // --- TESTS DE LISTAR VIAJES CONFIRMADOS POR VIAJERO ---
+
+    @Test
+    void deberiaListarViajesConfirmadosPorViajeroCorrectamente() throws Exception {
+        // given
+        Long viajeroId = 1L;
+        Viajero viajero = crearViajeroMock(viajeroId);
+
+        Viaje viaje1 = crearViajeMock(1L, 3, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusDays(5));
+        Viaje viaje2 = crearViajeMock(2L, 2, EstadoDeViaje.EN_CURSO, LocalDateTime.now());
+        Viaje viaje3 = crearViajeMock(3L, 1, EstadoDeViaje.FINALIZADO, LocalDateTime.now().minusDays(2));
+
+        Reserva reserva1 = crearReservaMock(1L, EstadoReserva.CONFIRMADA);
+        reserva1.setViaje(viaje1);
+        reserva1.setViajero(viajero);
+
+        Reserva reserva2 = crearReservaMock(2L, EstadoReserva.CONFIRMADA);
+        reserva2.setViaje(viaje2);
+        reserva2.setViajero(viajero);
+
+        Reserva reserva3 = crearReservaMock(3L, EstadoReserva.CONFIRMADA);
+        reserva3.setViaje(viaje3);
+        reserva3.setViajero(viajero);
+
+        List<Reserva> reservas = Arrays.asList(reserva1, reserva2, reserva3);
+
+        when(servicioViajero.obtenerViajero(viajeroId)).thenReturn(viajero);
+        when(repositorioReservaMock.findViajesConfirmadosPorViajero(viajero)).thenReturn(reservas);
+
+        // when
+        List<Reserva> resultado = servicioReserva.listarViajesConfirmadosPorViajero(viajeroId);
+
+        // then
+        assertThat(resultado, hasSize(3));
+        assertThat(resultado.get(0).getEstado(), is(EstadoReserva.CONFIRMADA));
+        assertThat(resultado.get(1).getEstado(), is(EstadoReserva.CONFIRMADA));
+        assertThat(resultado.get(2).getEstado(), is(EstadoReserva.CONFIRMADA));
+        verify(servicioViajero, times(1)).obtenerViajero(viajeroId);
+        verify(repositorioReservaMock, times(1)).findViajesConfirmadosPorViajero(viajero);
+    }
+
+    @Test
+    void deberiaRetornarListaVaciaCuandoNoHayViajesConfirmados() throws Exception {
+        // given
+        Long viajeroId = 1L;
+        Viajero viajero = crearViajeroMock(viajeroId);
+
+        when(servicioViajero.obtenerViajero(viajeroId)).thenReturn(viajero);
+        when(repositorioReservaMock.findViajesConfirmadosPorViajero(viajero)).thenReturn(Arrays.asList());
+
+        // when
+        List<Reserva> resultado = servicioReserva.listarViajesConfirmadosPorViajero(viajeroId);
+
+        // then
+        assertThat(resultado, hasSize(0));
+        verify(servicioViajero, times(1)).obtenerViajero(viajeroId);
+        verify(repositorioReservaMock, times(1)).findViajesConfirmadosPorViajero(viajero);
+    }
+
+    @Test
+    void deberiaLanzarExcepcionCuandoViajeroNoExisteAlListarViajesConfirmados() throws UsuarioInexistente {
+        // given
+        Long viajeroId = 999L;
+
+        when(servicioViajero.obtenerViajero(viajeroId))
+                .thenThrow(new UsuarioInexistente("No se encontró el viajero con id: " + viajeroId));
+
+        // when & then
+        assertThrows(UsuarioInexistente.class, () -> {
+            servicioReserva.listarViajesConfirmadosPorViajero(viajeroId);
+        });
+
+        verify(servicioViajero, times(1)).obtenerViajero(viajeroId);
+        verify(repositorioReservaMock, never()).findViajesConfirmadosPorViajero(any());
+    }
+
     // --- MÉTODOS AUXILIARES PARA CREAR MOCKS ---
 
     private Viaje crearViajeMock(Long id, Integer asientosDisponibles, EstadoDeViaje estado, LocalDateTime fechaSalida) {
