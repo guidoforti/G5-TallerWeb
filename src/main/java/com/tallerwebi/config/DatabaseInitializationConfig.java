@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.DataSourceInitializer;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import java.nio.charset.StandardCharsets;
 
 import javax.sql.DataSource;
 
@@ -19,6 +20,7 @@ public class DatabaseInitializationConfig {
     public DataSourceInitializer dataSourceInitializer() {
         ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
         populator.addScript(new ClassPathResource("data.sql"));
+        populator.setSqlScriptEncoding("UTF-8");
 
         DataSourceInitializer initializer = new DataSourceInitializer();
         initializer.setDataSource(dataSource);

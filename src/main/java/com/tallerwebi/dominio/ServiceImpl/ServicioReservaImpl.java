@@ -12,6 +12,11 @@ import com.tallerwebi.dominio.IServicio.ServicioViajero;
 import com.tallerwebi.dominio.excepcion.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.tallerwebi.dominio.IServicio.ServicioHistorialReserva;
+import com.tallerwebi.dominio.Entity.HistorialReserva;
+import com.tallerwebi.dominio.Entity.Usuario;
+import com.tallerwebi.dominio.Entity.Conductor;
+import com.tallerwebi.dominio.IRepository.RepositorioHistorialReserva;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
@@ -25,12 +30,14 @@ public class ServicioReservaImpl implements ServicioReserva {
     private final ReservaRepository reservaRepository;
     private final ServicioViaje servicioViaje;
     private final ServicioViajero servicioViajero;
+    private final RepositorioHistorialReserva repositorioHistorialReserva;
 
     @Autowired
-    public ServicioReservaImpl(ReservaRepository reservaRepository, ServicioViaje servicioViaje, ServicioViajero servicioViajero) {
+    public ServicioReservaImpl(ReservaRepository reservaRepository, ServicioViaje servicioViaje, ServicioViajero servicioViajero, RepositorioHistorialReserva repositorioHistorialReserva) {
         this.reservaRepository = reservaRepository;
         this.servicioViaje = servicioViaje;
         this.servicioViajero = servicioViajero;
+        this.repositorioHistorialReserva = repositorioHistorialReserva;
     }
 
     @Override
@@ -57,8 +64,10 @@ public class ServicioReservaImpl implements ServicioReserva {
         reserva.setViajero(viajeroManaged);
         reserva.setEstado(EstadoReserva.PENDIENTE);
         reserva.setFechaSolicitud(LocalDateTime.now());
+        Reserva reservaGuardada = reservaRepository.save(reserva);
 
-        return reservaRepository.save(reserva);
+        registrarHistorial(reservaGuardada, null, viajeroManaged);
+        return reservaGuardada;
     }
 
     @Override
@@ -145,6 +154,7 @@ public class ServicioReservaImpl implements ServicioReserva {
         if (reserva.getViaje().getAsientosDisponibles() == null || reserva.getViaje().getAsientosDisponibles() <= 0) {
             throw new SinAsientosDisponiblesException("No hay asientos disponibles");
         }
+        EstadoReserva estadoAnterior = reserva.getEstado();
 
         // Obtener el viaje completo para asegurar que tenga todos los campos (incluido version)
         Viaje viaje = servicioViaje.obtenerViajePorId(reserva.getViaje().getId());
@@ -154,6 +164,9 @@ public class ServicioReservaImpl implements ServicioReserva {
 
         // Cambiar estado a CONFIRMADA
         reserva.setEstado(EstadoReserva.CONFIRMADA);
+
+        Usuario conductor = reserva.getViaje().getConductor();
+        registrarHistorial(reserva, estadoAnterior, conductor);
 
         // No es necesario llamar a update/modificar porque Hibernate detectará los cambios automáticamente
         // gracias a @Transactional y dirty checking. El viaje se actualizará automáticamente.
@@ -181,9 +194,14 @@ public class ServicioReservaImpl implements ServicioReserva {
             throw new ReservaYaExisteException("La reserva no está en estado PENDIENTE");
         }
 
+        EstadoReserva estadoAnterior = reserva.getEstado();
+
         // Cambiar estado a RECHAZADA y setear motivo
         reserva.setEstado(EstadoReserva.RECHAZADA);
         reserva.setMotivoRechazo(motivo);
+
+        Usuario conductor = reserva.getViaje().getConductor(); // El conductor que realiza la acción
+        registrarHistorial(reserva, estadoAnterior, conductor);
 
         // Guardar cambios
         reservaRepository.update(reserva);
@@ -243,12 +261,28 @@ public class ServicioReservaImpl implements ServicioReserva {
         if (ahora.isBefore(ventanaPermitida)) {
             throw new AccionNoPermitidaException("Solo se puede marcar asistencia desde 30 minutos antes de la salida del viaje");
         }
+        EstadoReserva estadoAnterior = reserva.getEstado();
+
 
         // Marcar asistencia
         reserva.setAsistencia(estadoAsistencia);
-
+        Usuario conductor = reserva.getViaje().getConductor();
         // Guardar cambios
+        registrarHistorial(reserva, estadoAnterior, conductor);
         reservaRepository.update(reserva);
+    }
+
+    private void registrarHistorial(Reserva reserva, EstadoReserva estadoAnterior, Usuario usuarioQueRealizaLaAccion) {
+        HistorialReserva historial = new HistorialReserva();
+        historial.setReserva(reserva);
+        historial.setViaje(reserva.getViaje());
+        historial.setViajero(reserva.getViajero());
+        historial.setConductor(usuarioQueRealizaLaAccion);
+        historial.setFechaEvento(LocalDateTime.now());
+        historial.setEstadoAnterior(estadoAnterior);
+        historial.setEstadoNuevo(reserva.getEstado()); // El estado nuevo ya está seteado en la Reserva
+
+        repositorioHistorialReserva.save(historial);
     }
 
     @Override
