@@ -30,20 +30,22 @@
                             <!-- Ciudad Origen -->
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Ciudad Origen</label>
-                                <input type="text"
-                                       class="form-control"
-                                       th:field="*{nombreCiudadOrigen}"
-                                       required>
+                                <select th:field="*{nombreCiudadOrigen}"
+                                        class="form-control"
+                                        required>
+                                    <option th:value="*{nombreCiudadOrigen}" th:text="*{nombreCiudadOrigen}" selected></option>
+                                </select>
                                 <div class="invalid-feedback">Por favor ingrese la ciudad de origen</div>
                             </div>
 
                             <!-- Ciudad Destino -->
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Ciudad Destino</label>
-                                <input type="text"
-                                       class="form-control"
-                                       th:field="*{nombreCiudadDestino}"
-                                       required>
+                                <select th:field="*{nombreCiudadDestino}"
+                                        class="form-control"
+                                        required>
+                                    <option th:value="*{nombreCiudadDestino}" th:text="*{nombreCiudadDestino}" selected></option>
+                                </select>
                                 <div class="invalid-feedback">Por favor ingrese la ciudad de destino</div>
                             </div>
                         </div>
@@ -105,17 +107,6 @@
                         <div class="mb-4">
                             <label class="form-label">Paradas Intermedias</label>
                             <div id="paradasContainer" class="mb-2">
-                                <div th:each="parada, iterStat : *{nombreParadas}" class="input-group mb-2">
-                                    <input type="text"
-                                           class="form-control"
-                                           th:field="*{nombreParadas[__${iterStat.index}__]}"
-                                           placeholder="Nombre de la parada">
-                                    <button type="button"
-                                            class="btn btn-outline-danger"
-                                            onclick="this.closest('.input-group').remove()">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
                             </div>
                             <button type="button"
                                     id="btnAgregarParada"
@@ -125,6 +116,7 @@
                             <small class="form-text text-muted d-block mt-1">
                                 Agregá ciudades intermedias en el orden que las visitarás
                             </small>
+                            <input type="hidden" id="paradasIniciales" th:value="${#strings.arrayJoin(viaje.nombreParadas.toArray(), '||')}">
                         </div>
 
                         <!-- Botones -->
@@ -146,45 +138,181 @@
 <!-- Bootstrap core js -->
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
 <script>
-    // Validación del formulario
-    (function () {
-        'use strict'
-        var forms = document.querySelectorAll('.needs-validation')
-        Array.prototype.slice.call(forms)
-            .forEach(function (form) {
-                form.addEventListener('submit', function (event) {
-                    if (!form.checkValidity()) {
-                        event.preventDefault()
-                        event.stopPropagation()
-                    }
-                    form.classList.add('was-validated')
-                }, false)
-            })
-    })()
+    function getTomSelectConfig() {
+        return {
+            valueField: 'text',
+            labelField: 'text',
+            searchField: 'text',
+            create: false,
+            loadThrottle: 300,
+            placeholder: 'Escribí para buscar...',
+            preload: false,
+            shouldLoad: function(query) {
+                return query.length >= 2;
+            },
+            load: function(query, callback) {
+                const url = `/spring/api/nominatim/buscar?query=${encodeURIComponent(query)}`;
 
-    // Manejo de paradas
-    document.addEventListener('DOMContentLoaded', function() {
+                fetch(url)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Error en la respuesta del servidor');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        const options = data.map(ciudad => ({ text: ciudad, value: ciudad }));
+                        callback(options);
+                    })
+                    .catch(error => {
+                        console.error('Error al buscar ciudades:', error);
+                        callback();
+                    });
+            },
+            render: {
+                no_results: function() {
+                    return '<div class="no-results">No se encontraron ciudades</div>';
+                }
+            }
+        };
+    }
+
+    function setupTomSelect(selectId) {
+        const selectElement = document.getElementById(selectId);
+
+        if (!selectElement) {
+            console.error(`No se encontró el elemento select: ${selectId}`);
+            return null;
+        }
+        if (selectElement.tomselect) {
+            selectElement.tomselect.destroy();
+        }
+        try {
+            return new TomSelect(`#${selectId}`, getTomSelectConfig());
+        } catch (error) {
+            console.error(`Error al inicializar Tom Select en ${selectId}:`, error);
+            return null;
+        }
+    }
+    const tomSelectInstances = new Map();
+
+    function obtenerCantidadParadas() {
+        return document.getElementById('paradasContainer').querySelectorAll('select.parada-input-select').length;
+    }
+
+    function agregarParada(initialValue = null) {
         const container = document.getElementById('paradasContainer');
-        const btnAgregar = document.getElementById('btnAgregarParada');
-        let paradaCount = container.querySelectorAll('.input-group').length;
 
-        btnAgregar.addEventListener('click', function() {
-            const div = document.createElement('div');
-            div.className = 'input-group mb-2';
-            div.innerHTML = `
-                <input type="text"
-                       class="form-control"
-                       name="nombreParadas[${paradaCount}]"
-                       placeholder="Nombre de la parada">
-                <button type="button"
-                        class="btn btn-outline-danger"
-                        onclick="this.closest('.input-group').remove()">
-                    <i class="bi bi-trash"></i>
-                </button>
-            `;
-            container.appendChild(div);
-            paradaCount++;
+        if (!container) {
+            console.error('No se encontró el container de paradas');
+            return;
+        }
+
+        const index = obtenerCantidadParadas();
+        const uniqueId = `parada-input-${index}-${Date.now()}`;
+
+        const paradaDiv = document.createElement('div');
+        paradaDiv.className = 'parada-item input-group mb-2';
+        paradaDiv.id = `parada-${uniqueId}`;
+
+        paradaDiv.innerHTML = `
+            <div class="flex-grow-1">
+                <select id="${uniqueId}"
+                        name="nombreParadas[${index}]"
+                        class="form-control parada-input-select"
+                        placeholder="Escribí para buscar..."
+                        required>
+                    ${initialValue ? `<option value="${initialValue}" selected>${initialValue}</option>` : ''}
+                </select>
+            </div>
+            <button type="button"
+                    class="btn btn-outline-danger"
+                    data-unique-id="${uniqueId}"
+                    onclick="eliminarParada('${uniqueId}')">
+                <i class="bi bi-trash"></i>
+            </button>
+        `;
+
+        container.appendChild(paradaDiv);
+
+        const tomSelectInstance = setupTomSelect(uniqueId);
+        if (tomSelectInstance) {
+            tomSelectInstances.set(uniqueId, tomSelectInstance);
+
+            if (initialValue) {
+                 tomSelectInstance.addOption({ text: initialValue, value: initialValue });
+                 tomSelectInstance.setValue(initialValue);
+            }
+        }
+    }
+
+    function eliminarParada(uniqueId) {
+        const paradaDiv = document.getElementById(`parada-${uniqueId}`);
+
+        if (!paradaDiv) {
+            return;
+        }
+
+        const tomSelectInstance = tomSelectInstances.get(uniqueId);
+        if (tomSelectInstance) {
+            tomSelectInstance.destroy();
+            tomSelectInstances.delete(uniqueId);
+        }
+
+        paradaDiv.remove();
+
+        actualizarIndicesParadas();
+    }
+    function actualizarIndicesParadas() {
+        const paradas = document.getElementById('paradasContainer').querySelectorAll('.parada-item');
+
+        paradas.forEach((paradaDiv, index) => {
+            const selectElement = paradaDiv.querySelector('select.parada-input-select');
+
+            if (selectElement) {
+                selectElement.name = `nombreParadas[${index}]`;
+            }
         });
+    }
+    function cargarParadasExistentes() {
+        const paradasInput = document.getElementById('paradasIniciales');
+        if (!paradasInput) return;
+
+        const paradasStr = paradasInput.value;
+
+        if (paradasStr) {
+            const nombresParadas = paradasStr.split('||');
+            nombresParadas.forEach(nombre => {
+                if (nombre && nombre.trim() !== '') {
+                    agregarParada(nombre.trim());
+                }
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+        setupTomSelect('nombreCiudadOrigen');
+        setupTomSelect('nombreCiudadDestino');
+        cargarParadasExistentes();
+
+        const btnAgregarParada = document.getElementById('btnAgregarParada');
+        if (btnAgregarParada) {
+            btnAgregarParada.addEventListener('click', () => agregarParada());
+        }
     });
 </script>
 </body>

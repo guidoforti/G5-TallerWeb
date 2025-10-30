@@ -469,7 +469,17 @@ public class ControladorViaje {
             return new ModelAndView("redirect:/viaje/listar", model);
 
         } catch (Exception e) {
+            try{
+                Conductor conductorRecargado = servicioConductor.obtenerConductor(conductorId);
+                List<Vehiculo> vehiculos = servicioVehiculo.obtenerVehiculosParaConductor(conductorRecargado.getId());
+                model.addAttribute("vehiculos", vehiculos);
+            }catch (UsuarioInexistente ex){
+
+            }
+            List<Vehiculo> vehiculos = servicioVehiculo.obtenerVehiculosParaConductor(conductorEnSesion.getId());
+            model.addAttribute("viaje", viaje);
             model.addAttribute("error", "Error al modificar el viaje: " + e.getMessage());
+
             return new ModelAndView("editarViaje", model);
         }
     }
@@ -486,6 +496,9 @@ public class ControladorViaje {
      */
     private Ciudad resolverCiudad(String nombreCompleto) throws NominatimResponseException, JsonProcessingException {
         // Buscar ciudad en Nominatim
+        if (nombreCompleto == null || nombreCompleto.trim().isEmpty()) {
+            return null;
+        }
         NominatimResponse nominatimResponse = servicioNominatim.buscarCiudadPorInputCompleto(nombreCompleto);
 
         // Convertir respuesta de Nominatim a entidad Ciudad

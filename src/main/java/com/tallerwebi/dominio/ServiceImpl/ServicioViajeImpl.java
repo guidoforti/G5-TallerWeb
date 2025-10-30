@@ -72,9 +72,32 @@ public class ServicioViajeImpl implements ServicioViaje {
         Viaje viajeExistente = viajeRepository.findById(viaje.getId())
                 .orElseThrow(() -> new BadRequestException("El viaje no existe"));
 
+        if (!viajeExistente.getEstado().equals(EstadoDeViaje.DISPONIBLE)) {
+            throw new BadRequestException("El viaje debe estar DISPONIBLE para ser modificado.");
+        }
+
         // 2. Actualizar campos básicos
         viajeExistente.setFechaHoraDeSalida(viaje.getFechaHoraDeSalida());
         viajeExistente.setPrecio(viaje.getPrecio());
+
+        if (viaje.getOrigen() != null) {
+            viajeExistente.setOrigen(viaje.getOrigen());
+        }
+        if (viaje.getDestino() != null) {
+            viajeExistente.setDestino(viaje.getDestino());
+        }
+
+        if (viaje.getVehiculo() != null) {
+            int asientosMaximos = viaje.getVehiculo().getAsientosTotales() - 1;
+            if (viaje.getAsientosDisponibles() > asientosMaximos) {
+                throw new BadRequestException("Los asientos disponibles (" + viaje.getAsientosDisponibles() + ") no pueden ser mayores a " + asientosMaximos +
+                        " (total del vehículo menos el asiento del conductor)");
+            }
+            viajeExistente.setVehiculo(viaje.getVehiculo());
+        }
+        if (viaje.getAsientosDisponibles() != null) {
+            viajeExistente.setAsientosDisponibles(viaje.getAsientosDisponibles());
+        }
 
         // 3. Limpiar paradas existentes
         viajeExistente.getParadas().clear();

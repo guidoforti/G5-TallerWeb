@@ -6,7 +6,10 @@ import com.tallerwebi.presentacion.DTO.OutputsDTO.HistorialReservaDTO;
 import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
 import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
 import org.springframework.stereotype.Controller;
+import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
+import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
@@ -19,11 +22,15 @@ import java.util.List;
 public class ControladorHistorialReserva {
 
     private ServicioHistorialReserva servicioHistorialReserva;
-    private static final String ATTRIBUTE_USUARIO = "usuario";
+    private final ServicioConductor servicioConductor;
+    private static final String ATTRIBUTE_ID_USUARIO = "idUsuario";
+    private static final String ATTRIBUTE_ROL = "ROL";
     private static final String ROLES_CONDUCTOR = "CONDUCTOR";
 
-    public ControladorHistorialReserva(ServicioHistorialReserva servicioHistorialReserva) {
+    public ControladorHistorialReserva(ServicioHistorialReserva servicioHistorialReserva,
+                                       ServicioConductor servicioConductor) {
         this.servicioHistorialReserva = servicioHistorialReserva;
+        this.servicioConductor = servicioConductor;
     }
 
     /**
@@ -36,16 +43,18 @@ public class ControladorHistorialReserva {
      */
     @GetMapping("/viaje")
     public ModelAndView verHistorialPorViaje(@RequestParam("idViaje") Long idViaje, HttpSession session) {
-        ModelAndView modelAndView = new ModelAndView("historial-reservas");
-        Usuario usuarioEnSesion = (Usuario) session.getAttribute(ATTRIBUTE_USUARIO);
+        ModelAndView modelAndView = new ModelAndView("historialReservas");
+        Object usuarioIdObj = session.getAttribute(ATTRIBUTE_ID_USUARIO);
+        String rol = (String) session.getAttribute(ATTRIBUTE_ROL);
 
         // 1. Verificar autenticación
-        if (usuarioEnSesion == null || !ROLES_CONDUCTOR.equals(usuarioEnSesion.getRol())) {
-            // Asumiendo que solo los CONDUCTORES pueden acceder a esta funcionalidad
-            return new ModelAndView("redirect:/login"); 
+        if (usuarioIdObj == null || !ROLES_CONDUCTOR.equals(rol)) {
+            return new ModelAndView("redirect:/login");
         }
 
         try {
+            Long usuarioId = (Long) usuarioIdObj;
+            Usuario usuarioEnSesion = servicioConductor.obtenerConductor(usuarioId);
             // 2. Llamada al servicio que contiene la lógica de autorización
             List<HistorialReservaDTO> historial = 
                     servicioHistorialReserva.obtenerHistorialPorViaje(idViaje, usuarioEnSesion);
@@ -55,7 +64,10 @@ public class ControladorHistorialReserva {
             modelAndView.addObject("idViaje", idViaje);
             modelAndView.addObject("mensajeExito", "Historial cargado correctamente para el viaje ID: " + idViaje);
             
-        } catch (ViajeNoEncontradoException e) {
+        } catch (UsuarioInexistente e) {
+            session.invalidate();
+            return new ModelAndView("redirect:/login");
+        }catch (ViajeNoEncontradoException e) {
             // 4. Manejo de excepciones
             modelAndView.addObject("error", "Error: " + e.getMessage());
             modelAndView.setViewName("error"); // O redirigir a una página de listado de viajes
