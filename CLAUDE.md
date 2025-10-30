@@ -291,3 +291,4 @@ return repository.findById(id)
 4. Follow naming conventions
 5. Handle exceptions properly
 6. Review checklist before commit
+- Check existing implementations for reference when working on a feature

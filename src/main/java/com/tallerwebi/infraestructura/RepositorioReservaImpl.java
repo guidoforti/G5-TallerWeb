@@ -77,4 +77,17 @@ public class RepositorioReservaImpl implements ReservaRepository {
                 .setParameter("estado", EstadoReserva.CONFIRMADA)
                 .getResultList();
     }
+
+    @Override
+    public List<Reserva> findByViajeroAndEstadoInOrderByViajesFechaSalidaAsc(Viajero viajero, List<EstadoReserva> estados) {
+        String hql = "SELECT r FROM Reserva r " +
+                "WHERE r.viajero.id = :viajeroId " +
+                "AND r.estado IN (:estados) " +
+                "ORDER BY r.viaje.fechaHoraDeSalida ASC";
+        return sessionFactory.getCurrentSession()
+                .createQuery(hql, Reserva.class)
+                .setParameter("viajeroId", viajero.getId())
+                .setParameter("estados", estados)
+                .getResultList();
+    }
 }

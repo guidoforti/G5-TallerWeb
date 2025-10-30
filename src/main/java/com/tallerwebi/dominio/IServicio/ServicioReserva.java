@@ -114,4 +114,14 @@ public interface ServicioReserva {
      * @throws DatoObligatorioException Si el valor de asistencia es inválido
      */
     void marcarAsistencia(Long reservaId, Long conductorId, String asistencia) throws NotFoundException, UsuarioNoAutorizadoException, ReservaYaExisteException, AccionNoPermitidaException, DatoObligatorioException;
+
+    /**
+     * Lista todas las reservas pendientes y rechazadas de un viajero
+     * ordenadas por fecha de salida del viaje (más cercanas primero)
+     *
+     * @param viajeroId El ID del viajero
+     * @return Lista de reservas pendientes y rechazadas
+     * @throws UsuarioInexistente Si no se encuentra el viajero
+     */
+    List<Reserva> listarReservasPendientesYRechazadas(Long viajeroId) throws UsuarioInexistente;
 }

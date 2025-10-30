@@ -544,4 +544,72 @@ public class ControladorReservaTest {
         assertThat(mav.getModel().get("rechazoDTO"), is(rechazoDTO));
         verify(servicioReservaMock, times(1)).rechazarReserva(rechazoDTO.getReservaId(), conductorId, rechazoDTO.getMotivo());
     }
+
+    // --- TESTS DE LISTAR RESERVAS PENDIENTES Y RECHAZADAS (VIAJERO) ---
+
+    @Test
+    public void deberiaMostrarReservasPendientesYRechazadasCuandoViajeroLogueado() throws Exception {
+        // given
+        Long viajeroId = 1L;
+        List<Reserva> reservas = Arrays.asList(new Reserva(), new Reserva());
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(viajeroId);
+        when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
+        when(servicioReservaMock.listarReservasPendientesYRechazadas(viajeroId)).thenReturn(reservas);
+
+        // when
+        ModelAndView mav = controladorReserva.listarReservasPendientesYRechazadas(sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("misReservasPendientes"));
+        assertThat(mav.getModel().get("reservasPendientes"), notNullValue());
+        assertThat(mav.getModel().get("reservasRechazadas"), notNullValue());
+        verify(servicioReservaMock, times(1)).listarReservasPendientesYRechazadas(viajeroId);
+    }
+
+    @Test
+    public void deberiaRedirigirALoginSiNoHaySesionEnReservasPendientes() throws Exception {
+        // given
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(null);
+
+        // when
+        ModelAndView mav = controladorReserva.listarReservasPendientesYRechazadas(sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("redirect:/login"));
+        verify(servicioReservaMock, never()).listarReservasPendientesYRechazadas(anyLong());
+    }
+
+    @Test
+    public void deberiaRedirigirALoginSiRolNoEsViajeroEnReservasPendientes() throws Exception {
+        // given
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
+        when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR");
+
+        // when
+        ModelAndView mav = controladorReserva.listarReservasPendientesYRechazadas(sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("redirect:/login"));
+        verify(servicioReservaMock, never()).listarReservasPendientesYRechazadas(anyLong());
+    }
+
+    @Test
+    public void deberiaMostrarErrorSiViajeroNoExisteEnReservasPendientes() throws Exception {
+        // given
+        Long viajeroId = 999L;
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(viajeroId);
+        when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
+        when(servicioReservaMock.listarReservasPendientesYRechazadas(viajeroId))
+                .thenThrow(new UsuarioInexistente("No se encontró el viajero"));
+
+        // when
+        ModelAndView mav = controladorReserva.listarReservasPendientesYRechazadas(sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("error"));
+        assertThat(mav.getModel().get("error"), is("No se encontró el viajero"));
+        verify(servicioReservaMock, times(1)).listarReservasPendientesYRechazadas(viajeroId);
+    }
 }
