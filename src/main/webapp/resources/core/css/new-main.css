@@ -1,15 +1,94 @@
-body {
-    background-color: #FBEFE6; /* fondo neutro */
-    color: #333333; /* texto oscuro para contraste */
+/* =================================================================
+   PALETA DE COLORES (NUEVA ARMONÍA)
+   ================================================================= */
+
+:root {
+    --primary-orange: #E16A3D;         /* Naranja Principal (Burnt Sienna) */
+    --taupe-strong: #4E3D2F;           /* Marrón Oscuro (Taupe - Opciones Home) */
+    --coffee-medium: #734933;          /* Marrón Medio (Coffee - Detalle/Editar) */
+    --danger-red: #BA3A3A;             /* Rojo Peligro (Persian Red) */
+    --background-linen: #FBEFE6;       /* Fondo Base */
+    --text-dark: #333333;              /* Texto principal */
 }
+
+/* --- Base y Tipografía --- */
+body {
+    background-color: var(--background-linen);
+    color: var(--text-dark);
+    font-family: 'Lato', sans-serif;
+    font-size: 16px;
+}
+
+h1, h2, h3, h4, h5, h6, .navbar-brand, button, .btn, th {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+}
+
+/* --- Estilos Globales de Navbar --- */
 .navbar-unrumbo {
     background-color: #ffffff;
-    border-bottom: 2px solid #E16A3D;
+    border-bottom: 2px solid var(--primary-orange);
 }
-.btn-unrumbo {
-    background-color: #E16A3D;
-    border: none;
+
+/* 1. Botón Principal (Acción, Navegación: Publicar, Ir a Home) */
+.btn-unrumbo, .btn-primary {
+    /* Naranja Principal: Énfasis Fuerte */
+    background-color: var(--primary-orange) !important;
+    border-color: var(--primary-orange) !important;
+    color: white !important;
+    font-weight: 600;
 }
-.btn-unrumbo:hover {
-    background-color: #cf5930;
+.btn-unrumbo:hover, .btn-primary:hover {
+    background-color: #cf5930 !important; /* Tono de hover consistente */
+    border-color: #cf5930 !important;
+}
+
+/* 2. Botón Énfasis Fuerte (Opciones de Home: Mis viajes, Registrar vehículo) */
+/* Usamos .btn-dark o una clase custom para aplicar el Marrón Oscuro (#4E3D2F) */
+.btn-dark, .btn-home-option {
+    background-color: var(--taupe-strong) !important;
+    border-color: var(--taupe-strong) !important;
+    color: white !important;
+}
+.btn-dark:hover, .btn-home-option:hover {
+    background-color: #3f3126 !important; /* Tono más oscuro para hover */
+    border-color: #3f3126 !important;
+}
+
+/* 3. Botón Secundario/Detalle (Ver detalle, Editar) */
+/* Aplicamos el Marrón Medio (#734933) a las clases .btn-info / .btn-secondary */
+.btn-info, .btn-secondary {
+    background-color: var(--coffee-medium) !important;
+    border-color: var(--coffee-medium) !important;
+    color: white !important;
+}
+.btn-info:hover, .btn-secondary:hover {
+    background-color: #5d3b2a !important;
+    border-color: #5d3b2a !important;
+}
+
+/* 4. Botón Negativo (Cancelar viaje - Mantiene el Rojo Persa) */
+.btn-danger {
+    background-color: var(--danger-red) !important;
+    border-color: var(--danger-red) !important;
+    color: white !important;
+}
+.btn-danger:hover {
+    background-color: #9c2e2e !important;
+    border-color: #9c2e2e !important;
+}
+
+/* 5. Botón Neutro (Volver, Outline) */
+.btn-outline-secondary, .btn-light {
+    color: var(--text-dark) !important;
+    border: 1px solid #c9c9c9 !important;
+    background-color: white !important;
+}
+.btn-outline-secondary:hover {
+    background-color: #f0f0f0 !important;
+}
+
+/* [Opcional] Para asegurar el color de fondo en estados específicos (Ej. Estado de Viaje DISPONIBLE) */
+.bg-success {
+    background-color: var(--coffee-medium) !important; /* Usamos el color de detalle */
 }

@@ -71,7 +71,10 @@
 </head>
 
 <body>
-<nav th:replace="fragments/fragments :: navbar"></nav>
+<th:block th:switch="${userRole}">
+    <nav th:case="'CONDUCTOR'" th:replace="fragments/navbar_conductor :: navbar"></nav>
+    <nav th:case="'VIAJERO'" th:replace="fragments/navbar_viajero :: navbar"></nav>
+</th:block>
 
 <main role="main" class="container" style="margin-top: 120px; margin-bottom: 50px;">
     <div class="row justify-content-center">
