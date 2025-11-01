@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="fragments/fragments :: head('UnRumbo - ¡Pago Exitoso!')">
+    <th:block th:fragment="extra">
+    </th:block>
+</head>
+
+<body>
+<nav th:replace="fragments/fragments :: navbar"></nav>
+
+<main role="main" class="container" style="margin-top: 120px;">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+
+            <div th:if="${pagoOK}" class="alert alert-success text-center shadow-sm" role="alert">
+                <h4 class="alert-heading mb-0" th:text="${pagoOK}">¡El pago fue exitoso!</h4>
+                <p class="mb-0">Tu asiento en el viaje está confirmado.</p>
+            </div>
+
+            <div class="card shadow-sm border-0" th:if="${reserva}" th:object="${reserva}">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Resumen de tu Reserva</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <strong>Origen:</strong>
+                            <p class="text-muted" th:text="*{origenNombre}">Origen no disponible</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Destino:</strong>
+                            <p class="text-muted" th:text="*{destinoNombre}">Destino no disponible</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Fecha de Salida:</strong>
+                            <p class="text-muted" th:text="*{fechaSalida}">Fecha no disponible</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Conductor:</strong>
+                            <p class="text-muted" th:text="*{conductorNombre}">Conductor no disponible</p>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <strong>Precio Pagado:</strong>
+                            <p class="h5 fw-bold text-success" th:text="'$' + *{precio}">$0.00</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Estado del Pago:</strong><br>
+                            <span class="badge bg-success fs-6">PAGADO</span>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="text-center mt-4">
+                        <a th:href="@{/reserva/misViajes}" class="btn btn-unrumbo text-white fw-bold">
+                            Ver todos mis viajes
+                        </a>
+                        <a th:href="@{/viajero/home}" class="btn btn-outline-secondary fw-bold ms-2">
+                            Volver al Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
