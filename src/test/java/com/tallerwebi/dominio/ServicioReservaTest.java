@@ -4,12 +4,10 @@ import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Reserva;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.Viajero;
-import com.tallerwebi.dominio.Enums.EstadoAsistencia;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.IRepository.RepositorioHistorialReserva;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
-import com.tallerwebi.dominio.IServicio.ServicioHistorialReserva;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
@@ -733,7 +731,7 @@ class ServicioReservaTest {
     // --- TESTS DE LISTAR RESERVAS PENDIENTES Y RECHAZADAS ---
 
     @Test
-    void deberiaListarReservasPendientesYRechazadasCorrectamente() throws Exception {
+    void deberiaListarReservasActivasPorViajeroCorrectamente() throws Exception {
         // given
         Long viajeroId = 1L;
         Viajero viajero = crearViajeroMock(viajeroId);
@@ -757,7 +755,7 @@ class ServicioReservaTest {
                 .thenReturn(reservas);
 
         // when
-        List<Reserva> resultado = servicioReserva.listarReservasPendientesYRechazadas(viajeroId);
+        List<Reserva> resultado = servicioReserva.listarReservasActivasPorViajero(viajeroId);
 
         // then
         assertThat(resultado, hasSize(2));
@@ -779,7 +777,7 @@ class ServicioReservaTest {
                 .thenReturn(Arrays.asList());
 
         // when
-        List<Reserva> resultado = servicioReserva.listarReservasPendientesYRechazadas(viajeroId);
+        List<Reserva> resultado = servicioReserva.listarReservasActivasPorViajero(viajeroId);
 
         // then
         assertThat(resultado, hasSize(0));
@@ -798,7 +796,7 @@ class ServicioReservaTest {
 
         // when & then
         assertThrows(UsuarioInexistente.class, () -> {
-            servicioReserva.listarReservasPendientesYRechazadas(viajeroId);
+            servicioReserva.listarReservasActivasPorViajero(viajeroId);
         });
 
         verify(servicioViajero, times(1)).obtenerViajero(viajeroId);

@@ -556,16 +556,16 @@ public class ControladorReservaTest {
 
         when(sessionMock.getAttribute("idUsuario")).thenReturn(viajeroId);
         when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
-        when(servicioReservaMock.listarReservasPendientesYRechazadas(viajeroId)).thenReturn(reservas);
+        when(servicioReservaMock.listarReservasActivasPorViajero(viajeroId)).thenReturn(reservas);
 
         // when
-        ModelAndView mav = controladorReserva.listarReservasPendientesYRechazadas(sessionMock);
+        ModelAndView mav = controladorReserva.listarReservasActivas(sessionMock);
 
         // then
         assertThat(mav.getViewName(), is("misReservasPendientes"));
         assertThat(mav.getModel().get("reservasPendientes"), notNullValue());
         assertThat(mav.getModel().get("reservasRechazadas"), notNullValue());
-        verify(servicioReservaMock, times(1)).listarReservasPendientesYRechazadas(viajeroId);
+        verify(servicioReservaMock, times(1)).listarReservasActivasPorViajero(viajeroId);
     }
 
     @Test
@@ -574,11 +574,11 @@ public class ControladorReservaTest {
         when(sessionMock.getAttribute("idUsuario")).thenReturn(null);
 
         // when
-        ModelAndView mav = controladorReserva.listarReservasPendientesYRechazadas(sessionMock);
+        ModelAndView mav = controladorReserva.listarReservasActivas(sessionMock);
 
         // then
         assertThat(mav.getViewName(), is("redirect:/login"));
-        verify(servicioReservaMock, never()).listarReservasPendientesYRechazadas(anyLong());
+        verify(servicioReservaMock, never()).listarReservasActivasPorViajero(anyLong());
     }
 
     @Test
@@ -588,11 +588,11 @@ public class ControladorReservaTest {
         when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR");
 
         // when
-        ModelAndView mav = controladorReserva.listarReservasPendientesYRechazadas(sessionMock);
+        ModelAndView mav = controladorReserva.listarReservasActivas(sessionMock);
 
         // then
         assertThat(mav.getViewName(), is("redirect:/login"));
-        verify(servicioReservaMock, never()).listarReservasPendientesYRechazadas(anyLong());
+        verify(servicioReservaMock, never()).listarReservasActivasPorViajero(anyLong());
     }
 
     @Test
@@ -602,16 +602,16 @@ public class ControladorReservaTest {
 
         when(sessionMock.getAttribute("idUsuario")).thenReturn(viajeroId);
         when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
-        when(servicioReservaMock.listarReservasPendientesYRechazadas(viajeroId))
+        when(servicioReservaMock.listarReservasActivasPorViajero(viajeroId))
                 .thenThrow(new UsuarioInexistente("No se encontró el viajero"));
 
         // when
-        ModelAndView mav = controladorReserva.listarReservasPendientesYRechazadas(sessionMock);
+        ModelAndView mav = controladorReserva.listarReservasActivas(sessionMock);
 
         // then
         assertThat(mav.getViewName(), is("error"));
         assertThat(mav.getModel().get("error"), is("No se encontró el viajero"));
-        verify(servicioReservaMock, times(1)).listarReservasPendientesYRechazadas(viajeroId);
+        verify(servicioReservaMock, times(1)).listarReservasActivasPorViajero(viajeroId);
     }
 
     // --- TESTS DE LISTAR MIS VIAJES (VIAJERO) ---

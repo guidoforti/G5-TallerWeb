@@ -4,6 +4,7 @@ import com.tallerwebi.dominio.Entity.Reserva;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Enums.EstadoAsistencia;
+import com.tallerwebi.dominio.Enums.EstadoPago;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
@@ -286,18 +287,32 @@ public class ServicioReservaImpl implements ServicioReserva {
     }
 
     @Override
-    public List<Reserva> listarReservasPendientesYRechazadas(Long viajeroId) throws UsuarioInexistente {
+    public List<Reserva> listarReservasActivasPorViajero(Long viajeroId) throws UsuarioInexistente {
         // Obtener el viajero y validar que existe
         Viajero viajero = servicioViajero.obtenerViajero(viajeroId);
 
         // Definir los estados a buscar
-        List<EstadoReserva> estados = List.of(EstadoReserva.PENDIENTE, EstadoReserva.RECHAZADA);
+        List<EstadoReserva> estados = List.of(EstadoReserva.PENDIENTE, EstadoReserva.RECHAZADA , EstadoReserva.CONFIRMADA);
 
         // Obtener las reservas filtradas y ordenadas por fecha de salida del viaje
         List<Reserva> reservas = reservaRepository.findByViajeroAndEstadoInOrderByViajesFechaSalidaAsc(viajero, estados);
 
+        List<Reserva> reservasFiltradas = reservas.stream()
+                .filter(r -> {
+                    // Caso 1: Si la reserva está CONFIRMADA...
+                    if (r.getEstado() == EstadoReserva.CONFIRMADA) {
+                        // ...solo la queremos si AÚN NO está pagada.
+                        return r.getEstadoPago() != EstadoPago.PAGADO;
+                    }
+
+                    // Caso 2: Si no está confirmada (es PENDIENTE o RECHAZADA)...
+                    // ...la queremos siempre.
+                    return true;
+                })
+                .collect(Collectors.toList());
+
         // Inicializar lazy loads para evitar LazyInitializationException
-        reservas.forEach(reserva -> {
+        reservasFiltradas.forEach(reserva -> {
             if (reserva.getViaje() != null) {
                 org.hibernate.Hibernate.initialize(reserva.getViaje().getOrigen());
                 org.hibernate.Hibernate.initialize(reserva.getViaje().getDestino());
@@ -305,7 +320,7 @@ public class ServicioReservaImpl implements ServicioReserva {
             }
         });
 
-        return reservas;
+        return reservasFiltradas;
     }
 
     @Override

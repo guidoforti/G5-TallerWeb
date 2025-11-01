@@ -14,7 +14,7 @@ import com.tallerwebi.dominio.excepcion.*;
 import com.tallerwebi.presentacion.DTO.InputsDTO.MarcarAsistenciaInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.RechazoReservaInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.SolicitudReservaInputDTO;
-import com.tallerwebi.presentacion.DTO.OutputsDTO.ReservaPendienteRechazadaDTO;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.ReservaActivaDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ReservaVistaDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeConfirmadoViajeroDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeReservaSolicitudDTO;
@@ -492,7 +492,7 @@ public class ControladorReserva {
      * GET /reserva/misReservasPendientes
      */
     @GetMapping("/misReservasPendientes")
-    public ModelAndView listarReservasPendientesYRechazadas(HttpSession session) {
+    public ModelAndView listarReservasActivas(HttpSession session) {
         ModelMap model = new ModelMap();
 
         // Validar sesión
@@ -507,7 +507,7 @@ public class ControladorReserva {
 
         try {
             // Obtener todas las reservas pendientes y rechazadas del viajero
-            List<Reserva> reservas = servicioReserva.listarReservasPendientesYRechazadas(viajeroId);
+            List<Reserva> reservas = servicioReserva.listarReservasActivasPorViajero(viajeroId);
 
             // Separar en dos listas: pendientes y rechazadas
             List<Reserva> reservasPendientes = reservas.stream()
@@ -518,17 +518,25 @@ public class ControladorReserva {
                     .filter(r -> r.getEstado() == EstadoReserva.RECHAZADA)
                     .collect(Collectors.toList());
 
+            List<Reserva> reservasConfirmadas = reservas.stream()
+                    .filter(r -> r.getEstado() == EstadoReserva.CONFIRMADA)
+                    .collect(Collectors.toList());
             // Convertir a DTOs
-            List<ReservaPendienteRechazadaDTO> pendientesDTO = reservasPendientes.stream()
-                    .map(ReservaPendienteRechazadaDTO::new)
+            List<ReservaActivaDTO> pendientesDTO = reservasPendientes.stream()
+                    .map(ReservaActivaDTO::new)
                     .collect(Collectors.toList());
 
-            List<ReservaPendienteRechazadaDTO> rechazadasDTO = reservasRechazadas.stream()
-                    .map(ReservaPendienteRechazadaDTO::new)
+            List<ReservaActivaDTO> rechazadasDTO = reservasRechazadas.stream()
+                    .map(ReservaActivaDTO::new)
+                    .collect(Collectors.toList());
+
+            List<ReservaActivaDTO> confirmadasDTO = reservasConfirmadas.stream()
+                    .map(ReservaActivaDTO::new)
                     .collect(Collectors.toList());
 
             model.put("reservasPendientes", pendientesDTO);
             model.put("reservasRechazadas", rechazadasDTO);
+            model.put("reservasConfirmadas", confirmadasDTO);
 
             return new ModelAndView("misReservasPendientes", model);
 

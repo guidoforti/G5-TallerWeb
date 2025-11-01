@@ -1,6 +1,6 @@
 <!DOCTYPE HTML>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/fragments :: head('UnRumbo - Mis Reservas Pendientes y Rechazadas')">
+<head th:replace="fragments/fragments :: head('UnRumbo - Mis Reservas Activas')">
     <th:block th:fragment="extra">
         <style>
             .reserva-card {
@@ -57,7 +57,94 @@
             <p class="text-muted">Consulta el estado de tus solicitudes de viaje</p>
         </div>
     </div>
+    <!-- SECCIÓN RESERVAS PENDIENTES -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h4 class="section-title text-success">
+                <i class="bi bi-calendar-check me-2"></i>Reservas Confirmadas (Listas para Pagar)
+            </h4>
 
+            <div class="row" th:if="${not #lists.isEmpty(reservasConfirmadas)}">
+                <div class="col-12 mb-4" th:each="reserva : ${reservasConfirmadas}">
+                    <div class="card reserva-card">
+                        <div class="card-body position-relative">
+                        <span class="badge bg-success estado-badge">
+                            <i class="bi bi-check-circle me-1"></i> Confirmada
+                        </span>
+
+                            <div class="row align-items-center">
+                                <div class="col-md-7 ruta-info">
+                                    <div class="d-flex flex-column">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-geo-alt-fill text-danger me-2"></i>
+                                            <strong>Origen:</strong>
+                                            <span class="ms-2" th:text="${reserva.origenNombre}">Origen</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-geo-fill text-success me-2"></i>
+                                            <strong>Destino:</strong>
+                                            <span class="ms-2" th:text="${reserva.destinoNombre}">Destino</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-calendar3 me-2 text-unrumbo"></i>
+                                            <strong>Fecha:</strong>
+                                            <span class="ms-2" th:text="${reserva.fechaSalida}">Fecha y hora</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-person me-2 text-info"></i>
+                                            <strong>Conductor:</strong>
+                                            <span class="ms-2" th:text="${reserva.conductorNombre}">Conductor</span>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-currency-dollar me-2 text-success"></i>
+                                            <strong>Precio:</strong>
+                                            <span class="ms-2 fw-bold text-success" th:text="'$' + ${reserva.precio}">$0</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-5 d-flex flex-column justify-content-center align-items-end">
+                                    <a th:href="@{/reserva/pagar(reservaId=${reserva.reservaId})}"
+                                       class="btn btn-lg btn-success">
+                                        <i class="bi bi-credit-card-fill me-1"></i> Pagar Ahora
+                                    </a>
+                                    <small class="text-muted mt-2">Pagarás <strong th:text="'$' + ${reserva.precio}">$0</strong> con Mercado Pago</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" th:if="${#lists.isEmpty(reservasConfirmadas)}">
+                <div class="col-12 text-center py-4">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <i class="bi bi-inbox display-4 text-muted mb-3"></i>
+                            <h5 class="text-muted">No tenés reservas confirmadas pendientes de pago.</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-5">
+        <div class="col-12">
+            <h4 class="section-title text-warning">
+                <i class="bi bi-clock-history me-2"></i>Reservas Pendientes
+            </h4>
+
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <h4 class="section-title text-danger">
+                <i class="bi bi-x-circle me-2"></i>Reservas Rechazadas
+            </h4>
+
+        </div>
+    </div>
     <!-- SECCIÓN RESERVAS PENDIENTES -->
     <div class="row mb-5">
         <div class="col-12">

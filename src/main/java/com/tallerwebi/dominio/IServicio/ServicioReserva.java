@@ -123,7 +123,7 @@ public interface ServicioReserva {
      * @return Lista de reservas pendientes y rechazadas
      * @throws UsuarioInexistente Si no se encuentra el viajero
      */
-    List<Reserva> listarReservasPendientesYRechazadas(Long viajeroId) throws UsuarioInexistente;
+    List<Reserva> listarReservasActivasPorViajero(Long viajeroId) throws UsuarioInexistente;
 
     /**
      * Lista todos los viajes confirmados de un viajero (reservas con estado CONFIRMADA)
