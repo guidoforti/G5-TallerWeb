@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpSession;
+import java.util.ArrayList;
+import java.util.List;
 
 @Controller
 @RequestMapping("/vehiculos")
@@ -33,6 +35,36 @@ public class ControladorVehiculo {
     public ControladorVehiculo(ServicioVehiculo servicioVehiculo , ServicioConductor servicioConductor) {
         this.servicioVehiculo = servicioVehiculo;
         this.servicioConductor = servicioConductor;
+    }
+
+    @GetMapping("/listarVehiculos")
+    public ModelAndView listarVehiculosRegistrados(HttpSession session) {
+        ModelMap model = new ModelMap();
+        Object rol = (session != null) ? session.getAttribute("ROL") : null;
+        Object usuarioId = (session != null) ? session.getAttribute("idUsuario") : null;
+        if (rol == null || !rol.equals("CONDUCTOR") || usuarioId == null) {
+            Exception e = new UsuarioNoAutorizadoException("no tienes permisos para acceder a este recurso");
+            model.put("error", e.getMessage());
+            return new ModelAndView("usuarioNoAutorizado", model);
+        }
+        Long conductorId = (Long) usuarioId;
+        try {
+            List<Vehiculo> ListaDeVehiculos = servicioVehiculo.obtenerVehiculosParaConductor(conductorId);
+
+            List<VehiculoOutputDTO> vehiculoOutputDTOList = new ArrayList<>();
+            for(Vehiculo vehiculo : ListaDeVehiculos) {
+                VehiculoOutputDTO dto = new VehiculoOutputDTO(vehiculo);
+                vehiculoOutputDTOList.add(dto);
+            }
+
+            model.put("listaVehiculos", vehiculoOutputDTOList); // Pasa la lista de Vehiculos al modelo
+
+        } catch (Exception e) {
+            model.put("error", "Error al cargar vehículos: " + e.getMessage());
+            return new ModelAndView("errorGeneral", model);
+        }
+
+        return new ModelAndView("listarVehiculos", model);
     }
 
 
