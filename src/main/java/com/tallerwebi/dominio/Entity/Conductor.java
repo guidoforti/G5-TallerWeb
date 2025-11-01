@@ -8,6 +8,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -26,5 +27,22 @@ public class Conductor extends Usuario {
     private List<Viaje> viajes;
     @OneToMany(mappedBy = "conductor", cascade = CascadeType.ALL, orphanRemoval = false)
     private List<Vehiculo> vehiculos;
+
+    // Campos para sistema de suspensiones
+    @Column(name = "suspendido_hasta")
+    private LocalDateTime suspendidoHasta;
+
+    @Column(name = "activo")
+    private Boolean activo = true;
+
+    /**
+     * Verifica si el conductor está actualmente suspendido
+     */
+    public boolean estaSuspendido() {
+        if (suspendidoHasta == null || !activo) {
+            return false;
+        }
+        return LocalDateTime.now().isBefore(suspendidoHasta);
+    }
 
 }
