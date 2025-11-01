@@ -88,7 +88,24 @@ h1, h2, h3, h4, h5, h6, .navbar-brand, button, .btn, th {
     background-color: #f0f0f0 !important;
 }
 
-/* [Opcional] Para asegurar el color de fondo en estados específicos (Ej. Estado de Viaje DISPONIBLE) */
 .bg-success {
     background-color: var(--coffee-medium) !important; /* Usamos el color de detalle */
+}
+.table-unrumbo-dark thead {
+    background-color: #4E3D2F !important;
+    color: white;
+}
+.table-unrumbo-dark th {
+    font-weight: 600;
+    /* Asegura que el contenido del header esté verticalmente centrado */
+    vertical-align: middle;
+}
+
+.table-unrumbo-dark th, .table-unrumbo-dark td {
+    vertical-align: middle !important;
+}
+
+.badge-en-curso {
+    background-color: #734933; /* Marrón Medio */
+    color: white;
 }
