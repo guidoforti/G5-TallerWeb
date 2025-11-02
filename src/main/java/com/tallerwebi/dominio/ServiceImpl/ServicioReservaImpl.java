@@ -40,13 +40,16 @@ public class ServicioReservaImpl implements ServicioReserva {
     private final ServicioViaje servicioViaje;
     private final ServicioViajero servicioViajero;
     private final RepositorioHistorialReserva repositorioHistorialReserva;
+    private final PreferenceClient preferenceClient;
 
     @Autowired
-    public ServicioReservaImpl(ReservaRepository reservaRepository, ServicioViaje servicioViaje, ServicioViajero servicioViajero, RepositorioHistorialReserva repositorioHistorialReserva) {
+    public ServicioReservaImpl(ReservaRepository reservaRepository, ServicioViaje servicioViaje, ServicioViajero servicioViajero,
+                               RepositorioHistorialReserva repositorioHistorialReserva, PreferenceClient preferenceClient) {
         this.reservaRepository = reservaRepository;
         this.servicioViaje = servicioViaje;
         this.servicioViajero = servicioViajero;
         this.repositorioHistorialReserva = repositorioHistorialReserva;
+        this.preferenceClient = preferenceClient;
     }
 
     @Override
@@ -400,8 +403,7 @@ public class ServicioReservaImpl implements ServicioReserva {
                 .backUrls(backUrls)
                 .build();
 
-        PreferenceClient client = new PreferenceClient();
-        return client.create(preferenceRequest);
+        return preferenceClient.create(preferenceRequest);
     }
 
     @Override

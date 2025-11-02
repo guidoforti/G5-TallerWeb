@@ -1,10 +1,11 @@
 package com.tallerwebi.dominio;
 
-import com.tallerwebi.dominio.Entity.Conductor;
-import com.tallerwebi.dominio.Entity.Reserva;
-import com.tallerwebi.dominio.Entity.Viaje;
-import com.tallerwebi.dominio.Entity.Viajero;
+import com.mercadopago.client.preference.PreferenceClient;
+import com.mercadopago.client.preference.PreferenceRequest;
+import com.mercadopago.resources.preference.Preference;
+import com.tallerwebi.dominio.Entity.*;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
+import com.tallerwebi.dominio.Enums.EstadoPago;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.IRepository.RepositorioHistorialReserva;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
@@ -34,6 +35,7 @@ class ServicioReservaTest {
     private ServicioViaje servicioViaje;
     private ServicioViajero servicioViajero;
     private RepositorioHistorialReserva repositorioHistorialReserva;
+    private PreferenceClient preferenceClient;
 
     @BeforeEach
     void setUp() {
@@ -41,7 +43,9 @@ class ServicioReservaTest {
         servicioViaje = mock(ServicioViaje.class);
         servicioViajero = mock(ServicioViajero.class);
         repositorioHistorialReserva = mock(RepositorioHistorialReserva.class);
-        servicioReserva = new ServicioReservaImpl(repositorioReservaMock, servicioViaje, servicioViajero, repositorioHistorialReserva);
+        preferenceClient = mock(PreferenceClient.class);
+
+        servicioReserva = new ServicioReservaImpl(repositorioReservaMock, servicioViaje, servicioViajero, repositorioHistorialReserva,preferenceClient);
     }
 
     // --- TESTS DE SOLICITAR RESERVA ---
@@ -878,6 +882,209 @@ class ServicioReservaTest {
 
         verify(servicioViajero, times(1)).obtenerViajero(viajeroId);
         verify(repositorioReservaMock, never()).findViajesConfirmadosPorViajero(any());
+    }
+
+
+
+    @Test
+    public void deberiaCrearPreferenciaDePagoCorrectamente() throws Exception {
+        // given
+        Long reservaId = 1L;
+        Long viajeroId = 10L;
+        Reserva reserva = crearReservaCompletaParaPago(reservaId, viajeroId, EstadoReserva.CONFIRMADA, EstadoPago.NO_PAGADO);
+        Preference preferenciaMock = new Preference(); // Mock de la respuesta de MP
+
+
+        // when
+        when(servicioViajero.obtenerViajero(viajeroId)).thenReturn(reserva.getViajero());
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+        when(preferenceClient.create(any(PreferenceRequest.class))).thenReturn(preferenciaMock);
+
+        // then
+        Preference resultado = servicioReserva.crearPreferenciaDePago(reservaId, viajeroId);
+
+        // assert
+        assertThat(resultado, notNullValue());
+
+        verify(preferenceClient, times(1)).create(any(PreferenceRequest.class));
+    }
+
+    @Test
+    public void deberiaLanzarNotFoundExceptionSiReservaNoExisteAlCrearPreferencia() throws UsuarioInexistente {
+        // given
+        Long reservaId = 99L;
+        Long viajeroId = 10L;
+        when(servicioViajero.obtenerViajero(viajeroId)).thenReturn(new Viajero());
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.empty());
+
+        // then
+        assertThrows(NotFoundException.class, () -> {
+            servicioReserva.crearPreferenciaDePago(reservaId, viajeroId);
+        });
+    }
+
+    @Test
+    public void deberiaLanzarUsuarioNoAutorizadoExceptionSiViajeroNoEsDuenoDeReserva() throws UsuarioInexistente {
+        // given
+        Long reservaId = 1L;
+        Long viajeroIdLogueado = 10L;
+        Long viajeroIdDueno = 20L; // <-- IDs diferentes
+        Reserva reserva = crearReservaCompletaParaPago(reservaId, viajeroIdDueno, EstadoReserva.CONFIRMADA, EstadoPago.NO_PAGADO);
+
+        // when
+        when(servicioViajero.obtenerViajero(viajeroIdLogueado)).thenReturn(new Viajero()); // No importa el viajero, solo el ID
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+
+        // then
+        assertThrows(UsuarioNoAutorizadoException.class, () -> {
+            servicioReserva.crearPreferenciaDePago(reservaId, viajeroIdLogueado);
+        });
+    }
+
+    @Test
+    public void deberiaLanzarAccionNoPermitidaExceptionSiReservaNoEstaConfirmada() throws UsuarioInexistente {
+        // given
+        Long reservaId = 1L;
+        Long viajeroId = 10L;
+        // Estado PENDIENTE (incorrecto)
+        Reserva reserva = crearReservaCompletaParaPago(reservaId, viajeroId, EstadoReserva.PENDIENTE, EstadoPago.NO_PAGADO);
+
+        // when
+        when(servicioViajero.obtenerViajero(viajeroId)).thenReturn(reserva.getViajero());
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+
+        // then
+        assertThrows(AccionNoPermitidaException.class, () -> {
+            servicioReserva.crearPreferenciaDePago(reservaId, viajeroId);
+        });
+    }
+
+    @Test
+    public void deberiaLanzarAccionNoPermitidaExceptionSiReservaYaEstaPagada() throws UsuarioInexistente {
+        // given
+        Long reservaId = 1L;
+        Long viajeroId = 10L;
+        // Estado PAGADO (incorrecto)
+        Reserva reserva = crearReservaCompletaParaPago(reservaId, viajeroId, EstadoReserva.CONFIRMADA, EstadoPago.PAGADO);
+
+        // when
+        when(servicioViajero.obtenerViajero(viajeroId)).thenReturn(reserva.getViajero());
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+
+        // then
+        assertThrows(AccionNoPermitidaException.class, () -> {
+            servicioReserva.crearPreferenciaDePago(reservaId, viajeroId);
+        });
+    }
+
+    // ===============================================================
+    // TESTS PARA: confirmarPagoReserva
+    // ===============================================================
+
+    @Test
+    public void deberiaConfirmarPagoReservaCorrectamente() throws Exception {
+        // given
+        Long reservaId = 1L;
+        Long viajeroId = 10L;
+        Reserva reserva = crearReservaCompletaParaPago(reservaId, viajeroId, EstadoReserva.CONFIRMADA, EstadoPago.NO_PAGADO);
+
+        // when
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+
+        // then
+        Reserva resultado = servicioReserva.confirmarPagoReserva(reservaId, viajeroId);
+
+        // assert
+        assertThat(resultado.getEstadoPago(), is(EstadoPago.PAGADO));
+        verify(repositorioReservaMock, times(1)).update(reserva);
+    }
+
+    @Test
+    public void deberiaLanzarNotFoundExceptionSiReservaNoExisteAlConfirmarPago() {
+        // given
+        Long reservaId = 99L;
+        Long viajeroId = 10L;
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.empty());
+
+        // then
+        assertThrows(NotFoundException.class, () -> {
+            servicioReserva.confirmarPagoReserva(reservaId, viajeroId);
+        });
+        verify(repositorioReservaMock, never()).update(any());
+    }
+
+    @Test
+    public void deberiaLanzarUsuarioNoAutorizadoExceptionSiViajeroNoEsDuenoAlConfirmarPago() {
+        // given
+        Long reservaId = 1L;
+        Long viajeroIdLogueado = 10L;
+        Long viajeroIdDueno = 20L; // <-- IDs diferentes
+        Reserva reserva = crearReservaCompletaParaPago(reservaId, viajeroIdDueno, EstadoReserva.CONFIRMADA, EstadoPago.NO_PAGADO);
+
+        // when
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+
+        // then
+        assertThrows(UsuarioNoAutorizadoException.class, () -> {
+            servicioReserva.confirmarPagoReserva(reservaId, viajeroIdLogueado);
+        });
+        verify(repositorioReservaMock, never()).update(any());
+    }
+
+    @Test
+    public void deberiaLanzarAccionNoPermitidaExceptionSiReservaNoEstaConfirmadaAlConfirmarPago() {
+        // given
+        Long reservaId = 1L;
+        Long viajeroId = 10L;
+        // Estado PENDIENTE (incorrecto)
+        Reserva reserva = crearReservaCompletaParaPago(reservaId, viajeroId, EstadoReserva.PENDIENTE, EstadoPago.NO_PAGADO);
+
+        // when
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+
+        // then
+        assertThrows(AccionNoPermitidaException.class, () -> {
+            servicioReserva.confirmarPagoReserva(reservaId, viajeroId);
+        });
+        verify(repositorioReservaMock, never()).update(any());
+    }
+
+    // ===============================================================
+    // MÉTODO HELPER (Necesario para los tests de 'crearPreferencia')
+    // ===============================================================
+
+    /**
+     * Helper para crear una Reserva con todos los mocks anidados necesarios
+     * para probar 'crearPreferenciaDePago'.
+     */
+    private Reserva crearReservaCompletaParaPago(Long reservaId, Long viajeroId, EstadoReserva estado, EstadoPago estadoPago) {
+        // 1. Mocks de Ciudades
+        Ciudad origen = mock(Ciudad.class);
+        when(origen.getNombre()).thenReturn("Buenos Aires");
+
+        Ciudad destino = mock(Ciudad.class);
+        when(destino.getNombre()).thenReturn("Córdoba");
+
+        // 2. Mock de Viaje
+        Viaje viaje = mock(Viaje.class);
+        when(viaje.getOrigen()).thenReturn(origen);
+        when(viaje.getDestino()).thenReturn(destino);
+        when(viaje.getFechaHoraDeSalida()).thenReturn(LocalDateTime.of(2025, 12, 24, 10, 0));
+        when(viaje.getPrecio()).thenReturn(5000.0);
+
+        // 3. Mock de Viajero
+        Viajero viajero = mock(Viajero.class);
+        when(viajero.getId()).thenReturn(viajeroId);
+
+        // 4. Crear Reserva
+        Reserva reserva = new Reserva();
+        reserva.setId(reservaId);
+        reserva.setViajero(viajero);
+        reserva.setViaje(viaje);
+        reserva.setEstado(estado);
+        reserva.setEstadoPago(estadoPago);
+
+        return reserva;
     }
 
     // --- MÉTODOS AUXILIARES PARA CREAR MOCKS ---
