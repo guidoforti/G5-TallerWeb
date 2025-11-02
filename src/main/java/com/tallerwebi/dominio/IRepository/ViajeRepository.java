@@ -19,4 +19,8 @@ public interface ViajeRepository {
     List<Viaje> findByOrigenYDestinoYConductor(Ciudad origen, Ciudad destino , Conductor conductor);
     List<Viaje> findByConductorId(Long idConductor);
     List<Viaje> buscarViajesPorFiltros(Ciudad origen, Ciudad destino, List<EstadoDeViaje> estados, LocalDateTime fechaDesde, Double precioMin, Double precioMax);
+
+    // Métodos para gestión de viajes
+    List<Viaje> findViajesEnCursoExcedidos(LocalDateTime fechaLimite);
+    List<Viaje> findViajesNoIniciadosFueraDePlazo(LocalDateTime fechaLimite);
 }

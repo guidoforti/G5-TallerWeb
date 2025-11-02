@@ -58,26 +58,33 @@ INSERT INTO ciudad (id, nombre, latitud, longitud)
 VALUES (4, 'Ciudad de Mendoza', -32.8894155, -68.8446177);
 
 -- 8️⃣ VIAJES DE PRUEBA
--- Estado: 0=DISPONIBLE, 1=COMPLETO, 2=FINALIZADO, 3=CANCELADO
+-- Estado: 0=DISPONIBLE, 1=COMPLETO, 2=FINALIZADO, 3=CANCELADO, 4=EN_CURSO
+-- duracion_estimada_minutos: Calculated using Haversine formula (distance * 1.3 buffer / 60 km/h)
+
 -- Viaje 1: Buenos Aires → Córdoba (DISPONIBLE, futuro)
-INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion, version)
-VALUES (1, 1, 2, 2, 1, '2025-10-30 08:00:00', 3, 5000.00, 0, CURRENT_TIMESTAMP, 0);
+-- Distance: ~645 km → Duration: 645 * 1.3 / 60 = ~14 hours = 838 minutes
+INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion, duracion_estimada_minutos, version)
+VALUES (1, 1, 2, 2, 1, '2025-10-30 08:00:00', 3, 5000.00, 0, CURRENT_TIMESTAMP, 838, 0);
 
 -- Viaje 2: Buenos Aires → Rosario (DISPONIBLE, futuro)
-INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion, version)
-VALUES (2, 1, 3, 2, 2, '2025-11-01 10:00:00', 4, 3500.00, 0, CURRENT_TIMESTAMP, 0);
+-- Distance: ~297 km → Duration: 297 * 1.3 / 60 = ~6.4 hours = 386 minutes
+INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion, duracion_estimada_minutos, version)
+VALUES (2, 1, 3, 2, 2, '2025-11-01 10:00:00', 4, 3500.00, 0, CURRENT_TIMESTAMP, 386, 0);
 
 -- Viaje 3: Córdoba → Buenos Aires (COMPLETO, futuro)
-INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion, version)
-VALUES (3, 2, 1, 2, 3, '2025-11-05 14:00:00', 0, 4800.00, 1, CURRENT_TIMESTAMP, 0);
+-- Distance: ~645 km → Duration: 645 * 1.3 / 60 = ~14 hours = 838 minutes
+INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion, duracion_estimada_minutos, version)
+VALUES (3, 2, 1, 2, 3, '2025-11-05 14:00:00', 0, 4800.00, 1, CURRENT_TIMESTAMP, 838, 0);
 
 -- Viaje 4: Buenos Aires → Ciudad de Mendoza (DISPONIBLE, futuro, más caro)
-INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion, version)
-VALUES (4, 1, 4, 2, 5, '2025-11-10 06:00:00', 2, 12000.00, 0, CURRENT_TIMESTAMP, 0);
+-- Distance: ~1038 km → Duration: 1038 * 1.3 / 60 = ~22.5 hours = 1349 minutes
+INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion, duracion_estimada_minutos, version)
+VALUES (4, 1, 4, 2, 5, '2025-11-10 06:00:00', 2, 12000.00, 0, CURRENT_TIMESTAMP, 1349, 0);
 
 -- Viaje 5: Buenos Aires → Córdoba (FINALIZADO, pasado)
-INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion, version)
-VALUES (5, 1, 2, 2, 1, '2025-10-20 09:00:00', 0, 4500.00, 2, CURRENT_TIMESTAMP, 0);
+-- Distance: ~645 km → Duration: 645 * 1.3 / 60 = ~14 hours = 838 minutes
+INSERT INTO viaje (id, origen_id, destino_id, conductor_id, vehiculo_id, fecha_hora_de_salida, asientos_disponibles, precio, estado, fecha_de_creacion, duracion_estimada_minutos, version)
+VALUES (5, 1, 2, 2, 1, '2025-10-20 09:00:00', 0, 4500.00, 2, CURRENT_TIMESTAMP, 838, 0);
 
 -- 9️⃣ RESERVAS DE PRUEBA
 -- Estados: 0=PENDIENTE, 1=CONFIRMADA, 2=RECHAZADA, 3=CANCELADA_POR_VIAJERO

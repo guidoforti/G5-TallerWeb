@@ -49,11 +49,12 @@ VALUES (1, 'Toyota Corolla', '2014', 5, 1, 'AB123CD', 1),
 
 -- 4️⃣ VIAJES
 -- Los IDs de conductor siguen siendo los mismos de la tabla usuario (1, 2, 3)
+-- Usando fechas relativas para que los tests no se rompan con el tiempo
 INSERT INTO viaje (id, asientos_disponibles, estado, fecha_de_creacion, fecha_hora_de_salida, precio, conductor_id, origen_id,
                    destino_id, vehiculo_id)
-VALUES (1, 3, 0, '2025-10-01 10:00:00', '2025-10-05 08:00:00', 15000, 1, 1, 2, 1),
-       (2, 2, 0, '2025-09-20 14:00:00', '2025-09-25 07:30:00', 12000, 2, 2, 3, 2),
-       (3, 4, 0, '2025-08-10 09:30:00', '2025-08-15 06:45:00', 18000, 3, 3, 1, 3);
+VALUES (1, 3, 0, CURRENT_TIMESTAMP, DATEADD('DAY', 5, CURRENT_TIMESTAMP), 15000, 1, 1, 2, 1),
+       (2, 2, 0, CURRENT_TIMESTAMP, DATEADD('DAY', 3, CURRENT_TIMESTAMP), 12000, 2, 2, 3, 2),
+       (3, 4, 0, CURRENT_TIMESTAMP, DATEADD('DAY', 7, CURRENT_TIMESTAMP), 18000, 3, 3, 1, 3);
 
 -- 5️⃣ PARADAS
 INSERT INTO parada (id, orden, ciudad_id, viaje_id)

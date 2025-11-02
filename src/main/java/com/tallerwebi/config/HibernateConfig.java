@@ -8,6 +8,7 @@ import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.client.RestTemplate;
+import com.mercadopago.client.preference.PreferenceClient;
 
 import javax.sql.DataSource;
 import java.util.Properties;
@@ -77,5 +78,10 @@ public class HibernateConfig {
     @Bean
     public ObjectMapper objectMapper() {
         return new ObjectMapper();
+    }
+
+    @Bean
+    public PreferenceClient preferenceClient() {
+        return new PreferenceClient();
     }
 }

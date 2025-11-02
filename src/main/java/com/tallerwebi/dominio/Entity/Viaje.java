@@ -62,6 +62,22 @@ public class Viaje {
     private LocalDateTime fechaDeCreacion;
     private EstadoDeViaje estado;
 
+    // Campos para tracking de inicio/fin de viaje
+    @Column(name = "fecha_hora_inicio_real")
+    private LocalDateTime fechaHoraInicioReal;
+
+    @Column(name = "fecha_hora_fin_real")
+    private LocalDateTime fechaHoraFinReal;
+
+    @Column(name = "minutos_de_retraso")
+    private Integer minutosDeRetraso;
+
+    @Column(name = "duracion_estimada_minutos")
+    private Integer duracionEstimadaMinutos;
+
+    @Column(name = "cierre_automatico")
+    private Boolean cierreAutomatico;
+
 
     public void agregarParada(Parada parada) {
         paradas.add(parada);

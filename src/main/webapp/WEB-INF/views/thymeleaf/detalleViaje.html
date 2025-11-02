@@ -86,11 +86,18 @@
                         <div class="divider mx-auto" style="width: 80px; height: 3px; background-color: #E16A3D;"></div>
                     </div>
 
-                    <div th:if="${error}" class="alert alert-danger">
-                        <h4 class="alert-heading">Error</h4>
-                        <p class="mb-2" th:text="${error}"></p>
-                        <hr>
-                        <a href="/inicio" class="btn btn-outline-unrumbo">Volver al inicio</a>
+                    <!-- Mensajes de éxito -->
+                    <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>¡Éxito!</strong> <span th:text="${mensaje}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+
+                    <!-- Mensajes de error -->
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <strong>Error:</strong> <span th:text="${error}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
 
                     <div th:if="${detalle}">
@@ -108,16 +115,43 @@
                                             </div>
                                             <div>
                                                 <p class="mb-1 info-label">Origen</p>
-                                                <p class="mb-3 info-value" th:text="${detalle.getOrigen().getNombre()}"></p>
+                                                <p class="mb-0 info-value" th:text="${detalle.getOrigen().getNombre()}"></p>
                                             </div>
                                         </div>
-                                        <div class="d-flex align-items-center">
+                                        <div class="d-flex align-items-center mb-3">
                                             <div class="me-3" style="color: #E16A3D;">
                                                 <i class="fas fa-flag-checkered fa-lg"></i>
                                             </div>
                                             <div>
                                                 <p class="mb-1 info-label">Destino</p>
                                                 <p class="mb-0 info-value" th:text="${detalle.getDestino().getNombre()}"></p>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="me-3" style="color: #E16A3D;">
+                                                <i class="fas fa-calendar-check fa-lg"></i>
+                                            </div>
+                                            <div>
+                                                <p class="mb-1 info-label">Fecha y Hora de Salida</p>
+                                                <p class="mb-0 info-value" th:text="${detalle.fechaSalidaFormato != null ? detalle.fechaSalidaFormato : 'No disponible'}"></p>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="me-3" style="color: #E16A3D;">
+                                                <i class="fas fa-clock fa-lg"></i>
+                                            </div>
+                                            <div>
+                                                <p class="mb-1 info-label">Duración Estimada</p>
+                                                <p class="mb-0 info-value" th:text="${detalle.duracionEstimadaFormato != null ? detalle.duracionEstimadaFormato : 'No disponible'}"></p>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3" style="color: #E16A3D;">
+                                                <i class="fas fa-hourglass-half fa-lg"></i>
+                                            </div>
+                                            <div>
+                                                <p class="mb-1 info-label">Hora de Llegada Estimada</p>
+                                                <p class="mb-0 info-value" th:text="${detalle.horaLlegadaEstimada != null ? detalle.horaLlegadaEstimada : 'No disponible'}"></p>
                                             </div>
                                         </div>
                                     </div>
@@ -192,7 +226,7 @@
                         </div>
 
                         <!-- Botones de acción -->
-                        <div class="d-flex justify-content-center gap-3 mt-5">
+                        <div class="d-flex justify-content-center gap-3 mt-5 flex-wrap">
                             <!-- Botón Solicitar Reserva - Solo visible para VIAJERO -->
                             <a th:if="${userRole != null && userRole == 'VIAJERO'}"
                                th:href="@{/reserva/solicitar(viajeId=${viajeId})}"
@@ -200,8 +234,50 @@
                                 <i class="fas fa-ticket-alt me-2"></i> Solicitar Reserva
                             </a>
 
-                            <!-- Botón Ver Viajeros Confirmados - Solo visible para CONDUCTOR -->
+                            <!-- Botones de Control de Viaje - Solo visible para CONDUCTOR dueño del viaje -->
                             <th:block th:if="${userRole != null && userRole == 'CONDUCTOR'}">
+
+                                <!-- Botón Iniciar Viaje - Solo visible si el viaje está DISPONIBLE o COMPLETO -->
+                                <form th:if="${detalle.estado.name() == 'DISPONIBLE' || detalle.estado.name() == 'COMPLETO'}"
+                                      th:action="@{/viaje/{id}/iniciar(id=${viajeId})}"
+                                      method="post"
+                                      style="display: inline;">
+                                    <button type="submit"
+                                            class="btn btn-success"
+                                            onclick="return confirm('¿Estás seguro de iniciar este viaje?');">
+                                        <i class="fas fa-play-circle me-2"></i> Iniciar Viaje
+                                    </button>
+                                </form>
+
+                                <!-- Botón Finalizar Viaje - Solo visible si el viaje está EN_CURSO -->
+                                <form th:if="${detalle.estado.name() == 'EN_CURSO'}"
+                                      th:action="@{/viaje/{id}/finalizar(id=${viajeId})}"
+                                      method="post"
+                                      style="display: inline;">
+                                    <button type="submit"
+                                            class="btn btn-danger"
+                                            onclick="return confirm('¿Estás seguro de finalizar este viaje?');">
+                                        <i class="fas fa-stop-circle me-2"></i> Finalizar Viaje
+                                    </button>
+                                </form>
+
+                                <!-- Estado del Viaje Badge -->
+                                <div class="d-flex align-items-center">
+                                    <span class="badge fs-6 px-3 py-2"
+                                          th:classappend="${detalle.estado.name() == 'DISPONIBLE' ? 'bg-primary' :
+                                                          detalle.estado.name() == 'COMPLETO' ? 'bg-info' :
+                                                          detalle.estado.name() == 'EN_CURSO' ? 'bg-warning text-dark' :
+                                                          detalle.estado.name() == 'FINALIZADO' ? 'bg-success' :
+                                                          detalle.estado.name() == 'CANCELADO' ? 'bg-secondary' : 'bg-dark'}">
+                                        <i class="fas fa-circle me-1" style="font-size: 0.6em;"></i>
+                                        <span th:text="${detalle.estado.name() == 'DISPONIBLE' ? 'Disponible' :
+                                                       detalle.estado.name() == 'COMPLETO' ? 'Completo' :
+                                                       detalle.estado.name() == 'EN_CURSO' ? 'En Curso' :
+                                                       detalle.estado.name() == 'FINALIZADO' ? 'Finalizado' :
+                                                       detalle.estado.name() == 'CANCELADO' ? 'Cancelado' : 'Desconocido'}"></span>
+                                    </span>
+                                </div>
+
                                 <a th:href="@{/reserva/viajerosConfirmados(viajeId=${viajeId})}"
                                    class="btn btn-unrumbo">
                                     <i class="fas fa-users me-2"></i> Ver Viajeros Confirmados
