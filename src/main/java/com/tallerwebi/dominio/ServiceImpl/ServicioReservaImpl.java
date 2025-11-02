@@ -1,9 +1,17 @@
 package com.tallerwebi.dominio.ServiceImpl;
 
+import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
+import com.mercadopago.client.preference.PreferenceClient;
+import com.mercadopago.client.preference.PreferenceItemRequest;
+import com.mercadopago.client.preference.PreferenceRequest;
+import com.mercadopago.exceptions.MPApiException;
+import com.mercadopago.exceptions.MPException;
+import com.mercadopago.resources.preference.Preference;
 import com.tallerwebi.dominio.Entity.Reserva;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Enums.EstadoAsistencia;
+import com.tallerwebi.dominio.Enums.EstadoPago;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
@@ -12,15 +20,16 @@ import com.tallerwebi.dominio.IServicio.ServicioViajero;
 import com.tallerwebi.dominio.excepcion.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.tallerwebi.dominio.IServicio.ServicioHistorialReserva;
 import com.tallerwebi.dominio.Entity.HistorialReserva;
 import com.tallerwebi.dominio.Entity.Usuario;
-import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.IRepository.RepositorioHistorialReserva;
 
 import javax.transaction.Transactional;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service("servicioReserva")
@@ -31,13 +40,16 @@ public class ServicioReservaImpl implements ServicioReserva {
     private final ServicioViaje servicioViaje;
     private final ServicioViajero servicioViajero;
     private final RepositorioHistorialReserva repositorioHistorialReserva;
+    private final PreferenceClient preferenceClient;
 
     @Autowired
-    public ServicioReservaImpl(ReservaRepository reservaRepository, ServicioViaje servicioViaje, ServicioViajero servicioViajero, RepositorioHistorialReserva repositorioHistorialReserva) {
+    public ServicioReservaImpl(ReservaRepository reservaRepository, ServicioViaje servicioViaje, ServicioViajero servicioViajero,
+                               RepositorioHistorialReserva repositorioHistorialReserva, PreferenceClient preferenceClient) {
         this.reservaRepository = reservaRepository;
         this.servicioViaje = servicioViaje;
         this.servicioViajero = servicioViajero;
         this.repositorioHistorialReserva = repositorioHistorialReserva;
+        this.preferenceClient = preferenceClient;
     }
 
     @Override
@@ -286,18 +298,32 @@ public class ServicioReservaImpl implements ServicioReserva {
     }
 
     @Override
-    public List<Reserva> listarReservasPendientesYRechazadas(Long viajeroId) throws UsuarioInexistente {
+    public List<Reserva> listarReservasActivasPorViajero(Long viajeroId) throws UsuarioInexistente {
         // Obtener el viajero y validar que existe
         Viajero viajero = servicioViajero.obtenerViajero(viajeroId);
 
         // Definir los estados a buscar
-        List<EstadoReserva> estados = List.of(EstadoReserva.PENDIENTE, EstadoReserva.RECHAZADA);
+        List<EstadoReserva> estados = List.of(EstadoReserva.PENDIENTE, EstadoReserva.RECHAZADA , EstadoReserva.CONFIRMADA);
 
         // Obtener las reservas filtradas y ordenadas por fecha de salida del viaje
         List<Reserva> reservas = reservaRepository.findByViajeroAndEstadoInOrderByViajesFechaSalidaAsc(viajero, estados);
 
+        List<Reserva> reservasFiltradas = reservas.stream()
+                .filter(r -> {
+                    // Caso 1: Si la reserva está CONFIRMADA...
+                    if (r.getEstado() == EstadoReserva.CONFIRMADA) {
+                        // ...solo la queremos si AÚN NO está pagada.
+                        return r.getEstadoPago() != EstadoPago.PAGADO;
+                    }
+
+                    // Caso 2: Si no está confirmada (es PENDIENTE o RECHAZADA)...
+                    // ...la queremos siempre.
+                    return true;
+                })
+                .collect(Collectors.toList());
+
         // Inicializar lazy loads para evitar LazyInitializationException
-        reservas.forEach(reserva -> {
+        reservasFiltradas.forEach(reserva -> {
             if (reserva.getViaje() != null) {
                 org.hibernate.Hibernate.initialize(reserva.getViaje().getOrigen());
                 org.hibernate.Hibernate.initialize(reserva.getViaje().getDestino());
@@ -305,7 +331,7 @@ public class ServicioReservaImpl implements ServicioReserva {
             }
         });
 
-        return reservas;
+        return reservasFiltradas;
     }
 
     @Override
@@ -327,5 +353,76 @@ public class ServicioReservaImpl implements ServicioReserva {
         });
 
         return reservas;
+    }
+
+    @Override
+    public Preference crearPreferenciaDePago(Long reservaId, Long viajeroId) throws UsuarioInexistente, NotFoundException, UsuarioNoAutorizadoException, BadRequestException, MPException, MPApiException, AccionNoPermitidaException {
+
+        Viajero viajero = servicioViajero.obtenerViajero(viajeroId);
+        Optional <Reserva> reservaOpt = reservaRepository.findById(reservaId);
+        if (reservaOpt.isEmpty()){
+            throw new NotFoundException("la reserva con id : " + reservaId + " no existe");
+        }
+        if (reservaOpt.get().getViajero().getId() != viajero.getId()) {
+            throw new UsuarioNoAutorizadoException("la reserva que esta intenando abonar no pertenece al usuario id " + viajeroId);
+        }
+        if (!reservaOpt.get().getEstado().equals(EstadoReserva.CONFIRMADA)) {
+            throw new AccionNoPermitidaException("solo pueden ser abonadas las reservas con estado CONFIRMADO");
+        }
+        if (reservaOpt.get().getEstadoPago().equals(EstadoPago.PAGADO)) {
+            throw new AccionNoPermitidaException("la reserva ya se encuentra abonada");
+        }
+
+        Reserva reserva = reservaOpt.get();
+        Viaje viaje = reserva.getViaje();
+
+
+        PreferenceItemRequest itemRequest = PreferenceItemRequest.builder()
+                .id(reserva.getId().toString())
+                .title("Reserva UnRumbo: " + viaje.getOrigen().getNombre() + " a " + viaje.getDestino().getNombre())
+                .description("Asiento para el viaje del " + viaje.getFechaHoraDeSalida().toLocalDate().toString())
+                .quantity(1)
+                .currencyId("ARS")
+                .unitPrice(new BigDecimal(viaje.getPrecio()))
+                .build();
+
+        List<PreferenceItemRequest> items = new ArrayList<>();
+        items.add(itemRequest);
+        //String baseUrl = "http://localhost:8080/spring";
+
+        PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
+                .success("/reserva/pago/exitoso?reservaId=" + reserva.getId())
+                .failure("/reserva/pago/fallido?reservaId=" + reserva.getId())
+                .pending("/reserva/pago/pendiente?reservaId=" + reserva.getId())
+                .build();
+
+
+        PreferenceRequest preferenceRequest = PreferenceRequest.builder()
+                .items(items)
+                .backUrls(backUrls)
+                .autoReturn("approved")
+                .build();
+
+        return preferenceClient.create(preferenceRequest);
+    }
+
+    @Override
+    public Reserva confirmarPagoReserva(Long reservaId, Long viajeroId) throws NotFoundException, UsuarioNoAutorizadoException, AccionNoPermitidaException {
+
+        Reserva reserva = reservaRepository.findById(reservaId)
+                .orElseThrow(() -> new NotFoundException("La reserva " + reservaId + " no existe."));
+
+        if (!reserva.getViajero().getId().equals(viajeroId)) {
+            throw new UsuarioNoAutorizadoException("No tienes permiso para ver esta confirmación de pago.");
+        }
+
+        // 3. Validar estado (defensa extra)
+        if (reserva.getEstado() != EstadoReserva.CONFIRMADA) {
+            throw new AccionNoPermitidaException("El pago solo puede confirmarse para reservas APROBADAS.");
+        }
+        reserva.setEstadoPago(EstadoPago.PAGADO);
+        reservaRepository.update(reserva);
+
+        return reserva;
     }
 }

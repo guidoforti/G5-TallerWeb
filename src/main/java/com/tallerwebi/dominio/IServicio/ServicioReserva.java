@@ -1,5 +1,8 @@
 package com.tallerwebi.dominio.IServicio;
 
+import com.mercadopago.exceptions.MPApiException;
+import com.mercadopago.exceptions.MPException;
+import com.mercadopago.resources.preference.Preference;
 import com.tallerwebi.dominio.Entity.Reserva;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.Viajero;
@@ -123,7 +126,7 @@ public interface ServicioReserva {
      * @return Lista de reservas pendientes y rechazadas
      * @throws UsuarioInexistente Si no se encuentra el viajero
      */
-    List<Reserva> listarReservasPendientesYRechazadas(Long viajeroId) throws UsuarioInexistente;
+    List<Reserva> listarReservasActivasPorViajero(Long viajeroId) throws UsuarioInexistente;
 
     /**
      * Lista todos los viajes confirmados de un viajero (reservas con estado CONFIRMADA)
@@ -133,4 +136,8 @@ public interface ServicioReserva {
      * @throws UsuarioInexistente Si no se encuentra el viajero
      */
     List<Reserva> listarViajesConfirmadosPorViajero(Long viajeroId) throws UsuarioInexistente;
+
+    Preference crearPreferenciaDePago (Long reservaId, Long viajeroId) throws UsuarioInexistente, NotFoundException, UsuarioNoAutorizadoException, BadRequestException, MPException, MPApiException, AccionNoPermitidaException;
+
+    Reserva confirmarPagoReserva (Long reservaId, Long usuarioIdObj) throws NotFoundException, UsuarioNoAutorizadoException, AccionNoPermitidaException;
 }
