@@ -1114,4 +1114,255 @@ conductor.setRol("CONDUCTOR");
         assertThat(estadosUsados, not(hasItem(EstadoDeViaje.FINALIZADO)));
         assertThat(estadosUsados, not(hasItem(EstadoDeViaje.CANCELADO)));
     }
+
+    // ==================== TESTS FOR iniciarViaje() ====================
+
+    @Test
+    void deberiaIniciarViajeCorrectamenteEnHoraProgramada() throws Exception {
+        // given
+        Long viajeId = 1L;
+        Long conductorId = 1L;
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = new Viaje();
+        viaje.setId(viajeId);
+        viaje.setConductor(conductor);
+        viaje.setEstado(EstadoDeViaje.DISPONIBLE);
+        viaje.setFechaHoraDeSalida(LocalDateTime.now().minusMinutes(1)); // Hace 1 minuto
+
+        when(viajeRepositoryMock.findById(viajeId)).thenReturn(Optional.of(viaje));
+
+        // when
+        servicioViaje.iniciarViaje(viajeId, conductorId);
+
+        // then
+        ArgumentCaptor<Viaje> viajeCaptor = ArgumentCaptor.forClass(Viaje.class);
+        verify(viajeRepositoryMock).modificarViaje(viajeCaptor.capture());
+
+        Viaje viajeModificado = viajeCaptor.getValue();
+        assertThat(viajeModificado.getEstado(), is(EstadoDeViaje.EN_CURSO));
+        assertThat(viajeModificado.getFechaHoraInicioReal(), notNullValue());
+        assertThat(viajeModificado.getMinutosDeRetraso(), is(greaterThanOrEqualTo(0)));
+    }
+
+    @Test
+    void deberiaIniciarViajeConRetrasoYCalcularMinutos() throws Exception {
+        // given
+        Long viajeId = 1L;
+        Long conductorId = 1L;
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = new Viaje();
+        viaje.setId(viajeId);
+        viaje.setConductor(conductor);
+        viaje.setEstado(EstadoDeViaje.DISPONIBLE);
+        viaje.setFechaHoraDeSalida(LocalDateTime.now().minusMinutes(20)); // Hace 20 minutos
+
+        when(viajeRepositoryMock.findById(viajeId)).thenReturn(Optional.of(viaje));
+
+        // when
+        servicioViaje.iniciarViaje(viajeId, conductorId);
+
+        // then
+        ArgumentCaptor<Viaje> viajeCaptor = ArgumentCaptor.forClass(Viaje.class);
+        verify(viajeRepositoryMock).modificarViaje(viajeCaptor.capture());
+
+        Viaje viajeModificado = viajeCaptor.getValue();
+        assertThat(viajeModificado.getEstado(), is(EstadoDeViaje.EN_CURSO));
+        assertThat(viajeModificado.getMinutosDeRetraso(), is(greaterThanOrEqualTo(19))); // Al menos 19 minutos
+        assertThat(viajeModificado.getFechaHoraInicioReal(), notNullValue());
+    }
+
+    @Test
+    void noDeberiaIniciarViajeAntesDeHoraProgramada() {
+        // given
+        Long viajeId = 1L;
+        Long conductorId = 1L;
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = new Viaje();
+        viaje.setId(viajeId);
+        viaje.setConductor(conductor);
+        viaje.setEstado(EstadoDeViaje.DISPONIBLE);
+        viaje.setFechaHoraDeSalida(LocalDateTime.now().plusHours(1)); // En 1 hora
+
+        when(viajeRepositoryMock.findById(viajeId)).thenReturn(Optional.of(viaje));
+
+        // when & then
+        assertThrows(VentanaHorariaException.class, () -> servicioViaje.iniciarViaje(viajeId, conductorId));
+        verify(viajeRepositoryMock, never()).modificarViaje(any());
+    }
+
+    @Test
+    void noDeberiaIniciarViajeSiNoEsConductor() {
+        // given
+        Long viajeId = 1L;
+        Long conductorId = 1L;
+        Long otroConductorId = 2L;
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = new Viaje();
+        viaje.setId(viajeId);
+        viaje.setConductor(conductor);
+        viaje.setEstado(EstadoDeViaje.DISPONIBLE);
+        viaje.setFechaHoraDeSalida(LocalDateTime.now().minusMinutes(1));
+
+        when(viajeRepositoryMock.findById(viajeId)).thenReturn(Optional.of(viaje));
+
+        // when & then
+        assertThrows(UsuarioNoAutorizadoException.class, () -> servicioViaje.iniciarViaje(viajeId, otroConductorId));
+        verify(viajeRepositoryMock, never()).modificarViaje(any());
+    }
+
+    @Test
+    void noDeberiaIniciarViajeSiYaEstaIniciado() {
+        // given
+        Long viajeId = 1L;
+        Long conductorId = 1L;
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = new Viaje();
+        viaje.setId(viajeId);
+        viaje.setConductor(conductor);
+        viaje.setEstado(EstadoDeViaje.EN_CURSO); // Ya iniciado
+        viaje.setFechaHoraDeSalida(LocalDateTime.now().minusMinutes(10));
+
+        when(viajeRepositoryMock.findById(viajeId)).thenReturn(Optional.of(viaje));
+
+        // when & then
+        assertThrows(ViajeYaIniciadoException.class, () -> servicioViaje.iniciarViaje(viajeId, conductorId));
+        verify(viajeRepositoryMock, never()).modificarViaje(any());
+    }
+
+    @Test
+    void noDeberiaIniciarViajeSiEstaCancelado() {
+        // given
+        Long viajeId = 1L;
+        Long conductorId = 1L;
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = new Viaje();
+        viaje.setId(viajeId);
+        viaje.setConductor(conductor);
+        viaje.setEstado(EstadoDeViaje.CANCELADO);
+        viaje.setFechaHoraDeSalida(LocalDateTime.now().minusMinutes(10));
+
+        when(viajeRepositoryMock.findById(viajeId)).thenReturn(Optional.of(viaje));
+
+        // when & then
+        assertThrows(ViajeYaIniciadoException.class, () -> servicioViaje.iniciarViaje(viajeId, conductorId));
+        verify(viajeRepositoryMock, never()).modificarViaje(any());
+    }
+
+    @Test
+    void noDeberiaIniciarViajeSiNoExiste() {
+        // given
+        Long viajeId = 999L;
+        Long conductorId = 1L;
+
+        when(viajeRepositoryMock.findById(viajeId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(ViajeNoEncontradoException.class, () -> servicioViaje.iniciarViaje(viajeId, conductorId));
+        verify(viajeRepositoryMock, never()).modificarViaje(any());
+    }
+
+    // ==================== TESTS FOR finalizarViaje() ====================
+
+    @Test
+    void deberiaFinalizarViajeCorrectamente() throws Exception {
+        // given
+        Long viajeId = 1L;
+        Long conductorId = 1L;
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = new Viaje();
+        viaje.setId(viajeId);
+        viaje.setConductor(conductor);
+        viaje.setEstado(EstadoDeViaje.EN_CURSO);
+
+        when(viajeRepositoryMock.findById(viajeId)).thenReturn(Optional.of(viaje));
+
+        // when
+        servicioViaje.finalizarViaje(viajeId, conductorId);
+
+        // then
+        ArgumentCaptor<Viaje> viajeCaptor = ArgumentCaptor.forClass(Viaje.class);
+        verify(viajeRepositoryMock).modificarViaje(viajeCaptor.capture());
+
+        Viaje viajeModificado = viajeCaptor.getValue();
+        assertThat(viajeModificado.getEstado(), is(EstadoDeViaje.FINALIZADO));
+        assertThat(viajeModificado.getFechaHoraFinReal(), notNullValue());
+        assertThat(viajeModificado.getCierreAutomatico(), is(false));
+    }
+
+    @Test
+    void noDeberiaFinalizarViajeSiNoEsConductor() {
+        // given
+        Long viajeId = 1L;
+        Long conductorId = 1L;
+        Long otroConductorId = 2L;
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = new Viaje();
+        viaje.setId(viajeId);
+        viaje.setConductor(conductor);
+        viaje.setEstado(EstadoDeViaje.EN_CURSO);
+
+        when(viajeRepositoryMock.findById(viajeId)).thenReturn(Optional.of(viaje));
+
+        // when & then
+        assertThrows(UsuarioNoAutorizadoException.class, () -> servicioViaje.finalizarViaje(viajeId, otroConductorId));
+        verify(viajeRepositoryMock, never()).modificarViaje(any());
+    }
+
+    @Test
+    void noDeberiaFinalizarViajeSiNoEstaEnCurso() {
+        // given
+        Long viajeId = 1L;
+        Long conductorId = 1L;
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = new Viaje();
+        viaje.setId(viajeId);
+        viaje.setConductor(conductor);
+        viaje.setEstado(EstadoDeViaje.DISPONIBLE); // No está EN_CURSO
+
+        when(viajeRepositoryMock.findById(viajeId)).thenReturn(Optional.of(viaje));
+
+        // when & then
+        assertThrows(ViajeYaFinalizadoException.class, () -> servicioViaje.finalizarViaje(viajeId, conductorId));
+        verify(viajeRepositoryMock, never()).modificarViaje(any());
+    }
+
+    @Test
+    void noDeberiaFinalizarViajeSiNoExiste() {
+        // given
+        Long viajeId = 999L;
+        Long conductorId = 1L;
+
+        when(viajeRepositoryMock.findById(viajeId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(ViajeNoEncontradoException.class, () -> servicioViaje.finalizarViaje(viajeId, conductorId));
+        verify(viajeRepositoryMock, never()).modificarViaje(any());
+    }
 }

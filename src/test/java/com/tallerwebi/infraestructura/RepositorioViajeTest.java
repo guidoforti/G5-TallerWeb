@@ -715,4 +715,393 @@ void noDeberiaEncontrarViajeSiConductorNoCoincide() {
                     "Los viajes deben estar ordenados por fecha de salida ascendente");
         }
     }
+
+    // ==================== TESTS FOR findViajesEnCursoExcedidos ====================
+
+    @Test
+    void deberiaEncontrarViajesEnCursoExcedidos() {
+        // given
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+        Vehiculo vehiculo = sessionFactory.getCurrentSession().get(Vehiculo.class, 1L);
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad cordoba = sessionFactory.getCurrentSession().get(Ciudad.class, 2L);
+
+        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime hace3Horas = ahora.minusHours(3);
+
+        // Create trip that started 3 hours ago (exceeded)
+        Viaje viajeExcedido = new Viaje();
+        viajeExcedido.setOrigen(buenosAires);
+        viajeExcedido.setDestino(cordoba);
+        viajeExcedido.setConductor(conductor);
+        viajeExcedido.setVehiculo(vehiculo);
+        viajeExcedido.setEstado(EstadoDeViaje.EN_CURSO);
+        viajeExcedido.setFechaHoraDeSalida(hace3Horas.minusHours(1));
+        viajeExcedido.setFechaHoraInicioReal(hace3Horas);
+        viajeExcedido.setPrecio(10000.0);
+        viajeExcedido.setAsientosDisponibles(3);
+        viajeExcedido.setDuracionEstimadaMinutos(120);
+        viajeExcedido.setFechaDeCreacion(ahora.minusDays(1));
+        viajeExcedido.setReservas(new ArrayList<>());
+        viajeExcedido.setParadas(new ArrayList<>());
+        repositorioViaje.guardarViaje(viajeExcedido);
+        sessionFactory.getCurrentSession().flush();
+
+        // when - Search for trips that started more than 2 hours ago
+        LocalDateTime fechaLimite = ahora.minusHours(2);
+        List<Viaje> resultados = repositorioViaje.findViajesEnCursoExcedidos(fechaLimite);
+
+        // then
+        assertNotNull(resultados);
+        assertThat(resultados, hasSize(1));
+        assertThat(resultados.get(0).getId(), equalTo(viajeExcedido.getId()));
+        assertThat(resultados.get(0).getEstado(), equalTo(EstadoDeViaje.EN_CURSO));
+        assertNotNull(resultados.get(0).getFechaHoraInicioReal());
+        assertTrue(resultados.get(0).getFechaHoraInicioReal().isBefore(fechaLimite));
+    }
+
+    @Test
+    void noDeberiaEncontrarViajesEnCursoRecientes() {
+        // given
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+        Vehiculo vehiculo = sessionFactory.getCurrentSession().get(Vehiculo.class, 1L);
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad cordoba = sessionFactory.getCurrentSession().get(Ciudad.class, 2L);
+
+        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime hace1Hora = ahora.minusHours(1);
+
+        // Create trip that started 1 hour ago (not exceeded yet)
+        Viaje viajeReciente = new Viaje();
+        viajeReciente.setOrigen(buenosAires);
+        viajeReciente.setDestino(cordoba);
+        viajeReciente.setConductor(conductor);
+        viajeReciente.setVehiculo(vehiculo);
+        viajeReciente.setEstado(EstadoDeViaje.EN_CURSO);
+        viajeReciente.setFechaHoraDeSalida(hace1Hora.minusHours(1));
+        viajeReciente.setFechaHoraInicioReal(hace1Hora);
+        viajeReciente.setPrecio(10000.0);
+        viajeReciente.setAsientosDisponibles(3);
+        viajeReciente.setDuracionEstimadaMinutos(120);
+        viajeReciente.setFechaDeCreacion(ahora.minusDays(1));
+        viajeReciente.setReservas(new ArrayList<>());
+        viajeReciente.setParadas(new ArrayList<>());
+        repositorioViaje.guardarViaje(viajeReciente);
+        sessionFactory.getCurrentSession().flush();
+
+        // when - Search for trips that started more than 2 hours ago
+        LocalDateTime fechaLimite = ahora.minusHours(2);
+        List<Viaje> resultados = repositorioViaje.findViajesEnCursoExcedidos(fechaLimite);
+
+        // then - Should not include the recent trip
+        assertNotNull(resultados);
+        assertTrue(resultados.stream().noneMatch(v -> v.getId().equals(viajeReciente.getId())),
+                "No debería incluir viajes iniciados hace menos de 2 horas");
+    }
+
+    @Test
+    void noDeberiaEncontrarViajesNoIniciadosAlBuscarExcedidos() {
+        // given
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+        Vehiculo vehiculo = sessionFactory.getCurrentSession().get(Vehiculo.class, 1L);
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad cordoba = sessionFactory.getCurrentSession().get(Ciudad.class, 2L);
+
+        LocalDateTime ahora = LocalDateTime.now();
+
+        // Create trip without fechaHoraInicioReal (not started)
+        Viaje viajeNoIniciado = new Viaje();
+        viajeNoIniciado.setOrigen(buenosAires);
+        viajeNoIniciado.setDestino(cordoba);
+        viajeNoIniciado.setConductor(conductor);
+        viajeNoIniciado.setVehiculo(vehiculo);
+        viajeNoIniciado.setEstado(EstadoDeViaje.EN_CURSO);
+        viajeNoIniciado.setFechaHoraDeSalida(ahora.minusHours(5));
+        viajeNoIniciado.setFechaHoraInicioReal(null); // Not started
+        viajeNoIniciado.setPrecio(10000.0);
+        viajeNoIniciado.setAsientosDisponibles(3);
+        viajeNoIniciado.setDuracionEstimadaMinutos(120);
+        viajeNoIniciado.setFechaDeCreacion(ahora.minusDays(1));
+        viajeNoIniciado.setReservas(new ArrayList<>());
+        viajeNoIniciado.setParadas(new ArrayList<>());
+        repositorioViaje.guardarViaje(viajeNoIniciado);
+        sessionFactory.getCurrentSession().flush();
+
+        // when
+        LocalDateTime fechaLimite = ahora.minusHours(2);
+        List<Viaje> resultados = repositorioViaje.findViajesEnCursoExcedidos(fechaLimite);
+
+        // then - Should not include trips without fechaHoraInicioReal
+        assertNotNull(resultados);
+        assertTrue(resultados.stream().noneMatch(v -> v.getId().equals(viajeNoIniciado.getId())),
+                "No debería incluir viajes sin fechaHoraInicioReal");
+    }
+
+    @Test
+    void noDeberiaEncontrarViajesFinalizadosAlBuscarExcedidos() {
+        // given
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+        Vehiculo vehiculo = sessionFactory.getCurrentSession().get(Vehiculo.class, 1L);
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad cordoba = sessionFactory.getCurrentSession().get(Ciudad.class, 2L);
+
+        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime hace3Horas = ahora.minusHours(3);
+
+        // Create trip that is already FINALIZADO
+        Viaje viajeFinalizado = new Viaje();
+        viajeFinalizado.setOrigen(buenosAires);
+        viajeFinalizado.setDestino(cordoba);
+        viajeFinalizado.setConductor(conductor);
+        viajeFinalizado.setVehiculo(vehiculo);
+        viajeFinalizado.setEstado(EstadoDeViaje.FINALIZADO);
+        viajeFinalizado.setFechaHoraDeSalida(hace3Horas.minusHours(2));
+        viajeFinalizado.setFechaHoraInicioReal(hace3Horas);
+        viajeFinalizado.setFechaHoraFinReal(ahora.minusHours(1));
+        viajeFinalizado.setPrecio(10000.0);
+        viajeFinalizado.setAsientosDisponibles(3);
+        viajeFinalizado.setDuracionEstimadaMinutos(120);
+        viajeFinalizado.setFechaDeCreacion(ahora.minusDays(1));
+        viajeFinalizado.setReservas(new ArrayList<>());
+        viajeFinalizado.setParadas(new ArrayList<>());
+        repositorioViaje.guardarViaje(viajeFinalizado);
+        sessionFactory.getCurrentSession().flush();
+
+        // when
+        LocalDateTime fechaLimite = ahora.minusHours(2);
+        List<Viaje> resultados = repositorioViaje.findViajesEnCursoExcedidos(fechaLimite);
+
+        // then - Should not include FINALIZADO trips
+        assertNotNull(resultados);
+        assertTrue(resultados.stream().noneMatch(v -> v.getId().equals(viajeFinalizado.getId())),
+                "No debería incluir viajes en estado FINALIZADO");
+    }
+
+    // ==================== TESTS FOR findViajesNoIniciadosFueraDePlazo ====================
+
+    @Test
+    void deberiaEncontrarViajesNoIniciadosFueraDePlazo() {
+        // given
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+        Vehiculo vehiculo = sessionFactory.getCurrentSession().get(Vehiculo.class, 1L);
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad cordoba = sessionFactory.getCurrentSession().get(Ciudad.class, 2L);
+
+        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime hace20Minutos = ahora.minusMinutes(20);
+
+        // Create DISPONIBLE trip scheduled 20 minutes ago without fechaHoraInicioReal
+        Viaje viajeAtrasado = new Viaje();
+        viajeAtrasado.setOrigen(buenosAires);
+        viajeAtrasado.setDestino(cordoba);
+        viajeAtrasado.setConductor(conductor);
+        viajeAtrasado.setVehiculo(vehiculo);
+        viajeAtrasado.setEstado(EstadoDeViaje.DISPONIBLE);
+        viajeAtrasado.setFechaHoraDeSalida(hace20Minutos);
+        viajeAtrasado.setFechaHoraInicioReal(null); // Not started
+        viajeAtrasado.setPrecio(10000.0);
+        viajeAtrasado.setAsientosDisponibles(3);
+        viajeAtrasado.setDuracionEstimadaMinutos(120);
+        viajeAtrasado.setFechaDeCreacion(ahora.minusDays(1));
+        viajeAtrasado.setReservas(new ArrayList<>());
+        viajeAtrasado.setParadas(new ArrayList<>());
+        repositorioViaje.guardarViaje(viajeAtrasado);
+        sessionFactory.getCurrentSession().flush();
+
+        // when - Search for trips scheduled more than 15 minutes ago
+        LocalDateTime fechaLimite = ahora.minusMinutes(15);
+        List<Viaje> resultados = repositorioViaje.findViajesNoIniciadosFueraDePlazo(fechaLimite);
+
+        // then
+        assertNotNull(resultados);
+        assertTrue(resultados.stream().anyMatch(v -> v.getId().equals(viajeAtrasado.getId())),
+                "Debería incluir el viaje atrasado que acabamos de crear");
+
+        // Verify all results match criteria
+        for (Viaje viaje : resultados) {
+            assertTrue(viaje.getEstado() == EstadoDeViaje.DISPONIBLE ||
+                       viaje.getEstado() == EstadoDeViaje.COMPLETO,
+                    "Todos los viajes deben estar en estado DISPONIBLE o COMPLETO");
+            assertNull(viaje.getFechaHoraInicioReal(),
+                    "Ningún viaje debe tener fechaHoraInicioReal");
+            assertTrue(viaje.getFechaHoraDeSalida().isBefore(fechaLimite),
+                    "Todos los viajes deben estar programados antes del límite");
+        }
+    }
+
+    @Test
+    void deberiaEncontrarViajesCOMPLETONoIniciadosFueraDePlazo() {
+        // given
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+        Vehiculo vehiculo = sessionFactory.getCurrentSession().get(Vehiculo.class, 1L);
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad cordoba = sessionFactory.getCurrentSession().get(Ciudad.class, 2L);
+
+        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime hace30Minutos = ahora.minusMinutes(30);
+
+        // Create COMPLETO trip scheduled 30 minutes ago without fechaHoraInicioReal
+        Viaje viajeCompletoAtrasado = new Viaje();
+        viajeCompletoAtrasado.setOrigen(buenosAires);
+        viajeCompletoAtrasado.setDestino(cordoba);
+        viajeCompletoAtrasado.setConductor(conductor);
+        viajeCompletoAtrasado.setVehiculo(vehiculo);
+        viajeCompletoAtrasado.setEstado(EstadoDeViaje.COMPLETO);
+        viajeCompletoAtrasado.setFechaHoraDeSalida(hace30Minutos);
+        viajeCompletoAtrasado.setFechaHoraInicioReal(null); // Not started
+        viajeCompletoAtrasado.setPrecio(10000.0);
+        viajeCompletoAtrasado.setAsientosDisponibles(0);
+        viajeCompletoAtrasado.setDuracionEstimadaMinutos(120);
+        viajeCompletoAtrasado.setFechaDeCreacion(ahora.minusDays(1));
+        viajeCompletoAtrasado.setReservas(new ArrayList<>());
+        viajeCompletoAtrasado.setParadas(new ArrayList<>());
+        repositorioViaje.guardarViaje(viajeCompletoAtrasado);
+        sessionFactory.getCurrentSession().flush();
+
+        // when - Search for trips scheduled more than 15 minutes ago
+        LocalDateTime fechaLimite = ahora.minusMinutes(15);
+        List<Viaje> resultados = repositorioViaje.findViajesNoIniciadosFueraDePlazo(fechaLimite);
+
+        // then
+        assertNotNull(resultados);
+        assertTrue(resultados.stream().anyMatch(v -> v.getId().equals(viajeCompletoAtrasado.getId())),
+                "Debería incluir viajes en estado COMPLETO");
+    }
+
+    @Test
+    void noDeberiaEncontrarViajesDentroDePlazo() {
+        // given
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+        Vehiculo vehiculo = sessionFactory.getCurrentSession().get(Vehiculo.class, 1L);
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad cordoba = sessionFactory.getCurrentSession().get(Ciudad.class, 2L);
+
+        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime hace10Minutos = ahora.minusMinutes(10);
+
+        // Create trip scheduled 10 minutes ago (within 15 minute window)
+        Viaje viajeDentroDePlazo = new Viaje();
+        viajeDentroDePlazo.setOrigen(buenosAires);
+        viajeDentroDePlazo.setDestino(cordoba);
+        viajeDentroDePlazo.setConductor(conductor);
+        viajeDentroDePlazo.setVehiculo(vehiculo);
+        viajeDentroDePlazo.setEstado(EstadoDeViaje.DISPONIBLE);
+        viajeDentroDePlazo.setFechaHoraDeSalida(hace10Minutos);
+        viajeDentroDePlazo.setFechaHoraInicioReal(null);
+        viajeDentroDePlazo.setPrecio(10000.0);
+        viajeDentroDePlazo.setAsientosDisponibles(3);
+        viajeDentroDePlazo.setDuracionEstimadaMinutos(120);
+        viajeDentroDePlazo.setFechaDeCreacion(ahora.minusDays(1));
+        viajeDentroDePlazo.setReservas(new ArrayList<>());
+        viajeDentroDePlazo.setParadas(new ArrayList<>());
+        repositorioViaje.guardarViaje(viajeDentroDePlazo);
+        sessionFactory.getCurrentSession().flush();
+
+        // when - Search for trips scheduled more than 15 minutes ago
+        LocalDateTime fechaLimite = ahora.minusMinutes(15);
+        List<Viaje> resultados = repositorioViaje.findViajesNoIniciadosFueraDePlazo(fechaLimite);
+
+        // then - Should not include trips within 15 minute window
+        assertNotNull(resultados);
+        assertTrue(resultados.stream().noneMatch(v -> v.getId().equals(viajeDentroDePlazo.getId())),
+                "No debería incluir viajes programados hace menos de 15 minutos");
+    }
+
+    @Test
+    void noDeberiaEncontrarViajesYaIniciados() {
+        // given
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+        Vehiculo vehiculo = sessionFactory.getCurrentSession().get(Vehiculo.class, 1L);
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad cordoba = sessionFactory.getCurrentSession().get(Ciudad.class, 2L);
+
+        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime hace20Minutos = ahora.minusMinutes(20);
+
+        // Create trip scheduled 20 minutes ago but already started
+        Viaje viajeYaIniciado = new Viaje();
+        viajeYaIniciado.setOrigen(buenosAires);
+        viajeYaIniciado.setDestino(cordoba);
+        viajeYaIniciado.setConductor(conductor);
+        viajeYaIniciado.setVehiculo(vehiculo);
+        viajeYaIniciado.setEstado(EstadoDeViaje.EN_CURSO);
+        viajeYaIniciado.setFechaHoraDeSalida(hace20Minutos);
+        viajeYaIniciado.setFechaHoraInicioReal(ahora.minusMinutes(5)); // Already started
+        viajeYaIniciado.setPrecio(10000.0);
+        viajeYaIniciado.setAsientosDisponibles(3);
+        viajeYaIniciado.setDuracionEstimadaMinutos(120);
+        viajeYaIniciado.setFechaDeCreacion(ahora.minusDays(1));
+        viajeYaIniciado.setReservas(new ArrayList<>());
+        viajeYaIniciado.setParadas(new ArrayList<>());
+        repositorioViaje.guardarViaje(viajeYaIniciado);
+        sessionFactory.getCurrentSession().flush();
+
+        // when
+        LocalDateTime fechaLimite = ahora.minusMinutes(15);
+        List<Viaje> resultados = repositorioViaje.findViajesNoIniciadosFueraDePlazo(fechaLimite);
+
+        // then - Should not include trips with fechaHoraInicioReal set
+        assertNotNull(resultados);
+        assertTrue(resultados.stream().noneMatch(v -> v.getId().equals(viajeYaIniciado.getId())),
+                "No debería incluir viajes que ya tienen fechaHoraInicioReal");
+    }
+
+    @Test
+    void noDeberiaEncontrarViajesFINALIZADOSoCANCELADOS() {
+        // given
+        Conductor conductor = sessionFactory.getCurrentSession().get(Conductor.class, 1L);
+        Vehiculo vehiculo = sessionFactory.getCurrentSession().get(Vehiculo.class, 1L);
+        Ciudad buenosAires = sessionFactory.getCurrentSession().get(Ciudad.class, 1L);
+        Ciudad cordoba = sessionFactory.getCurrentSession().get(Ciudad.class, 2L);
+
+        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime hace30Minutos = ahora.minusMinutes(30);
+
+        // Create FINALIZADO trip
+        Viaje viajeFinalizado = new Viaje();
+        viajeFinalizado.setOrigen(buenosAires);
+        viajeFinalizado.setDestino(cordoba);
+        viajeFinalizado.setConductor(conductor);
+        viajeFinalizado.setVehiculo(vehiculo);
+        viajeFinalizado.setEstado(EstadoDeViaje.FINALIZADO);
+        viajeFinalizado.setFechaHoraDeSalida(hace30Minutos);
+        viajeFinalizado.setFechaHoraInicioReal(null);
+        viajeFinalizado.setPrecio(10000.0);
+        viajeFinalizado.setAsientosDisponibles(3);
+        viajeFinalizado.setDuracionEstimadaMinutos(120);
+        viajeFinalizado.setFechaDeCreacion(ahora.minusDays(1));
+        viajeFinalizado.setReservas(new ArrayList<>());
+        viajeFinalizado.setParadas(new ArrayList<>());
+        repositorioViaje.guardarViaje(viajeFinalizado);
+
+        // Create CANCELADO trip
+        Viaje viajeCancelado = new Viaje();
+        viajeCancelado.setOrigen(buenosAires);
+        viajeCancelado.setDestino(cordoba);
+        viajeCancelado.setConductor(conductor);
+        viajeCancelado.setVehiculo(vehiculo);
+        viajeCancelado.setEstado(EstadoDeViaje.CANCELADO);
+        viajeCancelado.setFechaHoraDeSalida(hace30Minutos);
+        viajeCancelado.setFechaHoraInicioReal(null);
+        viajeCancelado.setPrecio(10000.0);
+        viajeCancelado.setAsientosDisponibles(3);
+        viajeCancelado.setDuracionEstimadaMinutos(120);
+        viajeCancelado.setFechaDeCreacion(ahora.minusDays(1));
+        viajeCancelado.setReservas(new ArrayList<>());
+        viajeCancelado.setParadas(new ArrayList<>());
+        repositorioViaje.guardarViaje(viajeCancelado);
+
+        sessionFactory.getCurrentSession().flush();
+
+        // when
+        LocalDateTime fechaLimite = ahora.minusMinutes(15);
+        List<Viaje> resultados = repositorioViaje.findViajesNoIniciadosFueraDePlazo(fechaLimite);
+
+        // then - Should not include FINALIZADO or CANCELADO trips
+        assertNotNull(resultados);
+        assertTrue(resultados.stream().noneMatch(v -> v.getId().equals(viajeFinalizado.getId())),
+                "No debería incluir viajes en estado FINALIZADO");
+        assertTrue(resultados.stream().noneMatch(v -> v.getId().equals(viajeCancelado.getId())),
+                "No debería incluir viajes en estado CANCELADO");
+    }
 }
