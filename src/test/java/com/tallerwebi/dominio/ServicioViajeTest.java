@@ -9,6 +9,7 @@ import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.Enums.EstadoVerificacion;
 import com.tallerwebi.dominio.IRepository.RepositorioParada;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
+import com.tallerwebi.dominio.IRepository.ReservaRepository;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
@@ -47,6 +48,7 @@ class ServicioViajeTest {
     private ServicioVehiculo servicioVehiculoMock;
     private ServicioViaje servicioViaje;
     private RepositorioParada repositorioParada;
+    private ReservaRepository reservaRepositoryMock;
 
     @BeforeEach
     void setUp() {
@@ -54,7 +56,8 @@ class ServicioViajeTest {
         servicioConductorMock = mock(ServicioConductor.class);
         servicioVehiculoMock = mock(ServicioVehiculo.class);
         repositorioParada = mock(RepositorioParada.class);
-        servicioViaje = new ServicioViajeImpl(viajeRepositoryMock, servicioConductorMock, servicioVehiculoMock , repositorioParada);
+        reservaRepositoryMock = mock(ReservaRepository.class);
+        servicioViaje = new ServicioViajeImpl(viajeRepositoryMock, servicioConductorMock, servicioVehiculoMock, repositorioParada, reservaRepositoryMock);
     }
 
     private Viaje crearViajeDeTest() {

@@ -1,6 +1,7 @@
 package com.tallerwebi.presentacion.DTO.OutputsDTO;
 
 import com.tallerwebi.dominio.Entity.Viaje;
+import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.presentacion.DTO.CiudadDTO;
 import com.tallerwebi.presentacion.DTO.ParadaDTO;
 import com.tallerwebi.presentacion.DTO.ViajeroDTO;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,6 +27,11 @@ public class DetalleViajeOutputDTO {
     private List<ParadaDTO> paradas;
     private LocalDateTime fechaHoraDeSalida;
     private Integer asientosDisponibles;
+    private EstadoDeViaje estado;
+    private Integer duracionEstimadaMinutos;
+    private String fechaSalidaFormato;
+    private String horaLlegadaEstimada;
+    private String duracionEstimadaFormato;
 
     public DetalleViajeOutputDTO (Viaje viaje, List<ViajeroDTO> viajeros) {
         this.origen = new CiudadDTO(viaje.getOrigen());
@@ -36,5 +43,27 @@ public class DetalleViajeOutputDTO {
                 .collect(Collectors.toList());
         this.fechaHoraDeSalida = viaje.getFechaHoraDeSalida();
         this.asientosDisponibles = viaje.getAsientosDisponibles();
+        this.estado = viaje.getEstado();
+        this.duracionEstimadaMinutos = viaje.getDuracionEstimadaMinutos();
+
+        // Format duration as "X.X horas (Y minutos)"
+        if (duracionEstimadaMinutos != null) {
+            double horas = duracionEstimadaMinutos / 60.0;
+            this.duracionEstimadaFormato = String.format("%.1f horas (%d minutos)", horas, duracionEstimadaMinutos);
+        }
+
+        // Format departure time and calculate ETA
+        if (viaje.getFechaHoraDeSalida() != null) {
+            this.fechaSalidaFormato = viaje.getFechaHoraDeSalida()
+                .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+
+            // Calculate and format estimated arrival time
+            if (duracionEstimadaMinutos != null) {
+                LocalDateTime llegadaEstimada = viaje.getFechaHoraDeSalida()
+                    .plusMinutes(duracionEstimadaMinutos);
+                this.horaLlegadaEstimada = llegadaEstimada
+                    .format(DateTimeFormatter.ofPattern("HH:mm"));
+            }
+        }
     }
 }
