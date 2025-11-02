@@ -57,6 +57,13 @@
             <p class="text-muted">Consulta el estado de tus solicitudes de viaje</p>
         </div>
     </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <strong><i class="bi bi-exclamation-triangle-fill me-2"></i>¡Error al Pagar!</strong>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div class="row mb-5">
+        ...
     <!-- SECCIÓN RESERVAS confirmadas -->
     <div class="row mb-5">
         <div class="col-12">

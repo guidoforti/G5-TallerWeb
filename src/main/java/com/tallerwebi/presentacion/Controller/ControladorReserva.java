@@ -622,7 +622,8 @@ public class ControladorReserva {
     @GetMapping("/pagar")
     public ModelAndView pagarReservar (HttpSession session, @RequestParam Long reservaId , RedirectAttributes redirectAttributes) throws UsuarioInexistente {
         ModelMap model = new ModelMap();
-
+        System.out.println("\n--- [DEBUG] INICIO: GET /reserva/pagar ---");
+        System.out.println("[DEBUG] Recibido reservaId: " + reservaId);
         // Validar sesión
         Object usuarioIdObj = session.getAttribute("idUsuario");
         Object rol = session.getAttribute("ROL");
@@ -631,14 +632,50 @@ public class ControladorReserva {
             return new ModelAndView("redirect:/login");
         }
         try {
+            System.out.println("[DEBUG] TRY: Llamando a servicioReserva.crearPreferenciaDePago...");
             Preference preferenciaDePago  = servicioReserva.crearPreferenciaDePago(reservaId, (Long) usuarioIdObj);
-
+            System.out.println("[DEBUG] ÉXITO: Preferencia creada. Init Point: " + preferenciaDePago.getInitPoint());
+            System.out.println("--- [DEBUG] FIN: GET /reserva/pagar (Redirigiendo a MP) ---");
             return new ModelAndView("redirect:" + preferenciaDePago.getInitPoint());
-        } catch (NotFoundException | UsuarioNoAutorizadoException | MPException |
-                 MPApiException e) {
+        } catch (MPApiException e) { // <-- ¡Catch específico para errores de API!
+
+            System.err.println("************************************************************");
+            System.err.println("[DEBUG] CATCH: ¡FALLÓ! MPApiException (Error de la API de MP)");
+            System.err.println("STATUS CODE: " + e.getStatusCode());
+            // ESTA LÍNEA ES LA CLAVE. NOS DIRÁ EL ERROR REAL:
+            System.err.println("API RESPONSE: " + e.getApiResponse().getContent());
+            System.err.println("************************************************************");
+
+            // Le pasamos el error real al usuario para que lo veas en la pantalla
+            redirectAttributes.addFlashAttribute("error", "Error de MP: " + e.getApiResponse().getContent());
+            return new ModelAndView("redirect:/reserva/misReservasActivas");
+
+        } catch (MPException e) { // <-- Catch para errores del SDK
+
+            System.err.println("************************************************************");
+            System.err.println("[DEBUG] CATCH: ¡FALLÓ! MPException (Error del SDK de MP)");
+            System.err.println("MENSAJE: " + e.getMessage());
+            System.err.println("************************************************************");
+
+            redirectAttributes.addFlashAttribute("error", "Error del SDK de MP: " + e.getMessage());
+            return new ModelAndView("redirect:/reserva/misReservasActivas");
+
+        } catch (NotFoundException | UsuarioNoAutorizadoException | AccionNoPermitidaException e) { // Tus excepciones de negocio
+
+            System.err.println("************************************************************");
+            System.err.println("[DEBUG] CATCH: ¡FALLÓ! Excepción de negocio: " + e.getMessage());
+            System.err.println("************************************************************");
+
             redirectAttributes.addFlashAttribute("error", "Error al iniciar el pago: " + e.getMessage());
             return new ModelAndView("redirect:/reserva/misReservasActivas");
-        } catch (Exception e) {
+
+        } catch (Exception e) { // Catch genérico
+
+            System.err.println("************************************************************");
+            System.err.println("[DEBUG] CATCH: ¡FALLÓ! Excepción genérica: " + e.getMessage());
+            e.printStackTrace(); // Imprimir el stack trace completo
+            System.err.println("************************************************************");
+
             redirectAttributes.addFlashAttribute("error", "Ocurrió un error inesperado. Intente más tarde.");
             return new ModelAndView("redirect:/reserva/misReservasActivas");
         }

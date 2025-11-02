@@ -398,7 +398,6 @@ public class ServicioReservaImpl implements ServicioReserva {
         PreferenceRequest preferenceRequest = PreferenceRequest.builder()
                 .items(items)
                 .backUrls(backUrls)
-                .autoReturn("approved")
                 .build();
 
         PreferenceClient client = new PreferenceClient();
