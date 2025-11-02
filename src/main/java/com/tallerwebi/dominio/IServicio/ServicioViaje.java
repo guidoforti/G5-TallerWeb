@@ -22,4 +22,10 @@ public interface ServicioViaje {
     // En ServicioViaje.java
     Viaje obtenerViajeConParadas(Long id) throws NotFoundException;
     List<Viaje> buscarViajesDisponibles(Ciudad origen, Ciudad destino, LocalDateTime fechaSalida, Double precioMin, Double precioMax) throws DatoObligatorioException;
+
+    // Métodos para gestión de inicio/fin de viaje
+    void iniciarViaje(Long viajeId, Long conductorId) throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeYaIniciadoException, VentanaHorariaException;
+    void finalizarViaje(Long viajeId, Long conductorId) throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeYaFinalizadoException;
+    void cerrarViajesOlvidados();
+    void iniciarViajesAtrasados();
 }

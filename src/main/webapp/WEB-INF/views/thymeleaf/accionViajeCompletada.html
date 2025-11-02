@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/fragments :: head('UnRumbo - Acción Completada')">
+    <th:block th:fragment="extra">
+        <style>
+            .card {
+                border: none;
+                border-radius: 10px;
+                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+                margin-bottom: 1.5rem;
+            }
+            .btn-unrumbo {
+                background-color: #E16A3D;
+                border: none;
+                color: white;
+                font-weight: 500;
+                padding: 0.75rem 2rem;
+                border-radius: 5px;
+            }
+            .btn-unrumbo:hover {
+                background-color: #cf5930;
+                color: white;
+            }
+            .btn-outline-unrumbo {
+                border: 2px solid #E16A3D;
+                color: #E16A3D;
+                font-weight: 500;
+                padding: 0.75rem 2rem;
+                border-radius: 5px;
+                background-color: white;
+            }
+            .btn-outline-unrumbo:hover {
+                background-color: #E16A3D;
+                color: white;
+            }
+            .result-icon {
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 1.5rem;
+            }
+            .icon-success {
+                background-color: #28a745;
+            }
+            .icon-error {
+                background-color: #dc3545;
+            }
+        </style>
+    </th:block>
+</head>
+
+<body>
+<nav th:replace="fragments/fragments :: navbar"></nav>
+
+<main role="main" class="container" style="margin-top: 120px; margin-bottom: 50px;">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+                    <!-- Success icon -->
+                    <div th:if="${mensaje}" class="result-icon icon-success">
+                        <i class="fas fa-check fa-3x text-white"></i>
+                    </div>
+
+                    <!-- Error icon -->
+                    <div th:if="${error}" class="result-icon icon-error">
+                        <i class="fas fa-exclamation-triangle fa-3x text-white"></i>
+                    </div>
+
+                    <!-- Success message -->
+                    <div th:if="${mensaje}" class="text-center mb-4">
+                        <h2 class="fw-bold text-dark mb-3">Operación Exitosa</h2>
+                        <div class="divider mx-auto mb-3" style="width: 80px; height: 3px; background-color: #28a745;"></div>
+                        <div class="alert alert-success" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <span th:text="${mensaje}"></span>
+                        </div>
+                    </div>
+
+                    <!-- Error message -->
+                    <div th:if="${error}" class="text-center mb-4">
+                        <h2 class="fw-bold text-dark mb-3">Error en la Operación</h2>
+                        <div class="divider mx-auto mb-3" style="width: 80px; height: 3px; background-color: #dc3545;"></div>
+                        <div class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Error:</strong> <span th:text="${error}"></span>
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="d-flex justify-content-center gap-3 mt-4">
+                        <a th:href="@{/viaje/detalle(id=${viajeId})}" class="btn btn-unrumbo">
+                            <i class="fas fa-eye me-2"></i>Ver Detalle del Viaje
+                        </a>
+                        <a th:href="@{/viaje/listar}" class="btn btn-outline-unrumbo">
+                            <i class="fas fa-list me-2"></i>Volver a Mis Viajes
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Bootstrap JS and dependencies -->
+<script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+<!-- Font Awesome for icons -->
+<script src="https://kit.fontawesome.com/your-code.js" crossorigin="anonymous"></script>
+
+</body>
+</html>

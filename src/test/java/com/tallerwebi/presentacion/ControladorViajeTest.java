@@ -613,4 +613,202 @@ public class ControladorViajeTest {
         assertThat(mav.getViewName(), equalTo("redirect:/login"));
     }
 
+    // ==================== TESTS FOR iniciarViaje() ====================
+
+    @Test
+    public void deberiaIniciarViajeCorrectamenteYMostrarMensajeExito() throws Exception {
+        // given
+        Long viajeId = 1L;
+        Long conductorId = 1L;
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+        doNothing().when(servicioViajeMock).iniciarViaje(viajeId, conductorId);
+
+        // when
+        ModelAndView mav = controladorViaje.iniciarViaje(viajeId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("accionViajeCompletada"));
+        assertThat(mav.getModel().containsKey("mensaje"), is(true));
+        assertThat(mav.getModel().get("mensaje").toString(), equalTo("Viaje iniciado correctamente"));
+        assertThat(mav.getModel().get("viajeId"), equalTo(viajeId));
+        verify(servicioViajeMock, times(1)).iniciarViaje(viajeId, conductorId);
+    }
+
+    @Test
+    public void deberiaRedirigirALoginSiNoHaySesionAlIniciarViaje() throws Exception {
+        // given
+        Long viajeId = 1L;
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(null);
+
+        // when
+        ModelAndView mav = controladorViaje.iniciarViaje(viajeId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("redirect:/login"));
+        verify(servicioViajeMock, never()).iniciarViaje(anyLong(), anyLong());
+    }
+
+    @Test
+    public void deberiaMostrarErrorCuandoViajeNoExisteAlIniciar() throws Exception {
+        // given
+        Long viajeId = 999L;
+        Long conductorId = 1L;
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+        doThrow(new ViajeNoEncontradoException("Viaje no encontrado"))
+                .when(servicioViajeMock).iniciarViaje(viajeId, conductorId);
+
+        // when
+        ModelAndView mav = controladorViaje.iniciarViaje(viajeId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("accionViajeCompletada"));
+        assertThat(mav.getModel().containsKey("error"), is(true));
+        assertThat(mav.getModel().get("error").toString(), equalTo("Viaje no encontrado"));
+        assertThat(mav.getModel().get("viajeId"), equalTo(viajeId));
+        verify(servicioViajeMock, times(1)).iniciarViaje(viajeId, conductorId);
+    }
+
+    @Test
+    public void deberiaMostrarErrorCuandoConductorNoAutorizadoAlIniciar() throws Exception {
+        // given
+        Long viajeId = 1L;
+        Long conductorId = 2L;
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+        doThrow(new UsuarioNoAutorizadoException("No tienes permiso para iniciar este viaje"))
+                .when(servicioViajeMock).iniciarViaje(viajeId, conductorId);
+
+        // when
+        ModelAndView mav = controladorViaje.iniciarViaje(viajeId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("accionViajeCompletada"));
+        assertThat(mav.getModel().containsKey("error"), is(true));
+        assertThat(mav.getModel().get("error").toString(), equalTo("No tienes permiso para iniciar este viaje"));
+        assertThat(mav.getModel().get("viajeId"), equalTo(viajeId));
+        verify(servicioViajeMock, times(1)).iniciarViaje(viajeId, conductorId);
+    }
+
+    @Test
+    public void deberiaMostrarErrorGenericoAlIniciarViaje() throws Exception {
+        // given
+        Long viajeId = 1L;
+        Long conductorId = 1L;
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+        doThrow(new RuntimeException("Error inesperado"))
+                .when(servicioViajeMock).iniciarViaje(viajeId, conductorId);
+
+        // when
+        ModelAndView mav = controladorViaje.iniciarViaje(viajeId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("accionViajeCompletada"));
+        assertThat(mav.getModel().containsKey("error"), is(true));
+        assertThat(mav.getModel().get("error").toString(), equalTo("Error inesperado"));
+        assertThat(mav.getModel().get("viajeId"), equalTo(viajeId));
+        verify(servicioViajeMock, times(1)).iniciarViaje(viajeId, conductorId);
+    }
+
+    // ==================== TESTS FOR finalizarViaje() ====================
+
+    @Test
+    public void deberiaFinalizarViajeCorrectamenteYMostrarMensajeExito() throws Exception {
+        // given
+        Long viajeId = 1L;
+        Long conductorId = 1L;
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+        doNothing().when(servicioViajeMock).finalizarViaje(viajeId, conductorId);
+
+        // when
+        ModelAndView mav = controladorViaje.finalizarViaje(viajeId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("accionViajeCompletada"));
+        assertThat(mav.getModel().containsKey("mensaje"), is(true));
+        assertThat(mav.getModel().get("mensaje").toString(), equalTo("Viaje finalizado correctamente"));
+        assertThat(mav.getModel().get("viajeId"), equalTo(viajeId));
+        verify(servicioViajeMock, times(1)).finalizarViaje(viajeId, conductorId);
+    }
+
+    @Test
+    public void deberiaRedirigirALoginSiNoHaySesionAlFinalizarViaje() throws Exception {
+        // given
+        Long viajeId = 1L;
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(null);
+
+        // when
+        ModelAndView mav = controladorViaje.finalizarViaje(viajeId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("redirect:/login"));
+        verify(servicioViajeMock, never()).finalizarViaje(anyLong(), anyLong());
+    }
+
+    @Test
+    public void deberiaMostrarErrorCuandoViajeNoExisteAlFinalizar() throws Exception {
+        // given
+        Long viajeId = 999L;
+        Long conductorId = 1L;
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+        doThrow(new ViajeNoEncontradoException("Viaje no encontrado"))
+                .when(servicioViajeMock).finalizarViaje(viajeId, conductorId);
+
+        // when
+        ModelAndView mav = controladorViaje.finalizarViaje(viajeId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("accionViajeCompletada"));
+        assertThat(mav.getModel().containsKey("error"), is(true));
+        assertThat(mav.getModel().get("error").toString(), equalTo("Viaje no encontrado"));
+        assertThat(mav.getModel().get("viajeId"), equalTo(viajeId));
+        verify(servicioViajeMock, times(1)).finalizarViaje(viajeId, conductorId);
+    }
+
+    @Test
+    public void deberiaMostrarErrorCuandoConductorNoAutorizadoAlFinalizar() throws Exception {
+        // given
+        Long viajeId = 1L;
+        Long conductorId = 2L;
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+        doThrow(new UsuarioNoAutorizadoException("No tienes permiso para finalizar este viaje"))
+                .when(servicioViajeMock).finalizarViaje(viajeId, conductorId);
+
+        // when
+        ModelAndView mav = controladorViaje.finalizarViaje(viajeId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("accionViajeCompletada"));
+        assertThat(mav.getModel().containsKey("error"), is(true));
+        assertThat(mav.getModel().get("error").toString(), equalTo("No tienes permiso para finalizar este viaje"));
+        assertThat(mav.getModel().get("viajeId"), equalTo(viajeId));
+        verify(servicioViajeMock, times(1)).finalizarViaje(viajeId, conductorId);
+    }
+
+    @Test
+    public void deberiaMostrarErrorGenericoAlFinalizarViaje() throws Exception {
+        // given
+        Long viajeId = 1L;
+        Long conductorId = 1L;
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+        doThrow(new RuntimeException("Error inesperado"))
+                .when(servicioViajeMock).finalizarViaje(viajeId, conductorId);
+
+        // when
+        ModelAndView mav = controladorViaje.finalizarViaje(viajeId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), equalTo("accionViajeCompletada"));
+        assertThat(mav.getModel().containsKey("error"), is(true));
+        assertThat(mav.getModel().get("error").toString(), equalTo("Error inesperado"));
+        assertThat(mav.getModel().get("viajeId"), equalTo(viajeId));
+        verify(servicioViajeMock, times(1)).finalizarViaje(viajeId, conductorId);
+    }
+
 }

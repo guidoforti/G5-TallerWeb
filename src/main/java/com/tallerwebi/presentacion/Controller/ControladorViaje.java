@@ -537,4 +537,60 @@ public class ControladorViaje {
 
         return paradas;
     }
+
+    /**
+     * Endpoint para iniciar un viaje
+     */
+    @PostMapping("/{id}/iniciar")
+    public ModelAndView iniciarViaje(@PathVariable Long id, HttpSession session) {
+        ModelMap model = new ModelMap();
+
+        // Validar sesión
+        Long conductorId = (Long) session.getAttribute("idUsuario");
+        if (conductorId == null) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        try {
+            servicioViaje.iniciarViaje(id, conductorId);
+            model.put("mensaje", "Viaje iniciado correctamente");
+        } catch (ViajeNoEncontradoException e) {
+            model.put("error", "Viaje no encontrado");
+        } catch (UsuarioNoAutorizadoException e) {
+            model.put("error", "No tienes permiso para iniciar este viaje");
+        } catch (Exception e) {
+            model.put("error", e.getMessage());
+        }
+
+        model.put("viajeId", id);
+        return new ModelAndView("accionViajeCompletada", model);
+    }
+
+    /**
+     * Endpoint para finalizar un viaje
+     */
+    @PostMapping("/{id}/finalizar")
+    public ModelAndView finalizarViaje(@PathVariable Long id, HttpSession session) {
+        ModelMap model = new ModelMap();
+
+        // Validar sesión
+        Long conductorId = (Long) session.getAttribute("idUsuario");
+        if (conductorId == null) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        try {
+            servicioViaje.finalizarViaje(id, conductorId);
+            model.put("mensaje", "Viaje finalizado correctamente");
+        } catch (ViajeNoEncontradoException e) {
+            model.put("error", "Viaje no encontrado");
+        } catch (UsuarioNoAutorizadoException e) {
+            model.put("error", "No tienes permiso para finalizar este viaje");
+        } catch (Exception e) {
+            model.put("error", e.getMessage());
+        }
+
+        model.put("viajeId", id);
+        return new ModelAndView("accionViajeCompletada", model);
+    }
 }
