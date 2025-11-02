@@ -12,6 +12,7 @@ import org.hibernate.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -118,5 +119,29 @@ public class RepositorioViajeImpl implements ViajeRepository {
         }
 
         return query.getResultList();
+    }
+
+    @Override
+    public List<Viaje> findViajesEnCursoExcedidos(LocalDateTime fechaLimite) {
+        String hql = "FROM Viaje v WHERE v.estado = :estado " +
+                     "AND v.fechaHoraInicioReal IS NOT NULL " +
+                     "AND v.fechaHoraInicioReal < :fechaLimite";
+        return sessionFactory.getCurrentSession()
+            .createQuery(hql, Viaje.class)
+            .setParameter("estado", EstadoDeViaje.EN_CURSO)
+            .setParameter("fechaLimite", fechaLimite)
+            .getResultList();
+    }
+
+    @Override
+    public List<Viaje> findViajesNoIniciadosFueraDePlazo(LocalDateTime fechaLimite) {
+        String hql = "FROM Viaje v WHERE v.estado IN :estados " +
+                     "AND v.fechaHoraDeSalida < :fechaLimite " +
+                     "AND v.fechaHoraInicioReal IS NULL";
+        return sessionFactory.getCurrentSession()
+            .createQuery(hql, Viaje.class)
+            .setParameter("estados", Arrays.asList(EstadoDeViaje.DISPONIBLE, EstadoDeViaje.COMPLETO))
+            .setParameter("fechaLimite", fechaLimite)
+            .getResultList();
     }
 }
