@@ -13,6 +13,7 @@ import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.EdadInvalidaException;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
+import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ValoracionOutputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeroPerfilOutPutDTO;
 
@@ -28,6 +29,7 @@ import java.util.Optional;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.closeTo;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -244,4 +246,19 @@ class ServicioViajeroTest {
         verify(repositorioMock).buscarPorId(1L);
         verify(repositorioValoracionMock).findByReceptorId(1L);
     }
+
+    @Test
+    void obtenerPerfilViajeroConViajeroInexistenteDeberiaLanzarViajeroNoEncontradoException() {
+    // GIVEN
+    Long viajeroInexistenteId = 99L;
+    when(repositorioMock.buscarPorId(viajeroInexistenteId)).thenReturn(Optional.empty());
+
+    // WHEN & THEN
+    UsuarioInexistente excepcion = assertThrows(
+        UsuarioInexistente.class,
+        () -> servicio.obtenerPerfilViajero(viajeroInexistenteId)
+    );
+
+    assertThat(excepcion.getMessage(), containsString("No se encontró el viajero con id 99"));
+}
 }
