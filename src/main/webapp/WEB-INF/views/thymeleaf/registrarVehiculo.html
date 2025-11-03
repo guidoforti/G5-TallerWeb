@@ -2,7 +2,7 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="fragments/fragments :: head('UnRumbo - Registrar Vehículo')">
     <th:block th:fragment="extra">
-        <!-- Podés agregar links o scripts adicionales si hace falta -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     </th:block>
 </head>
 
@@ -11,57 +11,72 @@
 
 <main role="main" class="container" style="margin-top: 120px;">
     <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
+        <div class="col-md-9 col-lg-7">
             <div class="card shadow-sm border-0">
-                <div class="card-body">
+                <div class="card-body p-4">
+
                     <div class="text-center mb-4">
-                        <h4 class="fw-bold text-dark">Registrar Vehículo</h4>
-                        <p class="text-muted">Ingresá los datos de tu vehículo para continuar</p>
+                        <h4 class="fw-bold" style="color: #E16A3D;">
+                            <i class="fas fa-car me-2"></i> Registrar Vehículo
+                        </h4>
+                        <p class="text-muted">Ingresá los datos de tu vehículo</p>
                     </div>
 
-                    <!-- Mensaje de error -->
                     <p th:if="${error}" class="alert alert-danger" th:text="${error}"></p>
 
                     <form th:action="@{/vehiculos/registrar}" th:object="${vehiculoInputDTO}" method="post">
-                        <!-- Modelo -->
-                        <div class="mb-3">
-                            <label for="modelo" class="form-label">Modelo</label>
-                            <input type="text" id="modelo" th:field="*{modelo}" class="form-control" placeholder="Ej: Toyota Corolla" required>
-                        </div>
-
-                        <!-- Año -->
-                        <div class="mb-3">
-                            <label for="anio" class="form-label">Año</label>
-                            <input type="text" id="anio" th:field="*{anio}" class="form-control" placeholder="Ej: 2020" required>
-                        </div>
-
-                        <!-- Patente -->
-                        <div class="mb-3">
-                            <label for="patente" class="form-label">Patente</label>
-                            <input type="text" id="patente" th:field="*{patente}" class="form-control" placeholder="ABC123" required>
-                        </div>
-
-                        <!-- Asientos -->
-                        <div class="mb-3">
-                            <label for="asientosTotales" class="form-label">Asientos</label>
-                            <select id="asientosTotales" th:field="*{asientosTotales}" class="form-select" required>
-                                <option value="">Seleccione...</option>
-                                <option th:each="i : ${#numbers.sequence(2, 10)}"
-                                        th:value="${i}"
-                                        th:text="${i}"></option>
-                            </select>
-                        </div>
-
-                        <!-- Estado de verificación (oculto) -->
                         <input type="hidden" th:field="*{estadoVerificacion}" value="PENDIENTE">
 
-                        <!-- Botones -->
-                        <button type="submit" class="btn btn-unrumbo w-100 text-white fw-bold">Registrar</button>
+                        <div class="row g-3">
 
-                        <div class="text-center mt-3">
-                            <a th:href="@{/conductor/home}" class="text-decoration-none text-unrumbo fw-bold" style="color:#E16A3D;">
-                                Cancelar
+                            <div class="col-md-6">
+                                <h5 class="fw-bold mb-3" style="color: #734933;">Detalles Técnicos</h5>
+
+                                <div class="mb-3">
+                                    <label for="modelo" class="form-label"><i class="fas fa-tag me-1"></i> Modelo</label>
+                                    <input type="text" id="modelo" th:field="*{modelo}" class="form-control" placeholder="Ej: Toyota Corolla" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="anio" class="form-label"><i class="fas fa-calendar-alt me-1"></i> Año</label>
+                                    <input type="text" id="anio" th:field="*{anio}" class="form-control" placeholder="Ej: 2020" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="patente" class="form-label"><i class="fas fa-id-card-alt me-1"></i> Patente</label>
+                                    <input type="text" id="patente" th:field="*{patente}" class="form-control" placeholder="ABC123" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h5 class="fw-bold mb-3" style="color: #734933;">Capacidad</h5>
+
+                                <div class="mb-3">
+                                    <label for="asientosTotales" class="form-label"><i class="fas fa-chair me-1"></i> Asientos Totales</label>
+                                    <select id="asientosTotales" th:field="*{asientosTotales}" class="form-select" required>
+                                        <option value="">Seleccione...</option>
+                                        <option th:each="i : ${#numbers.sequence(2, 10)}"
+                                                th:value="${i}"
+                                                th:text="${i}"></option>
+                                    </select>
+                                    <small class="form-text text-muted">Incluyendo tu asiento como conductor.</small>
+                                </div>
+
+                                <div class="mb-3 mt-5 pt-3">
+                                    <p class="text-muted small">Tu vehículo será registrado y pasará al estado "PENDIENTE" de verificación.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a th:href="@{/conductor/home}" class="btn btn-outline-secondary me-md-2 fw-bold">
+                                <i class="fas fa-times me-1"></i> Cancelar
                             </a>
+                            <button type="submit" class="btn btn-primary fw-bold">
+                                <i class="fas fa-check-circle me-1"></i> Registrar Vehículo
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -70,7 +85,6 @@
     </div>
 </main>
 <div th:replace="fragments/fragments :: footer"></div>
-<!-- Bootstrap core js -->
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
 </body>
 </html>

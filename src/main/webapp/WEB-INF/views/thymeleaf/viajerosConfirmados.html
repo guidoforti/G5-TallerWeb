@@ -2,7 +2,16 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="fragments/fragments :: head('UnRumbo - Viajeros Confirmados')">
     <th:block th:fragment="extra">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
         <style>
+            :root {
+                --color-primary: #E16A3D;
+                --color-taupe: #4E3D2F;
+                --color-danger-persa: #BA3A3A;
+                --color-success-warm: #44806A;
+                --color-warning-soft: #FFC107;
+            }
+
             .table-viajeros {
                 background: white;
                 border-radius: 8px;
@@ -11,20 +20,39 @@
             }
             .badge-pago {
                 min-width: 80px;
+                font-weight: 600;
             }
             .badge-asistencia {
                 min-width: 100px;
+                font-weight: 600;
             }
             .btn-asistencia {
                 min-width: 90px;
                 font-size: 0.85rem;
+                font-weight: 600 !important;
             }
             .viaje-header {
-                background: linear-gradient(135deg, #E16A3D 0%, #d85a2d 100%);
+                background: var(--color-primary);
                 color: white;
                 padding: 2rem;
                 border-radius: 8px;
                 margin-bottom: 2rem;
+            }
+            .bg-success {
+                background-color: var(--color-success-warm) !important;
+                color: white;
+            }
+            .bg-warning {
+                background-color: var(--color-warning-soft) !important;
+                color: var(--color-taupe) !important; /* Texto oscuro sobre amarillo */
+            }
+            .bg-danger {
+                background-color: var(--color-danger-persa) !important;
+                color: white;
+            }
+            .bg-secondary {
+                background-color: var(--color-taupe) !important;
+                color: white;
             }
         </style>
     </th:block>
@@ -34,14 +62,12 @@
 <nav th:replace="fragments/navbar_conductor :: navbar"></nav>
 
 <main role="main" class="container py-4" style="margin-top: 100px;">
-    <!-- Botón de regreso -->
     <div class="mb-3">
-        <a th:href="@{/reserva/misReservas}" class="btn btn-outline-secondary">
+        <a th:href="@{/reserva/misReservas}" class="btn btn-outline-secondary fw-bold">
             <i class="bi bi-arrow-left me-1"></i> Volver a Mis Reservas
         </a>
     </div>
 
-    <!-- Cabecera con información del viaje -->
     <div class="viaje-header">
         <h2 class="fw-bold mb-3">
             <i class="bi bi-people-fill me-2"></i>Viajeros Confirmados
@@ -70,110 +96,96 @@
         </div>
     </div>
 
-    <!-- Mensajes -->
     <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="bi bi-check-circle me-2"></i>
         <span th:text="${mensaje}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-
     <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
         <i class="bi bi-exclamation-triangle me-2"></i>
         <span th:text="${error}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
-    <!-- Tabla de viajeros -->
     <div class="table-responsive table-viajeros">
         <table class="table table-hover mb-0">
             <thead class="table-light">
-                <tr>
-                    <th scope="col">
-                        <i class="bi bi-person me-1"></i>Nombre
-                    </th>
-                    <th scope="col">
-                        <i class="bi bi-envelope me-1"></i>Email
-                    </th>
-                    <th scope="col">
-                        <i class="bi bi-credit-card me-1"></i>Estado de Pago
-                    </th>
-                    <th scope="col">
-                        <i class="bi bi-check2-circle me-1"></i>Asistencia
-                    </th>
-                    <th scope="col" class="text-center">Acciones</th>
-                </tr>
+            <tr>
+                <th scope="col"><i class="bi bi-person me-1"></i>Nombre</th>
+                <th scope="col"><i class="bi bi-envelope me-1"></i>Email</th>
+                <th scope="col"><i class="bi bi-credit-card me-1"></i>Estado de Pago</th>
+                <th scope="col"><i class="bi bi-check2-circle me-1"></i>Asistencia</th>
+                <th scope="col" class="text-center">Acciones</th>
+            </tr>
             </thead>
             <tbody>
-                <tr th:if="${viajeros.isEmpty()}">
-                    <td colspan="5" class="text-center py-4 text-muted">
-                        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                        No hay viajeros confirmados para este viaje
-                    </td>
-                </tr>
-                <tr th:each="viajero : ${viajeros}">
-                    <td>
-                        <strong th:text="${viajero.viajeroNombre}"></strong>
-                    </td>
-                    <td th:text="${viajero.viajeroEmail}"></td>
-                    <td>
+            <tr th:if="${viajeros.isEmpty()}">
+                <td colspan="5" class="text-center py-4 text-muted">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    No hay viajeros confirmados para este viaje
+                </td>
+            </tr>
+            <tr th:each="viajero : ${viajeros}">
+                <td>
+                    <strong th:text="${viajero.viajeroNombre}"></strong>
+                </td>
+                <td th:text="${viajero.viajeroEmail}"></td>
+                <td>
                         <span th:if="${viajero.estadoPago == 'PAGADO'}"
                               class="badge bg-success badge-pago">
                             <i class="bi bi-check-circle me-1"></i>Pagado
                         </span>
-                        <span th:if="${viajero.estadoPago == 'NO_PAGADO'}"
-                              class="badge bg-warning text-dark badge-pago">
+                    <span th:if="${viajero.estadoPago == 'NO_PAGADO'}"
+                          class="badge bg-warning badge-pago">
                             <i class="bi bi-clock me-1"></i>No Pagado
                         </span>
-                    </td>
-                    <td>
+                </td>
+                <td>
                         <span th:if="${viajero.asistencia == 'NO_MARCADO'}"
                               class="badge bg-secondary badge-asistencia">
                             <i class="bi bi-dash-circle me-1"></i>No Marcado
                         </span>
-                        <span th:if="${viajero.asistencia == 'PRESENTE'}"
-                              class="badge bg-success badge-asistencia">
+                    <span th:if="${viajero.asistencia == 'PRESENTE'}"
+                          class="badge bg-success badge-asistencia">
                             <i class="bi bi-check-circle me-1"></i>Presente
                         </span>
-                        <span th:if="${viajero.asistencia == 'AUSENTE'}"
-                              class="badge bg-danger badge-asistencia">
+                    <span th:if="${viajero.asistencia == 'AUSENTE'}"
+                          class="badge bg-danger badge-asistencia">
                             <i class="bi bi-x-circle me-1"></i>Ausente
                         </span>
-                    </td>
-                    <td class="text-center">
-                        <!-- Solo mostrar botones si no se ha marcado asistencia -->
-                        <div th:if="${viajero.asistencia == 'NO_MARCADO'}" class="d-flex justify-content-center gap-2">
-                            <form th:action="@{/reserva/marcarAsistencia}" method="post" class="d-inline">
-                                <input type="hidden" name="reservaId" th:value="${viajero.reservaId}" />
-                                <input type="hidden" name="asistencia" value="PRESENTE" />
-                                <button type="submit" class="btn btn-sm btn-success btn-asistencia">
-                                    <i class="bi bi-check-lg me-1"></i>Presente
-                                </button>
-                            </form>
-                            <form th:action="@{/reserva/marcarAsistencia}" method="post" class="d-inline">
-                                <input type="hidden" name="reservaId" th:value="${viajero.reservaId}" />
-                                <input type="hidden" name="asistencia" value="AUSENTE" />
-                                <button type="submit" class="btn btn-sm btn-danger btn-asistencia">
-                                    <i class="bi bi-x-lg me-1"></i>Ausente
-                                </button>
-                            </form>
-                        </div>
-                        <span th:unless="${viajero.asistencia == 'NO_MARCADO'}" class="text-muted">
+                </td>
+                <td class="text-center">
+                    <div th:if="${viajero.asistencia == 'NO_MARCADO'}" class="d-flex justify-content-center gap-2">
+                        <form th:action="@{/reserva/marcarAsistencia}" method="post" class="d-inline">
+                            <input type="hidden" name="reservaId" th:value="${viajero.reservaId}" />
+                            <input type="hidden" name="asistencia" value="PRESENTE" />
+                            <button type="submit" class="btn btn-sm btn-success btn-asistencia">
+                                <i class="bi bi-check-lg me-1"></i>Presente
+                            </button>
+                        </form>
+                        <form th:action="@{/reserva/marcarAsistencia}" method="post" class="d-inline">
+                            <input type="hidden" name="reservaId" th:value="${viajero.reservaId}" />
+                            <input type="hidden" name="asistencia" value="AUSENTE" />
+                            <button type="submit" class="btn btn-sm btn-danger btn-asistencia">
+                                <i class="bi bi-x-lg me-1"></i>Ausente
+                            </button>
+                        </form>
+                    </div>
+                    <span th:unless="${viajero.asistencia == 'NO_MARCADO'}" class="text-muted small">
                             <i class="bi bi-lock me-1"></i>Ya marcado
                         </span>
-                    </td>
-                </tr>
+                </td>
+            </tr>
             </tbody>
         </table>
     </div>
 
-    <!-- Información adicional -->
     <div class="alert alert-info mt-3" role="alert">
         <i class="bi bi-info-circle me-2"></i>
         <strong>Nota:</strong> La asistencia solo puede marcarse desde 30 minutos antes de la salida del viaje.
     </div>
 </main>
 <div th:replace="fragments/fragments :: footer"></div>
-<!-- Bootstrap Bundle with Popper -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

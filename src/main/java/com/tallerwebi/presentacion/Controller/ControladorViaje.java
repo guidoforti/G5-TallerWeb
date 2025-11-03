@@ -338,18 +338,14 @@ public class ControladorViaje {
     public ModelAndView verDetalleDeUnViaje(HttpSession httpSession, @RequestParam("id") Long id) {
         ModelMap model = new ModelMap();
 
-        // Pasar el rol del usuario a la vista
-        Object rol = httpSession.getAttribute("ROL");
-        if (rol != null) {
-            model.put("userRole", rol.toString());
-        }
+        // [🟢 CLAVE 1: GARANTIZAR EL ROL Y EL ID DE SESIÓN]
+        Object usuarioIdObj = httpSession.getAttribute("idUsuario");
+        Object rolObj = httpSession.getAttribute("ROL");
 
-       /* Object rol = httpSession.getAttribute("rol");
-        if (rol == null || !rol.equals("CONDUCTOR")) {
-            UsuarioNoAutorizadoException e = new UsuarioNoAutorizadoException("Debe ser un usuario conductor para ver detalles de un viaje");
-            model.put("error" , e.getMessage());
-            return new ModelAndView("detalleViaje" , model);
-        } */
+        // Asignar 'ANONIMO' si no hay rol en sesión
+        String userRole = (rolObj != null) ? rolObj.toString() : "ANONIMO";
+        model.put("userRole", userRole); // Pasa el rol definido a la vista
+
         try {
             Viaje viaje = servicioViaje.obtenerDetalleDeViaje(id);
 
@@ -359,12 +355,22 @@ public class ControladorViaje {
                     .map(ViajeroDTO::new)
                     .collect(Collectors.toList());
 
+            boolean reservaExistente = false;
+            if (userRole.equals("VIAJERO") && usuarioIdObj != null) {
+                Long viajeroId = (Long) usuarioIdObj;
+                reservaExistente = servicioReserva.tieneReservaActiva(viajeroId, id);
+            }
+
+            model.put("reservaExistente", reservaExistente); // Pasa el resultado a la vista (boolean)
+
             DetalleViajeOutputDTO detalleViajeOutputDTO = new DetalleViajeOutputDTO(viaje, viajerosDTO);
             model.put("detalle", detalleViajeOutputDTO);
             model.put("viajeId", id);  // Pasar el ID del viaje para el botón de reserva
+
             return new ModelAndView("detalleViaje", model);
 
         } catch (NotFoundException | ViajeNoEncontradoException | UsuarioNoAutorizadoException e) {
+            // [Manejo de Error] Se mantiene el rol para la navbar, aunque el detalle falle.
             model.put("error", e.getMessage());
             return new ModelAndView("detalleViaje", model);
         }
