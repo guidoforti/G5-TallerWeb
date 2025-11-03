@@ -70,7 +70,7 @@
                                     </span>
                                 </td>
 
-                                <td class="text-center">
+                                <td class="text-center" style="vertical-align: middle;">
                                     <div class="d-flex justify-content-center gap-2">
 
                                         <a th:href="@{/viaje/detalle(id=${viaje.id})}"
@@ -85,10 +85,8 @@
                                             </a>
                                         </th:block>
                                         <th:block th:unless="${viaje.estado == 'DISPONIBLE'}">
-                                            <button class="btn btn-sm fw-bold flex-fill" disabled style="visibility: hidden; pointer-events: none;">
-                                                <i class="bi bi-pencil-square"></i> Editar
-                                            </button>
-                                        </th:block>
+                                            <div class="flex-fill" style="visibility: hidden; height: 31px;"></div> </th:block>
+
 
                                         <a th:if="${viaje.estado == 'DISPONIBLE' or viaje.estado == 'COMPLETO'}"
                                            th:href="@{'/viaje/cancelarViaje/' + ${viaje.id}}"
@@ -97,10 +95,7 @@
                                         </a>
 
                                         <th:block th:unless="${viaje.estado == 'DISPONIBLE' or viaje.estado == 'COMPLETO'}">
-                                            <button class="btn btn-sm fw-bold flex-fill" disabled style="visibility: hidden; pointer-events: none;">
-                                                <i class="bi bi-x-circle"></i> Cancelar
-                                            </button>
-                                        </th:block>
+                                            <div class="flex-fill" style="visibility: hidden; height: 31px;"></div> </th:block>
                                     </div>
                                 </td>
                             </tr>
