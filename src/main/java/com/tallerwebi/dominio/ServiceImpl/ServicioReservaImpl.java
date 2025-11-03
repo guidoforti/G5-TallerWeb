@@ -388,12 +388,12 @@ public class ServicioReservaImpl implements ServicioReserva {
 
         List<PreferenceItemRequest> items = new ArrayList<>();
         items.add(itemRequest);
-        //String baseUrl = "http://localhost:8080/spring";
+        //String baseUrl = "localhost:8080/spring";
 
         PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                .success("/reserva/pago/exitoso?reservaId=" + reserva.getId())
-                .failure("/reserva/pago/fallido?reservaId=" + reserva.getId())
-                .pending("/reserva/pago/pendiente?reservaId=" + reserva.getId())
+                .success("localhost:8080/spring/reserva/pago/exitoso?reservaId=" + reserva.getId())
+                .failure("localhost:8080/spring/reserva/pago/fallido?reservaId=" + reserva.getId())
+                .pending("localhost:8080/spring/reserva/pago/pendiente?reservaId=" + reserva.getId())
                 .build();
 
 
