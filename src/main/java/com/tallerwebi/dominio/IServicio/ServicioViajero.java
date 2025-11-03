@@ -6,10 +6,12 @@ import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.EdadInvalidaException;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeroPerfilOutPutDTO;
 
 public interface ServicioViajero {
 
     Viajero registrar(Viajero nuevoViajero) throws UsuarioExistente, EdadInvalidaException ,DatoObligatorioException;
     Viajero obtenerViajero(Long viajeroId) throws UsuarioInexistente;
+    ViajeroPerfilOutPutDTO obtenerPerfilViajero(Long viajeroId) throws UsuarioInexistente;
 
 }

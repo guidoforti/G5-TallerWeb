@@ -1,6 +1,10 @@
 package com.tallerwebi.dominio;
 
+import com.tallerwebi.dominio.Entity.Conductor;
+import com.tallerwebi.dominio.Entity.Usuario;
+import com.tallerwebi.dominio.Entity.Valoracion;
 import com.tallerwebi.dominio.Entity.Viajero;
+import com.tallerwebi.dominio.IRepository.RepositorioValoracion;
 import com.tallerwebi.dominio.IRepository.RepositorioViajero;
 import com.tallerwebi.dominio.IServicio.ServicioLogin; // Usado para el registro centralizado
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
@@ -9,17 +13,28 @@ import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.EdadInvalidaException;
 import com.tallerwebi.dominio.excepcion.UsuarioExistente;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.ValoracionOutputDTO;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeroPerfilOutPutDTO;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 class ServicioViajeroTest {
@@ -27,12 +42,14 @@ class ServicioViajeroTest {
     private RepositorioViajero repositorioMock;
     private ServicioViajero servicio;
     private ServicioLogin servicioLoginMock; // Renombrado a servicioLoginMock para claridad
+    private RepositorioValoracion repositorioValoracionMock;
 
     @BeforeEach
     void setUp() {
         repositorioMock = mock(RepositorioViajero.class);
         servicioLoginMock = Mockito.mock(ServicioLogin.class); // Mock para el servicio centralizado
-        servicio = new ServicioViajeroImpl(repositorioMock, servicioLoginMock);
+        repositorioValoracionMock = mock(RepositorioValoracion.class);
+        servicio = new ServicioViajeroImpl(repositorioMock, servicioLoginMock, repositorioValoracionMock);
     }
 
 
@@ -179,5 +196,52 @@ class ServicioViajeroTest {
 
         assertThrows(UsuarioInexistente.class, () -> servicio.obtenerViajero(id));
         verify(repositorioMock).buscarPorId(id);
+    }
+
+    @Test
+    void deberiaObtenerPerfilViajeroConPromedioYValoraciones() throws UsuarioInexistente {
+          // Datos del viajero
+        Viajero viajero = new Viajero();
+        viajero.setId(1L);
+        viajero.setNombre("Nacho");
+        viajero.setEdad(25);
+        viajero.setFotoPerfilUrl("foto.jpg");
+
+        // Datos de los usuarios emisores
+        Usuario emisor1 = new Conductor();
+        emisor1.setNombre("Carlos");
+
+        Usuario emisor2 = new Conductor();
+        emisor2.setNombre("Laura");
+
+        // Valoraciones
+        Valoracion valoracion1 = new Valoracion(emisor1, viajero, 5, "Excelente experiencia");
+        valoracion1.setFecha(LocalDate.now());
+
+        Valoracion valoracion2 = new Valoracion(emisor2, viajero, 3, "Normal");
+        valoracion2.setFecha(LocalDate.now());
+
+        // GIVEN
+        when(repositorioMock.buscarPorId(1L)).thenReturn(Optional.of(viajero));
+        when(repositorioValoracionMock.findByReceptorId(1L)).thenReturn(List.of(valoracion1, valoracion2));
+
+        // WHEN
+        ViajeroPerfilOutPutDTO resultado = servicio.obtenerPerfilViajero(1L);
+
+        // THEN
+        assertThat(resultado, is(notNullValue()));
+        assertThat(resultado.getNombre(), equalTo("Nacho"));
+        assertThat(resultado.getEdad(), equalTo(25));
+        assertThat(resultado.getValoraciones(), hasSize(2));
+        assertThat(resultado.getPromedioValoraciones(), closeTo(4.0, 0.01));
+
+        List<ValoracionOutputDTO> valoracionesDTO = resultado.getValoraciones();
+
+        assertThat(valoracionesDTO.get(0).getNombreReceptor(), equalTo("Nacho"));
+        assertThat(valoracionesDTO.get(0).getNombreEmisor(), anyOf(equalTo("Carlos"), equalTo("Laura")));
+        assertThat(valoracionesDTO.get(0).getPuntuacion(), anyOf(equalTo(5), equalTo(3)));
+
+        verify(repositorioMock).buscarPorId(1L);
+        verify(repositorioValoracionMock).findByReceptorId(1L);
     }
 }

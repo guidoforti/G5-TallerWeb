@@ -19,9 +19,14 @@ import java.util.List;
 public class Viajero extends Usuario {
 
     private Integer edad;
+    private Boolean fumador;
+    private Boolean discapacitado;
+    private String fotoPerfilUrl;
 
     // Relación con reservas
     @OneToMany(mappedBy = "viajero", fetch = FetchType.LAZY)
     private List<Reserva> reservas = new ArrayList<>();
 
+    @OneToMany(mappedBy = "receptor", fetch = FetchType.LAZY)
+    private List<Valoracion> valoracionesRecibidas = new ArrayList<>();
 }
