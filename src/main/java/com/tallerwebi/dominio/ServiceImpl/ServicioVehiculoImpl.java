@@ -71,9 +71,7 @@ public class ServicioVehiculoImpl implements ServicioVehiculo {
         if(repositorioVehiculo.encontrarVehiculoConPatente(vehiculo.getPatente()).isPresent()){
             throw new PatenteDuplicadaException("La patente cargada ya existe");
         }
-        if (vehiculo.getEstadoVerificacion() == null) {
-            vehiculo.setEstadoVerificacion(EstadoVerificacion.PENDIENTE);
-        }
+
         return repositorioVehiculo.guardarVehiculo(vehiculo);
     }
 
