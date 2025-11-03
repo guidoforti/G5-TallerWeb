@@ -1,10 +1,7 @@
 package com.tallerwebi.infraestructura;
 
 
-import com.tallerwebi.dominio.Entity.Conductor;
-import com.tallerwebi.dominio.Entity.Ciudad;
-import com.tallerwebi.dominio.Entity.Viaje;
-import com.tallerwebi.dominio.Entity.Viajero;
+import com.tallerwebi.dominio.Entity.*;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import org.hibernate.SessionFactory;
@@ -143,5 +140,16 @@ public class RepositorioViajeImpl implements ViajeRepository {
             .setParameter("estados", Arrays.asList(EstadoDeViaje.DISPONIBLE, EstadoDeViaje.COMPLETO))
             .setParameter("fechaLimite", fechaLimite)
             .getResultList();
+    }
+    @Override
+    public List<Viaje> findByVehiculoAndEstadoIn(Vehiculo vehiculo, List<EstadoDeViaje> estados) {
+        // La consulta asume que la entidad Viaje tiene un atributo 'vehiculo'
+        String hql = "FROM Viaje v WHERE v.vehiculo = :vehiculo AND v.estado IN (:estados)";
+
+        return sessionFactory.getCurrentSession()
+                .createQuery(hql, Viaje.class)
+                .setParameter("vehiculo", vehiculo) // Pasar el objeto Vehiculo como parámetro
+                .setParameterList("estados", estados)
+                .getResultList();
     }
 }

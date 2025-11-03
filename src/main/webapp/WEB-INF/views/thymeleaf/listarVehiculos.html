@@ -44,6 +44,7 @@
     </div>
 
     <div th:if="${error}" class="alert alert-danger" role="alert" th:text="${error}"></div>
+    <div th:if="${mensaje}" class="alert alert-success" role="alert" th:text="${mensaje}"></div>
 
     <div th:if="${#lists.isEmpty(listaVehiculos)}" class="alert alert-info text-center">
         Aún no tienes vehículos registrados. Utiliza el botón superior para agregar uno.
@@ -74,20 +75,30 @@
                         <td><span th:text="${vehiculo.asientosTotales}"></span></td>
 
                         <td>
-                                <span th:if="${vehiculo.estadoVerificacion == 'VERIFICADO'}"
-                                      class="badge badge-verificado">
-                                    <i class="bi bi-check-circle me-1"></i> Verificado
-                                </span>
+                            <span th:if="${vehiculo.estadoVerificacion == 'VERIFICADO'}"
+                                  class="badge badge-verificado"> <i class="bi bi-check-circle me-1"></i> Verificado
+                            </span>
                             <span th:if="${vehiculo.estadoVerificacion == 'PENDIENTE'}"
-                                  class="badge badge-pendiente">
-                                    <i class="bi bi-clock me-1"></i> Pendiente
-                                </span>
+                                  class="badge badge-pendiente"> <i class="bi bi-clock me-1"></i> Pendiente
+                             </span>
+                            <span th:if="${vehiculo.estadoVerificacion == 'DESACTIVADO'}"
+                                  class="badge bg-secondary"> <i class="bi bi-slash-circle me-1"></i> Baja
+                             </span>
                         </td>
 
                         <td class="text-center text-nowrap">
-                            <span class="text-muted small">
-                                Gestión no implementada
-                            </span>
+                            <th:block th:if="${vehiculo.estadoVerificacion != T(com.tallerwebi.dominio.Enums.EstadoVerificacion).DESACTIVADO}">
+                                <a th:href="@{/vehiculos/desactivar/{id}(id=${vehiculo.id})}"
+                                   class="btn btn-sm btn-danger fw-bold">
+                                    <i class="bi bi-shield-slash"></i> Desactivar
+                                </a>
+                            </th:block>
+
+                            <th:block th:if="${vehiculo.estadoVerificacion == T(com.tallerwebi.dominio.Enums.EstadoVerificacion).DESACTIVADO}">
+                                <span class="badge bg-secondary fw-bold">
+                                    <i class="bi bi-slash-circle me-1"></i> Baja
+                                </span>
+                            </th:block>
                         </td>
                     </tr>
                     </tbody>

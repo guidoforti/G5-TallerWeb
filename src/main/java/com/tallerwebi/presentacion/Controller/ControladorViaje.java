@@ -338,7 +338,6 @@ public class ControladorViaje {
     public ModelAndView verDetalleDeUnViaje(HttpSession httpSession, @RequestParam("id") Long id) {
         ModelMap model = new ModelMap();
 
-        // [🟢 CLAVE 1: GARANTIZAR EL ROL Y EL ID DE SESIÓN]
         Object usuarioIdObj = httpSession.getAttribute("idUsuario");
         Object rolObj = httpSession.getAttribute("ROL");
 

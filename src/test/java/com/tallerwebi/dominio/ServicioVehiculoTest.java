@@ -5,6 +5,7 @@ import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Enums.EstadoVerificacion;
 import com.tallerwebi.dominio.IRepository.RepositorioConductor;
 import com.tallerwebi.dominio.IRepository.RepositorioVehiculo;
+import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.ServiceImpl.ServicioVehiculoImpl;
 import com.tallerwebi.dominio.excepcion.NotFoundException;
@@ -36,6 +37,8 @@ public class ServicioVehiculoTest {
     @Mock
     private RepositorioConductor repositorioConductorMock;
 
+    @Mock
+    private ViajeRepository viajeRepository;
     private ServicioVehiculo servicioVehiculo;
 
     @BeforeEach
@@ -43,7 +46,8 @@ public class ServicioVehiculoTest {
         MockitoAnnotations.openMocks(this);
         repositorioVehiculoMock = mock(RepositorioVehiculo.class);
         repositorioConductorMock = mock(RepositorioConductor.class);
-        servicioVehiculo = new ServicioVehiculoImpl(repositorioVehiculoMock, repositorioConductorMock);
+        viajeRepository = mock(ViajeRepository.class);
+        servicioVehiculo = new ServicioVehiculoImpl(repositorioVehiculoMock, repositorioConductorMock, viajeRepository);
     }
 
     @Test
