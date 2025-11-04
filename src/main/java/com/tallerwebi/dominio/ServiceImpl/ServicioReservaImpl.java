@@ -28,6 +28,7 @@ import javax.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -388,7 +389,7 @@ public class ServicioReservaImpl implements ServicioReserva {
 
         List<PreferenceItemRequest> items = new ArrayList<>();
         items.add(itemRequest);
-        //String baseUrl = "localhost:8080/spring";
+
         PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
                 .success("localhost:8080/spring/reserva/pago/exitoso?reservaId=" + reserva.getId())
                 .failure("localhost:8080/spring/reserva/pago/fallido?reservaId=" + reserva.getId())
@@ -423,5 +424,14 @@ public class ServicioReservaImpl implements ServicioReserva {
         reservaRepository.update(reserva);
 
         return reserva;
+    }
+    @Override
+    public Boolean tieneReservaActiva(Long viajeroId, Long viajeId) {
+        // Definimos qué estados se consideran "activos"
+        // PENDIENTE (esperando confirmación) o CONFIRMADA (esperando pago/viaje)
+        List<EstadoReserva> estadosActivos = Arrays.asList(EstadoReserva.PENDIENTE, EstadoReserva.CONFIRMADA);
+
+        // Si la búsqueda devuelve algún resultado, la reserva ya existe y está activa.
+        return reservaRepository.findByViajeroIdAndViajeIdAndEstadoIn(viajeroId, viajeId, estadosActivos).isPresent();
     }
 }

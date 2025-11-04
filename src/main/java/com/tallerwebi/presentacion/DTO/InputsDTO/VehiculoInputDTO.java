@@ -19,7 +19,7 @@ public class VehiculoInputDTO {
     private String anio;
     private String patente;
     private Integer asientosTotales;
-    private EstadoVerificacion estadoVerificacion;
+    private EstadoVerificacion estadoVerificacion = EstadoVerificacion.PENDIENTE;
 
 
 

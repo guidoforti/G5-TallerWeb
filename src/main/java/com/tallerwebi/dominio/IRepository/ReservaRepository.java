@@ -74,5 +74,6 @@ public interface ReservaRepository {
      * @return Lista de reservas confirmadas
      */
     List<Reserva> findViajesConfirmadosPorViajero(Viajero viajero);
+    Optional<Reserva> findByViajeroIdAndViajeIdAndEstadoIn(Long viajeroId, Long viajeId, List<EstadoReserva> estados);
 
 }

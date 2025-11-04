@@ -8,9 +8,10 @@
 
     <!-- Bootstrap core css -->
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.2.0/css/bootstrap.min.css}"/>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- custom style -->
-    <link rel="stylesheet" th:href="@{/css/new-main.css}"/>
+    <link rel="stylesheet" th:href="@{/css/new-main.css?v=2}"/>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
 
     <!-- Tom-select import -->
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.css" rel="stylesheet">
@@ -20,15 +21,38 @@
     <th:block th:replace="~{::extra}"></th:block>
 </head>
 
-<body>
-<!-- Navbar -->
-<nav th:fragment="navbar" class="navbar navbar-expand-md navbar-unrumbo fixed-top">
-    <div class="container-fluid">
-        <a class="navbar-brand fw-bold text-dark" href="#">
-            <img th:src="@{/img/unrumbo-logo.png}" alt="UnRumbo" width="40" class="me-2">
-            UnRumbo
-        </a>
-    </div>
+<body><nav th:fragment="navbar" class="navbar navbar-expand-md navbar-unrumbo fixed-top">
 </nav>
+<footer th:fragment="footer" class="bg-dark text-white mt-5 p-4">
+    <style>
+        /* [IMPORTANTE] Esto asegura que el footer use el color Marrón Oscuro (#4E3D2F) */
+        .footer-unrumbo {
+            background-color: #4E3D2F !important;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+        }
+        .footer-unrumbo a {
+            color: #FFC107 !important; /* Amarillo suave para los enlaces */
+        }
+        .footer-unrumbo a:hover {
+            color: #E16A3D !important; /* Naranja principal al pasar el ratón */
+        }
+    </style>
+    <div class="footer-unrumbo">
+        <div class="container text-center">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5 class="fw-bold">UnRumbo</h5>
+                    <p class="small mb-0">Soluciones de Viaje Compartido</p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <p class="small mt-3">
+                        &copy; <span th:text="${#dates.format(#dates.createNow(), 'yyyy')}">2025</span> UnRumbo S.A.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
 </body>
 </html>

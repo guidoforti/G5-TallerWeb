@@ -102,4 +102,18 @@ public class RepositorioReservaImpl implements ReservaRepository {
                 .setParameter("estado", EstadoReserva.CONFIRMADA)
                 .getResultList();
     }
+    @Override
+    public Optional<Reserva> findByViajeroIdAndViajeIdAndEstadoIn(Long viajeroId, Long viajeId, List<EstadoReserva> estados) {
+        String hql = "SELECT r FROM Reserva r WHERE r.viajero.id = :viajeroId AND r.viaje.id = :viajeId AND r.estado IN (:estados)";
+
+        List<Reserva> resultados = sessionFactory.getCurrentSession()
+                .createQuery(hql, Reserva.class)
+                .setParameter("viajeroId", viajeroId)
+                .setParameter("viajeId", viajeId)
+                .setParameterList("estados", estados)
+                .setMaxResults(1) // Solo necesitamos saber si existe al menos uno
+                .getResultList();
+
+        return resultados.isEmpty() ? Optional.empty() : Optional.of(resultados.get(0));
+    }
 }
