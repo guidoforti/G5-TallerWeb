@@ -44,7 +44,7 @@ public class ControladorViajero {
             Long viajeroId = (Long) usuarioId;
             Viajero viajero = servicioViajero.obtenerViajero(viajeroId);
 
-            model.put("nombreConductor", viajero.getNombre());
+            model.put("nombreViajero", viajero.getNombre());
             model.put("rol", rol);
             return new ModelAndView("homeViajero", model);
 

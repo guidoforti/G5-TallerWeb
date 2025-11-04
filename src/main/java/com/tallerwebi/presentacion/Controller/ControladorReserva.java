@@ -681,7 +681,7 @@ public class ControladorReserva {
         }
     }
 
-    @GetMapping("pago/exitoso")
+    @GetMapping("/pago/exitoso")
     public ModelAndView devolverPagoExitoso(HttpSession session, @RequestParam Long reservaId, RedirectAttributes redirectAttributes) {
         ModelMap model = new ModelMap();
         // Validar sesión

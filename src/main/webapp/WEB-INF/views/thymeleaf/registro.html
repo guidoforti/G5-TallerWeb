@@ -2,27 +2,63 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="fragments/fragments :: head('UnRumbo - Registro')">
     <th:block th:fragment="extra">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+        <style>
+            :root {
+                --color-primary: #E16A3D;         /* Naranja Principal */
+                --color-taupe: #4E3D2F;           /* Marrón Oscuro */
+                --color-coffee: #734933;          /* Marrón Medio */
+                --color-success-warm: #44806A;    /* Verde Cálido (Éxito) */
+            }
+            .btn-unrumbo {
+                background-color: var(--color-primary) !important;
+                border-color: var(--color-primary) !important;
+                color: white !important;
+            }
+            .btn-unrumbo:hover {
+                background-color: #cf5930 !important;
+                border-color: #cf5930 !important;
+            }
+            .card-body .p-3.border.rounded.mb-3.bg-light {
+                background-color: #f8f9fa !important; /* Gris muy claro */
+                border-color: #dee2e6 !important;
+            }
+            .h6-conductor { color: var(--color-coffee); } /* Marrón medio para conductor */
+            .h6-viajero { color: var(--color-success-warm); } /* Verde cálido para viajero */
+            .text-unrumbo-link {
+                color: var(--color-primary) !important;
+                text-decoration: none;
+            }
+            .text-unrumbo-link:hover {
+                color: #cf5930 !important;
+                text-decoration: underline;
+            }
+        </style>
     </th:block>
 </head>
 
 <body>
-<nav th:replace="fragments/fragments :: navbar"></nav>
+<nav th:replace="fragments/navbar_anonimo :: navbar"></nav>
 
 <main role="main" class="container" style="margin-top: 120px;">
-
     <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
+        <div class="col-md-7 col-lg-6">
             <div class="card shadow-sm border-0">
-                <div class="card-body">
+                <div class="card-body p-4">
                     <div class="text-center mb-4">
-                        <h4 class="fw-bold text-dark">Registro de Usuario</h4>
+                        <h4 class="fw-bold" style="color: var(--color-taupe);">
+                            <i class="fas fa-user-plus me-2"></i> Registro de Usuario
+                        </h4>
                         <p class="text-muted">Completa tus datos y selecciona tu rol</p>
                     </div>
 
                     <form th:action="@{/validar-registro}" method="POST" th:object="${datosRegistro}">
 
                         <div class="mb-3">
-                            <label for="rolSeleccionado" class="form-label">Quiero registrarme como:</label>
+                            <label for="rolSeleccionado" class="form-label fw-bold">
+                                <i class="fas fa-user-tag me-1"></i> Quiero registrarme como:
+                            </label>
                             <select id="rolSeleccionado" th:field="*{rolSeleccionado}" class="form-select" required>
                                 <option value="">Selecciona tu rol</option>
                                 <option value="VIAJERO">Viajero (Pasajero)</option>
@@ -34,43 +70,55 @@
                         <hr/>
 
                         <div class="mb-3">
-                            <label for="nombre" class="form-label">Nombre completo</label>
+                            <label for="nombre" class="form-label fw-bold">
+                                <i class="fas fa-user me-1"></i> Nombre completo
+                            </label>
                             <input th:field="*{nombre}" id="nombre" type="text" class="form-control" placeholder="Juan Pérez" required>
                         </div>
 
                         <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
+                            <label for="email" class="form-label fw-bold">
+                                <i class="fas fa-envelope me-1"></i> Email
+                            </label>
                             <input th:field="*{email}" id="email" type="email" class="form-control" placeholder="ejemplo@mail.com" required>
                         </div>
 
                         <div class="mb-3">
-                            <label for="contrasenia" class="form-label">Contraseña</label>
+                            <label for="contrasenia" class="form-label fw-bold">
+                                <i class="fas fa-lock me-1"></i> Contraseña
+                            </label>
                             <input th:field="*{contrasenia}" id="contrasenia" type="password" class="form-control" placeholder="********" required>
                         </div>
 
-                        <div id="camposConductor" class="p-3 border rounded mb-3 bg-light">
-                            <h6 class="text-primary">Datos Adicionales de Conductor</h6>
+                        <div id="camposConductor" class="p-3 border rounded mb-3 bg-light" style="border-color: var(--color-coffee) !important;">
+                            <h6 class="fw-bold h6-conductor"><i class="fas fa-car me-2"></i> Datos Adicionales de Conductor</h6>
                             <div class="mb-3">
-                                <label for="fechaDeVencimientoLicencia" class="form-label">Fecha de vencimiento de licencia</label>
+                                <label for="fechaDeVencimientoLicencia" class="form-label">
+                                    <i class="fas fa-calendar-alt me-1"></i> Fecha de vencimiento de licencia
+                                </label>
                                 <input th:field="*{fechaDeVencimientoLicencia}" id="fechaDeVencimientoLicencia" type="date" class="form-control">
                             </div>
                         </div>
 
-                        <div id="camposViajero" class="p-3 border rounded mb-3 bg-light">
-                            <h6 class="text-success">Datos Adicionales de Viajero</h6>
+                        <div id="camposViajero" class="p-3 border rounded mb-3 bg-light" style="border-color: var(--color-success-warm) !important;">
+                            <h6 class="fw-bold h6-viajero"><i class="fas fa-hiking me-2"></i> Datos Adicionales de Viajero</h6>
                             <div class="mb-3">
-                                <label for="edad" class="form-label">Edad</label>
+                                <label for="edad" class="form-label">
+                                    <i class="fas fa-baby me-1"></i> Edad
+                                </label>
                                 <input th:field="*{edad}" id="edad" type="number" class="form-control" placeholder="Edad">
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-unrumbo w-100 text-white fw-bold">Registrarme</button>
+                        <button type="submit" class="btn btn-unrumbo w-100 fw-bold">
+                            <i class="fas fa-paper-plane me-1"></i> Registrarme
+                        </button>
 
                         <p th:if="${error != null}" class="alert alert-danger mt-3" th:text="${error}"></p>
                     </form>
 
                     <div class="text-center mt-3">
-                        <a th:href="@{/login}" class="text-decoration-none text-unrumbo fw-bold" style="color:#E16A3D;">
+                        <a th:href="@{/login}" class="text-unrumbo-link fw-bold">
                             ¿Ya tenés cuenta? Iniciá sesión
                         </a>
                     </div>
@@ -80,7 +128,7 @@
     </div>
 
 </main>
-
+<div th:replace="fragments/fragments :: footer"></div>
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
 <script th:src="@{/js/registroDinamico.js}"></script>
 </body>

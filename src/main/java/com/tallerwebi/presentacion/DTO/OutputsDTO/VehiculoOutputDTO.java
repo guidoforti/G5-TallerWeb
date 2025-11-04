@@ -12,6 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class VehiculoOutputDTO {
+    private Long id;
     private String modelo;
     private String anio;
     private String patente;
@@ -20,7 +21,7 @@ public class VehiculoOutputDTO {
 
 
     public VehiculoOutputDTO (Vehiculo vehiculo) {
-
+        this.id = vehiculo.getId();
         this.modelo = vehiculo.getModelo();
         this.anio  = vehiculo.getAnio();
         this.patente = vehiculo.getPatente();

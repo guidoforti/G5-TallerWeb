@@ -18,7 +18,6 @@ public interface ServicioViaje {
     Viaje obtenerDetalleDeViaje(Long id) throws NotFoundException;
 
     void modificarViaje(Viaje viaje ,  List<Parada> paradas) throws BadRequestException;
-
     // En ServicioViaje.java
     Viaje obtenerViajeConParadas(Long id) throws NotFoundException;
     List<Viaje> buscarViajesDisponibles(Ciudad origen, Ciudad destino, LocalDateTime fechaSalida, Double precioMin, Double precioMax) throws DatoObligatorioException;
