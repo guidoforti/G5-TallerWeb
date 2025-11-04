@@ -19,7 +19,7 @@ public class ViajeroPerfilOutPutDTO {
     private String nombre;
     private Integer edad;
     private Boolean fumador;
-    private Boolean discapacitado;
+    private String discapacitado;
     private String fotoPerfilUrl;
     private Double promedioValoraciones;
     private List<ValoracionOutputDTO> valoraciones;

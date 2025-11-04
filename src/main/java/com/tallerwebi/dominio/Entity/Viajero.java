@@ -20,7 +20,7 @@ public class Viajero extends Usuario {
 
     private Integer edad;
     private Boolean fumador;
-    private Boolean discapacitado;
+    private String discapacitado;
     private String fotoPerfilUrl;
 
     // Relación con reservas
