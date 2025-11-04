@@ -144,4 +144,28 @@ public class RepositorioViajeImpl implements ViajeRepository {
             .setParameter("fechaLimite", fechaLimite)
             .getResultList();
     }
+
+    @Override
+    public boolean existeViajeFinalizadoYNoValorado(Long emisorId, Long receptorId) {
+    
+        
+        String hql = "SELECT COUNT(j.id) FROM Viaje j "
+            + "LEFT JOIN j.reservas r "
+            
+            + "LEFT JOIN Valoracion v ON v.emisor.id = :emisorId AND v.receptor.id = :receptorId "
+    
+            + "WHERE j.estado = :estadoFinalizado AND v.id IS NULL AND (" 
+                + " (j.conductor.id = :emisorId AND r.viajero.id = :receptorId) OR " 
+                + " (j.conductor.id = :receptorId AND r.viajero.id = :emisorId) "
+            + ")";
+            
+        Long count = (Long) sessionFactory.getCurrentSession()
+            .createQuery(hql)
+            .setParameter("emisorId", emisorId)
+            .setParameter("receptorId", receptorId)
+            .setParameter("estadoFinalizado", EstadoDeViaje.FINALIZADO)
+            .uniqueResult();
+
+        return count != null && count > 0;
+    }
 }

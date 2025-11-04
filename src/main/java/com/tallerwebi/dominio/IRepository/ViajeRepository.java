@@ -23,4 +23,7 @@ public interface ViajeRepository {
     // Métodos para gestión de viajes
     List<Viaje> findViajesEnCursoExcedidos(LocalDateTime fechaLimite);
     List<Viaje> findViajesNoIniciadosFueraDePlazo(LocalDateTime fechaLimite);
+
+    //meotodo nuevo para ver si el viaje finalizo
+    boolean existeViajeFinalizadoYNoValorado(Long emisorId, Long receptorId);
 }
