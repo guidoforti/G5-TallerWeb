@@ -80,4 +80,16 @@ public class ControladorViajero {
     }
 }
 
+    @GetMapping("/perfil")
+    public String verPerfil(HttpSession session, Model model) throws UsuarioInexistente {
+        Long viajeroId = (Long) session.getAttribute("idUsuario");
+        if (viajeroId == null) {
+            return "redirect:/login";
+        }
+
+        ViajeroPerfilOutPutDTO perfilDTO = servicioViajero.obtenerPerfilViajero(viajeroId);
+        model.addAttribute("perfil", perfilDTO);
+        return "perfilViajero"; 
+    }
+
 }

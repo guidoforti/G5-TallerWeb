@@ -1,11 +1,172 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>UnRumbo - Perfil del Viajero</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.2.0/css/bootstrap.min.css}" />
+
+    <!-- Pequeños estilos inline para no crear muchos archivos -->
+    <style>
+        .profile-photo {
+            width: 140px;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        .star {
+            color: #f4c150;
+        }
+        .no-data {
+            color: #6c757d;
+            font-style: italic;
+        }
+    </style>
 </head>
 <body>
-    
+<nav class="navbar navbar-light bg-light">
+    <div class="container">
+        <a class="navbar-brand fw-bold" th:href="@{/}">UnRumbo</a>
+    </div>
+</nav>
+
+<main class="container" style="margin-top: 80px; margin-bottom: 40px;">
+    <div class="row">
+        <!-- Panel izquierdo: tarjeta con datos básicos -->
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body text-center">
+                    <img th:if="${perfil.fotoPerfilUrl != null}"
+                         th:src="${perfil.fotoPerfilUrl}"
+                         alt="Foto de perfil"
+                         class="profile-photo mb-3" />
+
+                    <div th:if="${perfil.fotoPerfilUrl == null}" class="mb-3">
+                        <svg width="140" height="140" viewBox="0 0 24 24" class="profile-photo bg-light d-inline-block"
+                             xmlns="http://www.w3.org/2000/svg" fill="#ced4da">
+                            <rect width="24" height="24" rx="4"></rect>
+                            <path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 20a8 8 0 0 1 16 0H4z" fill="#adb5bd"/>
+                        </svg>
+                    </div>
+
+                    <h5 class="card-title mb-1" th:text="${perfil.nombre}">Nombre Viajero</h5>
+                    <p class="text-muted mb-2">ID: <span th:text="${perfil.id}">1</span></p>
+
+                    <ul class="list-unstyled text-start mb-3">
+                        <li><strong>Edad:</strong> <span th:text="${perfil.edad}">30</span></li>
+                        <li><strong>Fumador:</strong> <span th:text="${perfil.fumador != null and perfil.fumador} ? 'Sí' : 'No'"></span></li>
+                        <li><strong>Discapacidad:</strong>
+                            <span th:text="${perfil.discapacitado != null ? perfil.discapacitado : 'No'}">No</span>
+                        </li>
+                    </ul>
+
+                    <div class="mb-3 w-100">
+                        <div class="d-flex justify-content-center align-items-center mb-1">
+                            <div class="me-2">
+                                <span class="fw-bold">Valoración promedio</span>
+                            </div>
+                            <div>
+                                <span th:text="${#numbers.formatDecimal(perfil.promedioValoraciones, 1, 'COMMA', 1, 'POINT')}"
+                                      class="fw-semibold">4.0</span>
+                                <small class="text-muted">/ 5</small>
+                            </div>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-warning"
+                                role="progressbar"
+                                 th:style="${'width:' + (perfil.promedioValoraciones * 20) + '%'}"
+                                 th:attr="aria-valuenow=${perfil.promedioValoraciones * 20}"
+                                 aria-valuemin="0"
+                                aria-valuemax="100">
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a th:href="@{/viajero/home}" class="btn btn-outline-secondary btn-sm">Volver al home</a>
+                        <!-- ejemplo de acción contextual -->
+                        <a th:href="@{'/reserva/solicitar?viajeroId=' + ${perfil.id}}" class="btn btn-primary btn-sm">Solicitar reserva</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Box resumen (opcional) -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Resumen</h6>
+                    <!-- <p class="mb-0"><strong>Reservas confirmadas:</strong>
+                        <span th:text="${perfil.numeroReservasConfirmadas != null ? perfil.numeroReservasConfirmadas : 0}">0</span>
+                    </p> -->
+                    <small class="text-muted">Información de comportamiento (opcional)</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel derecho: valoraciones -->
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Valoraciones</h5>
+                    <p class="text-muted">Comentarios y puntuaciones recibidas por este viajero</p>
+
+                    <div th:if="${perfil.valoraciones == null or #lists.isEmpty(perfil.valoraciones)}" class="text-center py-4">
+                        <p class="no-data">Aún no hay valoraciones para este viajero.</p>
+                    </div>
+
+                    <div th:if="${perfil.valoraciones != null and !#lists.isEmpty(perfil.valoraciones)}">
+                        <div th:each="val : ${perfil.valoraciones}" class="mb-3">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0 me-3">
+                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center"
+                                         style="width:48px;height:48px;">
+                                        <svg width="28" height="28" viewBox="0 0 24 24" fill="#adb5bd" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 20a8 8 0 0 1 16 0H4z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong th:text="${val.nombreEmisor}">Nombre Emisor</strong>
+                                            <small class="text-muted"> • <span th:text="${val.fecha}">10/10/2025</span></small>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="fw-bold me-1" th:text="${val.puntuacion}">5</span>
+                                            <span class="star">★</span>
+                                        </div>
+                                    </div>
+                                    <p class="mb-1" th:text="${val.comentario}">Comentario del evaluador...</p>
+                                </div>
+                            </div>
+                            <hr />
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Sección opcional: historial breve (si tienes datos) -->
+           <!-- <div th:if="${perfil.ultimasAcciones != null}" class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">Actividad reciente</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li th:each="a : ${perfil.ultimasAcciones}">
+                            <small class="text-muted" th:text="${a}">Reserva confirmada - 01/01/2025</small>
+                        </li>
+                    </ul>
+                </div>
+            </div> -->
+
+        </div>
+    </div>
+</main>
+
+<!-- Bootstrap JS -->
+<script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
 </body>
 </html>

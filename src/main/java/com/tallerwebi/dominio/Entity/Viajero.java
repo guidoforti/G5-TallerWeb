@@ -18,9 +18,16 @@ import java.util.List;
 @PrimaryKeyJoinColumn(name = "usuario_id")
 public class Viajero extends Usuario {
 
+   // @Column(name = "edad_viajero")
     private Integer edad;
+
+  //  @Column(name = "es_fumador")
     private Boolean fumador;
-    private Boolean discapacitado;
+
+    //@Column(name = "discapacidad")
+    private String discapacitado;
+
+    // @Column(name = "foto_perfil_viajero")
     private String fotoPerfilUrl;
 
     // Relación con reservas

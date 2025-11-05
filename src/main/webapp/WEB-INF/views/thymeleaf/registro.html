@@ -107,6 +107,14 @@
                                     <i class="fas fa-baby me-1"></i> Edad
                                 </label>
                                 <input th:field="*{edad}" id="edad" type="number" class="form-control" placeholder="Edad">
+                                <label for="fumador">¿Es fumador?</label>
+                                <select id="fumador" name="fumador" required>
+                                <option value="false">No</option>
+                                <option value="true">Sí</option>
+                                </select>
+
+                                <label for="discapacidad">¿Tiene alguna discapacidad?</label>
+                                <input type="text" id="discapacidad" name="discapacidad" placeholder="(opcional)">
                             </div>
                         </div>
 
