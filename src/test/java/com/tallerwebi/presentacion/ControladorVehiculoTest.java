@@ -50,7 +50,7 @@ public class ControladorVehiculoTest {
     }
 
     @Test
-    public void registrarVehiculo_conDatosValidos_deberiaRedirigirAlHome() throws Exception {
+    public void registrarVehiculo_conDatosValidos_deberiaRedirigirAListarVehiculos() throws Exception {
         when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR");
         when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
 
@@ -59,9 +59,12 @@ public class ControladorVehiculoTest {
 
         ModelAndView modelAndView = controladorVehiculo.registrarVehiculo(vehiculoInputDTO, sessionMock);
 
-        assertThat(modelAndView.getViewName(), equalToIgnoringCase("redirect:/conductor/home"));
+        String expectedRedirect = "redirect:/vehiculos/listarVehiculos?mensaje=%C2%A1Veh%C3%ADculo+%27ABC123%27+registrado+con+%C3%A9xito%21";
+
+        assertThat(modelAndView.getViewName(), equalToIgnoringCase(expectedRedirect));
         verify(servicioVehiculoMock, times(1)).guardarVehiculo(any(Vehiculo.class));
     }
+
 
     @Test
     public void registrarVehiculo_conPatenteDuplicada_deberiaMostrarError() throws Exception {

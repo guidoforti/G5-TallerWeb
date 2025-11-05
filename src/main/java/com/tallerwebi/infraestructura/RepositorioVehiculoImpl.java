@@ -2,6 +2,7 @@ package com.tallerwebi.infraestructura;
 
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.IRepository.RepositorioVehiculo;
+import com.tallerwebi.dominio.Enums.EstadoVerificacion;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,15 @@ public class RepositorioVehiculoImpl implements RepositorioVehiculo {
         String hql = "SELECT v FROM Vehiculo v WHERE v.conductor.id = :conductorId";
         return sessionFactory.getCurrentSession().createQuery(hql, Vehiculo.class)
                 .setParameter("conductorId", conductorId)
+                .getResultList();
+    }
+    @Override
+    public List<Vehiculo> findByConductorIdAndEstadoVerificacionNot(Long conductorId, EstadoVerificacion estado) {
+        String hql = "SELECT v FROM Vehiculo v WHERE v.conductor.id = :conductorId AND v.estadoVerificacion != :estado";
+
+        return sessionFactory.getCurrentSession().createQuery(hql, Vehiculo.class)
+                .setParameter("conductorId", conductorId)
+                .setParameter("estado", estado) // Filtra donde el estado NO sea DESACTIVADO
                 .getResultList();
     }
 

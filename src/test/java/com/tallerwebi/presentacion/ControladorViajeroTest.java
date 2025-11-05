@@ -82,7 +82,7 @@ public class ControladorViajeroTest {
         // Assert
         assertThat(mav.getViewName(), equalTo("homeViajero"));
         // El modelo del controlador usa la clave "nombreConductor" (aún inconsistente, pero el test la respeta)
-        assertThat(mav.getModel().get("nombreConductor").toString(), equalTo(viajeroMock.getNombre()));
+        assertThat(mav.getModel().get("nombreViajero").toString(), equalTo(viajeroMock.getNombre()));
         assertThat(mav.getModel().get("rol").toString(), equalTo("VIAJERO"));
         verify(servicioViajeroMock, times(1)).obtenerViajero(1L);
     }
