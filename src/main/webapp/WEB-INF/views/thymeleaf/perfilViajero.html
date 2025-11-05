@@ -10,40 +10,46 @@
 
     <!-- Pequeños estilos inline para no crear muchos archivos -->
     <style>
-        /* [1] COPIA Y PEGA AQUI TU BLOQUE DE ESTILOS DE :root y clases de btn-unrumbo, h6-conductor, h6-viajero, etc. */
-        :root {
-            --color-primary: #E16A3D;         /* Naranja Principal */
-            --color-taupe: #4E3D2F;           /* Marrón Oscuro */
-            --color-coffee: #734933;          /* Marrón Medio */
-            --color-success-warm: #44806A;    /* Verde Cálido (Éxito) */
-        }
-        .btn-unrumbo {
-            background-color: var(--color-primary) !important;
-            border-color: var(--color-primary) !important;
-            color: white !important;
-        }
-        .btn-unrumbo:hover {
-            background-color: #cf5930 !important;
-            border-color: #cf5930 !important;
-        }
-        /* ... puedes omitir los estilos de .card-body y h6-conductor/viajero si solo se usan en el registro ... */
-
-        /* Estilos existentes */
-        .profile-photo {
-            width: 140px;
-            height: 140px;
-            object-fit: cover;
-            border-radius: 10px;
-            border: 1px solid #e9ecef;
-        }
-        .star {
-            color: #f4c150; /* Puedes mantener este o usar un color más coherente como var(--color-primary) */
-        }
-        .no-data {
-            color: #6c757d;
-            font-style: italic;
-        }
-    </style>
+    :root {
+        --color-primary: #E16A3D;  /* Naranja Principal */
+        --color-taupe: #4E3D2F;  /* Marrón Oscuro */
+        --color-coffee: #734933; /* Marrón Medio */
+        --color-success-warm: #44806A; /* Verde Cálido (Éxito) - Color Viajero */
+    }
+    
+    /* 1. Estilos del Botón Principal (Naranja) */
+    .btn-unrumbo {
+        background-color: var(--color-primary) !important;
+        border-color: var(--color-primary) !important;
+        color: white !important;
+    }
+    .btn-unrumbo:hover {
+        background-color: #cf5930 !important;
+        border-color: #cf5930 !important;
+    }
+    
+    /* 2. Estilos para el Perfil del Viajero */
+    .profile-photo {
+        width: 140px;
+        height: 140px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid #e9ecef;
+    }
+    /* Estrellas: Usaremos el color principal naranja */
+    .star, .star-unrumbo {
+        color: var(--color-primary); /* Naranja Principal para todas las estrellas */
+    }
+    .no-data {
+        color: #6c757d;
+        font-style: italic;
+    }
+    
+    /* Clase de utilidad si quieres destacar algo en color Viajero */
+    .text-viajero {
+        color: var(--color-success-warm);
+    }
+</style>
 </head>
 <body>
 <nav class="navbar navbar-light bg-light">
