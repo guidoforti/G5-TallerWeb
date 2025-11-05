@@ -1,0 +1,31 @@
+package com.tallerwebi.presentacion.DTO.OutputsDTO;
+
+import java.util.List;
+
+import com.tallerwebi.dominio.Entity.Conductor;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class ConductorPerfilOutPutDTO {
+
+    private String nombre;
+    private Integer edad;
+    private String fotoDePerfil;
+    private double promedioValoraciones;
+    private List<ValoracionOutputDTO> valoraciones;
+
+    public ConductorPerfilOutPutDTO(Conductor conductor, List<ValoracionOutputDTO> valoraciones, double promedio) {
+        this.nombre = conductor.getNombre();
+        this.edad = conductor.getEdad();
+        this.fotoDePerfil = conductor.getFotoDePerfil();
+        this.valoraciones = valoraciones;
+        this.promedioValoraciones = promedio;
+    }
+}
