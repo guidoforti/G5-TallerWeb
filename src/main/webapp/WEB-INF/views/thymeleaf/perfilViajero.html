@@ -10,6 +10,25 @@
 
     <!-- Pequeños estilos inline para no crear muchos archivos -->
     <style>
+        /* [1] COPIA Y PEGA AQUI TU BLOQUE DE ESTILOS DE :root y clases de btn-unrumbo, h6-conductor, h6-viajero, etc. */
+        :root {
+            --color-primary: #E16A3D;         /* Naranja Principal */
+            --color-taupe: #4E3D2F;           /* Marrón Oscuro */
+            --color-coffee: #734933;          /* Marrón Medio */
+            --color-success-warm: #44806A;    /* Verde Cálido (Éxito) */
+        }
+        .btn-unrumbo {
+            background-color: var(--color-primary) !important;
+            border-color: var(--color-primary) !important;
+            color: white !important;
+        }
+        .btn-unrumbo:hover {
+            background-color: #cf5930 !important;
+            border-color: #cf5930 !important;
+        }
+        /* ... puedes omitir los estilos de .card-body y h6-conductor/viajero si solo se usan en el registro ... */
+
+        /* Estilos existentes */
         .profile-photo {
             width: 140px;
             height: 140px;
@@ -18,7 +37,7 @@
             border: 1px solid #e9ecef;
         }
         .star {
-            color: #f4c150;
+            color: #f4c150; /* Puedes mantener este o usar un color más coherente como var(--color-primary) */
         }
         .no-data {
             color: #6c757d;
@@ -89,7 +108,7 @@
                     <div class="d-grid gap-2">
                         <a th:href="@{/viajero/home}" class="btn btn-outline-secondary btn-sm">Volver al home</a>
                         <!-- ejemplo de acción contextual -->
-                        <a th:href="@{'/reserva/solicitar?viajeroId=' + ${perfil.id}}" class="btn btn-primary btn-sm">Solicitar reserva</a>
+                        <a th:href="@{'/reserva/solicitar?viajeroId=' + ${perfil.id}}" class="btn btn-unrumbo btn-sm">Solicitar reserva</a>
                     </div>
                 </div>
             </div>
