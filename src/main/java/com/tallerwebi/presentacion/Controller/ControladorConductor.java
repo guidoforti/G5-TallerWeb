@@ -70,4 +70,20 @@ public class ControladorConductor {
             return new ModelAndView("error", modelo);
         }
     }
+
+    @GetMapping("/perfil")
+    public ModelAndView verPerfilConductor(HttpSession session) throws UsuarioInexistente {
+        Long idConductor = (Long) session.getAttribute("idUsuario");
+
+        if (idConductor == null) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        ConductorPerfilOutPutDTO perfil = servicioConductor.obtenerPerfilDeConductor(idConductor);
+
+        ModelMap model = new ModelMap();
+        model.put("perfil", perfil);
+
+        return new ModelAndView("perfilConductor", model);
+    }
 }

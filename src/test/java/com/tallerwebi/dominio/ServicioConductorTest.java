@@ -44,7 +44,7 @@ class ServicioConductorTest {
 
     // 1. Cobertura: registrar() - Éxito
     @Test
-    void deberiaRegistrarConductorSiNoExiste() throws UsuarioExistente, FechaDeVencimientoDeLicenciaInvalida {
+    void deberiaRegistrarConductorSiNoExiste() throws UsuarioExistente, FechaDeVencimientoDeLicenciaInvalida, EdadInvalidaException {
         // Arrange
         Conductor nuevo = new Conductor();
         nuevo.setNombre("Ana");
@@ -157,11 +157,13 @@ class ServicioConductorTest {
     valoracion1.setPuntuacion(5);
     valoracion1.setComentario("Excelente viaje");
     valoracion1.setEmisor(viajero);
+    valoracion1.setReceptor(conductor);
 
     Valoracion valoracion2 = new Valoracion();
     valoracion2.setPuntuacion(3);
     valoracion2.setComentario("Podría mejorar");
     valoracion2.setEmisor(viajero);
+    valoracion2.setReceptor(conductor);
 
     when(repositorioMock.buscarPorId(conductorId)).thenReturn(Optional.of(conductor));
     when(repositorioValoracionMock.findByReceptorId(conductorId))

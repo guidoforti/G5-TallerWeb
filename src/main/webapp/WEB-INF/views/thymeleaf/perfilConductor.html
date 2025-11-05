@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/fragments :: head('Perfil del Conductor')">
+    <th:block th:fragment="extra"></th:block>
+</head>
+<body>
+
+<main class="container mt-5 mb-5">
+    <div class="card shadow-lg p-4 rounded-4">
+        <div class="row align-items-center">
+            <div class="col-md-4 text-center">
+                <img src="/images/profile-placeholder.png" alt="Foto del conductor" class="rounded-circle img-fluid shadow-sm" style="max-width: 180px;">
+            </div>
+            <div class="col-md-8">
+                <h2 th:text="${perfil.nombre}" class="fw-bold"></h2>
+                <p class="text-muted mb-1">Edad: <span th:text="${perfil.edad != null ? perfil.edad : 'No especificada'}"></span> años</p>
+                <p class="text-muted mb-1">Licencia válida hasta: 
+                    <span th:text="${perfil.fechaVencimientoLicencia != null ? perfil.fechaVencimientoLicencia : 'No registrada'}"></span>
+                </p>
+
+                <div class="mt-3">
+                    <h5>Valoración promedio</h5>
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar bg-warning" role="progressbar"
+                             th:style="'width:' + (${perfil.promedioValoraciones != null ? perfil.promedioValoraciones * 20 : 0}) + '%'"
+                             aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <small class="text-muted" th:text="'Promedio: ' + (${perfil.promedioValoraciones != null ? perfil.promedioValoraciones : 0}) + ' / 5'"></small>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-4"/>
+
+        <div>
+            <h4 class="mb-3">Comentarios de viajeros</h4>
+            <div th:if="${perfil.valoraciones != null and !perfil.valoraciones.isEmpty()}">
+                <div th:each="valoracion : ${perfil.valoraciones}" class="border-bottom mb-3 pb-2">
+                    <p class="mb-1">
+                        <strong th:text="${valoracion.nombreEmisor}">Juan Pérez</strong>
+                        <span class="text-warning ms-2" th:text="'★'.repeat(${valoracion.puntuacion})"></span>
+                    </p>
+                    <p class="text-muted" th:text="${valoracion.comentario}">Excelente conductor, muy amable.</p>
+                </div>
+            </div>
+            <div th:if="${perfil.valoraciones == null or perfil.valoraciones.isEmpty()}">
+                <p class="text-muted fst-italic">Este conductor aún no tiene valoraciones.</p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="fragments/fragments :: footer"></footer>
+</body>
+</html>

@@ -24,6 +24,7 @@ public class RegistroInputDTO {
     // Campos Específicos de Conductor
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate fechaDeVencimientoLicencia;
+    private Integer edadConductor;
 
     // Campos Específicos de Viajero
     private Integer edad;
@@ -39,6 +40,7 @@ public class RegistroInputDTO {
         conductor.setEmail(this.email);
         conductor.setContrasenia(this.contrasenia);
         conductor.setFechaDeVencimientoLicencia(this.fechaDeVencimientoLicencia);
+        conductor.setEdad(edadConductor);
         // NOTA: El ROL y ACTIVO se asignan en el Servicio.
         return conductor;
     }

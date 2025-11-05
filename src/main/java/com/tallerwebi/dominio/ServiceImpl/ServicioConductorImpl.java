@@ -34,10 +34,13 @@ public class ServicioConductorImpl implements ServicioConductor {
     }
 
     @Override
-    public Conductor registrar(Conductor nuevoConductor) throws UsuarioExistente, FechaDeVencimientoDeLicenciaInvalida {
+    public Conductor registrar(Conductor nuevoConductor) throws UsuarioExistente, FechaDeVencimientoDeLicenciaInvalida, EdadInvalidaException {
         // validar que la fecha sea futura
         if (nuevoConductor.getFechaDeVencimientoLicencia().isBefore(LocalDate.now())) {
             throw new FechaDeVencimientoDeLicenciaInvalida("La fecha de vencimiento de la licencia debe ser mayor a la actual");
+        }
+        if (nuevoConductor.getEdad() < 18) {
+            throw new EdadInvalidaException("El usuario debe ser mayor de 18 años.");
         }
 
         nuevoConductor.setRol("CONDUCTOR");
