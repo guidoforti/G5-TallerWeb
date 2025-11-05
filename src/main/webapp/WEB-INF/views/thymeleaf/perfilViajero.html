@@ -59,7 +59,7 @@
                         <li><strong>Edad:</strong> <span th:text="${perfil.edad}">30</span></li>
                         <li><strong>Fumador:</strong> <span th:text="${perfil.fumador != null and perfil.fumador} ? 'Sí' : 'No'"></span></li>
                         <li><strong>Discapacidad:</strong>
-                            <span th:text="${perfil.discapacitado != null ? perfil.discapacitado : 'No'}">No</span>
+                            <span th:text="${#strings.isEmpty(perfil.discapacitado) ? 'No especificada' : perfil.discapacitado}">No especificada</span>
                         </li>
                     </ul>
 

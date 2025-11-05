@@ -60,7 +60,13 @@ public class ControladorRegistro {
             } else if ("VIAJERO".equals(registroDTO.getRolSeleccionado())) {
                 Viajero nuevoViajero = registroDTO.toViajeroEntity();
                 nuevoViajero.setFumador(registroDTO.getFumador() != null ? registroDTO.getFumador() : false);
-                nuevoViajero.setDiscapacitado(registroDTO.getDiscapacitado() != null && !registroDTO.getDiscapacitado().isEmpty()? registroDTO.getDiscapacitado() : "No");
+                String discapacidadIngresada = registroDTO.getDiscapacitado(); 
+                // Si el usuario ingresó algo, guárdalo. Si no, guarda null (o cadena vacía "")
+                if (discapacidadIngresada != null && !discapacidadIngresada.trim().isEmpty()) {
+                nuevoViajero.setDiscapacitado(discapacidadIngresada.trim());
+                } else {
+                nuevoViajero.setDiscapacitado(null); // O deja que el DTO.toViajeroEntity() lo asigne
+                }
                 Viajero viajeroRegistrado = servicioViajero.registrar(nuevoViajero);
                 session.setAttribute("idUsuario", viajeroRegistrado.getId());
                 session.setAttribute("ROL", "VIAJERO");
