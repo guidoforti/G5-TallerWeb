@@ -4,6 +4,8 @@ import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.presentacion.Controller.ControladorConductor;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.ConductorPerfilOutPutDTO;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.ModelAndView;
@@ -11,7 +13,10 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpSession;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 public class ControladorConductorTest {
@@ -98,4 +103,32 @@ public class ControladorConductorTest {
         // Verificamos que se llegó al catch y se llamó a invalidate()
         verify(sessionMock, times(1)).invalidate();
     }
+
+    @Test
+    public void deberiaMostrarPerfilConductorCorrectamente() throws UsuarioInexistente {
+        // given
+        Long conductorId = 1L;
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+        when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
+
+        ConductorPerfilOutPutDTO perfilDTO = new ConductorPerfilOutPutDTO();
+        perfilDTO.setNombre("Carlos");
+        perfilDTO.setEdad(35);
+        perfilDTO.setPromedioValoraciones(4.5);
+
+        when(servicioConductorMock.obtenerPerfilDeConductor(conductorId)).thenReturn(perfilDTO);
+
+        // when
+        ModelAndView mav = controladorConductor.verPerfilConductor(conductorId, sessionMock);
+
+        // then
+        assertThat(mav.getViewName(), is("perfilConductor"));
+        assertThat(mav.getModel().containsKey("perfil"), is(true));
+
+        ConductorPerfilOutPutDTO perfil = (ConductorPerfilOutPutDTO) mav.getModel().get("perfil");
+        assertThat(perfil.getNombre(), is("Carlos"));
+        assertThat(perfil.getEdad(), is(35));
+        assertThat(perfil.getPromedioValoraciones(), closeTo(4.5, 0.01));
+    }
+
 }

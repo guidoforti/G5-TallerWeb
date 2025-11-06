@@ -93,6 +93,13 @@
                         <div id="camposConductor" class="p-3 border rounded mb-3 bg-light" style="border-color: var(--color-coffee) !important;">
                             <h6 class="fw-bold h6-conductor"><i class="fas fa-car me-2"></i> Datos Adicionales de Conductor</h6>
                             <div class="mb-3">
+                                <label for="edad" class="form-label">
+                                    <i class="fas fa-user-clock me-1"></i> Edad
+                                </label>
+                                <input th:field="*{edadConductor}" id="edadConductor" type="number" class="form-control" placeholder="Ingrese su edad">
+                            </div>
+
+                            <div class="mb-3">
                                 <label for="fechaDeVencimientoLicencia" class="form-label">
                                     <i class="fas fa-calendar-alt me-1"></i> Fecha de vencimiento de licencia
                                 </label>
@@ -107,6 +114,14 @@
                                     <i class="fas fa-baby me-1"></i> Edad
                                 </label>
                                 <input th:field="*{edad}" id="edad" type="number" class="form-control" placeholder="Edad">
+                                <label for="fumador">¿Es fumador?</label>
+                                <select id="fumador" name="fumador" required>
+                                <option value="false">No</option>
+                                <option value="true">Sí</option>
+                                </select>
+
+                                <label for="discapacitado">¿Tiene alguna discapacidad?</label>
+                                <input type="text" id="discapacitado" name="discapacitado" placeholder="(opcional)">
                             </div>
                         </div>
 
