@@ -19,11 +19,11 @@ public class ConductorPerfilOutPutDTO {
     private String nombre;
     private Integer edad;
     private String fotoDePerfil;
-    private double promedioValoraciones;
+    private Double promedioValoraciones;
     private LocalDate fechaVencimientoLicencia;
     private List<ValoracionOutputDTO> valoraciones;
 
-    public ConductorPerfilOutPutDTO(Conductor conductor, List<ValoracionOutputDTO> valoraciones, double promedio) {
+    public ConductorPerfilOutPutDTO(Conductor conductor, List<ValoracionOutputDTO> valoraciones, Double promedio) {
         this.nombre = conductor.getNombre();
         this.edad = conductor.getEdad();
         this.fotoDePerfil = conductor.getFotoDePerfil();
