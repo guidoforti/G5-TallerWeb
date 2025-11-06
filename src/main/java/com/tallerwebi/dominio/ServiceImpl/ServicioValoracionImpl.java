@@ -64,28 +64,32 @@ public class ServicioValoracionImpl implements ServicioValoracion {
     }
 
     @Override
-@Transactional(readOnly = true)
-public List<ValoracionOutputDTO> obtenerValoracionesDeUsuario(Long usuarioId) {
-    List<Valoracion> valoraciones = repositorioValoracion.findByReceptorId(usuarioId);
+        @Transactional(readOnly = true)
+        public List<Valoracion> obtenerValoracionesDeUsuario(Long usuarioId) {
+            List<Valoracion> valoraciones = repositorioValoracion.findByReceptorId(usuarioId);
 
-   valoraciones.forEach(v -> {
-    if (v.getEmisor() != null) Hibernate.initialize(v.getEmisor());
-    if (v.getReceptor() != null) Hibernate.initialize(v.getReceptor());
-});
+        valoraciones.forEach(v -> {
+            Hibernate.initialize(v.getEmisor());
+            Hibernate.initialize(v.getReceptor());
+        });
 
 
-    return valoraciones.stream()
-            .map(ValoracionOutputDTO::new)
-            .collect(Collectors.toList());
-}
+            return valoraciones;
+        }
 
 
     @Override
     @Transactional(readOnly = true)
     public Double calcularPromedioValoraciones(Long usuarioId) {
         List<Valoracion> valoraciones = repositorioValoracion.findByReceptorId(usuarioId);
+
+        valoraciones.forEach(v -> {
+            Hibernate.initialize(v.getEmisor());
+            Hibernate.initialize(v.getReceptor());
+        });
+
         return valoraciones.isEmpty()
                 ? 0.0
-                : valoraciones.stream().mapToInt(Valoracion::getPuntuacion).average().orElse(0.0); 
+                : valoraciones.stream().mapToDouble(Valoracion::getPuntuacion).average().orElse(0.0); 
     }
 }

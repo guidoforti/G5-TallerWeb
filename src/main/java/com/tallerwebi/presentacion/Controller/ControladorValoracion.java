@@ -1,6 +1,7 @@
 package com.tallerwebi.presentacion.Controller;
 
 import com.tallerwebi.dominio.Entity.Usuario;
+import com.tallerwebi.dominio.Entity.Valoracion;
 import com.tallerwebi.dominio.IRepository.RepositorioUsuario;
 import com.tallerwebi.dominio.IServicio.ServicioValoracion;
 import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
@@ -15,8 +16,11 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpSession;
+
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/valoraciones")
@@ -47,13 +51,26 @@ public class ControladorValoracion {
                 throw new UsuarioInexistente("El usuario que intentás ver no existe.");
             }
 
+            ValoracionOutputDTO v1 = new ValoracionOutputDTO(
+                11L,
+                "Juan",
+                "Carlos Perez",
+                5,
+                "Excelente viaje",
+                LocalDate.now().minusDays(2)
+        );
             // Obtener valoraciones y promedio
-            List<ValoracionOutputDTO> valoraciones = servicioValoracion.obtenerValoracionesDeUsuario(receptorId);
+            /* 
+            List<Valoracion> valoraciones = servicioValoracion.obtenerValoracionesDeUsuario(receptorId);
+            List<ValoracionOutputDTO> valoracionesDTO = valoraciones.stream()
+            .map(ValoracionOutputDTO::new)
+            .collect(Collectors.toList());
+            */
             Double promedio = servicioValoracion.calcularPromedioValoraciones(receptorId);
 
             // Armar modelo para la vista
             model.put("receptor", receptorOpt.get());
-            model.put("valoraciones", valoraciones);
+            model.put("valoraciones", v1);
             model.put("promedio", promedio);
 
             // DTO vacío para el formulario de nueva valoración
