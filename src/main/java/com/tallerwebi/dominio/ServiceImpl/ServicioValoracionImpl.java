@@ -68,10 +68,11 @@ public class ServicioValoracionImpl implements ServicioValoracion {
 public List<ValoracionOutputDTO> obtenerValoracionesDeUsuario(Long usuarioId) {
     List<Valoracion> valoraciones = repositorioValoracion.findByReceptorId(usuarioId);
 
-    valoraciones.forEach(v -> {
-        Hibernate.initialize(v.getEmisor());
-        Hibernate.initialize(v.getReceptor());
-    });
+   valoraciones.forEach(v -> {
+    if (v.getEmisor() != null) Hibernate.initialize(v.getEmisor());
+    if (v.getReceptor() != null) Hibernate.initialize(v.getReceptor());
+});
+
 
     return valoraciones.stream()
             .map(ValoracionOutputDTO::new)

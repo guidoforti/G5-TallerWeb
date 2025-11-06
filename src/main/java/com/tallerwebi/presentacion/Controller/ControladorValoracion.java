@@ -31,94 +31,80 @@ public class ControladorValoracion {
         this.repositorioUsuario = repositorioUsuario;
     }
 
-    /**
-     * Muestra el perfil de valoraciones de un usuario y el formulario para dejar una valoración.
-     */
     @GetMapping("/{receptorId}")
-    public ModelAndView verValoraciones(
-            @PathVariable Long receptorId, 
-            @ModelAttribute("success") String successMessage, 
-            @ModelAttribute("error") String errorMessage) {
-        
+    public ModelAndView verValoraciones(@PathVariable Long receptorId, HttpSession session) {
         ModelMap model = new ModelMap();
 
+        Object usuarioIdObj = session.getAttribute("idUsuario");
+        if (usuarioIdObj == null) {
+            return new ModelAndView("redirect:/login");
+        }
+
         try {
-            // 1. Obtener la información del usuario receptor para mostrar los detalles
+            // Buscar al usuario receptor (no se puede valorar un usuario inexistente)
             Optional<Usuario> receptorOpt = repositorioUsuario.buscarPorId(receptorId);
             if (!receptorOpt.isPresent()) {
-                throw new UsuarioInexistente("Usuario no encontrado.");
+                throw new UsuarioInexistente("El usuario que intentás ver no existe.");
             }
 
-            // 2. Obtener las valoraciones y el promedio
+            // Obtener valoraciones y promedio
             List<ValoracionOutputDTO> valoraciones = servicioValoracion.obtenerValoracionesDeUsuario(receptorId);
             Double promedio = servicioValoracion.calcularPromedioValoraciones(receptorId);
 
-            // 3. Preparar el modelo
-            model.put("receptorId", receptorId);
+            // Armar modelo para la vista
+            model.put("receptor", receptorOpt.get());
             model.put("valoraciones", valoraciones);
             model.put("promedio", promedio);
-            
-            // 4. Agregar mensajes flash (si existen)
-            if (!successMessage.isEmpty()) {
-                model.put("success", successMessage);
-            }
-            if (!errorMessage.isEmpty()) {
-                model.put("error", errorMessage);
-            }
 
+            // DTO vacío para el formulario de nueva valoración
+            model.put("valoracionDto", new ValoracionNuevaInputDTO());
             return new ModelAndView("verValoraciones", model);
 
         } catch (UsuarioInexistente e) {
             model.put("error", e.getMessage());
             return new ModelAndView("error", model);
+
         } catch (Exception e) {
             model.put("error", "Error al cargar las valoraciones: " + e.getMessage());
             return new ModelAndView("error", model);
         }
     }
 
-    /**
-     * Procesa el envío de una nueva valoración.
-     */
     @PostMapping("/nueva")
-    public ModelAndView enviarValoracion(
-            @ModelAttribute("valoracionDto")  ValoracionNuevaInputDTO valoracionDto,
-            HttpSession session, 
-            RedirectAttributes redirectAttributes) {
+    public ModelAndView enviarValoracion(@ModelAttribute("valoracionDto") ValoracionNuevaInputDTO valoracionDto, HttpSession session) {
+        ModelMap model = new ModelMap();
 
-        // 1. Validar sesión del emisor
-        Long emisorId = (Long) session.getAttribute("idUsuario");
-        if (emisorId == null) {
+        Object usuarioIdObj = session.getAttribute("idUsuario");
+        if (usuarioIdObj == null) {
             return new ModelAndView("redirect:/login");
         }
-        
-        // 2. Obtener el usuario emisor
-        Optional<Usuario> emisorOpt = repositorioUsuario.buscarPorId(emisorId);
-        if (!emisorOpt.isPresent()) {
-            session.invalidate(); 
-            return new ModelAndView("redirect:/login");
-        }
-        Usuario emisor = emisorOpt.get();
+
+        Long emisorId = (Long) usuarioIdObj;
 
         try {
-            // 3. Llamar al servicio que valida y guarda la valoración
-            // El servicio contiene las validaciones:
-            // a) No autovaloración.
-            // b) Puntuación y comentario obligatorio.
-            // c) Existe viaje concluido y pendiente de valoración entre emisor y receptor.
+            //  Obtener emisor desde la base
+            Optional<Usuario> emisorOpt = repositorioUsuario.buscarPorId(emisorId);
+            if (!emisorOpt.isPresent()) {
+                session.invalidate();
+                return new ModelAndView("redirect:/login");
+            }
+
+            Usuario emisor = emisorOpt.get();
+
+            // Intentar guardar la valoración
             servicioValoracion.valorarUsuario(emisor, valoracionDto);
-            
-            redirectAttributes.addFlashAttribute("success", "¡Valoración enviada con éxito!");
+
+            // 4Redirigir al perfil del receptor actualizado
+            return new ModelAndView("redirect:/valoraciones/" + valoracionDto.getReceptorId());
 
         } catch (DatoObligatorioException | UsuarioInexistente e) {
-            // Error de validación o negocio, redirigir al perfil del receptor con el mensaje de error
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
-        } catch (Exception e) {
-             // Error inesperado
-            redirectAttributes.addFlashAttribute("error", "Error inesperado al enviar la valoración.");
-        }
+            model.put("error", e.getMessage());
+            model.put("valoracionDto", valoracionDto);
+            return new ModelAndView("verValoraciones", model);
 
-        // Redirigir siempre al perfil del usuario valorado para ver la actualización
-        return new ModelAndView("redirect:/valoraciones/" + valoracionDto.getReceptorId());
+        } catch (Exception e) {
+            model.put("error", "Error al enviar la valoración: " + e.getMessage());
+            return new ModelAndView("error", model);
+        }
     }
 }
