@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import com.tallerwebi.dominio.Entity.HistorialReserva;
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.IRepository.RepositorioHistorialReserva;
+import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
 
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
@@ -42,15 +43,17 @@ public class ServicioReservaImpl implements ServicioReserva {
     private final ServicioViajero servicioViajero;
     private final RepositorioHistorialReserva repositorioHistorialReserva;
     private final PreferenceClient preferenceClient;
+    private final ServicioNotificacion servicioNotificacion;
 
     @Autowired
     public ServicioReservaImpl(ReservaRepository reservaRepository, ServicioViaje servicioViaje, ServicioViajero servicioViajero,
-                               RepositorioHistorialReserva repositorioHistorialReserva, PreferenceClient preferenceClient) {
+                               RepositorioHistorialReserva repositorioHistorialReserva, PreferenceClient preferenceClient, ServicioNotificacion servicioNotificacion) {
         this.reservaRepository = reservaRepository;
         this.servicioViaje = servicioViaje;
         this.servicioViajero = servicioViajero;
         this.repositorioHistorialReserva = repositorioHistorialReserva;
         this.preferenceClient = preferenceClient;
+        this.servicioNotificacion = servicioNotificacion;
     }
 
     @Override
@@ -79,6 +82,19 @@ public class ServicioReservaImpl implements ServicioReserva {
         reserva.setFechaSolicitud(LocalDateTime.now());
         Reserva reservaGuardada = reservaRepository.save(reserva);
 
+        String mensaje = String.format("¡Nueva Solicitud de Reserva! %s ha solicitado un asiento para el viaje de %s a %s.",
+                viajeroManaged.getNombre(),
+                viajeManaged.getOrigen().getNombre(),
+                viajeManaged.getDestino().getNombre());
+
+        // URL Destino: [🟢 CORRECCIÓN] Redirigir al listado de reservas para la acción (asumiendo /reserva/listar existe)
+        String urlDestino = "/reserva/listar?viajeId=" + viajeManaged.getId();
+
+        // Disparar la notificación al conductor del viaje
+        servicioNotificacion.guardarNotificacion(viajeManaged.getConductor(), mensaje, urlDestino);
+
+        // Disparar la notificación al conductor del viaje
+        servicioNotificacion.guardarNotificacion(viajeManaged.getConductor(), mensaje, urlDestino);
         registrarHistorial(reservaGuardada, null, viajeroManaged);
         return reservaGuardada;
     }

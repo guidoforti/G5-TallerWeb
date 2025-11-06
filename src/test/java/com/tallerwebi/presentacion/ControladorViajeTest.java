@@ -291,7 +291,8 @@ public class ControladorViajeTest {
     public void deberiaMostrarDetalleDeViajeExistente() throws Exception {
         // given
         Long viajeId = 1L;
-
+        when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
         // Crear ciudades de origen y destino
         Ciudad origen = new Ciudad();
         origen.setId(1L);
@@ -338,6 +339,8 @@ public class ControladorViajeTest {
     public void deberiaMostrarErrorSiElViajeNoExiste() throws Exception {
         // given
         Long viajeId = 999L;
+        when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
         when(servicioViajeMock.obtenerDetalleDeViaje(viajeId))
                 .thenThrow(new NotFoundException("No se encontró el viaje con ID: " + viajeId));
 

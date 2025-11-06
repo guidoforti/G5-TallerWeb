@@ -34,5 +34,79 @@
 </main>
 <div th:replace="fragments/fragments :: footer"></div>
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+<script>
+    /**
+     * Script para el sistema de notificaciones por Polling.
+     * Se ejecuta inmediatamente al cargar el fragmento.
+     */
+
+    const API_URL = '/spring/api/notificaciones/pendientes';
+    const POLLING_INTERVAL = 10000; // 10 segundos
+
+    // Elementos del DOM (Ya deben existir en la Navbar)
+    const notificationCounter = document.getElementById('notificacion-contador');
+
+    function mostrarToastNotificacion(notif) {
+        console.log(`[NOTIF] ${notif.mensaje}`);
+
+        // Simulación de Toast con confirmación para la redirección
+        const isConfirmed = confirm(`¡NUEVA NOTIFICACIÓN! ${notif.mensaje}\n\n¿Ir a detalles?`);
+
+        if (isConfirmed && notif.urlDestino) {
+            window.location.href = notif.urlDestino;
+        }
+    }
+
+    function actualizarContador(count) {
+        if (notificationCounter) {
+            if (count > 0) {
+                notificationCounter.textContent = count;
+                notificationCounter.style.display = 'inline-block';
+            } else {
+                notificationCounter.textContent = 0;
+                notificationCounter.style.display = 'none';
+            }
+        }
+    }
+
+    function checkNotifications() {
+        // Ejecutamos fetch. El backend debe devolver 401 si la sesión es inválida.
+        fetch(API_URL)
+            .then(response => {
+                if (response.status === 401) {
+                    throw new Error("UNAUTHORIZED");
+                }
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(notificaciones => {
+                // Si recibimos notificaciones, procesamos y mostramos la más reciente
+                if (notificaciones.length > 0) {
+                    mostrarToastNotificacion(notificaciones[0]);
+                }
+                // Actualizar el badge con el total de notificaciones no vistas
+                actualizarContador(notificaciones.length);
+            })
+            .catch(error => {
+                if (error.message === "UNAUTHORIZED") {
+                    console.warn("Polling detenido: Sesión expirada.");
+                    // Opcional: Podrías redirigir a /login aquí si la sesión es crítica: window.location.href = '/spring/login';
+                } else {
+                    console.error("Error de Polling:", error);
+                }
+            });
+    }
+
+    // [🟢 INICIO]: Función para iniciar el Polling
+    function iniciarPolling() {
+        checkNotifications(); // Primera comprobación inmediata
+        setInterval(checkNotifications, POLLING_INTERVAL); // Repetición
+    }
+
+    // Disparar el Polling Inmediatamente (ya que estamos en un fragmento condicional)
+    iniciarPolling();
+</script>
 </body>
 </html>
