@@ -24,9 +24,13 @@ public class RegistroInputDTO {
     // Campos Específicos de Conductor
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate fechaDeVencimientoLicencia;
+    private Integer edadConductor;
 
     // Campos Específicos de Viajero
     private Integer edad;
+    private Boolean fumador;
+    private String discapacitado;
+    private Double promedioValoraciones;
 
     // --- Métodos de Conversión a Entidad ---
 
@@ -36,6 +40,7 @@ public class RegistroInputDTO {
         conductor.setEmail(this.email);
         conductor.setContrasenia(this.contrasenia);
         conductor.setFechaDeVencimientoLicencia(this.fechaDeVencimientoLicencia);
+        conductor.setEdad(edadConductor);
         // NOTA: El ROL y ACTIVO se asignan en el Servicio.
         return conductor;
     }
@@ -46,6 +51,8 @@ public class RegistroInputDTO {
         viajero.setEmail(this.email);
         viajero.setContrasenia(this.contrasenia);
         viajero.setEdad(this.edad);
+        viajero.setDiscapacitado(discapacitado);
+        viajero.setFumador(fumador);
         // NOTA: El ROL y ACTIVO se asignan en el Servicio.
         return viajero;
     }

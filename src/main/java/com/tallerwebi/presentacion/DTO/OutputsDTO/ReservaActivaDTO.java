@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ReservaPendienteRechazadaDTO {
+public class ReservaActivaDTO {
 
     private Long reservaId;
     private Long viajeId;
@@ -31,7 +31,7 @@ public class ReservaPendienteRechazadaDTO {
      * Constructor que convierte una entidad Reserva a DTO
      * con valores por defecto null-safe
      */
-    public ReservaPendienteRechazadaDTO(Reserva reserva) {
+    public ReservaActivaDTO(Reserva reserva) {
         this.reservaId = reserva.getId();
 
         // Información del viaje

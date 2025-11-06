@@ -1,5 +1,8 @@
 package com.tallerwebi.presentacion.Controller;
 
+import com.mercadopago.exceptions.MPApiException;
+import com.mercadopago.exceptions.MPException;
+import com.mercadopago.resources.preference.Preference;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Reserva;
 import com.tallerwebi.dominio.Entity.Viaje;
@@ -14,7 +17,7 @@ import com.tallerwebi.dominio.excepcion.*;
 import com.tallerwebi.presentacion.DTO.InputsDTO.MarcarAsistenciaInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.RechazoReservaInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.SolicitudReservaInputDTO;
-import com.tallerwebi.presentacion.DTO.OutputsDTO.ReservaPendienteRechazadaDTO;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.ReservaActivaDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ReservaVistaDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeConfirmadoViajeroDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeReservaSolicitudDTO;
@@ -491,8 +494,8 @@ public class ControladorReserva {
      * Lista las reservas pendientes y rechazadas del viajero logueado
      * GET /reserva/misReservasPendientes
      */
-    @GetMapping("/misReservasPendientes")
-    public ModelAndView listarReservasPendientesYRechazadas(HttpSession session) {
+    @GetMapping("/misReservasActivas")
+    public ModelAndView listarReservasActivas(HttpSession session) {
         ModelMap model = new ModelMap();
 
         // Validar sesión
@@ -507,7 +510,7 @@ public class ControladorReserva {
 
         try {
             // Obtener todas las reservas pendientes y rechazadas del viajero
-            List<Reserva> reservas = servicioReserva.listarReservasPendientesYRechazadas(viajeroId);
+            List<Reserva> reservas = servicioReserva.listarReservasActivasPorViajero(viajeroId);
 
             // Separar en dos listas: pendientes y rechazadas
             List<Reserva> reservasPendientes = reservas.stream()
@@ -518,19 +521,27 @@ public class ControladorReserva {
                     .filter(r -> r.getEstado() == EstadoReserva.RECHAZADA)
                     .collect(Collectors.toList());
 
+            List<Reserva> reservasConfirmadas = reservas.stream()
+                    .filter(r -> r.getEstado() == EstadoReserva.CONFIRMADA)
+                    .collect(Collectors.toList());
             // Convertir a DTOs
-            List<ReservaPendienteRechazadaDTO> pendientesDTO = reservasPendientes.stream()
-                    .map(ReservaPendienteRechazadaDTO::new)
+            List<ReservaActivaDTO> pendientesDTO = reservasPendientes.stream()
+                    .map(ReservaActivaDTO::new)
                     .collect(Collectors.toList());
 
-            List<ReservaPendienteRechazadaDTO> rechazadasDTO = reservasRechazadas.stream()
-                    .map(ReservaPendienteRechazadaDTO::new)
+            List<ReservaActivaDTO> rechazadasDTO = reservasRechazadas.stream()
+                    .map(ReservaActivaDTO::new)
+                    .collect(Collectors.toList());
+
+            List<ReservaActivaDTO> confirmadasDTO = reservasConfirmadas.stream()
+                    .map(ReservaActivaDTO::new)
                     .collect(Collectors.toList());
 
             model.put("reservasPendientes", pendientesDTO);
             model.put("reservasRechazadas", rechazadasDTO);
+            model.put("reservasConfirmadas", confirmadasDTO);
 
-            return new ModelAndView("misReservasPendientes", model);
+            return new ModelAndView("misReservasActivas", model);
 
         } catch (UsuarioInexistente e) {
             model.put("error", e.getMessage());
@@ -604,6 +615,142 @@ public class ControladorReserva {
         } catch (UsuarioInexistente e) {
             model.put("error", e.getMessage());
             return new ModelAndView("error", model);
+        }
+    }
+
+
+    @GetMapping("/pagar")
+    public ModelAndView pagarReservar (HttpSession session, @RequestParam Long reservaId , RedirectAttributes redirectAttributes) throws UsuarioInexistente {
+        ModelMap model = new ModelMap();
+        System.out.println("\n--- [DEBUG] INICIO: GET /reserva/pagar ---");
+        System.out.println("[DEBUG] Recibido reservaId: " + reservaId);
+        // Validar sesión
+        Object usuarioIdObj = session.getAttribute("idUsuario");
+        Object rol = session.getAttribute("ROL");
+
+        if (usuarioIdObj == null || !"VIAJERO".equals(rol)) {
+            return new ModelAndView("redirect:/login");
+        }
+        try {
+            System.out.println("[DEBUG] TRY: Llamando a servicioReserva.crearPreferenciaDePago...");
+            Preference preferenciaDePago  = servicioReserva.crearPreferenciaDePago(reservaId, (Long) usuarioIdObj);
+            System.out.println("[DEBUG] ÉXITO: Preferencia creada. Init Point: " + preferenciaDePago.getInitPoint());
+            System.out.println("--- [DEBUG] FIN: GET /reserva/pagar (Redirigiendo a MP) ---");
+            return new ModelAndView("redirect:" + preferenciaDePago.getInitPoint());
+        } catch (MPApiException e) { // <-- ¡Catch específico para errores de API!
+
+            System.err.println("************************************************************");
+            System.err.println("[DEBUG] CATCH: ¡FALLÓ! MPApiException (Error de la API de MP)");
+            System.err.println("STATUS CODE: " + e.getStatusCode());
+            // ESTA LÍNEA ES LA CLAVE. NOS DIRÁ EL ERROR REAL:
+            System.err.println("API RESPONSE: " + e.getApiResponse().getContent());
+            System.err.println("************************************************************");
+
+            // Le pasamos el error real al usuario para que lo veas en la pantalla
+            redirectAttributes.addFlashAttribute("error", "Error de MP: " + e.getApiResponse().getContent());
+            return new ModelAndView("redirect:/reserva/misReservasActivas");
+
+        } catch (MPException e) { // <-- Catch para errores del SDK
+
+            System.err.println("************************************************************");
+            System.err.println("[DEBUG] CATCH: ¡FALLÓ! MPException (Error del SDK de MP)");
+            System.err.println("MENSAJE: " + e.getMessage());
+            System.err.println("************************************************************");
+
+            redirectAttributes.addFlashAttribute("error", "Error del SDK de MP: " + e.getMessage());
+            return new ModelAndView("redirect:/reserva/misReservasActivas");
+
+        } catch (NotFoundException | UsuarioNoAutorizadoException | AccionNoPermitidaException e) { // Tus excepciones de negocio
+
+            System.err.println("************************************************************");
+            System.err.println("[DEBUG] CATCH: ¡FALLÓ! Excepción de negocio: " + e.getMessage());
+            System.err.println("************************************************************");
+
+            redirectAttributes.addFlashAttribute("error", "Error al iniciar el pago: " + e.getMessage());
+            return new ModelAndView("redirect:/reserva/misReservasActivas");
+
+        } catch (Exception e) { // Catch genérico
+
+            System.err.println("************************************************************");
+            System.err.println("[DEBUG] CATCH: ¡FALLÓ! Excepción genérica: " + e.getMessage());
+            e.printStackTrace(); // Imprimir el stack trace completo
+            System.err.println("************************************************************");
+
+            redirectAttributes.addFlashAttribute("error", "Ocurrió un error inesperado. Intente más tarde.");
+            return new ModelAndView("redirect:/reserva/misReservasActivas");
+        }
+    }
+
+    @GetMapping("/pago/exitoso")
+    public ModelAndView devolverPagoExitoso(HttpSession session, @RequestParam Long reservaId, RedirectAttributes redirectAttributes) {
+        ModelMap model = new ModelMap();
+        // Validar sesión
+        Object usuarioIdObj = session.getAttribute("idUsuario");
+        Object rol = session.getAttribute("ROL");
+
+        if (usuarioIdObj == null || !"VIAJERO".equals(rol)) {
+            return new ModelAndView("redirect:/login");
+        }
+        try {
+            Reserva reserva = servicioReserva.confirmarPagoReserva(reservaId, (Long)usuarioIdObj);
+            ReservaActivaDTO reservaActivaDTO = new ReservaActivaDTO(reserva);
+            model.put("reserva" , reservaActivaDTO);
+            model.put("pagoOK" , "El pago fue exitoso");
+            return new ModelAndView("pagoExitoso" , model);
+        } catch (NotFoundException | UsuarioNoAutorizadoException | AccionNoPermitidaException e){
+            redirectAttributes.addFlashAttribute("error" , e.getMessage());
+            return new ModelAndView("redirect:/reserva/misReservasActivas");
+    }
+    }
+
+
+    @GetMapping("/pago/fallido")
+    public ModelAndView devolverPagoFallido(HttpSession session,
+                                            @RequestParam Long reservaId,
+                                            RedirectAttributes redirectAttributes) {
+        Object usuarioIdObj = session.getAttribute("idUsuario");
+        Object rol = session.getAttribute("ROL");
+
+        if (usuarioIdObj == null || !"VIAJERO".equals(rol)) {
+            return new ModelAndView("redirect:/login");
+        }
+        ModelMap model = new ModelMap();
+        try {
+            Reserva reserva = servicioReserva.obtenerReservaPorId(reservaId);
+            model.put("reserva", new ReservaActivaDTO(reserva));
+            model.put("error", "Tu pago fue rechazado o cancelado.");
+            return new ModelAndView("pagoFallido", model);
+
+        } catch (NotFoundException e){
+
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return new ModelAndView("redirect:/reserva/misReservasActivas");
+        }
+    }
+
+
+
+    @GetMapping("/pago/pendiente")
+    public ModelAndView devolverPagoPendiente(HttpSession session,
+                                            @RequestParam Long reservaId,
+                                            RedirectAttributes redirectAttributes) {
+        Object usuarioIdObj = session.getAttribute("idUsuario");
+        Object rol = session.getAttribute("ROL");
+
+        if (usuarioIdObj == null || !"VIAJERO".equals(rol)) {
+            return new ModelAndView("redirect:/login");
+        }
+        ModelMap model = new ModelMap();
+        try {
+            Reserva reserva = servicioReserva.obtenerReservaPorId(reservaId);
+            model.put("reserva", new ReservaActivaDTO(reserva));
+            model.put("error", "Tu pago esta pendiente");
+            return new ModelAndView("pagoPendiente", model);
+
+        } catch (NotFoundException e){
+
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return new ModelAndView("redirect:/reserva/misReservasActivas");
         }
     }
 }

@@ -3,17 +3,21 @@ package com.tallerwebi.dominio.ServiceImpl;
 import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.*;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
+import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.IRepository.RepositorioParada;
+import com.tallerwebi.dominio.IRepository.ReservaRepository;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.excepcion.*;
+import com.tallerwebi.dominio.util.CalculadoraDistancia;
 import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -28,13 +32,17 @@ public class ServicioViajeImpl implements ServicioViaje {
     private ServicioConductor servicioConductor;
     private ServicioVehiculo servicioVehiculo;
     private RepositorioParada repositorioParada;
+    private ReservaRepository reservaRepository;
 
     @Autowired
-    public ServicioViajeImpl(ViajeRepository viajeRepository, ServicioConductor servicioConductor, ServicioVehiculo servicioVehiculo, RepositorioParada repositorioParada) {
+    public ServicioViajeImpl(ViajeRepository viajeRepository, ServicioConductor servicioConductor,
+                             ServicioVehiculo servicioVehiculo, RepositorioParada repositorioParada,
+                             ReservaRepository reservaRepository) {
         this.viajeRepository = viajeRepository;
         this.servicioConductor = servicioConductor;
         this.servicioVehiculo = servicioVehiculo;
         this.repositorioParada = repositorioParada;
+        this.reservaRepository = reservaRepository;
     }
 
     @Override
@@ -182,6 +190,16 @@ public class ServicioViajeImpl implements ServicioViaje {
         viaje.setConductor(conductor);
         viaje.setVehiculo(vehiculo);
 
+        // Calcular duración estimada basada en distancia
+        double distanciaKm = CalculadoraDistancia.calcularDistanciaHaversine(
+            viaje.getOrigen().getLatitud(),
+            viaje.getOrigen().getLongitud(),
+            viaje.getDestino().getLatitud(),
+            viaje.getDestino().getLongitud()
+        );
+        int duracionMinutos = CalculadoraDistancia.calcularDuracionEstimadaMinutos(distanciaKm);
+        viaje.setDuracionEstimadaMinutos(duracionMinutos);
+
         // Guardar viaje
         viajeRepository.guardarViaje(viaje);
     }
@@ -296,6 +314,132 @@ public class ServicioViajeImpl implements ServicioViaje {
         }
 
         return viajes;
+    }
+
+    @Override
+    public void iniciarViaje(Long viajeId, Long conductorId)
+        throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeYaIniciadoException, VentanaHorariaException {
+
+        // Obtener viaje
+        Viaje viaje = viajeRepository.findById(viajeId)
+            .orElseThrow(() -> new ViajeNoEncontradoException("Viaje no encontrado"));
+
+        // Verificar que el conductor es el dueño del viaje
+        if (!viaje.getConductor().getId().equals(conductorId)) {
+            throw new UsuarioNoAutorizadoException("No eres el conductor de este viaje");
+        }
+
+        // Verificar que el viaje no esté ya iniciado o finalizado
+        if (viaje.getEstado() == EstadoDeViaje.EN_CURSO || viaje.getEstado() == EstadoDeViaje.FINALIZADO) {
+            throw new ViajeYaIniciadoException("El viaje ya fue iniciado");
+        }
+
+        // Verificar que el viaje no esté cancelado
+        if (viaje.getEstado() == EstadoDeViaje.CANCELADO) {
+            throw new ViajeYaIniciadoException("El viaje está cancelado");
+        }
+
+        LocalDateTime ahora = LocalDateTime.now();
+
+        // Verificar que el viaje puede iniciarse (solo a partir de la hora programada)
+        if (ahora.isBefore(viaje.getFechaHoraDeSalida())) {
+            throw new VentanaHorariaException("No puedes iniciar el viaje antes de la hora programada: " +
+                viaje.getFechaHoraDeSalida().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+        }
+
+        // Calcular minutos de retraso (puede ser negativo si inicia antes)
+        int minutosRetraso = (int) Duration.between(viaje.getFechaHoraDeSalida(), ahora).toMinutes();
+
+        // Iniciar viaje
+        viaje.setEstado(EstadoDeViaje.EN_CURSO);
+        viaje.setFechaHoraInicioReal(ahora);
+        viaje.setMinutosDeRetraso(minutosRetraso);
+        viajeRepository.modificarViaje(viaje);
+    }
+
+    @Override
+    public void finalizarViaje(Long viajeId, Long conductorId)
+        throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeYaFinalizadoException {
+
+        // Obtener viaje
+        Viaje viaje = viajeRepository.findById(viajeId)
+            .orElseThrow(() -> new ViajeNoEncontradoException("Viaje no encontrado"));
+
+        // Verificar que el conductor es el dueño
+        if (!viaje.getConductor().getId().equals(conductorId)) {
+            throw new UsuarioNoAutorizadoException("No eres el conductor de este viaje");
+        }
+
+        // Verificar que esté en curso
+        if (viaje.getEstado() != EstadoDeViaje.EN_CURSO) {
+            throw new ViajeYaFinalizadoException("El viaje no está en curso");
+        }
+
+        // Finalizar viaje
+        viaje.setEstado(EstadoDeViaje.FINALIZADO);
+        viaje.setFechaHoraFinReal(LocalDateTime.now());
+        viaje.setCierreAutomatico(false);
+        viajeRepository.modificarViaje(viaje);
+    }
+
+    @Override
+    public void cerrarViajesOlvidados() {
+        LocalDateTime ahora = LocalDateTime.now();
+
+        // Buscar viajes en curso que excedieron duracionEstimada + 2 horas
+        List<Viaje> viajesOlvidados = viajeRepository.findViajesEnCursoExcedidos(
+            ahora.minusHours(2)
+        );
+
+        for (Viaje viaje : viajesOlvidados) {
+            // Verificar si realmente excedió el tiempo
+            if (viaje.getFechaHoraInicioReal() != null && viaje.getDuracionEstimadaMinutos() != null) {
+                LocalDateTime finEstimado = viaje.getFechaHoraInicioReal()
+                    .plusMinutes(viaje.getDuracionEstimadaMinutos())
+                    .plusHours(2);
+
+                if (ahora.isAfter(finEstimado)) {
+                    // Cerrar automáticamente (sin penalización)
+                    viaje.setEstado(EstadoDeViaje.FINALIZADO);
+                    viaje.setFechaHoraFinReal(finEstimado);
+                    viaje.setCierreAutomatico(true);
+                    viajeRepository.modificarViaje(viaje);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void iniciarViajesAtrasados() {
+        LocalDateTime ahora = LocalDateTime.now();
+
+        // Buscar viajes que debieron iniciar hace más de 15 minutos
+        List<Viaje> viajesAtrasados = viajeRepository.findViajesNoIniciadosFueraDePlazo(
+            ahora.minusMinutes(15)
+        );
+
+        for (Viaje viaje : viajesAtrasados) {
+            try {
+                // Intentar iniciar el viaje automáticamente
+                iniciarViaje(viaje.getId(), viaje.getConductor().getId());
+            } catch (Exception e) {
+                // Si falla el inicio (ej: ya fue cancelado), continuar con el siguiente
+                // Log error but don't stop processing other trips
+                System.err.println("Error al iniciar viaje " + viaje.getId() + ": " + e.getMessage());
+            }
+        }
+    }
+
+    private void cancelarTodasLasReservas(Viaje viaje) {
+        Hibernate.initialize(viaje.getReservas());
+        for (Reserva reserva : viaje.getReservas()) {
+            if (reserva.getEstado() == EstadoReserva.CONFIRMADA) {
+                // Cambiar a rechazada cuando el viaje se cancela por el sistema
+                reserva.setEstado(EstadoReserva.RECHAZADA);
+                reserva.setMotivoRechazo("Viaje cancelado automáticamente por el sistema");
+                reservaRepository.update(reserva);
+            }
+        }
     }
 
 }
