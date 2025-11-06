@@ -54,9 +54,12 @@ public class RepositorioUsuarioImpl implements RepositorioUsuario {
     }
 
     @Override
-    public Optional<Usuario> buscarPorId(Long id) {
-        Usuario usuario = sessionFactory.getCurrentSession().get(Usuario.class, id);
-        return Optional.ofNullable(usuario);
-    }
+public Optional<Usuario> buscarPorId(Long id) {
+    final Session session = sessionFactory.getCurrentSession();
+    String hql = "FROM Usuario U WHERE U.id = :id";
+    Query<Usuario> query = session.createQuery(hql, Usuario.class)
+            .setParameter("id", id);
+    return query.uniqueResultOptional();
+}
 
 }

@@ -21,8 +21,11 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {HibernateTestConfig.class, DataBaseTestInitilizationConfig.class})
@@ -178,4 +181,32 @@ public class RepositorioUsuarioTest {
         assertTrue(recuperado.isPresent(), "El usuario modificado debería ser encontrado.");
         assertThat(recuperado.get().getNombre(), is(equalTo(nuevoNombre)));
     }
+
+    @Test
+public void deberiaEncontrarUsuarioPorIdExistente() {
+    // Arrange: usuarioBase ya fue guardado en @BeforeEach
+    Long idExistente = usuarioBase.getId();
+
+    // Act
+    Optional<Usuario> resultado = repositorioUsuario.buscarPorId(idExistente);
+
+    // Assert
+    assertTrue(resultado.isPresent(), "Debería encontrar un usuario existente por su ID.");
+    assertThat(resultado.get().getId(), is(equalTo(idExistente)));
+    assertThat(resultado.get().getNombre(), is(equalTo(usuarioBase.getNombre())));
+}
+
+@Test
+public void noDeberiaEncontrarUsuarioPorIdInexistente() {
+    // Arrange
+    Long idInexistente = 9999L;
+
+    // Act
+    Optional<Usuario> resultado = repositorioUsuario.buscarPorId(idInexistente);
+
+    // Assert
+    assertTrue(resultado.isEmpty(), "No debería encontrar ningún usuario con un ID inexistente.");
+}
+
+    
 }

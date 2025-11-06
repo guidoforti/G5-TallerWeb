@@ -90,6 +90,13 @@
                         </div>
                     </div>
 
+                    <a th:if="${accionFinalizada}" 
+                            th:href="@{/valoraciones/{id}(id=${idUsuario})}" 
+                            class="btn btn-unrumbo">
+
+                            <i class="fas fa-star me-2"></i> Valorar a Viajeros
+                        </a>
+
                     <!-- Action buttons -->
                     <div class="d-flex justify-content-center gap-3 mt-4">
                         <a th:href="@{/viaje/detalle(id=${viajeId})}" class="btn btn-unrumbo">
