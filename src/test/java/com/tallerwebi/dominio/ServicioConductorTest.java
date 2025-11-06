@@ -50,6 +50,7 @@ class ServicioConductorTest {
         nuevo.setNombre("Ana");
         nuevo.setEmail("ana@mail.com");
         nuevo.setContrasenia("123");
+        nuevo.setEdad(20);
         // Licencia futura
         nuevo.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(10));
 
@@ -73,6 +74,7 @@ class ServicioConductorTest {
         nuevo.setNombre("Ana");
         nuevo.setEmail("ana@mail.com");
         nuevo.setContrasenia("123");
+        nuevo.setEdad(20);
         nuevo.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(10));
 
         // Mock: ServicioLogin lanza la excepción (simulando que el email ya existe)
