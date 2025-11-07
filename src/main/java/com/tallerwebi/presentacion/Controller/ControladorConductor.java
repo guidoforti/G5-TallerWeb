@@ -37,7 +37,7 @@ public class ControladorConductor {
         try {
             Long conductorId = (Long) usuarioId;
             Conductor conductor = servicioConductor.obtenerConductor(conductorId);
-
+            model.put("idConductor", conductorId);
             model.put("nombreConductor", conductor.getNombre());
             model.put("rol", rol);
             return new ModelAndView("homeConductor", model);

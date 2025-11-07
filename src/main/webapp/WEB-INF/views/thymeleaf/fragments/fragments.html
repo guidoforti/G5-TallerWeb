@@ -17,12 +17,26 @@
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+
     <!-- Bloque extra opcional -->
     <th:block th:replace="~{::extra}"></th:block>
 </head>
 
 <body><nav th:fragment="navbar" class="navbar navbar-expand-md navbar-unrumbo fixed-top">
 </nav>
+<th:block th:fragment="scripts-websocket">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+    <script th:src="@{/js/notificacionesConductor.js}"></script>
+</th:block>
 <footer th:fragment="footer" class="bg-dark text-white mt-5 p-4">
     <style>
         /* [IMPORTANTE] Esto asegura que el footer use el color Marrón Oscuro (#4E3D2F) */

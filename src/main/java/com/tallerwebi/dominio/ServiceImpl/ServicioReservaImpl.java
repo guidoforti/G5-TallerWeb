@@ -18,12 +18,15 @@ import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
 import com.tallerwebi.dominio.excepcion.*;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.NotificacionOutputDTO;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.tallerwebi.dominio.Entity.HistorialReserva;
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.IRepository.RepositorioHistorialReserva;
-import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
@@ -43,17 +46,17 @@ public class ServicioReservaImpl implements ServicioReserva {
     private final ServicioViajero servicioViajero;
     private final RepositorioHistorialReserva repositorioHistorialReserva;
     private final PreferenceClient preferenceClient;
-    private final ServicioNotificacion servicioNotificacion;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Autowired
     public ServicioReservaImpl(ReservaRepository reservaRepository, ServicioViaje servicioViaje, ServicioViajero servicioViajero,
-                               RepositorioHistorialReserva repositorioHistorialReserva, PreferenceClient preferenceClient, ServicioNotificacion servicioNotificacion) {
+                               RepositorioHistorialReserva repositorioHistorialReserva, PreferenceClient preferenceClient, SimpMessagingTemplate messagingTemplate) {
         this.reservaRepository = reservaRepository;
         this.servicioViaje = servicioViaje;
         this.servicioViajero = servicioViajero;
         this.repositorioHistorialReserva = repositorioHistorialReserva;
         this.preferenceClient = preferenceClient;
-        this.servicioNotificacion = servicioNotificacion;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Override
@@ -82,20 +85,8 @@ public class ServicioReservaImpl implements ServicioReserva {
         reserva.setFechaSolicitud(LocalDateTime.now());
         Reserva reservaGuardada = reservaRepository.save(reserva);
 
-        String mensaje = String.format("¡Nueva Solicitud de Reserva! %s ha solicitado un asiento para el viaje de %s a %s.",
-                viajeroManaged.getNombre(),
-                viajeManaged.getOrigen().getNombre(),
-                viajeManaged.getDestino().getNombre());
-
-        // URL Destino: [🟢 CORRECCIÓN] Redirigir al listado de reservas para la acción (asumiendo /reserva/listar existe)
-        String urlDestino = "/reserva/listar?viajeId=" + viajeManaged.getId();
-
-        // Disparar la notificación al conductor del viaje
-        servicioNotificacion.guardarNotificacion(viajeManaged.getConductor(), mensaje, urlDestino);
-
-        // Disparar la notificación al conductor del viaje
-        servicioNotificacion.guardarNotificacion(viajeManaged.getConductor(), mensaje, urlDestino);
         registrarHistorial(reservaGuardada, null, viajeroManaged);
+        enviarNotificacionNuevaReserva(reservaGuardada);
         return reservaGuardada;
     }
 
@@ -449,5 +440,33 @@ public class ServicioReservaImpl implements ServicioReserva {
 
         // Si la búsqueda devuelve algún resultado, la reserva ya existe y está activa.
         return reservaRepository.findByViajeroIdAndViajeIdAndEstadoIn(viajeroId, viajeId, estadosActivos).isPresent();
+    }
+
+    private void enviarNotificacionNuevaReserva(Reserva reserva) {
+        // El Viaje es una entidad Managed, podemos acceder a sus relaciones.
+        // Asumo que la Entidad Viaje tiene una relación con la Entidad Conductor.
+
+        // Regla de Arquitectura Limpia: Manejar Lazy Loading si es necesario
+        Hibernate.initialize(reserva.getViaje());
+
+        // 1. Obtener el ID del Conductor
+        Long idConductor = reserva.getViaje().getConductor().getId();
+
+        // 2. Definir el destino del mensaje (la "topic" a la que el conductor está suscrito)
+        String destino = "/topic/notificaciones/" + idConductor;
+
+        // 3. Crear el DTO de la notificación (asumiendo que creaste NotificacionOutputDTO)
+        String mensaje = String.format("Nueva Reserva PENDIENTE de %s para tu Viaje a %s.",
+                reserva.getViajero().getNombre(),
+                reserva.getViaje().getDestino().getNombre()
+        );
+        NotificacionOutputDTO notificacion = new NotificacionOutputDTO(mensaje);
+
+        // 4. Enviar (convertAndSend) el DTO al destino
+        // Esto lo convierte automáticamente a JSON para el cliente.
+        messagingTemplate.convertAndSend(destino, notificacion);
+
+        // Nota: El uso de Hibernate.initialize() aquí sigue tu patrón:
+        // "Usa Hibernate.initialize() para colecciones perezosas cuando sea necesario"
     }
 }

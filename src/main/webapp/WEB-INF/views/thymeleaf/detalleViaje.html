@@ -26,13 +26,16 @@
 
 <body>
 <body>
-<th:block>
-    <nav th:if="${#strings.equals(userRole, 'CONDUCTOR')}"
-         th:replace="fragments/navbar_conductor :: navbar"></nav>
-
-    <nav th:if="${#strings.equals(userRole, 'VIAJERO')}"
-         th:replace="fragments/navbar_viajero :: navbar"></nav>
-
+<th:block th:switch="${userRole}">
+    <th:block th:case="'CONDUCTOR'">
+        <div th:replace="fragments/navbar_conductor :: navbar"></div>
+    </th:block>
+    <th:block th:case="'VIAJERO'">
+        <div th:replace="fragments/navbar_viajero :: navbar"></div>
+    </th:block>
+    <th:block th:case="*">
+        <div th:replace="fragments/navbar_anonimo :: navbar"></div>
+    </th:block>
 </th:block>
 
 <main role="main" class="container" style="margin-top: 120px; margin-bottom: 30px;">
