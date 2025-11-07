@@ -5,8 +5,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+// Este DTO viaja por el WebSocket
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class NotificacionOutputDTO {
+
     private String mensaje;
-    // Opcional: private String tipo;
+    private String urlDestino; // CLAVE: para la redirección al hacer click
+    private Long idNotificacion; // CLAVE: para marcar como leída via AJAX/AJAX
 }

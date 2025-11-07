@@ -10,6 +10,7 @@ public interface RepositorioUsuario {
     Usuario guardar(Usuario usuario);
     Optional <Usuario> buscarPorEmail(String email);
     void modificarUsuario(Usuario usuario);
+    Optional <Usuario> obtenerUsuarioPorId(Long id);
 
 }
 

@@ -40,6 +40,12 @@ public class RepositorioUsuarioImpl implements RepositorioUsuario {
     }
 
     @Override
+    public Optional<Usuario> obtenerUsuarioPorId(Long id) {
+        Usuario usuario = sessionFactory.getCurrentSession().get(Usuario.class, id);
+        return Optional.ofNullable(usuario);
+    }
+
+    @Override
     public Optional<Usuario> buscarPorEmail(String email) {
         String hql = "SELECT V FROM Usuario V WHERE V.email = :email";
         Query<Usuario> query = sessionFactory.getCurrentSession().createQuery(hql, Usuario.class)
