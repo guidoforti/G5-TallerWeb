@@ -55,10 +55,14 @@
 <th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
 
 <script th:inline="javascript">
-    const ID_CONDUCTOR = /*[[${idConductor}]]*/ 0;
-    if (ID_CONDUCTOR !== 0 && typeof iniciarConexionNotificaciones !== 'undefined') {
-        // Esto ejecutará la función definida en notificacionesConductor.js
-        iniciarConexionNotificaciones(ID_CONDUCTOR);
+    const ID_USUARIO = /*[[${idUsuario}]]*/ 0; // Se sigue llamando idUsuario/idConductor en el controlador
+
+    // CLAVE AÑADIDA: Obtener el contador inicial desde el modelo
+    const CONTADOR_INICIAL = /*[[${contadorNotificaciones}]]*/ 0;
+
+    if (ID_USUARIO !== 0 && typeof iniciarConexionNotificaciones !== 'undefined') {
+        // CAMBIO CLAVE: Pasar el contador inicial como segundo argumento
+        iniciarConexionNotificaciones(ID_USUARIO, CONTADOR_INICIAL);
     }
 </script>
 </body>

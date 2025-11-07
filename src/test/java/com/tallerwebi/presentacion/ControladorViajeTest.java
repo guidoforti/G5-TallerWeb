@@ -6,12 +6,7 @@ import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.Enums.EstadoVerificacion;
-import com.tallerwebi.dominio.IServicio.ServicioCiudad;
-import com.tallerwebi.dominio.IServicio.ServicioNominatim;
-import com.tallerwebi.dominio.IServicio.ServicioConductor;
-import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
-import com.tallerwebi.dominio.IServicio.ServicioViaje;
-import com.tallerwebi.dominio.IServicio.ServicioReserva;
+import com.tallerwebi.dominio.IServicio.*;
 import com.tallerwebi.dominio.excepcion.NotFoundException;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -49,7 +44,9 @@ public class ControladorViajeTest {
     private ServicioCiudad servicioCiudadMock;
     private ServicioConductor servicioConductorMock;
     private ServicioReserva servicioReservaMock;
+    private ServicioNotificacion servicioNotificacionMock;
     private HttpSession sessionMock;
+
 
     @BeforeEach
     public void init() throws Exception {
@@ -59,7 +56,8 @@ public class ControladorViajeTest {
         servicioCiudadMock = mock(ServicioCiudad.class);
         servicioConductorMock = mock(ServicioConductor.class);
         servicioReservaMock = mock(ServicioReserva.class);
-        controladorViaje = new ControladorViaje(servicioViajeMock, servicioVehiculoMock, servicioNominatimMock, servicioCiudadMock, servicioConductorMock, servicioReservaMock);
+        servicioNotificacionMock = mock(ServicioNotificacion.class);
+        controladorViaje = new ControladorViaje(servicioViajeMock, servicioVehiculoMock, servicioNominatimMock, servicioCiudadMock, servicioConductorMock, servicioReservaMock, servicioNotificacionMock);
         sessionMock = mock(HttpSession.class);
 
         // Setup mocks por defecto para Nominatim y Ciudad

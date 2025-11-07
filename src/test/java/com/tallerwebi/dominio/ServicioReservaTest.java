@@ -4,12 +4,10 @@ import com.mercadopago.client.preference.PreferenceClient;
 import com.mercadopago.client.preference.PreferenceRequest;
 import com.mercadopago.resources.preference.Preference;
 import com.tallerwebi.dominio.Entity.*;
-import com.tallerwebi.dominio.Enums.EstadoAsistencia;
-import com.tallerwebi.dominio.Enums.EstadoDeViaje;
-import com.tallerwebi.dominio.Enums.EstadoPago;
-import com.tallerwebi.dominio.Enums.EstadoReserva;
+import com.tallerwebi.dominio.Enums.*;
 import com.tallerwebi.dominio.IRepository.RepositorioHistorialReserva;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
+import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
@@ -39,7 +37,7 @@ class ServicioReservaTest {
     private ServicioViajero servicioViajero;
     private RepositorioHistorialReserva repositorioHistorialReserva;
     private PreferenceClient preferenceClient;
-    private SimpMessagingTemplate messagingTemplate;
+    private ServicioNotificacion servicioNotificacionMock;
 
     @BeforeEach
     void setUp() {
@@ -48,8 +46,8 @@ class ServicioReservaTest {
         servicioViajero = mock(ServicioViajero.class);
         repositorioHistorialReserva = mock(RepositorioHistorialReserva.class);
         preferenceClient = mock(PreferenceClient.class);
-        messagingTemplate = mock(SimpMessagingTemplate.class);
-        servicioReserva = new ServicioReservaImpl(repositorioReservaMock, servicioViaje, servicioViajero, repositorioHistorialReserva,preferenceClient, messagingTemplate);
+        servicioNotificacionMock = mock(ServicioNotificacion.class);
+        servicioReserva = new ServicioReservaImpl(repositorioReservaMock, servicioViaje, servicioViajero, repositorioHistorialReserva,preferenceClient, servicioNotificacionMock);
     }
 
     // --- TESTS DE SOLICITAR RESERVA ---
@@ -493,12 +491,18 @@ class ServicioReservaTest {
 
         Conductor conductor = new Conductor();
         conductor.setId(conductorId);
+        Ciudad ciudadDestinoMock = mock(Ciudad.class);
+        when(ciudadDestinoMock.getNombre()).thenReturn("Rosario");
 
         Viaje viaje = crearViajeMock(1L, 3, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusDays(1));
         viaje.setConductor(conductor);
+        viaje.setDestino(ciudadDestinoMock);
 
         Reserva reserva = crearReservaMock(reservaId, EstadoReserva.PENDIENTE);
         reserva.setViaje(viaje);
+
+        Viajero viajeroMock = mock(Viajero.class);
+        reserva.setViajero(viajeroMock);
 
         when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
         when(servicioViaje.obtenerViajePorId(viaje.getId())).thenReturn(viaje);
@@ -512,6 +516,12 @@ class ServicioReservaTest {
         // No se llama explícitamente a modificarViaje porque Hibernate usa dirty checking automático
         // El viaje se actualizará automáticamente al finalizar la transacción
         verify(repositorioReservaMock, times(1)).update(reserva);
+        verify(servicioNotificacionMock, times(1)).crearYEnviar(
+                eq(viajeroMock),
+                eq(TipoNotificacion.RESERVA_APROBADA),
+                anyString(),
+                anyString()
+        );
     }
 
     @Test
@@ -615,15 +625,22 @@ class ServicioReservaTest {
         Long conductorId = 1L;
         String motivo = "No hay lugar para equipaje grande";
 
+        Ciudad ciudadDestino = mock(Ciudad.class);
+        when(ciudadDestino.getNombre()).thenReturn("Mar del Plata");
+
+        Viajero viajero = mock(Viajero.class);
+        when(viajero.getId()).thenReturn(2L);
+        when(viajero.getNombre()).thenReturn("Juan Viajero");
         Conductor conductor = new Conductor();
         conductor.setId(conductorId);
 
         Viaje viaje = crearViajeMock(1L, 3, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusDays(1));
         viaje.setConductor(conductor);
+        viaje.setDestino(ciudadDestino);
 
         Reserva reserva = crearReservaMock(reservaId, EstadoReserva.PENDIENTE);
         reserva.setViaje(viaje);
-
+        reserva.setViajero(viajero);
         when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
 
         // when
@@ -633,6 +650,12 @@ class ServicioReservaTest {
         assertThat(reserva.getEstado(), is(EstadoReserva.RECHAZADA));
         assertThat(reserva.getMotivoRechazo(), is(motivo));
         verify(repositorioReservaMock, times(1)).update(reserva);
+        verify(servicioNotificacionMock, times(1)).crearYEnviar(
+                eq(viajero),
+                eq(TipoNotificacion.RESERVA_RECHAZADA),
+                anyString(),
+                anyString()
+        );
     }
 
     @Test
@@ -1126,7 +1149,7 @@ class ServicioReservaTest {
     }
 
     @Test
-    void deberiaEnviarNotificacionAlConductorAlSolicitarReserva() throws Exception {
+    void deberiaLlamarAlServicioDeNotificacionAlSolicitarReserva() throws Exception {
         // given
         Long ID_CONDUCTOR = 42L;
         Conductor conductor = new Conductor();
@@ -1166,14 +1189,11 @@ class ServicioReservaTest {
         String destinoEsperado = "/topic/notificaciones/" + ID_CONDUCTOR;
 
         // Verificamos que se llamó a convertAndSend() una vez
-        verify(messagingTemplate, times(1)).convertAndSend(
-                eq(destinoEsperado),
-                // Utilizamos un Hamcrest Matcher para verificar que el objeto enviado es del tipo DTO
-                any(com.tallerwebi.presentacion.DTO.OutputsDTO.NotificacionOutputDTO.class)
+        verify(servicioNotificacionMock, times(1)).crearYEnviar(
+                any(Usuario.class),
+                eq(TipoNotificacion.RESERVA_SOLICITADA),
+                anyString(),
+                anyString()
         );
-
-        // Opcional: Si quieres verificar el contenido del mensaje exacto,
-        // puedes usar ArgumentCaptor, pero con 'any(DTO.class)' es suficiente
-        // para la prueba de integración de capas.
     }
 }

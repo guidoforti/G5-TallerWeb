@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/fragments :: head('Historial de Notificaciones')"></head>
+
+<body>
+<nav th:replace="fragments/navbar_conductor :: navbar"></nav>
+
+<main role="main" class="container" style="margin-top: 120px;">
+    <h2><i class="fas fa-bell me-2"></i> Historial de Notificaciones</h2>
+    <hr>
+
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div th:if="${notificaciones.isEmpty()}" class="alert alert-info">
+        No tienes notificaciones en tu historial.
+    </div>
+
+    <div class="list-group">
+        <div th:each="notificacion : ${notificaciones}"
+             class="list-group-item list-group-item-action"
+             th:classappend="${notificacion.leida} ? 'text-muted' : 'fw-bold list-group-item-light'">
+
+            <a th:href="@{${notificacion.urlDestino}}" class="text-decoration-none d-block">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1" th:text="${notificacion.mensaje}"></h5>
+                    <small th:text="${notificacion.fechaCreacion}"></small>
+                </div>
+                <small th:text="'Tipo: ' + ${notificacion.tipo}"></small>
+            </a>
+        </div>
+    </div>
+</main>
+
+<div th:replace="fragments/fragments :: footer"></div>
+<th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
+<script th:inline="javascript">
+    const ID_USUARIO = /*[[${idUsuario}]]*/ 0;
+    // CLAVE: Cuando el usuario entra a este historial, el contador en la navbar debe ser cero
+    if (ID_USUARIO !== 0 && typeof iniciarConexionNotificaciones !== 'undefined') {
+        // Pasamos 0 para resetear el contador visual al entrar
+        iniciarConexionNotificaciones(ID_USUARIO, 0);
+    }
+</script>
+</body>
+</html>
