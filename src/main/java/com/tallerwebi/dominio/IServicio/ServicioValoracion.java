@@ -3,6 +3,7 @@ package com.tallerwebi.dominio.IServicio;
 import java.util.List;
 
 import com.tallerwebi.dominio.Entity.Usuario;
+import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Entity.Valoracion;
 import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
@@ -16,4 +17,8 @@ public interface ServicioValoracion {
     List<Valoracion> obtenerValoracionesDeUsuario(Long usuarioId);
 
     Double calcularPromedioValoraciones(Long usuarioId);
+
+    Viajero obtenerViajero(Long viajeroId) throws UsuarioInexistente;
+
+    Usuario obtenerUsuario(Long usuarioId) throws UsuarioInexistente;
 }

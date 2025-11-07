@@ -1,15 +1,18 @@
 package com.tallerwebi.dominio.ServiceImpl;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.hibernate.Hibernate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.tallerwebi.dominio.Entity.Usuario;
+import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Entity.Valoracion;
 import com.tallerwebi.dominio.IRepository.RepositorioUsuario;
 import com.tallerwebi.dominio.IRepository.RepositorioValoracion;
+import com.tallerwebi.dominio.IRepository.RepositorioViajero;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioValoracion;
 import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
@@ -23,14 +26,17 @@ public class ServicioValoracionImpl implements ServicioValoracion {
 
     private final RepositorioValoracion repositorioValoracion;
     private final RepositorioUsuario repositorioUsuario;
-    private final ViajeRepository viajeRepository; 
+    private final RepositorioViajero repositorioViajero;
+    private final ViajeRepository viajeRepository;
 
     @Autowired
     public ServicioValoracionImpl(RepositorioValoracion repositorioValoracion,
                                   RepositorioUsuario repositorioUsuario,
+                                  RepositorioViajero repositorioViajero,
                                   ViajeRepository viajeRepository) {
         this.repositorioValoracion = repositorioValoracion;
         this.repositorioUsuario = repositorioUsuario;
+        this.repositorioViajero = repositorioViajero;
         this.viajeRepository = viajeRepository;
     }
 
@@ -61,6 +67,20 @@ public class ServicioValoracionImpl implements ServicioValoracion {
 
         Valoracion valoracion = new Valoracion(emisor, receptor, dto.getPuntuacion(), dto.getComentario());
         repositorioValoracion.save(valoracion);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Viajero obtenerViajero(Long viajeroId) throws UsuarioInexistente {
+        return repositorioViajero.buscarPorId(viajeroId)
+                .orElseThrow(() -> new UsuarioInexistente("El viajero no existe."));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Usuario obtenerUsuario(Long usuarioId) throws UsuarioInexistente {
+        return repositorioUsuario.buscarPorId(usuarioId)
+                .orElseThrow(() -> new UsuarioInexistente("El usuario no existe."));
     }
 
     @Override

@@ -1,8 +1,8 @@
 package com.tallerwebi.presentacion.Controller;
 
 import com.tallerwebi.dominio.Entity.Usuario;
+import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Entity.Valoracion;
-import com.tallerwebi.dominio.IRepository.RepositorioUsuario;
 import com.tallerwebi.dominio.IServicio.ServicioValoracion;
 import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
@@ -27,12 +27,10 @@ import java.util.stream.Collectors;
 public class ControladorValoracion {
 
     private final ServicioValoracion servicioValoracion;
-    private final RepositorioUsuario repositorioUsuario;
 
     @Autowired
-    public ControladorValoracion(ServicioValoracion servicioValoracion, RepositorioUsuario repositorioUsuario) {
+    public ControladorValoracion(ServicioValoracion servicioValoracion) {
         this.servicioValoracion = servicioValoracion;
-        this.repositorioUsuario = repositorioUsuario;
     }
 
     @GetMapping("/{receptorId}")
@@ -45,44 +43,20 @@ public class ControladorValoracion {
         }
 
         try {
-            // Buscar al usuario receptor (no se puede valorar un usuario inexistente)
-            Optional<Usuario> receptorOpt = repositorioUsuario.buscarPorId(receptorId);
-            if (!receptorOpt.isPresent()) {
-                throw new UsuarioInexistente("El usuario que intentás ver no existe.");
-            }
+            // Buscar al viajero receptor usando el servicio
+            Viajero receptor = servicioValoracion.obtenerViajero(receptorId);
 
-            ValoracionOutputDTO v1 = new ValoracionOutputDTO(
-                11L,
-                "Juan",
-                "Carlos Perez",
-                5,
-                "Excelente viaje",
-                LocalDate.now().minusDays(2)
-        );
-            // Obtener valoraciones y promedio
-            /* 
-            List<Valoracion> valoraciones = servicioValoracion.obtenerValoracionesDeUsuario(receptorId);
-            List<ValoracionOutputDTO> valoracionesDTO = valoraciones.stream()
-            .map(ValoracionOutputDTO::new)
-            .collect(Collectors.toList());
-            */
-            Double promedio = servicioValoracion.calcularPromedioValoraciones(receptorId);
-
-            // Armar modelo para la vista
-            model.put("receptor", receptorOpt.get());
-            model.put("valoraciones", v1);
-            model.put("promedio", promedio);
-
-            // DTO vacío para el formulario de nueva valoración
+            // Armar modelo para la vista (solo formulario de nueva valoración)
+            model.put("receptor", receptor);
             model.put("valoracionDto", new ValoracionNuevaInputDTO());
-            return new ModelAndView("verValoraciones", model);
+            return new ModelAndView("valorarViajero", model);
 
         } catch (UsuarioInexistente e) {
             model.put("error", e.getMessage());
             return new ModelAndView("error", model);
 
         } catch (Exception e) {
-            model.put("error", "Error al cargar las valoraciones: " + e.getMessage());
+            model.put("error", "Error al cargar el perfil: " + e.getMessage());
             return new ModelAndView("error", model);
         }
     }
@@ -99,25 +73,28 @@ public class ControladorValoracion {
         Long emisorId = (Long) usuarioIdObj;
 
         try {
-            //  Obtener emisor desde la base
-            Optional<Usuario> emisorOpt = repositorioUsuario.buscarPorId(emisorId);
-            if (!emisorOpt.isPresent()) {
-                session.invalidate();
-                return new ModelAndView("redirect:/login");
-            }
-
-            Usuario emisor = emisorOpt.get();
+            // Obtener emisor (puede ser Viajero o Conductor) desde el servicio
+            Usuario emisor = servicioValoracion.obtenerUsuario(emisorId);
 
             // Intentar guardar la valoración
             servicioValoracion.valorarUsuario(emisor, valoracionDto);
 
-            // 4Redirigir al perfil del receptor actualizado
-            return new ModelAndView("redirect:/valoraciones/" + valoracionDto.getReceptorId());
+            // Redirigir a la home o a una vista de confirmación
+            return new ModelAndView("redirect:/home");
 
         } catch (DatoObligatorioException | UsuarioInexistente e) {
             model.put("error", e.getMessage());
             model.put("valoracionDto", valoracionDto);
-            return new ModelAndView("verValoraciones", model);
+
+            // Cargar receptor para volver a mostrar la vista
+            try {
+                Viajero receptor = servicioValoracion.obtenerViajero(valoracionDto.getReceptorId());
+                model.put("receptor", receptor);
+            } catch (UsuarioInexistente ex) {
+                model.put("error", "Error: " + ex.getMessage());
+            }
+
+            return new ModelAndView("valorarViajero", model);
 
         } catch (Exception e) {
             model.put("error", "Error al enviar la valoración: " + e.getMessage());
