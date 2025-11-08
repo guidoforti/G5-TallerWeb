@@ -6,6 +6,7 @@ import com.tallerwebi.dominio.Entity.Valoracion;
 import com.tallerwebi.dominio.IServicio.ServicioValoracion;
 import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
+import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ValoracionNuevaInputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ValoracionOutputDTO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,8 @@ public class ControladorValoracion {
         this.servicioValoracion = servicioValoracion;
     }
 
+
+    /* 
     @GetMapping("/{receptorId}")
     public ModelAndView verValoraciones(@PathVariable Long receptorId, HttpSession session) {
         ModelMap model = new ModelMap();
@@ -57,6 +60,47 @@ public class ControladorValoracion {
 
         } catch (Exception e) {
             model.put("error", "Error al cargar el perfil: " + e.getMessage());
+            return new ModelAndView("error", model);
+        }
+    }
+
+    */
+
+    @GetMapping("/viaje/{viajeId}")
+    public ModelAndView verViajerosParaValorar(@PathVariable Long viajeId, HttpSession session) {
+        ModelMap model = new ModelMap();
+
+        Object usuarioIdObj = session.getAttribute("idUsuario");
+        if (usuarioIdObj == null) {
+            return new ModelAndView("redirect:/login");
+        }
+        
+        // Asumiendo que el usuario logueado es el conductor:
+        Long conductorId = (Long) usuarioIdObj;
+
+        try {
+            // 1. Obtener la lista de viajeros usando el nuevo método del servicio
+            List<Viajero> viajeros = servicioValoracion.obtenerViajeros(viajeId);
+
+            if (viajeros.isEmpty()) {
+                model.put("error", "No hay viajeros para valorar en este viaje.");
+                return new ModelAndView("error", model);
+            }
+
+            // 2. Armar modelo para la vista
+            model.put("viajeros", viajeros);
+            model.put("viajeId", viajeId); 
+            model.put("conductorId", conductorId); // Puede ser útil para la vista
+            
+            // 🔥 Nueva vista: Necesitas crear una vista (HTML) que itere sobre la lista 'viajeros'
+            return new ModelAndView("valorarViajero", model); 
+
+        } catch (ViajeNoEncontradoException e) {
+            model.put("error", e.getMessage());
+            return new ModelAndView("error", model);
+
+        } catch (Exception e) {
+            model.put("error", "Error al cargar la lista de viajeros: " + e.getMessage());
             return new ModelAndView("error", model);
         }
     }

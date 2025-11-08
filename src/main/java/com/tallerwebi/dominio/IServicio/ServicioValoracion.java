@@ -2,11 +2,13 @@ package com.tallerwebi.dominio.IServicio;
 
 import java.util.List;
 
+import com.tallerwebi.dominio.Entity.Reserva;
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Entity.Valoracion;
 import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
+import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ValoracionNuevaInputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ValoracionOutputDTO;
 
@@ -21,4 +23,6 @@ public interface ServicioValoracion {
     Viajero obtenerViajero(Long viajeroId) throws UsuarioInexistente;
 
     Usuario obtenerUsuario(Long usuarioId) throws UsuarioInexistente;
+
+    List<Viajero> obtenerViajeros(Long viajeId) throws ViajeNoEncontradoException;
 }

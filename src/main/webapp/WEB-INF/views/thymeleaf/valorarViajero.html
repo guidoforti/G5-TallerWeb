@@ -1,7 +1,8 @@
 <!DOCTYPE HTML>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/fragments :: head('UnRumbo - Valorar Viajero')">
+<head th:replace="fragments/fragments :: head('UnRumbo - Seleccionar Viajero')">
     <th:block th:fragment="extra">
+        <!-- Reutilizamos tus estilos -->
         <style>
             .card {
                 border: none;
@@ -21,32 +22,28 @@
                 background-color: #cf5930;
                 color: white;
             }
-            .btn-outline-unrumbo {
-                border: 2px solid #E16A3D;
-                color: #E16A3D;
-                font-weight: 500;
-                padding: 0.75rem 2rem;
-                border-radius: 5px;
-                background-color: white;
-            }
-            .btn-outline-unrumbo:hover {
-                background-color: #E16A3D;
-                color: white;
-            }
-            .flash-message {
-                padding: 1rem;
-                margin-bottom: 1rem;
-                border-radius: 0.25rem;
-            }
-            .flash-error {
-                color: #842029;
-                background-color: #f8d7da;
-                border-color: #f5c2c7;
+            .list-group-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
             }
             .text-unrumbo {
                 color: #E16A3D;
             }
+            .avatar {
+                width: 50px;
+                height: 50px;
+                background-color: #E16A3D;
+                color: white;
+                border-radius: 50%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 1.2rem;
+                margin-right: 15px;
+            }
         </style>
+        <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     </th:block>
 </head>
 
@@ -56,63 +53,42 @@
 <main role="main" class="container" style="margin-top: 120px; margin-bottom: 50px;">
     <div class="row justify-content-center">
         <div class="col-lg-8">
-            <h1 class="text-center fw-bold text-dark mb-4">Valorar Viajero</h1>
+            <h1 class="text-center fw-bold text-dark mb-4">Selecciona un Viajero para Valorar</h1>
+            <p class="text-center text-muted mb-5">El viaje ha finalizado. Por favor, selecciona a los viajeros con los que compartiste el trayecto para dejarles una valoración.</p>
 
             <div th:if="${error}" class="flash-message flash-error" role="alert">
                 <i class="fas fa-exclamation-triangle me-2"></i>
                 <strong>Error:</strong> <span th:text="${error}"></span>
             </div>
 
-            <div class="card shadow-sm mb-4">
-                <div class="card-body p-4">
-                    <div class="mb-3">
-                        <h5 class="text-muted">Estás valorando a:</h5>
-                        <h3 class="fw-bold text-unrumbo" th:text="${receptor.nombre}">Nombre del Viajero</h3>
-                        <p class="text-muted mb-0" th:text="${receptor.email}">email@ejemplo.com</p>
-                    </div>
-                </div>
+            <div th:if="${viajeros.empty}" class="card p-4 text-center">
+                <p class="mb-0 text-muted">No se encontraron viajeros asociados a este viaje.</p>
             </div>
 
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
-                    <h4 class="fw-bold mb-3 text-unrumbo">Dejar una Valoración</h4>
-
-                    <form th:action="@{/valoraciones/nueva}" method="post" th:object="${valoracionDto}">
-
-                        <input type="hidden" name="receptorId" th:value="${receptor.id}">
-
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label for="puntuacion" class="form-label fw-bold">Puntuación (1-5):</label>
-                                    <select id="puntuacion" name="puntuacion" class="form-select" th:field="*{puntuacion}" required>
-                                        <option value="" disabled selected>Seleccione</option>
-                                        <option value="5">5 - Excelente</option>
-                                        <option value="4">4 - Muy Bueno</option>
-                                        <option value="3">3 - Regular</option>
-                                        <option value="2">2 - Malo</option>
-                                        <option value="1">1 - Pésimo</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-8">
-                                <div class="form-group mb-3">
-                                    <label for="comentario" class="form-label fw-bold">Comentario:</label>
-                                    <textarea id="comentario" name="comentario" class="form-control" rows="4" th:field="*{comentario}" required placeholder="Escribe tu opinión sobre el viaje con este viajero..."></textarea>
-                                </div>
-                            </div>
+            <ul class="list-group">
+                <!-- Iteramos sobre la lista 'viajeros' que viene del controlador -->
+                <li th:each="viajero : ${viajeros}" class="list-group-item">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar">
+                             <i class="fas fa-user"></i>
                         </div>
-
-                        <div class="d-flex justify-content-between">
-                            <a th:href="@{/home}" class="btn btn-outline-unrumbo">
-                                <i class="fas fa-arrow-left me-1"></i> Volver
-                            </a>
-                            <button type="submit" class="btn btn-unrumbo">
-                                <i class="fas fa-paper-plane me-2"></i> Enviar Valoración
-                            </button>
+                        <div>
+                            <h5 class="mb-0 fw-bold" th:text="${viajero.nombre}">Nombre del Viajero</h5>
+                            <small class="text-muted" th:text="${viajero.email}">email@ejemplo.com</small>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                    
+                    <!-- Botón que lleva a la vista de formulario individual -->
+                    <a th:href="@{/valoraciones/{id}(id=${viajero.id})}" class="btn btn-unrumbo btn-sm">
+                        <i class="fas fa-star me-1"></i> Valorar
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="mt-4 text-center">
+                <a th:href="@{/home}" class="btn btn-outline-unrumbo">
+                    <i class="fas fa-home me-1"></i> Volver a Home
+                </a>
             </div>
 
         </div>
@@ -120,7 +96,6 @@
 </main>
 
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
-<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 
 </body>
 </html>

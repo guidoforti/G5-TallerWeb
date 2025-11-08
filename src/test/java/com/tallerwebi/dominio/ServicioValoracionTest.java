@@ -2,9 +2,11 @@
 package com.tallerwebi.dominio;
 
 import com.tallerwebi.dominio.Entity.Conductor;
+import com.tallerwebi.dominio.Entity.Reserva;
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Entity.Valoracion;
+import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.IRepository.RepositorioUsuario;
 import com.tallerwebi.dominio.IRepository.RepositorioValoracion;
 import com.tallerwebi.dominio.IRepository.RepositorioViajero;
@@ -13,12 +15,14 @@ import com.tallerwebi.dominio.IServicio.ServicioValoracion;
 import com.tallerwebi.dominio.ServiceImpl.ServicioValoracionImpl;
 import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
+import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ValoracionNuevaInputDTO;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -432,4 +436,58 @@ class ServicioValoracionTest {
         assertThat(promedio, notNullValue());
         assertThat(promedio, is(0.0));
     }
+
+    @Test
+    void obtenerViajeros_conViajerosExistentes_debeRetornarListaDeViajeros() throws ViajeNoEncontradoException {
+        // 1. Configuración de Mocks (Arrange)
+        // Datos de Viajeros
+        Viajero viajero1 = new Viajero(1, false, "Ninguna", "url1", new ArrayList<>(), new ArrayList<>());
+        Viajero viajero2 = new Viajero(2, true, "Movilidad Reducida", "url2", new ArrayList<>(), new ArrayList<>());
+
+        // Datos de Reservas con sus Viajeros (debe coincidir con la entidad)
+        Reserva reserva1 = new Reserva();
+        reserva1.setViajero(viajero1);
+        Reserva reserva2 = new Reserva();
+        reserva2.setViajero(viajero2);
+
+        // Objeto Viaje
+        Viaje viajeMock = new Viaje(); // Asume que Viaje tiene un constructor vacío o setters
+        // Simula la lista de reservas
+        viajeMock.setReservas(Arrays.asList(reserva1, reserva2)); 
+
+        // Comportamiento del Mock del Repositorio
+        when(viajeRepositoryMock.findById(viajeMock.getId())).thenReturn(Optional.of(viajeMock));
+
+        // 2. Ejecución (Act)
+        List<Viajero> viajeros = servicioValoracion.obtenerViajeros(viajeMock.getId());
+
+        // 3. Verificación y Aserciones (Assert) - Usando Hamcrest
+        assertThat("La lista no debe ser nula", viajeros, is(notNullValue()));
+        assertThat("La lista debe contener 2 viajeros", viajeros, hasSize(2));
+        assertThat("La lista debe contener a viajero1", viajeros, hasItem(viajero1));
+        assertThat("La lista debe contener a viajero2", viajeros, hasItem(viajero2));
+
+        // Verifica que se llamó al repositorio
+        verify(viajeRepositoryMock, times(1)).findById(viajeMock.getId());
+    }
+
+    @Test
+    void obtenerViajeros_sinReservas_debeRetornarListaVacia() throws ViajeNoEncontradoException {
+        // 1. Configuración de Mocks (Arrange)
+        Viaje viajeMock = new Viaje();
+        viajeMock.setReservas(new ArrayList<>()); // Viaje sin reservas
+
+        when(viajeRepositoryMock.findById(viajeMock.getId())).thenReturn(Optional.of(viajeMock));
+
+        // 2. Ejecución (Act)
+        List<Viajero> viajeros = servicioValoracion.obtenerViajeros(viajeMock.getId());
+
+        // 3. Verificación y Aserciones (Assert) - Usando Hamcrest
+        assertThat("La lista no debe ser nula", viajeros, is(notNullValue()));
+        assertThat("La lista debe estar vacía", viajeros, is(empty()));
+        assertThat("La lista debe estar vacía (alternativa)", viajeros, hasSize(0));
+
+        verify(viajeRepositoryMock, times(1)).findById(viajeMock.getId());
+    }
+    
 }
