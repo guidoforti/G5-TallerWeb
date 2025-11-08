@@ -130,7 +130,7 @@ public class ControladorValoracionTest {
         ModelAndView mav = controladorValoracion.enviarValoracion(dto, sessionMock);
 
         // then
-        assertThat(mav.getViewName(), equalTo("redirect:/home"));
+        assertThat(mav.getViewName(), equalTo("redirect:/conductor/home"));
         verify(servicioValoracionMock, times(1)).valorarUsuario(emisor, dto);
     }
 

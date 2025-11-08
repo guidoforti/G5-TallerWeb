@@ -112,4 +112,7 @@ public class ServicioValoracionImpl implements ServicioValoracion {
                 ? 0.0
                 : valoraciones.stream().mapToDouble(Valoracion::getPuntuacion).average().orElse(0.0); 
     }
+
+   
+    
 }
