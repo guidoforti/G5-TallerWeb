@@ -54,9 +54,11 @@ public class RepositorioUsuarioImpl implements RepositorioUsuario {
     }
 
     @Override
-    public Optional<Usuario> buscarPorId(Long id) {
-        Usuario usuario = sessionFactory.getCurrentSession().get(Usuario.class, id);
-        return Optional.ofNullable(usuario);
-    }
+public Optional<Usuario> buscarPorId(Long id) {
+    final Session session = sessionFactory.getCurrentSession();
+    // Use session.get() to properly handle polymorphic queries with joined table inheritance
+    Usuario usuario = session.get(Usuario.class, id);
+    return Optional.ofNullable(usuario);
+}
 
 }

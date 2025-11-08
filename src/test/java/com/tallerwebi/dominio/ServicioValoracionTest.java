@@ -1,17 +1,19 @@
-package com.tallerwebi.dominio; 
+
+package com.tallerwebi.dominio;
 
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Usuario;
+import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Entity.Valoracion;
 import com.tallerwebi.dominio.IRepository.RepositorioUsuario;
 import com.tallerwebi.dominio.IRepository.RepositorioValoracion;
+import com.tallerwebi.dominio.IRepository.RepositorioViajero;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioValoracion;
 import com.tallerwebi.dominio.ServiceImpl.ServicioValoracionImpl;
 import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ValoracionNuevaInputDTO;
-import com.tallerwebi.presentacion.DTO.OutputsDTO.ValoracionOutputDTO;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,41 +35,116 @@ class ServicioValoracionTest {
 
     private RepositorioValoracion repositorioValoracionMock;
     private RepositorioUsuario repositorioUsuarioMock;
-    private ViajeRepository viajeRepositoryMock; 
+    private RepositorioViajero repositorioViajeroMock;
+    private ViajeRepository viajeRepositoryMock;
     private ServicioValoracion servicioValoracion;
-    private Usuario receptorDummy; // Usuario genérico para asegurar que la búsqueda siempre devuelva algo.
+    private Usuario receptorDummy;
 
     @BeforeEach
     void setUp() {
         repositorioValoracionMock = mock(RepositorioValoracion.class);
         repositorioUsuarioMock = mock(RepositorioUsuario.class);
-        viajeRepositoryMock = mock(ViajeRepository.class); 
-        receptorDummy = crearUsuario(99L); 
-        
-        // 1. Configuración por defecto para ViajeRepository: asume que el viaje ES valorable.
-        // Esto permite que los tests de Puntuación/Comentario lleguen a su propia validación
+        repositorioViajeroMock = mock(RepositorioViajero.class);
+        viajeRepositoryMock = mock(ViajeRepository.class);
+        receptorDummy = crearUsuario(99L);
+
         when(viajeRepositoryMock.existeViajeFinalizadoYNoValorado(anyLong(), anyLong())).thenReturn(true);
-        
-        // 2. Configuración por defecto para RepositorioUsuario: asume que el usuario receptor existe.
-        // Esto evita que los tests de DatoObligatorioException fallen por UsuarioInexistente.
         when(repositorioUsuarioMock.buscarPorId(anyLong())).thenReturn(Optional.of(receptorDummy));
 
-        // Inicialización del servicio con los mocks
         servicioValoracion = new ServicioValoracionImpl(
-            repositorioValoracionMock, 
-            repositorioUsuarioMock, 
+            repositorioValoracionMock,
+            repositorioUsuarioMock,
+            repositorioViajeroMock,
             viajeRepositoryMock
         );
     }
 
     private Usuario crearUsuario(Long id) {
-        Conductor usuario = new Conductor(); 
+        Conductor usuario = new Conductor();
         usuario.setId(id);
         usuario.setNombre("Conductor" + id);
         usuario.setEmail("elconductor" + id + "@conductor.com");
-        usuario.setRol("CONDUCTOR"); 
-        usuario.activar(); 
+        usuario.setRol("CONDUCTOR");
+        usuario.activar();
         return usuario;
+    }
+
+    private Viajero crearViajero(Long id) {
+        Viajero viajero = new Viajero();
+        viajero.setId(id);
+        viajero.setNombre("Viajero" + id);
+        viajero.setEmail("viajero" + id + "@email.com");
+        viajero.setRol("VIAJERO");
+        viajero.activar();
+        return viajero;
+    }
+
+    // =================================================================
+    // TESTS PARA: obtenerViajero(Long viajeroId)
+    // =================================================================
+
+    @Test
+    void deberiaObtenerViajeroCorrectamente() throws Exception {
+        // given
+        Long viajeroId = 10L;
+        Viajero viajero = crearViajero(viajeroId);
+        when(repositorioViajeroMock.buscarPorId(viajeroId)).thenReturn(Optional.of(viajero));
+
+        // when
+        Viajero resultado = servicioValoracion.obtenerViajero(viajeroId);
+
+        // then
+        assertThat(resultado, equalTo(viajero));
+        verify(repositorioViajeroMock).buscarPorId(viajeroId);
+    }
+
+    @Test
+    void deberiaLanzarExcepcionSiViajeroNoExiste() {
+        // given
+        Long viajeroId = 999L;
+        when(repositorioViajeroMock.buscarPorId(viajeroId)).thenReturn(Optional.empty());
+
+        // when & then
+        UsuarioInexistente exception = assertThrows(
+            UsuarioInexistente.class,
+            () -> servicioValoracion.obtenerViajero(viajeroId)
+        );
+
+        assertThat(exception.getMessage(), is("El viajero no existe."));
+    }
+
+    // =================================================================
+    // TESTS PARA: obtenerUsuario(Long usuarioId)
+    // =================================================================
+
+    @Test
+    void deberiaObtenerUsuarioCorrectamente() throws Exception {
+        // given
+        Long usuarioId = 15L;
+        Usuario usuario = crearUsuario(usuarioId);
+        when(repositorioUsuarioMock.buscarPorId(usuarioId)).thenReturn(Optional.of(usuario));
+
+        // when
+        Usuario resultado = servicioValoracion.obtenerUsuario(usuarioId);
+
+        // then
+        assertThat(resultado, equalTo(usuario));
+        verify(repositorioUsuarioMock).buscarPorId(usuarioId);
+    }
+
+    @Test
+    void deberiaLanzarExcepcionSiUsuarioNoExiste() {
+        // given
+        Long usuarioId = 888L;
+        when(repositorioUsuarioMock.buscarPorId(usuarioId)).thenReturn(Optional.empty());
+
+        // when & then
+        UsuarioInexistente exception = assertThrows(
+            UsuarioInexistente.class,
+            () -> servicioValoracion.obtenerUsuario(usuarioId)
+        );
+
+        assertThat(exception.getMessage(), is("El usuario no existe."));
     }
 
     // =================================================================
@@ -75,16 +152,15 @@ class ServicioValoracionTest {
     // =================================================================
 
     @Test
-    void deberiaGuardarUnaValoracionCorrectamente() throws Exception {
+    void deberiaGuardarUnaValoracionCorrectamenteCuandoEmisorEsViajero() throws Exception {
         // given
-        Usuario emisor = crearUsuario(1L);
+        Viajero emisor = crearViajero(1L);
         Usuario receptor = crearUsuario(2L);
         ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
         dto.setReceptorId(2L);
         dto.setPuntuacion(5);
         dto.setComentario("Excelente servicio y puntualidad.");
 
-        // Anulamos el mock genérico del setUp solo para simular un receptor específico
         when(repositorioUsuarioMock.buscarPorId(2L)).thenReturn(Optional.of(receptor));
 
         // when
@@ -93,8 +169,8 @@ class ServicioValoracionTest {
         // then
         ArgumentCaptor<Valoracion> valoracionCaptor = ArgumentCaptor.forClass(Valoracion.class);
         verify(repositorioValoracionMock).save(valoracionCaptor.capture());
-        verify(viajeRepositoryMock).existeViajeFinalizadoYNoValorado(1L, 2L); 
-        
+        verify(viajeRepositoryMock).existeViajeFinalizadoYNoValorado(1L, 2L);
+
         Valoracion valoracionGuardada = valoracionCaptor.getValue();
         assertThat(valoracionGuardada.getEmisor(), equalTo(emisor));
         assertThat(valoracionGuardada.getReceptor(), equalTo(receptor));
@@ -102,34 +178,58 @@ class ServicioValoracionTest {
         assertThat(valoracionGuardada.getComentario(), is("Excelente servicio y puntualidad."));
     }
 
-    // --- TESTS DE EXCEPCIONES DE VALIDACIÓN DE DATOS ---
+    @Test
+    void deberiaGuardarUnaValoracionCorrectamenteCuandoEmisorEsConductor() throws Exception {
+        // given
+        Usuario emisor = crearUsuario(1L); // Conductor
+        Viajero receptor = crearViajero(2L);
+        ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
+        dto.setReceptorId(2L);
+        dto.setPuntuacion(4);
+        dto.setComentario("Buen viajero, muy respetuoso.");
+
+        when(repositorioUsuarioMock.buscarPorId(2L)).thenReturn(Optional.of(receptor));
+
+        // when
+        servicioValoracion.valorarUsuario(emisor, dto);
+
+        // then
+        ArgumentCaptor<Valoracion> valoracionCaptor = ArgumentCaptor.forClass(Valoracion.class);
+        verify(repositorioValoracionMock).save(valoracionCaptor.capture());
+        verify(viajeRepositoryMock).existeViajeFinalizadoYNoValorado(1L, 2L);
+
+        Valoracion valoracionGuardada = valoracionCaptor.getValue();
+        assertThat(valoracionGuardada.getEmisor(), equalTo(emisor));
+        assertThat(valoracionGuardada.getReceptor(), equalTo(receptor));
+        assertThat(valoracionGuardada.getPuntuacion(), is(4));
+        assertThat(valoracionGuardada.getComentario(), is("Buen viajero, muy respetuoso."));
+    }
 
     @Test
     void noDeberiaPermitirAutoValoracion() {
         // given
-        Usuario usuario = crearUsuario(1L);
+        Viajero viajero = crearViajero(1L);
         ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
-        dto.setReceptorId(1L); // El receptor es el mismo que el emisor
+        dto.setReceptorId(1L);
         dto.setPuntuacion(4);
         dto.setComentario("Me valoro a mi mismo.");
 
         // when & then
         DatoObligatorioException exception = assertThrows(
                 DatoObligatorioException.class,
-                () -> servicioValoracion.valorarUsuario(usuario, dto)
+                () -> servicioValoracion.valorarUsuario(viajero, dto)
         );
 
         assertThat(exception.getMessage(), is("Error. No podes valorarte a vos mismo"));
-        // Verifica que no se llamó a ninguna dependencia (falla antes)
         verify(viajeRepositoryMock, never()).existeViajeFinalizadoYNoValorado(anyLong(), anyLong());
-        verify(repositorioUsuarioMock, never()).buscarPorId(anyLong()); 
+        verify(repositorioUsuarioMock, never()).buscarPorId(anyLong());
         verify(repositorioValoracionMock, never()).save(any());
     }
 
     @Test
     void deberiaLanzarExcepcionSiPuntuacionEsNula() {
         // given
-        Usuario emisor = crearUsuario(1L);
+        Viajero emisor = crearViajero(1L);
         ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
         dto.setReceptorId(2L);
         dto.setPuntuacion(null);
@@ -137,7 +237,7 @@ class ServicioValoracionTest {
 
         // when & then
         DatoObligatorioException exception = assertThrows(
-            DatoObligatorioException.class, 
+            DatoObligatorioException.class,
             () -> servicioValoracion.valorarUsuario(emisor, dto)
         );
         assertThat(exception.getMessage(), is("La valoracion debe estar entre 1 y 5"));
@@ -147,33 +247,33 @@ class ServicioValoracionTest {
     @Test
     void deberiaLanzarExcepcionSiPuntuacionEstaFueraDeRangoBajo() {
         // given
-        Usuario emisor = crearUsuario(1L);
+        Viajero emisor = crearViajero(1L);
         ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
         dto.setReceptorId(2L);
-        dto.setPuntuacion(0); // rango 1-5
+        dto.setPuntuacion(0);
         dto.setComentario("Comentario valido.");
 
         // when then
         DatoObligatorioException exception = assertThrows(
-            DatoObligatorioException.class, 
+            DatoObligatorioException.class,
             () -> servicioValoracion.valorarUsuario(emisor, dto)
         );
         assertThat(exception.getMessage(), is("La valoracion debe estar entre 1 y 5"));
         verify(repositorioValoracionMock, never()).save(any());
     }
-    
+
     @Test
     void deberiaLanzarExcepcionSiPuntuacionEstaFueraDeRangoAlto() {
         // given
-        Usuario emisor = crearUsuario(1L);
+        Viajero emisor = crearViajero(1L);
         ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
         dto.setReceptorId(2L);
-        dto.setPuntuacion(6); // Rango: 1-5
+        dto.setPuntuacion(6);
         dto.setComentario("Comentario valido.");
 
         // when then
         DatoObligatorioException exception = assertThrows(
-            DatoObligatorioException.class, 
+            DatoObligatorioException.class,
             () -> servicioValoracion.valorarUsuario(emisor, dto)
         );
         assertThat(exception.getMessage(), is("La valoracion debe estar entre 1 y 5"));
@@ -183,7 +283,7 @@ class ServicioValoracionTest {
     @Test
     void deberiaLanzarExcepcionSiComentarioEsNulo() {
         // given
-        Usuario emisor = crearUsuario(1L);
+        Viajero emisor = crearViajero(1L);
         ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
         dto.setReceptorId(2L);
         dto.setPuntuacion(4);
@@ -197,15 +297,15 @@ class ServicioValoracionTest {
         assertThat(exception.getMessage(), is("El comentario es obligatorio"));
         verify(repositorioValoracionMock, never()).save(any());
     }
-    
+
     @Test
     void deberiaLanzarExcepcionSiComentarioEsVacio() {
         // given
-        Usuario emisor = crearUsuario(1L);
+        Viajero emisor = crearViajero(1L);
         ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
         dto.setReceptorId(2L);
         dto.setPuntuacion(4);
-        dto.setComentario("  "); // solo espacios
+        dto.setComentario("  ");
 
         // whenthen
         DatoObligatorioException exception = assertThrows(
@@ -216,18 +316,15 @@ class ServicioValoracionTest {
         verify(repositorioValoracionMock, never()).save(any());
     }
 
-    // --- TEST DE EXCEPCIÓN DE VALIDACIÓN DE VIAJE ---
-
     @Test
     void deberiaLanzarExcepcionSiNoExisteViajeFinalizadoParaValorar() {
         // given
-        Usuario emisor = crearUsuario(1L);
+        Viajero emisor = crearViajero(1L);
         ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
         dto.setReceptorId(2L);
         dto.setPuntuacion(5);
         dto.setComentario("Comentario OK.");
 
-        // ANULACIÓN: Forzamos el fallo de viaje
         when(viajeRepositoryMock.existeViajeFinalizadoYNoValorado(1L, 2L)).thenReturn(false);
 
         // when & then
@@ -237,22 +334,19 @@ class ServicioValoracionTest {
         );
 
         assertThat(exception.getMessage(), is("No hay un viaje concluido y pendiente de valoración entre usted y el usuario receptor."));
-        verify(repositorioUsuarioMock, never()).buscarPorId(anyLong()); 
+        verify(repositorioUsuarioMock, never()).buscarPorId(anyLong());
         verify(repositorioValoracionMock, never()).save(any());
     }
-
-    // --- TEST DE EXCEPCIÓN DE DEPENDENCIA (USUARIO INEXISTENTE) ---
 
     @Test
     void deberiaLanzarExcepcionSiUsuarioReceptorNoExiste() {
         // given
-        Usuario emisor = crearUsuario(1L);
+        Viajero emisor = crearViajero(1L);
         ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
         dto.setReceptorId(99L);
         dto.setPuntuacion(5);
         dto.setComentario("Comentario OK.");
 
-        // ANULACIÓN: Forzamos la devolución de Optional.empty() para este ID
         when(repositorioUsuarioMock.buscarPorId(99L)).thenReturn(Optional.empty());
 
         // whenthen
@@ -270,26 +364,24 @@ class ServicioValoracionTest {
     // =================================================================
 
     @Test
-    void deberiaObtenerYMapearValoracionesDeUsuario() {
+    void deberiaObtenerValoracionesDeUsuario() {
         // given
         Usuario receptor = crearUsuario(2L);
-        Usuario emisor1 = crearUsuario(1L);
-        Usuario emisor3 = crearUsuario(3L);
-        
-        // crear entidades valoracion
+        Viajero emisor1 = crearViajero(1L);
+        Viajero emisor3 = crearViajero(3L);
+
         Valoracion v1 = new Valoracion(emisor1, receptor, 5, "Muy bueno");
         Valoracion v2 = new Valoracion(emisor3, receptor, 3, "Regular");
 
         when(repositorioValoracionMock.findByReceptorId(2L)).thenReturn(Arrays.asList(v1, v2));
 
         // when
-        List<ValoracionOutputDTO> dtos = servicioValoracion.obtenerValoracionesDeUsuario(2L);
+        List<Valoracion> valoraciones = servicioValoracion.obtenerValoracionesDeUsuario(2L);
 
         // then
-        assertThat(dtos, hasSize(2));
-        assertThat(dtos.get(0).getPuntuacion(), is(5));
-        assertThat(dtos.get(0).getNombreEmisor(), is("Conductor1"));
-        assertThat(dtos.get(1).getComentario(), is("Regular"));
+        assertThat(valoraciones, hasSize(2));
+        assertThat(valoraciones.get(0).getPuntuacion(), is(5));
+        assertThat(valoraciones.get(1).getComentario(), is("Regular"));
     }
 
     @Test
@@ -298,11 +390,11 @@ class ServicioValoracionTest {
         when(repositorioValoracionMock.findByReceptorId(anyLong())).thenReturn(Collections.emptyList());
 
         // when
-        List<ValoracionOutputDTO> dtos = servicioValoracion.obtenerValoracionesDeUsuario(50L);
+        List<Valoracion> valoraciones = servicioValoracion.obtenerValoracionesDeUsuario(50L);
 
         // then
-        assertThat(dtos, notNullValue());
-        assertThat(dtos, empty());
+        assertThat(valoraciones, notNullValue());
+        assertThat(valoraciones, empty());
     }
 
     // =================================================================
@@ -313,9 +405,8 @@ class ServicioValoracionTest {
     void deberiaCalcularElPromedioCorrectamente() {
         // given
         Usuario receptor = crearUsuario(2L);
-        Usuario emisor = crearUsuario(1L);
-        
-        // Valoraciones: 5, 4, 3 -> Promedio: 12 / 3 = 4.0
+        Viajero emisor = crearViajero(1L);
+
         Valoracion v1 = new Valoracion(emisor, receptor, 5, "A");
         Valoracion v2 = new Valoracion(emisor, receptor, 4, "B");
         Valoracion v3 = new Valoracion(emisor, receptor, 3, "C");

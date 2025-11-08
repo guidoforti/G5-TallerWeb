@@ -594,8 +594,10 @@ public class ControladorViaje {
         } catch (Exception e) {
             model.put("error", e.getMessage());
         }
-
+        
         model.put("viajeId", id);
+        model.put("accionFinalizada", true);
+        model.put("idUsuario", conductorId);
         return new ModelAndView("accionViajeCompletada", model);
     }
 }
