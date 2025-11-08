@@ -1,6 +1,9 @@
 <!DOCTYPE HTML>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/fragments :: head('Historial de Notificaciones')"></head>
+<head th:replace="fragments/fragments :: head('Historial de Notificaciones')">
+    <th:block th:fragment="extra">
+    </th:block>
+</head>
 
 <body>
 <nav th:replace="fragments/navbar_conductor :: navbar"></nav>

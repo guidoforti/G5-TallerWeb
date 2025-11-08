@@ -174,7 +174,7 @@ public class ControladorReserva {
 
             model.put("viaje", viaje);
             model.put("reservas", reservasDTO);
-            return new ModelAndView("listarReservasViaje", model);
+            return new ModelAndView("misReservas", model);
 
         } catch (NotFoundException | ViajeNoEncontradoException | UsuarioNoAutorizadoException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());

@@ -2,29 +2,27 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="fragments/fragments :: head('UnRumbo - Home')">
     <th:block th:fragment="extra">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-        <style>
-            /* [Estilo del Badge de Notificación] */
-            #notificacion-contador {
-                position: absolute;
-                top: 5px;
-                right: 0px;
-                font-size: 0.75rem;
-                padding: 0.3em 0.6em;
-                background-color: #BA3A3A !important; /* Rojo Persa */
-            }
-            .notification-wrapper {
-                position: relative;
-                display: inline-block;
-                margin-bottom: 20px;
-            }
-        </style>
     </th:block>
 </head>
 
 <body>
 <nav th:replace="fragments/navbar_conductor :: navbar"></nav>
-
+    <style>
+        /* [Estilo del Badge de Notificación] */
+        #notificacion-contador {
+            position: absolute;
+            top: 5px;
+            right: 0px;
+            font-size: 0.75rem;
+            padding: 0.3em 0.6em;
+            background-color: #BA3A3A !important;
+        }
+        .notification-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+    </style>
 <main role="main" class="container" style="margin-top: 120px;">
 
 
@@ -55,7 +53,7 @@
 <th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
 
 <script th:inline="javascript">
-    const ID_USUARIO = /*[[${idUsuario}]]*/ 0; // Se sigue llamando idUsuario/idConductor en el controlador
+    const ID_USUARIO = /*[[${idConductor}]]*/ 0; // Se sigue llamando idUsuario/idConductor en el controlador
 
     // CLAVE AÑADIDA: Obtener el contador inicial desde el modelo
     const CONTADOR_INICIAL = /*[[${contadorNotificaciones}]]*/ 0;
