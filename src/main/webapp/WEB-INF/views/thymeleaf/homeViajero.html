@@ -6,7 +6,7 @@
 </head>
 
 <body>
-<nav th:replace="fragments/fragments :: navbar"></nav>
+<nav th:replace="fragments/navbar_viajero :: navbar"></nav>
 
 <main role="main" class="container" style="margin-top: 120px;">
     <div class="row justify-content-center">
@@ -28,13 +28,17 @@
                         <i class="bi bi-car-front me-2"></i>Mis Viajes
                     </a>
 
+                    <a th:href="@{/viajero/perfil}" class="btn btn-unrumbo text-white w-100 fw-bold mt-3">
+                        <i class="bi bi-person-circle me-2"></i>Mi Perfil
+                    </a>
+
                     <a th:href="@{/logout}" class="btn btn-unrumbo w-100 text-white fw-bold mt-4">Cerrar sesión</a>
                 </div>
             </div>
         </div>
     </div>
 </main>
-
+<div th:replace="fragments/fragments :: footer"></div>
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
 </body>
 </html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Navbar Anónimo</title>
+</head>
+<body>
+
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-unrumbo fixed-top border-bottom">
+    <div class="container-fluid">
+
+        <a class="navbar-brand fw-bold text-dark" th:href="@{/}">
+            <img th:src="@{/img/unrumbo-logo.png}" alt="UnRumbo" width="40" class="me-2">
+
+            <span class="fw-bold">UnRumbo</span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAnonimo">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNavAnonimo">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item me-2">
+                    <a class="btn btn-dark fw-bold" th:href="@{/login}">
+                        <i class="fas fa-sign-in-alt me-1"></i> Iniciar Sesión
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="btn btn-primary fw-bold" th:href="@{/registrarme}">
+                        <i class="fas fa-user-plus me-1"></i> Registrarse
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+</body>
+</html>

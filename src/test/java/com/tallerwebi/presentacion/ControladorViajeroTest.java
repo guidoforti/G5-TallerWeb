@@ -1,17 +1,23 @@
 package com.tallerwebi.presentacion;
 
+import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.presentacion.Controller.ControladorViajero;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeroPerfilOutPutDTO;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.ui.ExtendedModelMap;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpSession;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 public class ControladorViajeroTest {
@@ -76,7 +82,7 @@ public class ControladorViajeroTest {
         // Assert
         assertThat(mav.getViewName(), equalTo("homeViajero"));
         // El modelo del controlador usa la clave "nombreConductor" (aún inconsistente, pero el test la respeta)
-        assertThat(mav.getModel().get("nombreConductor").toString(), equalTo(viajeroMock.getNombre()));
+        assertThat(mav.getModel().get("nombreViajero").toString(), equalTo(viajeroMock.getNombre()));
         assertThat(mav.getModel().get("rol").toString(), equalTo("VIAJERO"));
         verify(servicioViajeroMock, times(1)).obtenerViajero(1L);
     }
@@ -97,5 +103,62 @@ public class ControladorViajeroTest {
         // Assert
         assertThat(mav.getViewName(), equalTo("redirect:/login"));
         verify(sessionMock, times(1)).invalidate();
+    }
+
+    @Test
+    void verPerfilViajeroCuandoUnConductorIntentaAccederCorrectamente() throws UsuarioInexistente {
+        // Arrange
+    Long viajeroId = 1L;
+    Conductor conductor = new Conductor();
+    when(sessionMock.getAttribute("usuario")).thenReturn(conductor);
+
+    ViajeroPerfilOutPutDTO perfil = new ViajeroPerfilOutPutDTO();
+    perfil.setNombre("Nacho");
+    when(servicioViajeroMock.obtenerPerfilViajero(viajeroId)).thenReturn(perfil);
+
+    // Act
+    ModelAndView mav = controladorViajero.verPerfilViajero(viajeroId, sessionMock);
+
+    // Assert
+    assertThat(mav.getViewName(), equalTo("perfilViajero"));
+    assertThat(mav.getModel().get("perfil"), equalTo(perfil));
+    verify(servicioViajeroMock, times(1)).obtenerPerfilViajero(viajeroId);
+    }
+
+    @Test
+    void verPerfilViajeroConsuarioNoConductorDebeDarAccesoDenegado() {
+        // Arrange
+    Long viajeroId = 1L;
+    Viajero usuarioNoConductor = new Viajero();
+    when(sessionMock.getAttribute("usuario")).thenReturn(usuarioNoConductor);
+
+    // Act
+    ModelAndView mav = controladorViajero.verPerfilViajero(viajeroId, sessionMock);
+
+    // Assert
+    assertEquals("errorAutorizacion", mav.getViewName());
+    assertThat(mav.getModel().get("error").toString(),
+               equalTo("Solo los conductores pueden ver perfiles de viajeros"));
+    verifyNoInteractions(servicioViajeroMock); // No debe llamar al servicio
+    }
+
+    @Test
+    void verPerfilViajeroConViajeroInexistenteLanzaError() throws UsuarioInexistente {
+        // Arrange
+    Long viajeroId = 99L;
+    Conductor conductor = new Conductor();
+    when(sessionMock.getAttribute("usuario")).thenReturn(conductor);
+
+    when(servicioViajeroMock.obtenerPerfilViajero(viajeroId))
+        .thenThrow(new UsuarioInexistente("Viajero no encontrado"));
+
+    // Act
+    ModelAndView mav = controladorViajero.verPerfilViajero(viajeroId, sessionMock);
+
+    // Assert
+    assertEquals("errorPerfilViajero", mav.getViewName());
+    assertThat(mav.getModel().get("error").toString(),
+               equalTo("El viajero que intentás visualizar no existe"));
+    verify(servicioViajeroMock, times(1)).obtenerPerfilViajero(viajeroId);
     }
 }
