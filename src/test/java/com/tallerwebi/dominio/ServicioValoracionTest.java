@@ -16,8 +16,8 @@ import com.tallerwebi.dominio.ServiceImpl.ServicioValoracionImpl;
 import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
-import com.tallerwebi.presentacion.DTO.InputsDTO.ValoracionNuevaInputDTO;
 
+import com.tallerwebi.presentacion.DTO.InputsDTO.ValoracionIndividualInputDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -160,7 +160,7 @@ class ServicioValoracionTest {
         // given
         Viajero emisor = crearViajero(1L);
         Usuario receptor = crearUsuario(2L);
-        ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
+        ValoracionIndividualInputDTO dto = new ValoracionIndividualInputDTO();
         dto.setReceptorId(2L);
         dto.setPuntuacion(5);
         dto.setComentario("Excelente servicio y puntualidad.");
@@ -187,7 +187,7 @@ class ServicioValoracionTest {
         // given
         Usuario emisor = crearUsuario(1L); // Conductor
         Viajero receptor = crearViajero(2L);
-        ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
+        ValoracionIndividualInputDTO dto = new ValoracionIndividualInputDTO();
         dto.setReceptorId(2L);
         dto.setPuntuacion(4);
         dto.setComentario("Buen viajero, muy respetuoso.");
@@ -213,7 +213,7 @@ class ServicioValoracionTest {
     void noDeberiaPermitirAutoValoracion() {
         // given
         Viajero viajero = crearViajero(1L);
-        ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
+        ValoracionIndividualInputDTO dto = new ValoracionIndividualInputDTO();
         dto.setReceptorId(1L);
         dto.setPuntuacion(4);
         dto.setComentario("Me valoro a mi mismo.");
@@ -234,7 +234,7 @@ class ServicioValoracionTest {
     void deberiaLanzarExcepcionSiPuntuacionEsNula() {
         // given
         Viajero emisor = crearViajero(1L);
-        ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
+        ValoracionIndividualInputDTO dto = new ValoracionIndividualInputDTO();
         dto.setReceptorId(2L);
         dto.setPuntuacion(null);
         dto.setComentario("Comentario valido.");
@@ -252,7 +252,7 @@ class ServicioValoracionTest {
     void deberiaLanzarExcepcionSiPuntuacionEstaFueraDeRangoBajo() {
         // given
         Viajero emisor = crearViajero(1L);
-        ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
+        ValoracionIndividualInputDTO dto = new ValoracionIndividualInputDTO();
         dto.setReceptorId(2L);
         dto.setPuntuacion(0);
         dto.setComentario("Comentario valido.");
@@ -270,7 +270,7 @@ class ServicioValoracionTest {
     void deberiaLanzarExcepcionSiPuntuacionEstaFueraDeRangoAlto() {
         // given
         Viajero emisor = crearViajero(1L);
-        ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
+        ValoracionIndividualInputDTO dto = new ValoracionIndividualInputDTO();
         dto.setReceptorId(2L);
         dto.setPuntuacion(6);
         dto.setComentario("Comentario valido.");
@@ -288,7 +288,7 @@ class ServicioValoracionTest {
     void deberiaLanzarExcepcionSiComentarioEsNulo() {
         // given
         Viajero emisor = crearViajero(1L);
-        ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
+        ValoracionIndividualInputDTO dto = new ValoracionIndividualInputDTO();
         dto.setReceptorId(2L);
         dto.setPuntuacion(4);
         dto.setComentario(null);
@@ -306,7 +306,7 @@ class ServicioValoracionTest {
     void deberiaLanzarExcepcionSiComentarioEsVacio() {
         // given
         Viajero emisor = crearViajero(1L);
-        ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
+        ValoracionIndividualInputDTO dto = new ValoracionIndividualInputDTO();
         dto.setReceptorId(2L);
         dto.setPuntuacion(4);
         dto.setComentario("  ");
@@ -324,7 +324,7 @@ class ServicioValoracionTest {
     void deberiaLanzarExcepcionSiNoExisteViajeFinalizadoParaValorar() {
         // given
         Viajero emisor = crearViajero(1L);
-        ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
+        ValoracionIndividualInputDTO dto = new ValoracionIndividualInputDTO();
         dto.setReceptorId(2L);
         dto.setPuntuacion(5);
         dto.setComentario("Comentario OK.");
@@ -346,7 +346,7 @@ class ServicioValoracionTest {
     void deberiaLanzarExcepcionSiUsuarioReceptorNoExiste() {
         // given
         Viajero emisor = crearViajero(1L);
-        ValoracionNuevaInputDTO dto = new ValoracionNuevaInputDTO();
+        ValoracionIndividualInputDTO dto = new ValoracionIndividualInputDTO();
         dto.setReceptorId(99L);
         dto.setPuntuacion(5);
         dto.setComentario("Comentario OK.");

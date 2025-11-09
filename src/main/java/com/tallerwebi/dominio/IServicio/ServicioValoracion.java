@@ -2,18 +2,16 @@ package com.tallerwebi.dominio.IServicio;
 
 import java.util.List;
 
-import com.tallerwebi.dominio.Entity.Reserva;
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Entity.Valoracion;
 import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
-import com.tallerwebi.presentacion.DTO.InputsDTO.ValoracionNuevaInputDTO;
-import com.tallerwebi.presentacion.DTO.OutputsDTO.ValoracionOutputDTO;
+import com.tallerwebi.presentacion.DTO.InputsDTO.ValoracionIndividualInputDTO;
 
 public interface ServicioValoracion {
-    void valorarUsuario(Usuario emisor, ValoracionNuevaInputDTO dto)
+    void valorarUsuario(Usuario emisor, ValoracionIndividualInputDTO dto)
         throws UsuarioInexistente, DatoObligatorioException;
 
     List<Valoracion> obtenerValoracionesDeUsuario(Long usuarioId);

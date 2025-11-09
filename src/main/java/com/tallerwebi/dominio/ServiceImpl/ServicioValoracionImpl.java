@@ -2,8 +2,8 @@ package com.tallerwebi.dominio.ServiceImpl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+
+import com.tallerwebi.presentacion.DTO.InputsDTO.ValoracionIndividualInputDTO;
 import org.hibernate.Hibernate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +22,6 @@ import com.tallerwebi.dominio.IServicio.ServicioValoracion;
 import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
-import com.tallerwebi.presentacion.DTO.InputsDTO.ValoracionNuevaInputDTO;
-import com.tallerwebi.presentacion.DTO.OutputsDTO.ValoracionOutputDTO;
 
 @Service("servicioValoracion")
 @Transactional
@@ -46,7 +44,7 @@ public class ServicioValoracionImpl implements ServicioValoracion {
     }
 
     @Override
-    public void valorarUsuario(Usuario emisor, ValoracionNuevaInputDTO dto)
+    public void valorarUsuario(Usuario emisor, ValoracionIndividualInputDTO dto)
             throws UsuarioInexistente, DatoObligatorioException {
 
         if (emisor.getId().equals(dto.getReceptorId())) {
@@ -121,31 +119,32 @@ public class ServicioValoracionImpl implements ServicioValoracion {
 
 
 
-@Override
-@Transactional(readOnly = true)
-public List<Viajero> obtenerViajeros(Long viajeId) throws ViajeNoEncontradoException {
-    // 1. Obtener el Viaje por su ID
-    Viaje viaje = viajeRepository.findById(viajeId)
-        .orElseThrow(() -> new ViajeNoEncontradoException("El viaje con ID " + viajeId + " no fue encontrado."));
+    @Override
+    @Transactional(readOnly = true)
+    public List<Viajero> obtenerViajeros(Long viajeId) throws ViajeNoEncontradoException {
+        // 1. Obtener el Viaje
+        Viaje viaje = viajeRepository.findById(viajeId)
+                .orElseThrow(() -> new ViajeNoEncontradoException("El viaje con ID " + viajeId + " no fue encontrado."));
 
-    // 2. Obtener la lista de Reservas (relación lazy-loaded, accesible por @Transactional)
-    List<Reserva> reservas = viaje.getReservas();
+        // 2. Obtener la lista de Reservas (relación lazy-loaded)
+        List<Reserva> reservas = viaje.getReservas();
 
-    // 3. CLAVE: Usar Stream para mapear cada Reserva a su Viajero
-    if (reservas.isEmpty()) {
-        return new ArrayList<>();
+        if (reservas.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<Viajero> viajeros = reservas.stream()
+                .map(Reserva::getViajero)
+                .filter(java.util.Objects::nonNull)
+                .collect(java.util.stream.Collectors.toList());
+
+        // Esto previene la LazyInitializationException en la vista (donde se accede a .nombre/.email)
+        for (Viajero viajero : viajeros) {
+            viajero.getNombre();
+            viajero.getEmail();
+        }
+
+        return viajeros;
     }
-
-    List<Viajero> viajeros = reservas.stream()
-        // Mapea (transforma) cada Reserva 'r' a su objeto Viajero 'r.getViajero()'
-        .map(Reserva::getViajero) 
-        // Filtra cualquier resultado nulo (si es que la relación permite nulos, por seguridad)
-        .filter(java.util.Objects::nonNull) 
-        // Recolecta los Viajeros en una nueva lista
-        .collect(java.util.stream.Collectors.toList()); 
-
-    return viajeros;
-}
 
    
     

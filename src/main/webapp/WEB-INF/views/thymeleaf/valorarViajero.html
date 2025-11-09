@@ -48,54 +48,65 @@
 </head>
 
 <body>
-<nav th:replace="fragments/fragments :: navbar"></nav>
+<nav th:replace="fragments/navbar_conductor :: navbar"></nav>
 
 <main role="main" class="container" style="margin-top: 120px; margin-bottom: 50px;">
     <div class="row justify-content-center">
         <div class="col-lg-8">
-            <h1 class="text-center fw-bold text-dark mb-4">Selecciona un Viajero para Valorar</h1>
-            <p class="text-center text-muted mb-5">El viaje ha finalizado. Por favor, selecciona a los viajeros con los que compartiste el trayecto para dejarles una valoración.</p>
+            <form th:action="@{/valoraciones/enviar}"
+                  th:object="${formularioValoracion}"
+                  method="post">
 
-            <div th:if="${error}" class="flash-message flash-error" role="alert">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong>Error:</strong> <span th:text="${error}"></span>
-            </div>
+                <input type="hidden" name="viajeId" th:value="${viajeId}" />
 
-            <div th:if="${viajeros.empty}" class="card p-4 text-center">
-                <p class="mb-0 text-muted">No se encontraron viajeros asociados a este viaje.</p>
-            </div>
+                <div class="list-group">
+                    <div th:each="valoracion, stat : *{valoraciones}" class="list-group-item">
 
-            <ul class="list-group">
-                <!-- Iteramos sobre la lista 'viajeros' que viene del controlador -->
-                <li th:each="viajero : ${viajeros}" class="list-group-item">
-                    <div class="d-flex align-items-center">
-                        <div class="avatar">
-                             <i class="fas fa-user"></i>
-                        </div>
-                        <div>
-                            <h5 class="mb-0 fw-bold" th:text="${viajero.nombre}">Nombre del Viajero</h5>
-                            <small class="text-muted" th:text="${viajero.email}">email@ejemplo.com</small>
+                        <div class="d-flex align-items-start w-100">
+
+                            <div class="avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div style="flex-grow: 1;">
+                                <h5 class="mb-0 fw-bold" th:text="${viajeros[__${stat.index}__].nombre}">Nombre del Viajero</h5>
+                                <small class="text-muted" th:text="${viajeros[__${stat.index}__].email}">email@ejemplo.com</small>
+
+                                <input type="hidden"
+                                       th:field="*{valoraciones[__${stat.index}__].receptorId}"
+                                       th:value="${viajeros[__${stat.index}__].id}" />
+                            </div>
+
+                            <div style="width: 50%; max-width: 300px; margin-left: 20px;">
+                                <div class="rating d-flex justify-content-end mb-2">
+                                    <span class="text-muted small me-2">Puntuación:</span>
+                                    <input type="number"
+                                           th:field="*{valoraciones[__${stat.index}__].puntuacion}"
+                                           min="1" max="5"
+                                           class="form-control form-control-sm"
+                                           style="width: 60px;" required />
+                                </div>
+
+                                <textarea th:field="*{valoraciones[__${stat.index}__].comentario}"
+                                          placeholder="Comentario (opcional)"
+                                          rows="2"
+                                          class="form-control form-control-sm"></textarea>
+                            </div>
                         </div>
                     </div>
-                    
-                    <!-- Botón que lleva a la vista de formulario individual -->
-                    <a th:href="@{/valoraciones/{id}(id=${viajero.id})}" class="btn btn-unrumbo btn-sm">
-                        <i class="fas fa-star me-1"></i> Valorar
-                    </a>
-                </li>
-            </ul>
-            
-            <div class="mt-4 text-center">
-                <a th:href="@{/home}" class="btn btn-outline-unrumbo">
-                    <i class="fas fa-home me-1"></i> Volver a Home
-                </a>
-            </div>
+                </div>
 
+                <div class="mt-5 text-center">
+                    <button type="submit" class="btn btn-unrumbo w-50 fw-bold">
+                        <i class="fas fa-paper-plane me-2"></i> Enviar Valoraciones
+                    </button>
+                    <a th:href="@{/conductor/home}" class="btn btn-outline-unrumbo mt-3 w-50">
+                        <i class="fas fa-home me-1"></i> Volver a Home
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </main>
-
-<script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
-
 </body>
+<script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
 </html>
