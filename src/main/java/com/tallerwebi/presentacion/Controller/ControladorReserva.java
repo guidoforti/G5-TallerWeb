@@ -13,6 +13,7 @@ import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
+import com.tallerwebi.dominio.IServicio.ServicioValoracion;
 import com.tallerwebi.dominio.excepcion.*;
 import com.tallerwebi.presentacion.DTO.InputsDTO.MarcarAsistenciaInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.RechazoReservaInputDTO;
@@ -42,16 +43,19 @@ public class ControladorReserva {
     private final ServicioViaje servicioViaje;
     private final ServicioViajero servicioViajero;
     private final ServicioConductor servicioConductor;
+    private final ServicioValoracion servicioValoracion;
 
     @Autowired
     public ControladorReserva(ServicioReserva servicioReserva,
                               ServicioViaje servicioViaje,
                               ServicioViajero servicioViajero,
-                              ServicioConductor servicioConductor) {
+                              ServicioConductor servicioConductor,
+                              ServicioValoracion servicioValoracion) {
         this.servicioReserva = servicioReserva;
         this.servicioViaje = servicioViaje;
         this.servicioViajero = servicioViajero;
         this.servicioConductor = servicioConductor;
+        this.servicioValoracion = servicioValoracion;
     }
 
     /**
@@ -572,13 +576,10 @@ public class ControladorReserva {
             // Obtener todas las reservas confirmadas del viajero
             List<Reserva> reservas = servicioReserva.listarViajesConfirmadosPorViajero(viajeroId);
 
-            // Categorizar por estado del viaje:
-            // Próximos: DISPONIBLE, COMPLETO
-            // En curso: EN_CURSO
-            // Finalizados: FINALIZADO, CANCELADO
+            // Categorizar por estado del viaje: (SIN CAMBIOS)
             List<Reserva> viajesProximos = reservas.stream()
                     .filter(r -> r.getViaje().getEstado() == EstadoDeViaje.DISPONIBLE ||
-                                 r.getViaje().getEstado() == EstadoDeViaje.COMPLETO)
+                            r.getViaje().getEstado() == EstadoDeViaje.COMPLETO)
                     .sorted((r1, r2) -> r1.getViaje().getFechaHoraDeSalida().compareTo(r2.getViaje().getFechaHoraDeSalida()))
                     .collect(Collectors.toList());
 
@@ -589,11 +590,10 @@ public class ControladorReserva {
 
             List<Reserva> viajesFinalizados = reservas.stream()
                     .filter(r -> r.getViaje().getEstado() == EstadoDeViaje.FINALIZADO ||
-                                 r.getViaje().getEstado() == EstadoDeViaje.CANCELADO)
+                            r.getViaje().getEstado() == EstadoDeViaje.CANCELADO)
                     .sorted((r1, r2) -> r2.getViaje().getFechaHoraDeSalida().compareTo(r1.getViaje().getFechaHoraDeSalida()))
                     .collect(Collectors.toList());
 
-            // Convertir a DTOs
             List<ViajeConfirmadoViajeroDTO> proximosDTO = viajesProximos.stream()
                     .map(ViajeConfirmadoViajeroDTO::new)
                     .collect(Collectors.toList());
@@ -603,7 +603,21 @@ public class ControladorReserva {
                     .collect(Collectors.toList());
 
             List<ViajeConfirmadoViajeroDTO> finalizadosDTO = viajesFinalizados.stream()
-                    .map(ViajeConfirmadoViajeroDTO::new)
+                    .map(reserva -> {
+                        ViajeConfirmadoViajeroDTO dto = new ViajeConfirmadoViajeroDTO(reserva);
+
+                        if (reserva.getViaje().getEstado() == EstadoDeViaje.FINALIZADO) {
+
+                            Long conductorId = reserva.getViaje().getConductor().getId();
+                            Long viajeId = reserva.getViaje().getId();
+
+                            boolean yaExiste = servicioValoracion.yaHaValorado(viajeroId, conductorId, viajeId);
+
+                            dto.setValoracionPendiente(!yaExiste);
+                        }
+
+                        return dto;
+                    })
                     .collect(Collectors.toList());
 
             model.put("viajesProximos", proximosDTO);

@@ -27,6 +27,7 @@ public class ViajeConfirmadoViajeroDTO {
     private Double precio;
     private EstadoDeViaje estadoViaje;
     private Integer asientosOcupados;
+    private Boolean valoracionPendiente = false;
 
     /**
      * Constructor que convierte una entidad Reserva a DTO

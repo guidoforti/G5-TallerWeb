@@ -23,4 +23,5 @@ public interface ServicioValoracion {
     Usuario obtenerUsuario(Long usuarioId) throws UsuarioInexistente;
 
     List<Viajero> obtenerViajeros(Long viajeId) throws ViajeNoEncontradoException;
+    boolean yaHaValorado(Long emisorId, Long receptorId, Long viajeId);
 }

@@ -8,6 +8,7 @@ import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
+import com.tallerwebi.dominio.IServicio.ServicioValoracion;
 import com.tallerwebi.dominio.excepcion.*;
 import com.tallerwebi.presentacion.Controller.ControladorReserva;
 import com.tallerwebi.presentacion.DTO.InputsDTO.RechazoReservaInputDTO;
@@ -39,6 +40,7 @@ public class ControladorReservaTest {
     private HttpSession sessionMock;
     private ServicioConductor servicioConductor;
     private RedirectAttributes redirectAttributesMock;
+    private ServicioValoracion servicioValoracionMock;
 
     @BeforeEach
     public void init() {
@@ -47,8 +49,9 @@ public class ControladorReservaTest {
         servicioViajeroMock = mock(ServicioViajero.class);
         servicioConductor = mock(ServicioConductor.class);
         redirectAttributesMock = mock(RedirectAttributes.class);
+        servicioValoracionMock = mock(ServicioValoracion.class);
 
-        controladorReserva = new ControladorReserva(servicioReservaMock, servicioViajeMock, servicioViajeroMock, servicioConductor);
+        controladorReserva = new ControladorReserva(servicioReservaMock, servicioViajeMock, servicioViajeroMock, servicioConductor, servicioValoracionMock);
         sessionMock = mock(HttpSession.class);
     }
 

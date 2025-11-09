@@ -146,6 +146,10 @@ public class ServicioValoracionImpl implements ServicioValoracion {
         return viajeros;
     }
 
-   
+    @Override
+    @Transactional(readOnly = true)
+    public boolean yaHaValorado(Long emisorId, Long receptorId, Long viajeId) {
+        return repositorioValoracion.yaExisteValoracionParaViaje(emisorId, receptorId, viajeId);
+    }
     
 }
