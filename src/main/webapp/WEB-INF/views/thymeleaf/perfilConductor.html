@@ -1,56 +1,55 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/fragments :: head('Perfil del Conductor')">
-    <th:block th:fragment="extra"></th:block>
-    <style>
+<head th:replace="fragments/fragments :: head('Perfil de Conductor')">
+    <th:block th:fragment="extra">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <style>
             :root {
-                --color-primary: #E16A3D; 
-                --color-taupe: #4E3D2F; 
-                --color-coffee: #734933; 
-                --color-success-warm: #44806A; 
+                --color-primary: #E16A3D;
+                --color-taupe: #4E3D2F;
+                --color-coffee: #734933;
             }
-            .btn-unrumbo {
-                background-color: var(--color-primary) !important;
-                border-color: var(--color-primary) !important;
-                color: white !important;
-            }
-            .btn-unrumbo:hover {
-                background-color: #cf5930 !important;
-                border-color: #cf5930 !important;
-            }
-            /* Clase específica para títulos del conductor */
-            .title-conductor {
-                color: var(--color-coffee); /* Marrón medio */
-            }
-            .star-conductor {
-                color: var(--color-primary); /* Podrías usar el color primario si quieres un naranja más intenso que el amarillo por defecto */
-            }
+            .btn-unrumbo { background-color: var(--color-primary) !important; border-color: var(--color-primary) !important; color: white !important; }
+            .title-conductor { color: var(--color-coffee); font-size: 1.8rem; }
+            .star-icon { color: gold; }
+            .profile-header { background-color: #f7f7f7; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+            .datos-secundarios { font-size: 0.9rem; }
         </style>
+    </th:block>
 </head>
 <body>
 
-<main class="container mt-5 mb-5">
+<nav th:replace="fragments/navbar_conductor :: navbar"></nav>
+<main class="container mt-5 mb-5" style="margin-top: 120px !important;">
     <div class="card shadow-lg p-4 rounded-4">
-        <div class="row align-items-center">
-            <div class="col-md-4 text-center">
-                <img src="/images/profile-placeholder.png" alt="Foto del conductor" class="rounded-circle img-fluid shadow-sm" style="max-width: 180px;">
+
+        <div class="profile-header">
+            <div class="row align-items-center">
+                <div class="col-md-3 text-center">
+                    <img src="/images/profile-placeholder.png" alt="Foto del conductor" class="rounded-circle img-fluid shadow-sm" style="max-width: 150px;">
+                </div>
+
+                <div class="col-md-9">
+                    <h2 th:text="${perfil.nombre}" class="fw-bold title-conductor mb-2">Nombre Completo del Conductor</h2>
+                    <hr class="my-2"/>
+
+                    <div class="mt-3">
+                        <h5 class="title-conductor mb-2">Promedio de Valoración</h5>
+                        <h3 class="fw-bold d-inline me-3" style="color: var(--color-primary);">
+                            <span th:text="${perfil.promedioValoraciones != null ? #numbers.formatDecimal(perfil.promedioValoraciones, 1, 1) : 0.0}">4.5</span> / 5
+                        </h3>
+                        <small class="text-muted" th:text="${perfil.valoraciones != null ? '(' + #lists.size(perfil.valoraciones) + ' comentarios)' : '(0 comentarios)'}"></small>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-8">
-                <h2 th:text="${perfil.nombre}" class="fw-bold title-conductor"></h2>
-                <p class="text-muted mb-1">Edad: <span th:text="${perfil.edad != null ? perfil.edad : 'No especificada'}"></span> años</p>
-                <p class="text-muted mb-1">Licencia válida hasta: 
+        </div>
+
+        <div class="row mt-3 datos-secundarios">
+            <div class="col-md-12">
+                <p class="mb-1"><strong>Edad:</strong> <span th:text="${perfil.edad != null ? perfil.edad : 'No especificada'}"></span> años</p>
+                <p class="mb-1"><strong>Licencia válida hasta:</strong>
                     <span th:text="${perfil.fechaVencimientoLicencia != null ? perfil.fechaVencimientoLicencia : 'No registrada'}"></span>
                 </p>
-
-                <div class="mt-3">
-                    <h5 class="title-conductor">Valoración promedio</h5>
-                    <div class="progress" style="height: 10px;">
-                        <div class="progress-bar bg-warning" role="progressbar"
-                             th:style="'width:' + (${perfil.promedioValoraciones != null ? perfil.promedioValoraciones * 20 : 0}) + '%'"
-                             aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
-                    <small class="text-muted" th:text="'Promedio: ' + (${perfil.promedioValoraciones != null ? perfil.promedioValoraciones : 0}) + ' / 5'"></small>
-                </div>
             </div>
         </div>
 
@@ -58,15 +57,21 @@
 
         <div>
             <h4 class="mb-3 title-conductor">Comentarios de viajeros</h4>
+
             <div th:if="${perfil.valoraciones != null and !perfil.valoraciones.isEmpty()}">
                 <div th:each="valoracion : ${perfil.valoraciones}" class="border-bottom mb-3 pb-2">
+
                     <p class="mb-1">
-                        <strong th:text="${valoracion.nombreEmisor}">Juan Pérez</strong>
-                        <span class="text-warning ms-2" th:text="'★'.repeat(${valoracion.puntuacion})"></span>
+                        <strong th:text="${valoracion.nombreEmisor}">Nombre del Emisor</strong>
+
+                        <span class="text-warning ms-2 star-icon"
+                              th:text="${#strings.repeat('★', valoracion.puntuacion)}">★★★★</span>
                     </p>
+
                     <p class="text-muted" th:text="${valoracion.comentario}">Excelente conductor, muy amable.</p>
                 </div>
             </div>
+
             <div th:if="${perfil.valoraciones == null or perfil.valoraciones.isEmpty()}">
                 <p class="text-muted fst-italic">Este conductor aún no tiene valoraciones.</p>
             </div>

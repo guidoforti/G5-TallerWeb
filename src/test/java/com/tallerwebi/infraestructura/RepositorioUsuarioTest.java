@@ -1,7 +1,7 @@
 package com.tallerwebi.infraestructura;
 
 import com.tallerwebi.dominio.Entity.Usuario;
-import com.tallerwebi.dominio.Entity.Viajero; // Necesario para instanciar una subclase concreta
+import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.IRepository.RepositorioUsuario;
 import com.tallerwebi.integracion.config.DataBaseTestInitilizationConfig;
 import com.tallerwebi.integracion.config.HibernateTestConfig;
@@ -14,18 +14,15 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {HibernateTestConfig.class, DataBaseTestInitilizationConfig.class})
@@ -38,26 +35,26 @@ public class RepositorioUsuarioTest {
     private RepositorioUsuario repositorioUsuario;
     private Usuario usuarioBase;
 
+    private LocalDate calcularFechaNacimiento(int edad) {
+        return LocalDate.now().minusYears(edad).minusDays(1);
+    }
+
     @BeforeEach
     public void setUp() {
         this.repositorioUsuario = new RepositorioUsuarioImpl(this.sessionFactory);
 
-        // Usamos una subclase concreta (Viajero) para poder guardar la entidad abstracta Usuario
         usuarioBase = new Viajero();
         usuarioBase.setNombre("UsuarioBase");
         usuarioBase.setEmail("base@test.com");
         usuarioBase.setContrasenia("pass123");
         usuarioBase.setRol("VIAJERO");
         usuarioBase.setActivo(true);
-        ((Viajero)usuarioBase).setEdad(30);
 
-        // Guardamos el usuario base para las pruebas de búsqueda
+        usuarioBase.setFechaNacimiento(calcularFechaNacimiento(30));
+        usuarioBase.setFumador(true);
+
         repositorioUsuario.guardar(usuarioBase);
     }
-
-    // -------------------------------------------------------------------------------------------------
-    // TEST: guardar(Usuario usuario)
-    // -------------------------------------------------------------------------------------------------
 
     @Test
     public void deberiaGuardarUnUsuarioNuevoYAsignarleId() {
@@ -67,7 +64,9 @@ public class RepositorioUsuarioTest {
         nuevoUsuario.setContrasenia("clave456");
         nuevoUsuario.setNombre("Nuevo Nombre");
         nuevoUsuario.setRol("VIAJERO");
-        ((Viajero)nuevoUsuario).setEdad(25);
+
+        nuevoUsuario.setFechaNacimiento(calcularFechaNacimiento(25));
+        nuevoUsuario.setDiscapacitado("Auditiva");
 
         // Act
         Usuario guardado = repositorioUsuario.guardar(nuevoUsuario);
@@ -76,15 +75,14 @@ public class RepositorioUsuarioTest {
         assertNotNull(guardado.getId(), "El usuario debería tener un ID asignado.");
         assertThat(guardado.getEmail(), is(equalTo("nuevo@guardar.com")));
 
-        // Verificamos que se pueda recuperar por email
+
         Optional<Usuario> recuperado = repositorioUsuario.buscarPorEmail("nuevo@guardar.com");
         assertTrue(recuperado.isPresent());
         assertThat(recuperado.get().getNombre(), is(equalTo("Nuevo Nombre")));
-    }
 
-    // -------------------------------------------------------------------------------------------------
-    // TEST: buscarUsuario(String email, String contrasenia)
-    // -------------------------------------------------------------------------------------------------
+        assertThat(recuperado.get().getEdad(), is(25));
+        assertThat(recuperado.get().getDiscapacitado(), is(equalTo("Auditiva")));
+    }
 
     @Test
     public void deberiaEncontrarUsuarioConCredencialesCorrectas() {
@@ -113,11 +111,6 @@ public class RepositorioUsuarioTest {
         // Assert
         assertTrue(resultado.isEmpty(), "No debería encontrar al usuario si el email no existe.");
     }
-
-    // -------------------------------------------------------------------------------------------------
-    // TEST: buscarPorEmail(String email)
-    // -------------------------------------------------------------------------------------------------
-
     @Test
     public void deberiaEncontrarUsuarioPorEmailExistente() {
         // Act
@@ -137,22 +130,16 @@ public class RepositorioUsuarioTest {
         assertTrue(resultado.isEmpty(), "No debería encontrar al usuario si el email no existe.");
     }
 
-    // -------------------------------------------------------------------------------------------------
-    // TEST: modificarUsuario(Usuario usuario)
-    // -------------------------------------------------------------------------------------------------
-
     @Test
     public void deberiaModificarLaContraseniaDelUsuario() {
         // Arrange
         String nuevaContrasenia = "newPass456";
 
-        // El usuarioBase ya está en sesión de Hibernate gracias a @Transactional
         usuarioBase.setContrasenia(nuevaContrasenia);
 
         // Act
         repositorioUsuario.modificarUsuario(usuarioBase);
 
-        // Forzamos la limpieza de la sesión para asegurar la recarga desde la DB
         sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
 
@@ -183,30 +170,30 @@ public class RepositorioUsuarioTest {
     }
 
     @Test
-public void deberiaEncontrarUsuarioPorIdExistente() {
-    // Arrange: usuarioBase ya fue guardado en @BeforeEach
-    Long idExistente = usuarioBase.getId();
+    public void deberiaEncontrarUsuarioPorIdExistente() {
+        Long idExistente = usuarioBase.getId();
 
-    // Act
-    Optional<Usuario> resultado = repositorioUsuario.buscarPorId(idExistente);
+        // Act
+        Optional<Usuario> resultado = repositorioUsuario.buscarPorId(idExistente);
 
-    // Assert
-    assertTrue(resultado.isPresent(), "Debería encontrar un usuario existente por su ID.");
-    assertThat(resultado.get().getId(), is(equalTo(idExistente)));
-    assertThat(resultado.get().getNombre(), is(equalTo(usuarioBase.getNombre())));
-}
+        // Assert
+        assertTrue(resultado.isPresent(), "Debería encontrar un usuario existente por su ID.");
+        assertThat(resultado.get().getId(), is(equalTo(idExistente)));
+        assertThat(resultado.get().getNombre(), is(equalTo(usuarioBase.getNombre())));
 
-@Test
-public void noDeberiaEncontrarUsuarioPorIdInexistente() {
-    // Arrange
-    Long idInexistente = 9999L;
+        // Verificamos que el campo booleano se recupera
+        assertThat(resultado.get().getFumador(), is(true));
+    }
 
-    // Act
-    Optional<Usuario> resultado = repositorioUsuario.buscarPorId(idInexistente);
+    @Test
+    public void noDeberiaEncontrarUsuarioPorIdInexistente() {
+        // Arrange
+        Long idInexistente = 9999L;
 
-    // Assert
-    assertTrue(resultado.isEmpty(), "No debería encontrar ningún usuario con un ID inexistente.");
-}
+        // Act
+        Optional<Usuario> resultado = repositorioUsuario.buscarPorId(idInexistente);
 
-    
+        // Assert
+        assertTrue(resultado.isEmpty(), "No debería encontrar ningún usuario con un ID inexistente.");
+    }
 }

@@ -64,66 +64,72 @@
                                 <option value="VIAJERO">Viajero (Pasajero)</option>
                                 <option value="CONDUCTOR">Conductor (Dueño de vehículo)</option>
                             </select>
-                            <small class="form-text text-muted">La selección determina qué campos son obligatorios.</small>
                         </div>
 
                         <hr/>
 
                         <div class="mb-3">
-                            <label for="nombre" class="form-label fw-bold">
-                                <i class="fas fa-user me-1"></i> Nombre completo
-                            </label>
+                            <label for="nombre" class="form-label fw-bold"><i class="fas fa-user me-1"></i> Nombre completo</label>
                             <input th:field="*{nombre}" id="nombre" type="text" class="form-control" placeholder="Juan Pérez" required>
                         </div>
 
                         <div class="mb-3">
-                            <label for="email" class="form-label fw-bold">
-                                <i class="fas fa-envelope me-1"></i> Email
-                            </label>
+                            <label for="email" class="form-label fw-bold"><i class="fas fa-envelope me-1"></i> Email</label>
                             <input th:field="*{email}" id="email" type="email" class="form-control" placeholder="ejemplo@mail.com" required>
                         </div>
 
                         <div class="mb-3">
-                            <label for="contrasenia" class="form-label fw-bold">
-                                <i class="fas fa-lock me-1"></i> Contraseña
-                            </label>
+                            <label for="contrasenia" class="form-label fw-bold"><i class="fas fa-lock me-1"></i> Contraseña</label>
                             <input th:field="*{contrasenia}" id="contrasenia" type="password" class="form-control" placeholder="********" required>
                         </div>
 
-                        <div id="camposConductor" class="p-3 border rounded mb-3 bg-light" style="border-color: var(--color-coffee) !important;">
-                            <h6 class="fw-bold h6-conductor"><i class="fas fa-car me-2"></i> Datos Adicionales de Conductor</h6>
-                            <div class="mb-3">
-                                <label for="edad" class="form-label">
-                                    <i class="fas fa-user-clock me-1"></i> Edad
-                                </label>
-                                <input th:field="*{edadConductor}" id="edadConductor" type="number" class="form-control" placeholder="Ingrese su edad">
-                            </div>
+                        <div class="mb-3">
+                            <label for="fechaNacimiento" class="form-label fw-bold">
+                                <i class="fas fa-calendar-alt me-1"></i> Fecha de Nacimiento *
+                            </label>
+                            <input th:field="*{fechaNacimiento}" id="fechaNacimiento" type="date" class="form-control" required>
+                        </div>
 
+                        <div class="mb-3">
+                            <label for="fumador" class="form-label fw-bold">
+                                <i class="fas fa-smoking me-1"></i> ¿Es fumador?
+                            </label>
+                            <select th:field="*{fumador}" id="fumador" class="form-select" required>
+                                <option value="false">No</option>
+                                <option value="true">Sí</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="discapacitado" class="form-label fw-bold">
+                                <i class="fas fa-wheelchair me-1"></i> Discapacidad (Opcional)
+                            </label>
+                            <input th:field="*{discapacitado}" id="discapacitado" type="text" class="form-control" placeholder="(ej: movilidad reducida)">
+                        </div>
+
+                        <hr/>
+
+                        <div id="camposConductor" class="p-3 border rounded mb-3 bg-light" style="border-color: var(--color-coffee) !important;">
+                            <h6 class="fw-bold h6-conductor"><i class="fas fa-car me-2"></i> Datos de Conductor</h6>
                             <div class="mb-3">
                                 <label for="fechaDeVencimientoLicencia" class="form-label">
-                                    <i class="fas fa-calendar-alt me-1"></i> Fecha de vencimiento de licencia
+                                    <i class="fas fa-calendar-check me-1"></i> Fecha de vencimiento de licencia *
                                 </label>
                                 <input th:field="*{fechaDeVencimientoLicencia}" id="fechaDeVencimientoLicencia" type="date" class="form-control">
                             </div>
                         </div>
 
                         <div id="camposViajero" class="p-3 border rounded mb-3 bg-light" style="border-color: var(--color-success-warm) !important;">
-                            <h6 class="fw-bold h6-viajero"><i class="fas fa-hiking me-2"></i> Datos Adicionales de Viajero</h6>
+                            <h6 class="fw-bold h6-viajero"><i class="fas fa-hiking me-2"></i> Datos de Viajero</h6>
                             <div class="mb-3">
-                                <label for="edad" class="form-label">
-                                    <i class="fas fa-baby me-1"></i> Edad
+                                <label for="fotoPerfilUrl" class="form-label">
+                                    <i class="fas fa-camera me-1"></i> URL de Foto de Perfil (Dummy)
                                 </label>
-                                <input th:field="*{edad}" id="edad" type="number" class="form-control" placeholder="Edad">
-                                <label for="fumador">¿Es fumador?</label>
-                                <select id="fumador" name="fumador" required>
-                                <option value="false">No</option>
-                                <option value="true">Sí</option>
-                                </select>
-
-                                <label for="discapacitado">¿Tiene alguna discapacidad?</label>
-                                <input type="text" id="discapacitado" name="discapacitado" placeholder="(opcional)">
+                                <input th:field="*{fotoPerfilUrl}" id="fotoPerfilUrl" type="text" class="form-control" placeholder="Temporal: URL/NULL">
                             </div>
+                            <p class="text-muted small mb-0">Los datos de edad, fumador y discapacidad se registran arriba.</p>
                         </div>
+
 
                         <button type="submit" class="btn btn-unrumbo w-100 fw-bold">
                             <i class="fas fa-paper-plane me-1"></i> Registrarme

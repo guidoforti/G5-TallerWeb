@@ -21,9 +21,6 @@ import java.util.Objects;
 @PrimaryKeyJoinColumn(name = "usuario_id")
 public class Conductor extends Usuario {
 
-    // @Column(name = "edad")
-    private Integer edad;
-
     // @Column(name = "foto_perfil_conductor")
     private String fotoDePerfil;
 

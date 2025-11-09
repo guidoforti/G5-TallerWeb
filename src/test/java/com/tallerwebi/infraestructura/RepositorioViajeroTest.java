@@ -13,6 +13,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -33,6 +34,10 @@ public class RepositorioViajeroTest {
 
     private Viajero viajeroBase;
 
+    private LocalDate calcularFechaNacimiento(int edad) {
+        return LocalDate.now().minusYears(edad).minusDays(1);
+    }
+
     @BeforeEach
     public void setUp() {
         this.repositorioViajero = new RepositorioViajeroImpl(this.sessionFactory);
@@ -40,7 +45,8 @@ public class RepositorioViajeroTest {
 
         viajeroBase = new Viajero();
         viajeroBase.setNombre("ViajeroBaseTest");
-        viajeroBase.setEdad(30);
+        viajeroBase.setFechaNacimiento(calcularFechaNacimiento(30));
+
         viajeroBase.setEmail("viajero.base.test@unlam.com");
         viajeroBase.setContrasenia("securePass1");
         viajeroBase.setRol("VIAJERO");
@@ -60,6 +66,7 @@ public class RepositorioViajeroTest {
         assertTrue(viajeroPorIDEncontrado.isPresent());
         assertThat(viajeroPorIDEncontrado.get().getId(), is(idExistente));
         assertThat(viajeroPorIDEncontrado.get().getEmail(), is("viajero.base.test@unlam.com"));
+        assertThat(viajeroPorIDEncontrado.get().getEdad(), is(30));
     }
 
     @Test

@@ -48,6 +48,10 @@ public class ControladorRegistro {
             model.put("error", "Debes seleccionar un rol para registrarte.");
             return new ModelAndView(vistaRetorno, model);
         }
+        if (registroDTO.getFechaNacimiento() == null) {
+            model.put("error", "La fecha de nacimiento es obligatoria.");
+            return new ModelAndView(vistaRetorno, model);
+        }
 
         try {
             if ("CONDUCTOR".equals(registroDTO.getRolSeleccionado())) {
@@ -59,18 +63,10 @@ public class ControladorRegistro {
 
             } else if ("VIAJERO".equals(registroDTO.getRolSeleccionado())) {
                 Viajero nuevoViajero = registroDTO.toViajeroEntity();
-                nuevoViajero.setFumador(registroDTO.getFumador() != null ? registroDTO.getFumador() : false);
-                String discapacidadIngresada = registroDTO.getDiscapacitado(); 
-                if (discapacidadIngresada != null && !discapacidadIngresada.trim().isEmpty()) {
-                nuevoViajero.setDiscapacitado(discapacidadIngresada.trim());
-                } else {
-                nuevoViajero.setDiscapacitado(null); 
-                }
                 Viajero viajeroRegistrado = servicioViajero.registrar(nuevoViajero);
                 session.setAttribute("idUsuario", viajeroRegistrado.getId());
                 session.setAttribute("ROL", "VIAJERO");
                 return new ModelAndView("redirect:/viajero/home");
-
             } else {
                 model.put("error", "Rol seleccionado no válido.");
                 return new ModelAndView(vistaRetorno, model);

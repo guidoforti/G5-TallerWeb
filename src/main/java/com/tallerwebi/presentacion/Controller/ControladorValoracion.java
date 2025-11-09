@@ -150,4 +150,54 @@ public class ControladorValoracion {
             return new ModelAndView("error", model);
         }
     }
+
+    @PostMapping("/unidad")
+    public ModelAndView enviarValoracionUnitaria(@ModelAttribute("valoracionDto") ValoracionIndividualInputDTO valoracionDto,
+                                                 @RequestParam("viajeId") Long viajeId,
+                                                 HttpSession session) {
+        ModelMap model = new ModelMap();
+
+        // 1. Validación de Sesión y Rol
+        Long viajeroId = (Long) session.getAttribute("idUsuario");
+        String rol = (String) session.getAttribute("ROL");
+
+        if (viajeroId == null || !"VIAJERO".equals(rol)) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        try {
+            // 2. Obtener Emisor (Viajero)
+            Usuario emisor = servicioValoracion.obtenerUsuario(viajeroId);
+
+            // 3. Persistir la Valoración
+            // Reutilizamos el método valorarUsuario (emisor, dto, viajeId) que ya modificamos.
+            // El servicio se encargará de: validar puntuación, verificar que sea FINALIZADO y que NO exista doble valoración.
+            servicioValoracion.valorarUsuario(emisor, valoracionDto, viajeId);
+
+            model.put("mensaje", "¡Valoración enviada con éxito! Gracias por tu opinión.");
+            return new ModelAndView("redirect:/reserva/misViajes"); // Redirigir al historial de viajes
+
+        } catch (DatoObligatorioException | UsuarioInexistente e) {
+            // Si hay error (ej: puntuación no válida, no existe el conductor, o ya valoró)
+
+            // 4. Recargar la vista con el error (para unicidad, se debe cargar el formulario de nuevo)
+            try {
+                Viaje viaje = servicioViaje.obtenerViajePorId(viajeId);
+                model.put("viaje", viaje);
+                model.put("conductorNombre", viaje.getConductor().getNombre());
+                model.put("valoracionDto", valoracionDto);
+                model.put("error", e.getMessage());
+
+                return new ModelAndView("valorarConductor", model);
+
+            } catch (Exception ex) {
+                // Si la recarga falla, muestra un error genérico
+                model.put("error", "Error crítico al procesar la valoración.");
+                return new ModelAndView("error", model);
+            }
+        } catch (Exception e) {
+            model.put("error", "Ocurrió un error inesperado: " + e.getMessage());
+            return new ModelAndView("error", model);
+        }
+    }
 }
