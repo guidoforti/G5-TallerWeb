@@ -11,7 +11,7 @@ import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ValoracionIndividualInputDTO;
 
 public interface ServicioValoracion {
-    void valorarUsuario(Usuario emisor, ValoracionIndividualInputDTO dto)
+    void valorarUsuario(Usuario emisor, ValoracionIndividualInputDTO dto, Long viajeId)
         throws UsuarioInexistente, DatoObligatorioException;
 
     List<Valoracion> obtenerValoracionesDeUsuario(Long usuarioId);

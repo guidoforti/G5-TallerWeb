@@ -3,6 +3,7 @@ package com.tallerwebi.dominio.ServiceImpl;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.presentacion.DTO.InputsDTO.ValoracionIndividualInputDTO;
 import org.hibernate.Hibernate;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,31 +45,30 @@ public class ServicioValoracionImpl implements ServicioValoracion {
     }
 
     @Override
-    public void valorarUsuario(Usuario emisor, ValoracionIndividualInputDTO dto)
+    public void valorarUsuario(Usuario emisor, ValoracionIndividualInputDTO dto, Long viajeId)
             throws UsuarioInexistente, DatoObligatorioException {
-
         if (emisor.getId().equals(dto.getReceptorId())) {
             throw new DatoObligatorioException("Error. No podes valorarte a vos mismo");
         }
-
         if (dto.getPuntuacion() == null || dto.getPuntuacion() < 1 || dto.getPuntuacion() > 5) {
             throw new DatoObligatorioException("La valoracion debe estar entre 1 y 5");
         }
 
-        if (dto.getComentario() == null || dto.getComentario().trim().isEmpty()) {
-            throw new DatoObligatorioException("El comentario es obligatorio");
-        }
-
-        if (!viajeRepository.existeViajeFinalizadoYNoValorado(emisor.getId(), dto.getReceptorId())) {
-            throw new DatoObligatorioException(
-                "No hay un viaje concluido y pendiente de valoración entre usted y el usuario receptor."
-            );
-        }
+        Viaje viaje = viajeRepository.findById(viajeId)
+                .orElseThrow(() -> new DatoObligatorioException("El Viaje no existe para registrar la valoración."));
 
         Usuario receptor = repositorioUsuario.buscarPorId(dto.getReceptorId())
                 .orElseThrow(() -> new UsuarioInexistente("No se encontró el usuario receptor"));
 
-        Valoracion valoracion = new Valoracion(emisor, receptor, dto.getPuntuacion(), dto.getComentario());
+
+        if (viaje.getEstado() != EstadoDeViaje.FINALIZADO) {
+            throw new DatoObligatorioException("Solo puedes valorar viajes finalizados.");
+        }
+
+        if (repositorioValoracion.yaExisteValoracionParaViaje(emisor.getId(), receptor.getId(), viajeId)) {
+            throw new DatoObligatorioException("Ya has valorado a este usuario para este viaje.");
+        }
+        Valoracion valoracion = new Valoracion(emisor, receptor, dto.getPuntuacion(), dto.getComentario(), viaje);
         repositorioValoracion.save(valoracion);
     }
 

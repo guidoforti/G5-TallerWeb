@@ -46,4 +46,21 @@ public class RepositorioValoracionImpl implements RepositorioValoracion {
                       .setParameter("receptorId", receptorId)
                       .getResultList();
     }
+
+    @Override
+    public boolean yaExisteValoracionParaViaje(Long emisorId, Long receptorId, Long viajeId) {
+        String hql = "SELECT COUNT(v.id) FROM Valoracion v "
+                + "WHERE v.emisor.id = :emisorId "
+                + "AND v.receptor.id = :receptorId "
+                + "AND v.viaje.id = :viajeId";
+
+        Long count = sessionFactory.getCurrentSession()
+                .createQuery(hql, Long.class)
+                .setParameter("emisorId", emisorId)
+                .setParameter("receptorId", receptorId)
+                .setParameter("viajeId", viajeId)
+                .uniqueResult();
+
+        return count != null && count > 0;
+    }
 }

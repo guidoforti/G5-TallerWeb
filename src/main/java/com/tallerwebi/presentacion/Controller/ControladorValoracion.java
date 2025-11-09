@@ -85,7 +85,7 @@ public class ControladorValoracion {
 
     @PostMapping("/enviar") // Nuevo endpoint para recibir el formulario completo
     public ModelAndView enviarTodasLasValoraciones(@ModelAttribute("formularioValoracion") ValoracionViajeInputDTO formulario,
-                                                   @RequestParam("viajeId") Long viajeId,
+                                                   @RequestParam("viajeId") Long viajeId, // Recibimos el ID del viaje
                                                    HttpSession session) {
         ModelMap model = new ModelMap();
         Long emisorId = (Long) session.getAttribute("idUsuario");
@@ -99,7 +99,7 @@ public class ControladorValoracion {
             Usuario emisor = servicioValoracion.obtenerUsuario(emisorId);
 
             for (ValoracionIndividualInputDTO dtoIndividual : formulario.getValoraciones()) {
-                servicioValoracion.valorarUsuario(emisor, dtoIndividual);
+                servicioValoracion.valorarUsuario(emisor, dtoIndividual, viajeId);
             }
 
             model.put("mensaje", "¡Valoraciones enviadas con éxito!");
