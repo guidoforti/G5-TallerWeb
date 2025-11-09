@@ -1,55 +1,50 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>UnRumbo - Perfil del Viajero</title>
+    <th:block th:fragment="extra">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <style>
+            :root {
+                --color-primary: #E16A3D;  /* Naranja Principal */
+                --color-taupe: #4E3D2F;  /* Marrón Oscuro */
+                --color-coffee: #734933; /* Marrón Medio */
+                --color-success-warm: #44806A; /* Verde Cálido (Éxito) - Color Viajero */
+            }
 
-    <!-- Bootstrap -->
-    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.2.0/css/bootstrap.min.css}" />
+            /* 1. Estilos del Botón Principal (Naranja) */
+            .btn-unrumbo {
+                background-color: var(--color-primary) !important;
+                border-color: var(--color-primary) !important;
+                color: white !important;
+            }
+            .btn-unrumbo:hover {
+                background-color: #cf5930 !important;
+                border-color: #cf5930 !important;
+            }
 
-    <!-- Pequeños estilos inline para no crear muchos archivos -->
-    <style>
-    :root {
-        --color-primary: #E16A3D;  /* Naranja Principal */
-        --color-taupe: #4E3D2F;  /* Marrón Oscuro */
-        --color-coffee: #734933; /* Marrón Medio */
-        --color-success-warm: #44806A; /* Verde Cálido (Éxito) - Color Viajero */
-    }
-    
-    /* 1. Estilos del Botón Principal (Naranja) */
-    .btn-unrumbo {
-        background-color: var(--color-primary) !important;
-        border-color: var(--color-primary) !important;
-        color: white !important;
-    }
-    .btn-unrumbo:hover {
-        background-color: #cf5930 !important;
-        border-color: #cf5930 !important;
-    }
-    
-    /* 2. Estilos para el Perfil del Viajero */
-    .profile-photo {
-        width: 140px;
-        height: 140px;
-        object-fit: cover;
-        border-radius: 10px;
-        border: 1px solid #e9ecef;
-    }
-    /* Estrellas: Usaremos el color principal naranja */
-    .star, .star-unrumbo {
-        color: var(--color-primary); /* Naranja Principal para todas las estrellas */
-    }
-    .no-data {
-        color: #6c757d;
-        font-style: italic;
-    }
-    
-    /* Clase de utilidad si quieres destacar algo en color Viajero */
-    .text-viajero {
-        color: var(--color-success-warm);
-    }
-</style>
+            /* 2. Estilos para el Perfil del Viajero */
+            .profile-photo {
+                width: 140px;
+                height: 140px;
+                object-fit: cover;
+                border-radius: 10px;
+                border: 1px solid #e9ecef;
+            }
+            /* Estrellas: Usaremos el color principal naranja */
+            .star, .star-unrumbo {
+                color: var(--color-primary); /* Naranja Principal para todas las estrellas */
+            }
+            .no-data {
+                color: #6c757d;
+                font-style: italic;
+            }
+
+            /* Clase de utilidad si quieres destacar algo en color Viajero */
+            .text-viajero {
+                color: var(--color-success-warm);
+            }
+        </style>
+    </th:block>
 </head>
 <body>
 <nav th:replace="fragments/navbar_viajero :: navbar"></nav>
