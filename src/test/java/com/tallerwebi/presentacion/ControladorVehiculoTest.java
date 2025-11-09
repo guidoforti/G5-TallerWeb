@@ -4,6 +4,7 @@ import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Enums.EstadoVerificacion;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
+import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.excepcion.NotFoundException;
 import com.tallerwebi.dominio.excepcion.PatenteDuplicadaException;
@@ -25,6 +26,7 @@ public class ControladorVehiculoTest {
 
     private ControladorVehiculo controladorVehiculo;
     private ServicioVehiculo servicioVehiculoMock;
+    private ServicioNotificacion servicioNotificacionMock;
     private ServicioConductor servicioConductorMock;
     private HttpSession sessionMock;
     private VehiculoInputDTO vehiculoInputDTO;
@@ -35,7 +37,8 @@ public class ControladorVehiculoTest {
     public void init() {
         servicioVehiculoMock = mock(ServicioVehiculo.class);
         servicioConductorMock = mock(ServicioConductor.class);
-        controladorVehiculo = new ControladorVehiculo(servicioVehiculoMock, servicioConductorMock);
+        servicioNotificacionMock = mock(ServicioNotificacion.class);
+        controladorVehiculo = new ControladorVehiculo(servicioVehiculoMock, servicioConductorMock, servicioNotificacionMock);
         sessionMock = mock(HttpSession.class);
         vehiculoInputDTO = new VehiculoInputDTO("Toyota", "2020", "ABC123", 4, EstadoVerificacion.PENDIENTE);
         conductorMock = new Conductor();

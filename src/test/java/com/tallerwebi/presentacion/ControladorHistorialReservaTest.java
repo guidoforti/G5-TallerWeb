@@ -4,6 +4,7 @@ import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioHistorialReserva;
+import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.HistorialReservaDTO;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
@@ -28,6 +29,7 @@ public class ControladorHistorialReservaTest {
 
     private ControladorHistorialReserva historialReservaController;
     private ServicioHistorialReserva servicioHistorialReservaMock;
+    private ServicioNotificacion servicioNotificacionMock;
     private ServicioConductor servicioConductorMock;
     private HttpSession sessionMock;
 
@@ -38,9 +40,10 @@ public class ControladorHistorialReservaTest {
     void setUp() {
         servicioHistorialReservaMock = mock(ServicioHistorialReserva.class);
         servicioConductorMock = mock(ServicioConductor.class);
+        servicioNotificacionMock = mock(ServicioNotificacion.class);
         sessionMock = mock(HttpSession.class);
 
-        historialReservaController = new ControladorHistorialReserva(servicioHistorialReservaMock, servicioConductorMock);
+        historialReservaController = new ControladorHistorialReserva(servicioHistorialReservaMock, servicioConductorMock, servicioNotificacionMock);
     }
 
     private Conductor setupConductorSession(Long conductorId) throws UsuarioInexistente {

@@ -13,16 +13,22 @@ import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Enums.EstadoAsistencia;
 import com.tallerwebi.dominio.Enums.EstadoPago;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
+import com.tallerwebi.dominio.Enums.TipoNotificacion;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
+import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
 import com.tallerwebi.dominio.excepcion.*;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.NotificacionOutputDTO;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.tallerwebi.dominio.Entity.HistorialReserva;
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.IRepository.RepositorioHistorialReserva;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
@@ -42,15 +48,17 @@ public class ServicioReservaImpl implements ServicioReserva {
     private final ServicioViajero servicioViajero;
     private final RepositorioHistorialReserva repositorioHistorialReserva;
     private final PreferenceClient preferenceClient;
+    private final ServicioNotificacion servicioNotificacion;
 
     @Autowired
     public ServicioReservaImpl(ReservaRepository reservaRepository, ServicioViaje servicioViaje, ServicioViajero servicioViajero,
-                               RepositorioHistorialReserva repositorioHistorialReserva, PreferenceClient preferenceClient) {
+                               RepositorioHistorialReserva repositorioHistorialReserva, PreferenceClient preferenceClient, ServicioNotificacion servicioNotificacion) {
         this.reservaRepository = reservaRepository;
         this.servicioViaje = servicioViaje;
         this.servicioViajero = servicioViajero;
         this.repositorioHistorialReserva = repositorioHistorialReserva;
         this.preferenceClient = preferenceClient;
+        this.servicioNotificacion = servicioNotificacion;
     }
 
     @Override
@@ -80,6 +88,27 @@ public class ServicioReservaImpl implements ServicioReserva {
         Reserva reservaGuardada = reservaRepository.save(reserva);
 
         registrarHistorial(reservaGuardada, null, viajeroManaged);
+        try {
+            Usuario conductor = reservaGuardada.getViaje().getConductor();
+            // 1. Mensaje personalizado:
+            String nombreViajero = reservaGuardada.getViajero().getNombre();
+            String destinoViaje = reservaGuardada.getViaje().getDestino().getNombre();
+            String mensaje = String.format("¡%s ha solicitado una reserva para tu viaje a %s!", nombreViajero, destinoViaje);
+            Long viajeId = reservaGuardada.getViaje().getId();
+            // 2. URL de redirección (Deep Link):
+            String urlDestino = "/reserva/listar?viajeId=" + viajeId;
+
+            // 3. Llamada al servicio genérico
+            servicioNotificacion.crearYEnviar(
+                    conductor,
+                    TipoNotificacion.RESERVA_SOLICITADA,
+                    mensaje,
+                    urlDestino
+            );
+        } catch (Exception e) {
+            // Manejo de errores de notificación no debe bloquear la reserva
+            System.err.println("Error al enviar notificación de reserva: " + e.getMessage());
+        }
         return reservaGuardada;
     }
 
@@ -180,7 +209,11 @@ public class ServicioReservaImpl implements ServicioReserva {
 
         Usuario conductor = reserva.getViaje().getConductor();
         registrarHistorial(reserva, estadoAnterior, conductor);
+        Usuario viajero = reserva.getViajero();
+        String mensaje = String.format("¡Tu reserva para el viaje a %s ha sido APROBADA!", reserva.getViaje().getDestino().getNombre());
+        String url = "/reserva/misViajes"; // Redirigir a sus viajes confirmados
 
+        servicioNotificacion.crearYEnviar(viajero, TipoNotificacion.RESERVA_APROBADA, mensaje, url);
         // No es necesario llamar a update/modificar porque Hibernate detectará los cambios automáticamente
         // gracias a @Transactional y dirty checking. El viaje se actualizará automáticamente.
         reservaRepository.update(reserva);
@@ -215,7 +248,11 @@ public class ServicioReservaImpl implements ServicioReserva {
 
         Usuario conductor = reserva.getViaje().getConductor(); // El conductor que realiza la acción
         registrarHistorial(reserva, estadoAnterior, conductor);
+        Usuario viajero = reserva.getViajero();
+        String mensaje = String.format("Tu reserva para el viaje a %s ha sido RECHAZADA. Motivo: %s", reserva.getViaje().getDestino().getNombre(), motivo);
+        String url = "/reserva/misReservasActivas"; // Redirigir a sus reservas pendientes/rechazadas
 
+        servicioNotificacion.crearYEnviar(viajero, TipoNotificacion.RESERVA_RECHAZADA, mensaje, url);
         // Guardar cambios
         reservaRepository.update(reserva);
     }
@@ -434,4 +471,5 @@ public class ServicioReservaImpl implements ServicioReserva {
         // Si la búsqueda devuelve algún resultado, la reserva ya existe y está activa.
         return reservaRepository.findByViajeroIdAndViajeIdAndEstadoIn(viajeroId, viajeId, estadosActivos).isPresent();
     }
+
 }

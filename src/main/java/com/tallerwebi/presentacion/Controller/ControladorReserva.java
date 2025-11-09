@@ -14,6 +14,7 @@ import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
 import com.tallerwebi.dominio.IServicio.ServicioValoracion;
+import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
 import com.tallerwebi.dominio.excepcion.*;
 import com.tallerwebi.presentacion.DTO.InputsDTO.MarcarAsistenciaInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.RechazoReservaInputDTO;
@@ -44,18 +45,21 @@ public class ControladorReserva {
     private final ServicioViajero servicioViajero;
     private final ServicioConductor servicioConductor;
     private final ServicioValoracion servicioValoracion;
+    private final ServicioNotificacion servicioNotificacion;
 
     @Autowired
     public ControladorReserva(ServicioReserva servicioReserva,
                               ServicioViaje servicioViaje,
                               ServicioViajero servicioViajero,
                               ServicioConductor servicioConductor,
-                              ServicioValoracion servicioValoracion) {
+                              ServicioValoracion servicioValoracion,
+                              ServicioNotificacion servicioNotificacion) {
         this.servicioReserva = servicioReserva;
         this.servicioViaje = servicioViaje;
         this.servicioViajero = servicioViajero;
         this.servicioConductor = servicioConductor;
         this.servicioValoracion = servicioValoracion;
+        this.servicioNotificacion = servicioNotificacion;
     }
 
     /**
@@ -178,7 +182,7 @@ public class ControladorReserva {
 
             model.put("viaje", viaje);
             model.put("reservas", reservasDTO);
-            return new ModelAndView("listarReservasViaje", model);
+            return new ModelAndView("misReservas", model);
 
         } catch (NotFoundException | ViajeNoEncontradoException | UsuarioNoAutorizadoException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -203,7 +207,7 @@ public class ControladorReserva {
         try {
             Conductor conductor = servicioConductor.obtenerConductor((Long) usuarioIdObj);
             List<Viaje> viajes = servicioViaje.listarViajesPorConductor(conductor);
-
+            model.put("contadorNotificaciones", servicioNotificacion.contarNoLeidas(conductor.getId()));
             // Obtener todas las reservas de los viajes
             List<ReservaVistaDTO> reservasDTO = new ArrayList<>();
             for (Viaje viaje : viajes) {
@@ -376,8 +380,8 @@ public class ControladorReserva {
      */
     @GetMapping("/viajerosConfirmados")
     public ModelAndView listarViajerosConfirmados(@RequestParam("viajeId") Long viajeId,
-                                                   HttpSession session,
-                                                   RedirectAttributes redirectAttributes) {
+                                                  HttpSession session,
+                                                  RedirectAttributes redirectAttributes) {
         ModelMap model = new ModelMap();
 
         // Validar sesión
@@ -389,7 +393,7 @@ public class ControladorReserva {
         }
 
         Long conductorId = (Long) conductorIdObj;
-
+        model.put("contadorNotificaciones", servicioNotificacion.contarNoLeidas(conductorId));
         try {
             // Obtener el viaje para mostrar información en la vista
             Viaje viaje = servicioViaje.obtenerViajePorId(viajeId);
@@ -511,7 +515,7 @@ public class ControladorReserva {
         }
 
         Long viajeroId = (Long) usuarioIdObj;
-
+        model.put("contadorNotificaciones", servicioNotificacion.contarNoLeidas(viajeroId));
         try {
             // Obtener todas las reservas pendientes y rechazadas del viajero
             List<Reserva> reservas = servicioReserva.listarReservasActivasPorViajero(viajeroId);
@@ -571,7 +575,7 @@ public class ControladorReserva {
         }
 
         Long viajeroId = (Long) usuarioIdObj;
-
+        model.put("contadorNotificaciones", servicioNotificacion.contarNoLeidas(viajeroId));
         try {
             // Obtener todas las reservas confirmadas del viajero
             List<Reserva> reservas = servicioReserva.listarViajesConfirmadosPorViajero(viajeroId);
@@ -714,7 +718,7 @@ public class ControladorReserva {
         } catch (NotFoundException | UsuarioNoAutorizadoException | AccionNoPermitidaException e){
             redirectAttributes.addFlashAttribute("error" , e.getMessage());
             return new ModelAndView("redirect:/reserva/misReservasActivas");
-    }
+        }
     }
 
 
@@ -746,8 +750,8 @@ public class ControladorReserva {
 
     @GetMapping("/pago/pendiente")
     public ModelAndView devolverPagoPendiente(HttpSession session,
-                                            @RequestParam Long reservaId,
-                                            RedirectAttributes redirectAttributes) {
+                                              @RequestParam Long reservaId,
+                                              RedirectAttributes redirectAttributes) {
         Object usuarioIdObj = session.getAttribute("idUsuario");
         Object rol = session.getAttribute("ROL");
 

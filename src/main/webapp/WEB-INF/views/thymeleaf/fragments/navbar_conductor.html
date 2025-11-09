@@ -9,11 +9,8 @@
     <div class="container-fluid">
 
         <a class="navbar-brand fw-bold text-dark" th:href="@{/conductor/home}">
-
             <img th:src="@{/img/unrumbo-logo.png}" alt="UnRumbo" width="40" class="me-2">
-
             <img th:src="@{/img/home.svg}" alt="Home" width="20" class="me-1" style="filter: brightness(0.6) sepia(1) hue-rotate(-25deg) saturate(3);">
-
             UnRumbo
         </a>
 
@@ -23,21 +20,43 @@
 
         <div class="collapse navbar-collapse" id="navbarNavConductor">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
                 <li class="nav-item">
-                    <a class="nav-link fw-bold" style="color: #E16A3D;" th:href="@{/viaje/publicar}"><i class="fas fa-route me-1"></i> Publicar</a>
+                    <a class="nav-link fw-bold" style="color: #E16A3D;" th:href="@{/viaje/publicar}">
+                        <i class="fas fa-route me-1"></i>
+                        <span class="d-none d-lg-inline">Publicar</span> </a>
                 </li>
+
                 <li class="nav-item">
-                    <a class="nav-link fw-bold" style="color: #E16A3D;" th:href="@{/viaje/listar}"><i class="fas fa-list-alt me-1"></i> Mis Viajes</a>
+                    <a class="nav-link fw-bold" style="color: #E16A3D;" th:href="@{/viaje/listar}">
+                        <i class="fas fa-list-alt me-1"></i>
+                        <span class="d-none d-lg-inline">Mis Viajes</span>
+                    </a>
                 </li>
+
                 <li class="nav-item">
-                    <a class="nav-link fw-bold" style="color: #E16A3D;" th:href="@{/vehiculos/listarVehiculos}"><i class="fas fa-car me-1"></i> Mis Vehículos</a>
+                    <a class="nav-link fw-bold" style="color: #E16A3D;" th:href="@{/vehiculos/listarVehiculos}">
+                        <i class="fas fa-car me-1"></i>
+                        <span class="d-none d-lg-inline">Mis Vehículos</span>
+                    </a>
                 </li>
             </ul>
 
             <ul class="navbar-nav">
+                <li class="nav-item me-3">
+                    <a class="nav-link" th:href="@{/notificaciones/historial}" id="notificacion-campana" style="color: #E16A3D;">
+                        <i class="fas fa-bell fa-lg"></i>
+                        <span id="notificacion-contador" class="badge rounded-pill bg-danger"
+                              style="position: absolute; top: 5px; right: 0px; display: none;">
+                            0
+                    </span>
+                    </a>
+                </li>
+
                 <li class="nav-item">
                     <span class="nav-link fw-bold" style="color: #4E3D2F;">
-                        <i class="fas fa-user-tie me-1"></i> CONDUCTOR
+                        <i class="fas fa-user-tie me-1 d-lg-none"></i>
+                        <span class="d-none d-lg-inline">CONDUCTOR</span>
                     </span>
                 </li>
             </ul>

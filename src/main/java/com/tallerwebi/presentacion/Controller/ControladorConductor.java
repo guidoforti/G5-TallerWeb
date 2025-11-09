@@ -2,6 +2,8 @@ package com.tallerwebi.presentacion.Controller;
 
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
+import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
+import com.tallerwebi.dominio.excepcion.NotFoundException;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ConductorPerfilOutPutDTO;
 
@@ -20,10 +22,12 @@ import javax.servlet.http.HttpSession;
 public class ControladorConductor {
 
     private final ServicioConductor servicioConductor;
+    private final ServicioNotificacion servicioNotificacion;
 
     @Autowired
-    public ControladorConductor(ServicioConductor servicioConductor) {
+    public ControladorConductor(ServicioConductor servicioConductor, ServicioNotificacion servicioNotificacion) {
         this.servicioConductor = servicioConductor;
+        this.servicioNotificacion = servicioNotificacion;
     }
 
     @GetMapping("/home")
@@ -40,12 +44,14 @@ public class ControladorConductor {
         try {
             Long conductorId = (Long) usuarioId;
             Conductor conductor = servicioConductor.obtenerConductor(conductorId);
-
+            Long contador = servicioNotificacion.contarNoLeidas(conductorId);
+            model.put("contadorNotificaciones", contador.intValue());
+            model.put("idConductor", conductorId);
             model.put("nombreConductor", conductor.getNombre());
             model.put("rol", rol);
             return new ModelAndView("homeConductor", model);
 
-        } catch (UsuarioInexistente e) {
+        } catch (UsuarioInexistente | NotFoundException e) {
             session.invalidate();
             model.addAttribute("error", "Su sesión no es válida. Por favor, inicie sesión nuevamente.");
             return new ModelAndView("redirect:/login", model);

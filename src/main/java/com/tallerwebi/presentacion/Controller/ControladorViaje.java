@@ -6,12 +6,8 @@ import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Parada;
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Entity.Viaje;
-import com.tallerwebi.dominio.IServicio.ServicioCiudad;
-import com.tallerwebi.dominio.IServicio.ServicioNominatim;
-import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
-import com.tallerwebi.dominio.IServicio.ServicioViaje;
-import com.tallerwebi.dominio.IServicio.ServicioConductor;
-import com.tallerwebi.dominio.IServicio.ServicioReserva;
+import com.tallerwebi.dominio.Enums.TipoNotificacion;
+import com.tallerwebi.dominio.IServicio.*;
 import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
@@ -50,6 +46,7 @@ public class ControladorViaje {
     private final ServicioCiudad servicioCiudad;
     private final ServicioConductor servicioConductor;
     private final ServicioReserva servicioReserva;
+    private final ServicioNotificacion servicioNotificacion;
 
     @Autowired
     public ControladorViaje(ServicioViaje servicioViaje,
@@ -57,13 +54,15 @@ public class ControladorViaje {
                             ServicioNominatim servicioNominatim,
                             ServicioCiudad servicioCiudad,
                             ServicioConductor servicioConductor,
-                            ServicioReserva servicioReserva) {
+                            ServicioReserva servicioReserva,
+                            ServicioNotificacion servicioNotificacion) {
         this.servicioViaje = servicioViaje;
         this.servicioVehiculo = servicioVehiculo;
         this.servicioNominatim = servicioNominatim;
         this.servicioCiudad = servicioCiudad;
         this.servicioConductor = servicioConductor;
         this.servicioReserva = servicioReserva;
+        this.servicioNotificacion = servicioNotificacion;
     }
 
 
@@ -76,7 +75,7 @@ public class ControladorViaje {
         if (usuarioId == null) {
             return new ModelAndView("redirect:/login");
         }
-
+        agregarContadorNotificaciones(model, (Long) usuarioId);
         // Retornar vista con formulario vacío
         model.put("busqueda", new BusquedaViajeInputDTO());
         return new ModelAndView("buscarViaje", model);
@@ -237,7 +236,7 @@ public class ControladorViaje {
         }
 
         Long conductorId = (Long) usuarioIdObj;
-
+        agregarContadorNotificaciones(model, conductorId);
         try {
             // 2. BUSCAR AL CONDUCTOR
             Conductor conductorEnSesion = servicioConductor.obtenerConductor(conductorId);
@@ -311,8 +310,17 @@ public class ControladorViaje {
         Conductor conductorEnSesion;
 
         try {
+            Viaje viajeACancelar = servicioViaje.obtenerViajePorId(id);
             conductorEnSesion = servicioConductor.obtenerConductor(conductorId);
             servicioViaje.cancelarViaje(id, conductorEnSesion);
+            List<Viajero> todosLosViajeros = servicioReserva.obtenerViajerosConfirmados(viajeACancelar);
+
+            for (Viajero viajero : todosLosViajeros) {
+                String mensaje = String.format("¡ATENCIÓN! El viaje a %s ha sido CANCELADO.", viajeACancelar.getDestino().getNombre());
+                String url = "/reserva/misReservasActivas"; // Redirigir al listado de sus reservas
+
+                servicioNotificacion.crearYEnviar(viajero, TipoNotificacion.VIAJE_CANCELADO, mensaje, url);
+            }
             model.put("exito", "El viaje fue cancelado exitosamente.");
             return new ModelAndView("redirect:/viaje/listar");
 
@@ -341,35 +349,41 @@ public class ControladorViaje {
         Object usuarioIdObj = httpSession.getAttribute("idUsuario");
         Object rolObj = httpSession.getAttribute("ROL");
 
-        // Asignar 'ANONIMO' si no hay rol en sesión
-        String userRole = (rolObj != null) ? rolObj.toString() : "ANONIMO";
-        model.put("userRole", userRole); // Pasa el rol definido a la vista
+        if (usuarioIdObj == null || rolObj == null) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        String userRole = rolObj.toString();
+        model.put("userRole", userRole);
+
+        if (!userRole.equals("CONDUCTOR") && !userRole.equals("VIAJERO")) {
+            model.put("error", "Su rol no tiene acceso a la visualización de detalles de viaje.");
+            return new ModelAndView("usuarioNoAutorizado", model);
+        }
 
         try {
             Viaje viaje = servicioViaje.obtenerDetalleDeViaje(id);
 
-            // Obtener viajeros confirmados a través de ServicioReserva
             List<Viajero> viajerosConfirmados = servicioReserva.obtenerViajerosConfirmados(viaje);
             List<ViajeroDTO> viajerosDTO = viajerosConfirmados.stream()
                     .map(ViajeroDTO::new)
                     .collect(Collectors.toList());
 
             boolean reservaExistente = false;
-            if (userRole.equals("VIAJERO") && usuarioIdObj != null) {
+            if (userRole.equals("VIAJERO")) {
                 Long viajeroId = (Long) usuarioIdObj;
                 reservaExistente = servicioReserva.tieneReservaActiva(viajeroId, id);
             }
 
-            model.put("reservaExistente", reservaExistente); // Pasa el resultado a la vista (boolean)
+            model.put("reservaExistente", reservaExistente);
 
             DetalleViajeOutputDTO detalleViajeOutputDTO = new DetalleViajeOutputDTO(viaje, viajerosDTO);
             model.put("detalle", detalleViajeOutputDTO);
-            model.put("viajeId", id);  // Pasar el ID del viaje para el botón de reserva
+            model.put("viajeId", id);
 
             return new ModelAndView("detalleViaje", model);
 
         } catch (NotFoundException | ViajeNoEncontradoException | UsuarioNoAutorizadoException e) {
-            // [Manejo de Error] Se mantiene el rol para la navbar, aunque el detalle falle.
             model.put("error", e.getMessage());
             return new ModelAndView("detalleViaje", model);
         }
@@ -558,6 +572,13 @@ public class ControladorViaje {
 
         try {
             servicioViaje.iniciarViaje(id, conductorId);
+            Viaje viaje = servicioViaje.obtenerViajePorId(id);
+            List<Viajero> viajerosConfirmados = servicioReserva.obtenerViajerosConfirmados(viaje);
+            for (Viajero viajero : viajerosConfirmados) {
+                String mensaje = String.format("¡Tu viaje a %s ha comenzado!", viaje.getDestino().getNombre());
+                String url = "/reserva/misViajes";
+                servicioNotificacion.crearYEnviar(viajero, TipoNotificacion.VIAJE_INICIADO, mensaje, url);
+            }
             model.put("mensaje", "Viaje iniciado correctamente");
         } catch (ViajeNoEncontradoException e) {
             model.put("error", "Viaje no encontrado");
@@ -599,5 +620,17 @@ public class ControladorViaje {
         model.put("accionFinalizada", true);
         model.put("idUsuario", conductorId);
         return new ModelAndView("accionViajeCompletada", model);
+    }
+
+    //Helper
+    private void agregarContadorNotificaciones(ModelMap model, Long userId) {
+        if (userId != null) {
+            try {
+                Long contador = servicioNotificacion.contarNoLeidas(userId);
+                model.put("contadorNotificaciones", contador);
+            } catch (NotFoundException e) {
+                model.put("contadorNotificaciones", 0L);
+            }
+        }
     }
 }
