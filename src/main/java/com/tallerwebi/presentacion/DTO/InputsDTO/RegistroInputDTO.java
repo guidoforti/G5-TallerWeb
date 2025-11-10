@@ -45,6 +45,7 @@ public class RegistroInputDTO {
     public Conductor toConductorEntity() {
         Conductor conductor = setCommonUserFields(new Conductor());
         conductor.setFechaDeVencimientoLicencia(this.fechaDeVencimientoLicencia);
+        conductor.setFotoPerfilUrl(this.fotoPerfilUrl);
         return conductor;
     }
 

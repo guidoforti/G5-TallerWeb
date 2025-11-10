@@ -20,7 +20,7 @@ public class ConductorPerfilOutPutDTO {
     private Boolean fumador;
     private String discapacitado;
     private Integer edad;
-    private String fotoDePerfil;
+    private String fotoPerfilUrl;
     private double promedioValoraciones;
     private LocalDate fechaVencimientoLicencia;
     private List<ValoracionOutputDTO> valoraciones;
@@ -30,7 +30,7 @@ public class ConductorPerfilOutPutDTO {
         this.fumador = conductor.getFumador();
         this.discapacitado = conductor.getDiscapacitado();
         this.edad = conductor.getEdad();
-        this.fotoDePerfil = conductor.getFotoDePerfil();
+        this.fotoPerfilUrl = conductor.getFotoPerfilUrl();
         this.valoraciones = valoraciones;
         this.promedioValoraciones = promedio;
         this.fechaVencimientoLicencia = conductor.getFechaDeVencimientoLicencia();

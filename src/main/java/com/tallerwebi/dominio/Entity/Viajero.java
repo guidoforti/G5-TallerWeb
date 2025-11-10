@@ -18,9 +18,6 @@ import java.util.List;
 @PrimaryKeyJoinColumn(name = "usuario_id")
 public class Viajero extends Usuario {
 
-    // @Column(name = "foto_perfil_viajero")
-    private String fotoPerfilUrl;
-
     // Relación con reservas
     @OneToMany(mappedBy = "viajero", fetch = FetchType.LAZY)
     private List<Reserva> reservas = new ArrayList<>();

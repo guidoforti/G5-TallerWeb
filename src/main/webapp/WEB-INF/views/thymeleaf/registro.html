@@ -107,6 +107,13 @@
                             <input th:field="*{discapacitado}" id="discapacitado" type="text" class="form-control" placeholder="(ej: movilidad reducida)">
                         </div>
 
+                        <div class="mb-3">
+                                <label for="fotoPerfilUrl" class="form-label">
+                                    <i class="fas fa-camera me-1"></i> URL de Foto de Perfil (Dummy)
+                                </label>
+                                <input th:field="*{fotoPerfilUrl}" id="fotoPerfilUrl" type="text" class="form-control" placeholder="Temporal: URL/NULL">
+                            </div>
+
                         <hr/>
 
                         <div id="camposConductor" class="p-3 border rounded mb-3 bg-light" style="border-color: var(--color-coffee) !important;">
@@ -121,13 +128,6 @@
 
                         <div id="camposViajero" class="p-3 border rounded mb-3 bg-light" style="border-color: var(--color-success-warm) !important;">
                             <h6 class="fw-bold h6-viajero"><i class="fas fa-hiking me-2"></i> Datos de Viajero</h6>
-                            <div class="mb-3">
-                                <label for="fotoPerfilUrl" class="form-label">
-                                    <i class="fas fa-camera me-1"></i> URL de Foto de Perfil (Dummy)
-                                </label>
-                                <input th:field="*{fotoPerfilUrl}" id="fotoPerfilUrl" type="text" class="form-control" placeholder="Temporal: URL/NULL">
-                            </div>
-                            <p class="text-muted small mb-0">Los datos de edad, fumador y discapacidad se registran arriba.</p>
                         </div>
 
 

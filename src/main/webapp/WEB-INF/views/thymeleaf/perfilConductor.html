@@ -26,8 +26,24 @@
         <div class="profile-header">
             <div class="row align-items-center">
                 <div class="col-md-3 text-center">
-                    <img src="/images/profile-placeholder.png" alt="Foto del conductor" class="rounded-circle img-fluid shadow-sm" style="max-width: 150px;">
-                </div>
+    <img th:if="${perfil.fotoPerfilUrl != null and !#strings.isEmpty(perfil.fotoPerfilUrl)}"
+         th:src="${perfil.fotoPerfilUrl}"
+         alt="Foto de perfil"
+         class="rounded-circle img-fluid shadow-sm"
+         style="max-width: 150px; width: 150px; height: 150px; object-fit: cover; margin-bottom: 1rem !important;" /> 
+    <div th:if="${perfil.fotoPerfilUrl == null or #strings.isEmpty(perfil.fotoPerfilUrl)}" 
+         class="mb-3 d-flex justify-content-center align-items-center" 
+         style="width: 150px; height: 150px; margin: 0 auto;">
+        
+        <svg width="150" height="150" viewBox="0 0 24 24" 
+             class="bg-light d-inline-block rounded-circle"
+             xmlns="http://www.w3.org/2000/svg" fill="#ced4da"
+             style="border: 1px solid #e9ecef;">
+            <rect width="24" height="24" rx="4"></rect>
+            <path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 20a8 8 0 0 1 16 0H4z" fill="#adb5bd"/>
+        </svg>
+    </div>
+</div>
 
                 <div class="col-md-9">
                     <h2 th:text="${perfil.nombre}" class="fw-bold title-conductor mb-2">Nombre Completo del Conductor</h2>

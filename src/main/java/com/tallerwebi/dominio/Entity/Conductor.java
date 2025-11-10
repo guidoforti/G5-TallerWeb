@@ -19,10 +19,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @Table(name = "conductor")
 @PrimaryKeyJoinColumn(name = "usuario_id")
-public class Conductor extends Usuario {
-
-    // @Column(name = "foto_perfil_conductor")
-    private String fotoDePerfil;
+public class Conductor extends Usuario {;
 
     @Column(name = "fecha_de_vencimiento_licencia")
     private LocalDate fechaDeVencimientoLicencia;
