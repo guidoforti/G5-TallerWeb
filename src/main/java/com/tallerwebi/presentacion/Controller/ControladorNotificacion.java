@@ -28,12 +28,26 @@ public class ControladorNotificacion {
         this.servicioNotificacion = servicioNotificacion;
     }
 
+    @GetMapping("/contar-no-leidas")
+    @ResponseBody
+    public Long getContadorNoLeido(HttpSession session) {
+        Long userId = (Long) session.getAttribute("idUsuario");
+        if (userId == null) return 0L;
+
+        try {
+            return servicioNotificacion.contarNoLeidas(userId);
+        } catch (NotFoundException e) {
+            return 0L;
+        }
+    }
+
     // Endpoint para la vista de listado de notificaciones (al hacer clic en la campana)
     // También funciona como la acción de marcar TODAS como leídas.
     @GetMapping("/historial")
     public ModelAndView verHistorial(HttpSession session) {
         ModelMap model = new ModelMap();
         Long idUsuario = (Long) session.getAttribute("idUsuario");
+        String rol = (String) session.getAttribute("ROL");
 
         if (idUsuario == null) {
             return new ModelAndView("redirect:/login");
@@ -47,6 +61,7 @@ public class ControladorNotificacion {
                     .map(NotificacionHistorialDTO::new)
                     .collect(Collectors.toList());
 
+            model.put("userRole", rol);
             model.put("notificaciones", historialDTO);
             model.put("idUsuario", idUsuario); // Necesario para la navbar si se incluye aquí.
 

@@ -2,6 +2,7 @@ package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Viajero;
+import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.presentacion.Controller.ControladorViajero;
@@ -24,13 +25,16 @@ public class ControladorViajeroTest {
 
     private ControladorViajero controladorViajero;
     private ServicioViajero servicioViajeroMock;
+    private ServicioNotificacion servicioNotificacionMock;
     private HttpSession sessionMock;
     private Viajero viajeroMock;
+
 
     @BeforeEach
     public void init() {
         servicioViajeroMock = mock(ServicioViajero.class);
-        controladorViajero = new ControladorViajero(servicioViajeroMock);
+        servicioNotificacionMock = mock(ServicioNotificacion.class);
+        controladorViajero = new ControladorViajero(servicioViajeroMock, servicioNotificacionMock);
         sessionMock = mock(HttpSession.class);
         viajeroMock = mock(Viajero.class);
 

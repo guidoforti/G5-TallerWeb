@@ -66,16 +66,29 @@ public class ControladorViaje {
     }
 
 
+
     @GetMapping("/buscar")
     public ModelAndView buscarViaje(HttpSession session) {
         ModelMap model = new ModelMap();
 
         // Validar sesión
         Object usuarioId = session.getAttribute("idUsuario");
+        String rol = (String) session.getAttribute("ROL");
         if (usuarioId == null) {
             return new ModelAndView("redirect:/login");
         }
-        agregarContadorNotificaciones(model, (Long) usuarioId);
+        Long userId = (Long) usuarioId;
+        try {
+            Long contador = servicioNotificacion.contarNoLeidas(userId);
+            model.put("contadorNotificaciones", contador.intValue());
+        } catch (NotFoundException e) {
+            model.put("contadorNotificaciones", 0);
+        }
+        model.put("idUsuario", userId);
+        model.put("ROL", rol);
+
+
+
         // Retornar vista con formulario vacío
         model.put("busqueda", new BusquedaViajeInputDTO());
         return new ModelAndView("buscarViaje", model);
@@ -88,8 +101,21 @@ public class ControladorViaje {
 
         // Validar sesión
         Object usuarioId = session.getAttribute("idUsuario");
+        String rol = (String) session.getAttribute("ROL");
         if (usuarioId == null) {
             return new ModelAndView("redirect:/login");
+        }
+
+        if (usuarioId != null) {
+            Long userId = (Long) usuarioId;
+            try {
+                Long contador = servicioNotificacion.contarNoLeidas(userId);
+                model.put("contadorNotificaciones", contador.intValue());
+            } catch (NotFoundException e) {
+                model.put("contadorNotificaciones", 0);
+            }
+            model.put("idUsuario", userId);
+            model.put("ROL", rol);
         }
 
         try {
@@ -163,6 +189,14 @@ public class ControladorViaje {
 
         Long conductorId = (Long) usuarioId;
 
+        try {
+            Long contador = servicioNotificacion.contarNoLeidas(conductorId);
+            model.put("contadorNotificaciones", contador.intValue());
+        } catch (NotFoundException e) {
+            model.put("contadorNotificaciones", 0);
+        }
+        model.put("idUsuario", conductorId);
+        model.put("ROL", rol);
         // Obtener los vehículos del conductor
         List<Vehiculo> vehiculos = servicioVehiculo.obtenerVehiculosParaConductor(conductorId);
 
@@ -622,15 +656,5 @@ public class ControladorViaje {
         return new ModelAndView("accionViajeCompletada", model);
     }
 
-    //Helper
-    private void agregarContadorNotificaciones(ModelMap model, Long userId) {
-        if (userId != null) {
-            try {
-                Long contador = servicioNotificacion.contarNoLeidas(userId);
-                model.put("contadorNotificaciones", contador);
-            } catch (NotFoundException e) {
-                model.put("contadorNotificaciones", 0L);
-            }
-        }
-    }
+
 }

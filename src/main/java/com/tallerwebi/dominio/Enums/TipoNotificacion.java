@@ -6,6 +6,6 @@ public enum TipoNotificacion {
     RESERVA_RECHAZADA,
     VIAJE_PROXIMO,
     VIAJE_INICIADO,
-    VIAJE_CANCELADO
+    PAGO_RECIBIDO, VIAJE_CANCELADO
     // Agrega más tipos según los requerimientos
 }

@@ -23,7 +23,6 @@
 </nav>
 <th:block th:fragment="scripts-websocket">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
@@ -31,11 +30,13 @@
     <script th:src="@{/js/notificaciones.js}"></script>
 
     <script th:inline="javascript">
-        // El controlador DEBE proporcionar 'idUsuario' y 'contadorNotificaciones'
-        const ID_USUARIO = /*[[${idUsuario}]]*/ 0;
+        // Esta sintaxis busca la primera clave disponible:
+        const ID_USUARIO = /*[[${idUsuario != null ? idUsuario :
+                              (idConductor != null ? idConductor :
+                              (idViajero != null ? idViajero : 0))}]]*/ 0;
+
         const CONTADOR_INICIAL = /*[[${contadorNotificaciones}]]*/ 0;
 
-        // Inicia la conexión si el usuario está autenticado y la función JS existe.
         if (ID_USUARIO !== 0 && typeof iniciarConexionNotificaciones !== 'undefined') {
             iniciarConexionNotificaciones(ID_USUARIO, CONTADOR_INICIAL);
         }

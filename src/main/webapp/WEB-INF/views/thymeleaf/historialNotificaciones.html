@@ -6,7 +6,15 @@
 </head>
 
 <body>
-<nav th:replace="fragments/navbar_conductor :: navbar"></nav>
+<th:block th:switch="${userRole}">
+    <th:block th:case="'CONDUCTOR'">
+        <div th:replace="fragments/navbar_conductor :: navbar"></div>
+    </th:block>
+    <th:block th:case="'VIAJERO'">
+        <div th:replace="fragments/navbar_viajero :: navbar"></div>
+    </th:block>
+</th:block>
+
 
 <main role="main" class="container" style="margin-top: 120px;">
     <h2><i class="fas fa-bell me-2"></i> Historial de Notificaciones</h2>
@@ -19,18 +27,17 @@
     </div>
 
     <div class="list-group">
-        <div th:each="notificacion : ${notificaciones}"
-             class="list-group-item list-group-item-action"
-             th:classappend="${notificacion.leida} ? 'text-muted' : 'fw-bold list-group-item-light'">
+        <a th:each="notificacion : ${notificaciones}"
+           th:href="@{${notificacion.urlDestino}}"
+           class="list-group-item list-group-item-action text-decoration-none d-block"
+           th:classappend="${notificacion.leida} ? 'text-muted' : 'fw-bold list-group-item-light'">
 
-            <a th:href="@{${notificacion.urlDestino}}" class="text-decoration-none d-block">
-                <div class="d-flex w-100 justify-content-between">
-                    <h5 class="mb-1" th:text="${notificacion.mensaje}"></h5>
-                    <small th:text="${notificacion.fechaCreacion}"></small>
-                </div>
-                <small th:text="'Tipo: ' + ${notificacion.tipo}"></small>
-            </a>
-        </div>
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1" th:text="${notificacion.mensaje}">Mensaje de Notificación</h5>
+                <small th:text="${notificacion.fechaCreacion}"></small>
+            </div>
+            <small th:text="'Tipo: ' + ${notificacion.tipo}"></small>
+        </a>
     </div>
 </main>
 

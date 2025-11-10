@@ -459,6 +459,15 @@ public class ServicioReservaImpl implements ServicioReserva {
         }
         reserva.setEstadoPago(EstadoPago.PAGADO);
         reservaRepository.update(reserva);
+        Usuario conductor = reserva.getViaje().getConductor();
+        String nombreViajero = reserva.getViajero().getNombre();
+        String destinoViaje = reserva.getViaje().getDestino().getNombre();
+        Long viajeId = reserva.getViaje().getId();
+
+        String mensajeConductor = String.format("¡Pago recibido! El viajero %s ha abonado su asiento para el viaje a %s.", nombreViajero, destinoViaje);
+        String urlConductor = "/reserva/viajerosConfirmados?viajeId=" + viajeId; // Redirigir a la lista de viajeros confirmados
+
+        servicioNotificacion.crearYEnviar(conductor, TipoNotificacion.PAGO_RECIBIDO, mensajeConductor, urlConductor);
 
         return reserva;
     }

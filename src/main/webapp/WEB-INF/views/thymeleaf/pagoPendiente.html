@@ -1,7 +1,10 @@
 <!DOCTYPE HTML>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="fragments/fragments :: head('UnRumbo - Pago Pendiente')"></head>
+<head th:replace="fragments/fragments :: head('UnRumbo - Pago Pendiente')">
+    <th:block th:fragment="extra">
+    </th:block>
+</head>
 
 <body>
 <nav th:replace="fragments/navbar_viajero :: navbar"></nav>

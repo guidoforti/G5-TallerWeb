@@ -102,6 +102,12 @@ function iniciarConexionNotificaciones(idUsuario, contadorInicial) {
     stompClient.connect({}, function (frame) {
         console.log('Conexión STOMP exitosa. Suscribiéndose...');
 
+        $.get(contextPath + '/notificaciones/contar-no-leidas').done(function(data) {
+                const contadorReal = parseInt(data);
+                // Actualizar el estado global del JS con el valor real del servidor
+                contadorNotificaciones = contadorReal;
+                actualizarContador(0); // Forzar la actualización visual del badge
+            });
         // 3. Suscripción al topic personal: /topic/notificaciones/{idUsuario}
         const topicDestino = `/topic/notificaciones/${idUsuario}`;
 

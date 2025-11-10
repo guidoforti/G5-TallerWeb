@@ -4,6 +4,7 @@ import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
+import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeroPerfilOutPutDTO;
@@ -23,10 +24,12 @@ import javax.servlet.http.HttpSession;
 public class ControladorViajero {
 
     private final ServicioViajero servicioViajero;
+    private final ServicioNotificacion servicioNotificacion;
 
     @Autowired
-    public ControladorViajero(ServicioViajero servicioViajero) {
+    public ControladorViajero(ServicioViajero servicioViajero, ServicioNotificacion servicioNotificacion) {
         this.servicioViajero = servicioViajero;
+        this.servicioNotificacion = servicioNotificacion;
     }
 
     @GetMapping("/home")
@@ -43,9 +46,14 @@ public class ControladorViajero {
         try {
             Long viajeroId = (Long) usuarioId;
             Viajero viajero = servicioViajero.obtenerViajero(viajeroId);
+            // 🚀 CLAVES FALTANTES: Inyección para WebSocket y Navbar
+
+            Long contador = servicioNotificacion.contarNoLeidas(viajeroId);
+            model.put("idUsuario", viajeroId);
+            model.put("ROL", rol);
+            model.put("contadorNotificaciones", contador.intValue());
 
             model.put("nombreViajero", viajero.getNombre());
-            model.put("rol", rol);
             return new ModelAndView("homeViajero", model);
 
         } catch (UsuarioInexistente e) {

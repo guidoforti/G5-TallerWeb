@@ -74,6 +74,7 @@ public class ControladorReserva {
 
         // Validar sesión
         Object usuarioId = session.getAttribute("idUsuario");
+        String rol = (String) session.getAttribute("ROL");
         if (usuarioId == null) {
             return new ModelAndView("redirect:/login");
         }
@@ -90,6 +91,8 @@ public class ControladorReserva {
             // Crear un DTO para pasar fechas formateadas y otros datos al template
             ViajeReservaSolicitudDTO viajeDTO = new ViajeReservaSolicitudDTO(viaje);
 
+            model.put("idUsuario", usuarioId);
+            model.put("ROL", rol);
             model.put("viaje", viajeDTO);
             model.put("solicitud", solicitudDTO);
             return new ModelAndView("solicitarReserva", model);
@@ -515,6 +518,8 @@ public class ControladorReserva {
         }
 
         Long viajeroId = (Long) usuarioIdObj;
+        model.put("idUsuario", viajeroId);
+        model.put("ROL", rol);
         model.put("contadorNotificaciones", servicioNotificacion.contarNoLeidas(viajeroId));
         try {
             // Obtener todas las reservas pendientes y rechazadas del viajero
@@ -575,6 +580,8 @@ public class ControladorReserva {
         }
 
         Long viajeroId = (Long) usuarioIdObj;
+        model.put("idUsuario", viajeroId);
+        model.put("ROL", rol);
         model.put("contadorNotificaciones", servicioNotificacion.contarNoLeidas(viajeroId));
         try {
             // Obtener todas las reservas confirmadas del viajero
@@ -712,6 +719,8 @@ public class ControladorReserva {
         try {
             Reserva reserva = servicioReserva.confirmarPagoReserva(reservaId, (Long)usuarioIdObj);
             ReservaActivaDTO reservaActivaDTO = new ReservaActivaDTO(reserva);
+            model.put("idUsuario", usuarioIdObj);
+            model.put("ROL", rol);
             model.put("reserva" , reservaActivaDTO);
             model.put("pagoOK" , "El pago fue exitoso");
             return new ModelAndView("pagoExitoso" , model);
@@ -735,6 +744,8 @@ public class ControladorReserva {
         ModelMap model = new ModelMap();
         try {
             Reserva reserva = servicioReserva.obtenerReservaPorId(reservaId);
+            model.put("idUsuario", usuarioIdObj);
+            model.put("ROL", rol);
             model.put("reserva", new ReservaActivaDTO(reserva));
             model.put("error", "Tu pago fue rechazado o cancelado.");
             return new ModelAndView("pagoFallido", model);
@@ -760,6 +771,8 @@ public class ControladorReserva {
         }
         ModelMap model = new ModelMap();
         try {
+            model.put("idUsuario", usuarioIdObj);
+            model.put("ROL", rol);
             Reserva reserva = servicioReserva.obtenerReservaPorId(reservaId);
             model.put("reserva", new ReservaActivaDTO(reserva));
             model.put("error", "Tu pago esta pendiente");
