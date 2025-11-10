@@ -1,8 +1,5 @@
 // ====================================================================
-// notificacionesConductor.js - Lógica de WebSocket y UI para Notificaciones
-//
-// Dependencias: jQuery, Toastr, SockJS, STOMP
-// Recibe: idUsuario (Long), contadorInicial (Integer)
+// notificaciones.js - Lógica de WebSocket y UI (Genérica para todos los roles)
 // ====================================================================
 
 let contadorNotificaciones = 0;
@@ -10,7 +7,7 @@ const contadorElement = document.getElementById('notificacion-contador');
 // Asegúrate de que este contextPath coincida con la configuración de tu Jetty/Spring
 const contextPath = '/spring';
 
-// 1. CONFIGURACIÓN GLOBAL DE TOASTR (Se ejecuta una sola vez al cargar el script)
+// 1. CONFIGURACIÓN GLOBAL DE TOASTR
 toastr.options = {
     "closeButton": true,
     "progressBar": true,
@@ -20,9 +17,7 @@ toastr.options = {
     "timeOut": "5000",
     "extendedTimeOut": "1000",
     "showEasing": "swing",
-    "hideEasing": "linear",
-    "showMethod": "fadeIn",
-    "hideMethod": "fadeOut"
+    "hideEasing": "fadeOut"
 };
 
 /**
@@ -32,14 +27,12 @@ toastr.options = {
 function actualizarContador(incremento) {
     contadorNotificaciones += incremento;
 
-    // Aseguramos que el contador nunca sea negativo
     if (contadorNotificaciones < 0) {
         contadorNotificaciones = 0;
     }
 
     if (contadorElement) {
         contadorElement.textContent = contadorNotificaciones;
-        // Muestra u oculta el badge
         contadorElement.style.display = contadorNotificaciones > 0 ? 'block' : 'none';
     }
 }
@@ -49,10 +42,8 @@ function actualizarContador(incremento) {
  * @param {number} idNotificacion - El ID de la notificación persistente.
  */
 function marcarNotificacionComoLeida(idNotificacion) {
-    // El Context Path es necesario para el endpoint REST de Spring
     $.post(contextPath + '/notificaciones/marcar-leida/' + idNotificacion)
         .done(function() {
-            // Descontamos visualmente solo si el AJAX fue exitoso
             actualizarContador(-1);
         })
         .fail(function(xhr) {
@@ -66,21 +57,21 @@ function marcarNotificacionComoLeida(idNotificacion) {
  * @param {object} notificacionDTO - DTO recibido por WebSocket.
  */
 function mostrarToastNotificacion(notificacionDTO) {
-    // Mostrar la notificación usando el mensaje del DTO
-    // El título es genérico para el rol de Conductor
-    const toast = toastr.info(notificacionDTO.mensaje, "¡Nueva Notificación!");
+    // 🔔 Título genérico para todos los roles
+    const titulo = "¡Notificación de Viaje!";
+    const toast = toastr.info(notificacionDTO.mensaje, titulo);
 
     // CLAVE: Agregar el evento de click (Requiere jQuery)
     if (toast && notificacionDTO.urlDestino) {
         toast.on('click', function() {
 
-            // 1. Marcar como leída via AJAX y descontar el contador
-            // Esto solo se debe hacer si el contador es > 0, para no decrementar dos veces.
+            // Marcar como leída via AJAX y descontar el contador
             if (contadorNotificaciones > 0) {
+                // Previene doble decremento si se hace clic muy rápido
                 marcarNotificacionComoLeida(notificacionDTO.idNotificacion);
             }
 
-            // 2. Redireccionar al destino (Deep Link)
+            // Redireccionar al destino (Deep Link)
             window.location.href = contextPath + notificacionDTO.urlDestino;
         });
     }

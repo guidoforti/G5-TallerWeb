@@ -63,7 +63,7 @@ public class ServicioNotificacionImpl implements ServicioNotificacion {
     @Override
     @Transactional(readOnly = true)
     public Long contarNoLeidas(Long idUsuario) throws NotFoundException {
-        Usuario usuario = repositorioUsuario.obtenerUsuarioPorId(idUsuario)
+        Usuario usuario = repositorioUsuario.buscarPorId(idUsuario)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado para notificaciones."));
 
         return repositorioNotificacion.contarNoLeidasPorUsuario(usuario);
@@ -84,7 +84,7 @@ public class ServicioNotificacionImpl implements ServicioNotificacion {
     @Override
     @Transactional(readOnly = true)
     public List<Notificacion> buscarUltimas(Long idUsuario) throws NotFoundException {
-        Usuario usuario = repositorioUsuario.obtenerUsuarioPorId(idUsuario)
+        Usuario usuario = repositorioUsuario.buscarPorId(idUsuario)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado para notificaciones."));
 
         return repositorioNotificacion.buscarPorUsuario(usuario, 10);
@@ -93,7 +93,7 @@ public class ServicioNotificacionImpl implements ServicioNotificacion {
     @Override
     @Transactional
     public List<Notificacion> obtenerYMarcarComoLeidas(Long idUsuario) throws NotFoundException {
-        Usuario usuario = repositorioUsuario.obtenerUsuarioPorId(idUsuario)
+        Usuario usuario = repositorioUsuario.buscarPorId(idUsuario)
                 .orElseThrow(() -> new NotFoundException("Usuario no encontrado para obtener notificaciones."));
 
         List<Notificacion> notificaciones = repositorioNotificacion.buscarPorUsuario(usuario, 20);
