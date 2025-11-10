@@ -2,16 +2,15 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:fragment="extra">
-    </th:block>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>UnRumbo - Perfil del Viajero</title>
-
-    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.2.0/css/bootstrap.min.css}" />
-
-    <!-- Pequeños estilos inline para no crear muchos archivos -->
     <style>
+        body{
+            background-color: #FBEFE6;
+        }
+        nav{
+            background-color: white;
+        }
         .profile-photo {
             width: 140px;
             height: 140px;
@@ -27,6 +26,11 @@
             font-style: italic;
         }
     </style>
+    </th:block>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>UnRumbo - Perfil del Viajero</title>
 </head>
 <body>
 <nav th:replace="fragments/navbar_viajero :: navbar"></nav>
@@ -167,5 +171,6 @@
 <!-- Bootstrap JS -->
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
 <th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
+<footer th:replace="fragments/fragments :: footer"></footer>
 </body>
 </html>
