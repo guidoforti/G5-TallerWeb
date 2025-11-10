@@ -57,22 +57,26 @@ function marcarNotificacionComoLeida(idNotificacion) {
  * @param {object} notificacionDTO - DTO recibido por WebSocket.
  */
 function mostrarToastNotificacion(notificacionDTO) {
-    // 🔔 Título genérico para todos los roles
     const titulo = "¡Notificación de Viaje!";
     const toast = toastr.info(notificacionDTO.mensaje, titulo);
 
-    // CLAVE: Agregar el evento de click (Requiere jQuery)
+    // 🔥 CORRECCIÓN CLAVE: Aplicar la redirección solo al cuerpo y detener la propagación del botón 'X'.
     if (toast && notificacionDTO.urlDestino) {
-        toast.on('click', function() {
 
-            // Marcar como leída via AJAX y descontar el contador
+        // 1. Manejador de clic para el cuerpo del toast (redirige)
+        toast.on('click', function() {
             if (contadorNotificaciones > 0) {
-                // Previene doble decremento si se hace clic muy rápido
                 marcarNotificacionComoLeida(notificacionDTO.idNotificacion);
             }
-
-            // Redireccionar al destino (Deep Link)
             window.location.href = contextPath + notificacionDTO.urlDestino;
+        });
+
+        // 2. Manejador para el botón de cerrar (¡previene el bucle!)
+        // Seleccionamos el botón de cierre que está DENTRO del toast.
+        toast.find('.toast-close-button').on('click', function(e) {
+            // Detenemos el evento para que no se propague al manejador de clic del toast (punto 1).
+            e.stopPropagation();
+            // Nota: Toastr ya maneja el cierre, esto es solo para el bug de redirección.
         });
     }
 }
@@ -102,12 +106,13 @@ function iniciarConexionNotificaciones(idUsuario, contadorInicial) {
     stompClient.connect({}, function (frame) {
         console.log('Conexión STOMP exitosa. Suscribiéndose...');
 
+        // Resincronización del contador al conectar (usando el nuevo endpoint)
         $.get(contextPath + '/notificaciones/contar-no-leidas').done(function(data) {
                 const contadorReal = parseInt(data);
-                // Actualizar el estado global del JS con el valor real del servidor
                 contadorNotificaciones = contadorReal;
-                actualizarContador(0); // Forzar la actualización visual del badge
+                actualizarContador(0);
             });
+
         // 3. Suscripción al topic personal: /topic/notificaciones/{idUsuario}
         const topicDestino = `/topic/notificaciones/${idUsuario}`;
 
@@ -117,8 +122,8 @@ function iniciarConexionNotificaciones(idUsuario, contadorInicial) {
             console.log("✅ ¡Nueva Notificación Recibida!", notificacionDTO.mensaje);
 
             // Lógica de UI
-            actualizarContador(1); // Incrementa visualmente
-            mostrarToastNotificacion(notificacionDTO); // Pasa el DTO completo para la redirección
+            actualizarContador(1);
+            mostrarToastNotificacion(notificacionDTO);
         });
     }, function (error) {
         console.error("❌ Error de WebSocket. Reconectando en 5s...", error);
