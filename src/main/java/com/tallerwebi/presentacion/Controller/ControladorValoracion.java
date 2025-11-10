@@ -1,25 +1,25 @@
 package com.tallerwebi.presentacion.Controller;
 
 import com.tallerwebi.dominio.Entity.Usuario;
+import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.Viajero;
-import com.tallerwebi.dominio.Entity.Valoracion;
 import com.tallerwebi.dominio.IServicio.ServicioValoracion;
+import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
-import com.tallerwebi.presentacion.DTO.InputsDTO.ValoracionNuevaInputDTO;
-import com.tallerwebi.presentacion.DTO.OutputsDTO.ValoracionOutputDTO;
+import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
+import com.tallerwebi.presentacion.DTO.InputsDTO.ValoracionIndividualInputDTO;
+import com.tallerwebi.presentacion.DTO.InputsDTO.ValoracionViajeInputDTO;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeroParaValorarOutputDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpSession;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
@@ -27,77 +27,176 @@ import java.util.stream.Collectors;
 public class ControladorValoracion {
 
     private final ServicioValoracion servicioValoracion;
+    private final ServicioViaje servicioViaje;
 
     @Autowired
-    public ControladorValoracion(ServicioValoracion servicioValoracion) {
+    public ControladorValoracion(ServicioValoracion servicioValoracion,
+                                 ServicioViaje servicioViaje) {
         this.servicioValoracion = servicioValoracion;
+        this.servicioViaje = servicioViaje;
     }
 
-    @GetMapping("/{receptorId}")
-    public ModelAndView verValoraciones(@PathVariable Long receptorId, HttpSession session) {
+
+    @GetMapping("/viaje/{viajeId}")
+    public ModelAndView verViajerosParaValorar(@PathVariable Long viajeId, HttpSession session) {
         ModelMap model = new ModelMap();
 
         Object usuarioIdObj = session.getAttribute("idUsuario");
         if (usuarioIdObj == null) {
             return new ModelAndView("redirect:/login");
         }
+        
+        // Asumiendo que el usuario logueado es el conductor:
+        Long conductorId = (Long) usuarioIdObj;
 
         try {
-            // Buscar al viajero receptor usando el servicio
-            Viajero receptor = servicioValoracion.obtenerViajero(receptorId);
+            // 1. Obtener la lista de viajeros usando el nuevo método del servicio
+            List<Viajero> viajeros = servicioValoracion.obtenerViajeros(viajeId);
 
-            // Armar modelo para la vista (solo formulario de nueva valoración)
-            model.put("receptor", receptor);
-            model.put("valoracionDto", new ValoracionNuevaInputDTO());
-            return new ModelAndView("valorarViajero", model);
+            List<ViajeroParaValorarOutputDTO> viajerosDTO = viajeros.stream()
+                    .map(ViajeroParaValorarOutputDTO::new)
+                    .collect(Collectors.toList());
 
-        } catch (UsuarioInexistente e) {
-            model.put("error", e.getMessage());
-            return new ModelAndView("error", model);
+            List<ValoracionIndividualInputDTO> listaValoraciones = viajerosDTO.stream()
+                    .map(viajero -> new ValoracionIndividualInputDTO(viajero.getId(), null, null)) // receptorId, puntuacion, comentario
+                    .collect(Collectors.toList());
 
-        } catch (Exception e) {
-            model.put("error", "Error al cargar el perfil: " + e.getMessage());
-            return new ModelAndView("error", model);
-        }
-    }
+            ValoracionViajeInputDTO formularioValoracion = new ValoracionViajeInputDTO(listaValoraciones);
 
-    @PostMapping("/nueva")
-    public ModelAndView enviarValoracion(@ModelAttribute("valoracionDto") ValoracionNuevaInputDTO valoracionDto, HttpSession session) {
-        ModelMap model = new ModelMap();
-
-        Object usuarioIdObj = session.getAttribute("idUsuario");
-        if (usuarioIdObj == null) {
-            return new ModelAndView("redirect:/login");
-        }
-
-        Long emisorId = (Long) usuarioIdObj;
-
-        try {
-            // Obtener emisor (puede ser Viajero o Conductor) desde el servicio
-            Usuario emisor = servicioValoracion.obtenerUsuario(emisorId);
-
-            // Intentar guardar la valoración
-            servicioValoracion.valorarUsuario(emisor, valoracionDto);
-
-            // Redirigir a la home o a una vista de confirmación
-            return new ModelAndView("redirect:/home");
-
-        } catch (DatoObligatorioException | UsuarioInexistente e) {
-            model.put("error", e.getMessage());
-            model.put("valoracionDto", valoracionDto);
-
-            // Cargar receptor para volver a mostrar la vista
-            try {
-                Viajero receptor = servicioValoracion.obtenerViajero(valoracionDto.getReceptorId());
-                model.put("receptor", receptor);
-            } catch (UsuarioInexistente ex) {
-                model.put("error", "Error: " + ex.getMessage());
+            if (viajerosDTO.isEmpty()) {
+                model.put("error", "No hay viajeros para valorar en este viaje.");
+                return new ModelAndView("error", model);
             }
 
-            return new ModelAndView("valorarViajero", model);
+            // 2. Armar modelo para la vista
+            model.put("viajeros", viajerosDTO);
+            model.put("formularioValoracion", formularioValoracion);
+            model.put("viajeId", viajeId); 
+            model.put("conductorId", conductorId); // Puede ser útil para la vista
+
+            return new ModelAndView("valorarViajero", model); 
+
+        } catch (ViajeNoEncontradoException e) {
+            model.put("error", e.getMessage());
+            return new ModelAndView("error", model);
 
         } catch (Exception e) {
-            model.put("error", "Error al enviar la valoración: " + e.getMessage());
+            model.put("error", "Error al cargar la lista de viajeros: " + e.getMessage());
+            return new ModelAndView("error", model);
+        }
+    }
+
+    // ControladorValoracion.java
+
+    @PostMapping("/enviar") // Nuevo endpoint para recibir el formulario completo
+    public ModelAndView enviarTodasLasValoraciones(@ModelAttribute("formularioValoracion") ValoracionViajeInputDTO formulario,
+                                                   @RequestParam("viajeId") Long viajeId, // Recibimos el ID del viaje
+                                                   HttpSession session) {
+        ModelMap model = new ModelMap();
+        Long emisorId = (Long) session.getAttribute("idUsuario");
+
+        Object usuarioIdObj = session.getAttribute("idUsuario");
+        if (usuarioIdObj == null) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        try {
+            Usuario emisor = servicioValoracion.obtenerUsuario(emisorId);
+
+            for (ValoracionIndividualInputDTO dtoIndividual : formulario.getValoraciones()) {
+                servicioValoracion.valorarUsuario(emisor, dtoIndividual, viajeId);
+            }
+
+            model.put("mensaje", "¡Valoraciones enviadas con éxito!");
+            return new ModelAndView("redirect:/conductor/home", model);
+
+        } catch (DatoObligatorioException | UsuarioInexistente e) {
+            model.put("error", "Error al enviar valoraciones: " + e.getMessage());
+            return new ModelAndView("error", model);
+        } catch (Exception e) {
+            model.put("error", "Ocurrió un error inesperado al enviar las valoraciones.");
+            return new ModelAndView("error", model);
+        }
+    }
+
+    @GetMapping("/conductor/form")
+    public ModelAndView mostrarFormularioValoracionConductor(@RequestParam("viajeId") Long viajeId, HttpSession session) {
+        ModelMap model = new ModelMap();
+        Long viajeroId = (Long) session.getAttribute("idUsuario");
+
+        Object usuarioIdObj = session.getAttribute("idUsuario");
+        if (usuarioIdObj == null) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        try {
+            // 1. Obtener datos del viaje para mostrar conductor y destino
+            Viaje viaje = servicioViaje.obtenerViajePorId(viajeId);
+
+            Long conductorId = viaje.getConductor().getId();
+
+            // 2. Preparar el Input DTO para UN solo receptor
+            ValoracionIndividualInputDTO valoracionDto = new ValoracionIndividualInputDTO();
+            valoracionDto.setReceptorId(conductorId);
+
+            model.put("viaje", viaje);
+            model.put("conductorNombre", viaje.getConductor().getNombre());
+            model.put("valoracionDto", valoracionDto);
+
+            return new ModelAndView("valorarConductor", model);
+
+        } catch (Exception e) {
+            model.put("error", "Error al cargar formulario: " + e.getMessage());
+            return new ModelAndView("error", model);
+        }
+    }
+
+    @PostMapping("/unidad")
+    public ModelAndView enviarValoracionUnitaria(@ModelAttribute("valoracionDto") ValoracionIndividualInputDTO valoracionDto,
+                                                 @RequestParam("viajeId") Long viajeId,
+                                                 HttpSession session) {
+        ModelMap model = new ModelMap();
+
+        // 1. Validación de Sesión y Rol
+        Long viajeroId = (Long) session.getAttribute("idUsuario");
+        String rol = (String) session.getAttribute("ROL");
+
+        if (viajeroId == null || !"VIAJERO".equals(rol)) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        try {
+            // 2. Obtener Emisor (Viajero)
+            Usuario emisor = servicioValoracion.obtenerUsuario(viajeroId);
+
+            // 3. Persistir la Valoración
+            // Reutilizamos el método valorarUsuario (emisor, dto, viajeId) que ya modificamos.
+            // El servicio se encargará de: validar puntuación, verificar que sea FINALIZADO y que NO exista doble valoración.
+            servicioValoracion.valorarUsuario(emisor, valoracionDto, viajeId);
+
+            model.put("mensaje", "¡Valoración enviada con éxito! Gracias por tu opinión.");
+            return new ModelAndView("redirect:/reserva/misViajes"); // Redirigir al historial de viajes
+
+        } catch (DatoObligatorioException | UsuarioInexistente e) {
+            // Si hay error (ej: puntuación no válida, no existe el conductor, o ya valoró)
+
+            // 4. Recargar la vista con el error (para unicidad, se debe cargar el formulario de nuevo)
+            try {
+                Viaje viaje = servicioViaje.obtenerViajePorId(viajeId);
+                model.put("viaje", viaje);
+                model.put("conductorNombre", viaje.getConductor().getNombre());
+                model.put("valoracionDto", valoracionDto);
+                model.put("error", e.getMessage());
+
+                return new ModelAndView("valorarConductor", model);
+
+            } catch (Exception ex) {
+                // Si la recarga falla, muestra un error genérico
+                model.put("error", "Error crítico al procesar la valoración.");
+                return new ModelAndView("error", model);
+            }
+        } catch (Exception e) {
+            model.put("error", "Ocurrió un error inesperado: " + e.getMessage());
             return new ModelAndView("error", model);
         }
     }

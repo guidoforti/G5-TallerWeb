@@ -3,6 +3,8 @@ package com.tallerwebi.dominio.Entity;
 import lombok.Getter;
 import lombok.Setter;
 import javax.persistence.*;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.Objects;
 
 @Entity
@@ -21,6 +23,11 @@ public abstract class Usuario {
     private Boolean activo = false;
     private String nombre;
 
+    @Column(name = "fecha_nacimiento")
+    private LocalDate fechaNacimiento;
+    private Boolean fumador;
+    private String discapacitado;
+
     public boolean activo() {
         return activo;
     }
@@ -34,6 +41,13 @@ public abstract class Usuario {
         if (o == null || getClass() != o.getClass()) return false;
         Usuario usuario = (Usuario) o;
         return Objects.equals(email, usuario.email) && Objects.equals(contrasenia, usuario.contrasenia);
+    }
+    @Transient
+    public Integer getEdad() {
+        if (this.fechaNacimiento == null) {
+            return null;
+        }
+        return Period.between(this.fechaNacimiento, LocalDate.now()).getYears();
     }
 
     @Override

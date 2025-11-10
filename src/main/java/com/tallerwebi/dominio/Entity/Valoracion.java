@@ -32,15 +32,20 @@ public class Valoracion {
     @JoinColumn(name = "receptor_id", nullable = false)
     private Usuario receptor;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "viaje_id", nullable = false)
+    private Viaje viaje;
+
     private Integer puntuacion;
     private String comentario;
     private LocalDate fecha;
 
-    public Valoracion(Usuario emisor, Usuario receptor, Integer puntuacion, String comentario) {
+    public Valoracion(Usuario emisor, Usuario receptor, Integer puntuacion, String comentario, Viaje viaje) {
         this.emisor = emisor;
         this.receptor = receptor;
         this.puntuacion = puntuacion;
         this.comentario = comentario;
         this.fecha = LocalDate.now();
+        this.viaje = viaje;
     }
 }

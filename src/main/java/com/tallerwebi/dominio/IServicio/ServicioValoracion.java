@@ -7,11 +7,11 @@ import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Entity.Valoracion;
 import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
-import com.tallerwebi.presentacion.DTO.InputsDTO.ValoracionNuevaInputDTO;
-import com.tallerwebi.presentacion.DTO.OutputsDTO.ValoracionOutputDTO;
+import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
+import com.tallerwebi.presentacion.DTO.InputsDTO.ValoracionIndividualInputDTO;
 
 public interface ServicioValoracion {
-    void valorarUsuario(Usuario emisor, ValoracionNuevaInputDTO dto)
+    void valorarUsuario(Usuario emisor, ValoracionIndividualInputDTO dto, Long viajeId)
         throws UsuarioInexistente, DatoObligatorioException;
 
     List<Valoracion> obtenerValoracionesDeUsuario(Long usuarioId);
@@ -21,4 +21,7 @@ public interface ServicioValoracion {
     Viajero obtenerViajero(Long viajeroId) throws UsuarioInexistente;
 
     Usuario obtenerUsuario(Long usuarioId) throws UsuarioInexistente;
+
+    List<Viajero> obtenerViajeros(Long viajeId) throws ViajeNoEncontradoException;
+    boolean yaHaValorado(Long emisorId, Long receptorId, Long viajeId);
 }

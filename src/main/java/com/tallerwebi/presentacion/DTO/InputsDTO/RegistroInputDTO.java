@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import com.tallerwebi.dominio.Entity.Conductor;
+import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Viajero;
 import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
@@ -13,47 +14,43 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class RegistroInputDTO {
 
-    // Campos Comunes
     private String nombre;
     private String email;
     private String contrasenia;
+    private String rolSeleccionado;
 
-    // Campo Clave para la Bifurcación de Lógica
-    private String rolSeleccionado; // Valores esperados: "CONDUCTOR" o "VIAJERO"
-
-    // Campos Específicos de Conductor
     @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private LocalDate fechaDeVencimientoLicencia;
-    private Integer edadConductor;
+    private LocalDate fechaNacimiento;
 
-    // Campos Específicos de Viajero
-    private Integer edad;
     private Boolean fumador;
     private String discapacitado;
-    private Double promedioValoraciones;
 
-    // --- Métodos de Conversión a Entidad ---
+
+    private String fotoPerfilUrl;
+
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    private LocalDate fechaDeVencimientoLicencia;
+
+
+    private <T extends Usuario> T setCommonUserFields(T usuario) {
+        usuario.setNombre(this.nombre);
+        usuario.setEmail(this.email);
+        usuario.setContrasenia(this.contrasenia);
+        usuario.setFechaNacimiento(this.fechaNacimiento);
+        usuario.setDiscapacitado(this.discapacitado);
+        usuario.setFumador(this.fumador != null ? this.fumador : false);
+        return usuario;
+    }
 
     public Conductor toConductorEntity() {
-        Conductor conductor = new Conductor();
-        conductor.setNombre(this.nombre);
-        conductor.setEmail(this.email);
-        conductor.setContrasenia(this.contrasenia);
+        Conductor conductor = setCommonUserFields(new Conductor());
         conductor.setFechaDeVencimientoLicencia(this.fechaDeVencimientoLicencia);
-        conductor.setEdad(edadConductor);
-        // NOTA: El ROL y ACTIVO se asignan en el Servicio.
         return conductor;
     }
 
     public Viajero toViajeroEntity() {
-        Viajero viajero = new Viajero();
-        viajero.setNombre(this.nombre);
-        viajero.setEmail(this.email);
-        viajero.setContrasenia(this.contrasenia);
-        viajero.setEdad(this.edad);
-        viajero.setDiscapacitado(discapacitado);
-        viajero.setFumador(fumador);
-        // NOTA: El ROL y ACTIVO se asignan en el Servicio.
+        Viajero viajero = setCommonUserFields(new Viajero());
+        viajero.setFotoPerfilUrl(this.fotoPerfilUrl);
         return viajero;
     }
 }

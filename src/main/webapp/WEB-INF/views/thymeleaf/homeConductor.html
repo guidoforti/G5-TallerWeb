@@ -7,8 +7,25 @@
 
 <body>
 <nav th:replace="fragments/navbar_conductor :: navbar"></nav>
-
+    <style>
+        /* [Estilo del Badge de Notificación] */
+        #notificacion-contador {
+            position: absolute;
+            top: 5px;
+            right: 0px;
+            font-size: 0.75rem;
+            padding: 0.3em 0.6em;
+            background-color: #BA3A3A !important;
+        }
+        .notification-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+    </style>
 <main role="main" class="container" style="margin-top: 120px;">
+
+
     <div class="row justify-content-center">
         <div class="col-md-6 col-lg-5">
             <div class="card shadow-sm border-0">
@@ -33,8 +50,9 @@
             </div>
         </div>
     </div>
-</main>
-<div th:replace="fragments/fragments :: footer"></div>
-<script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+</main><div th:replace="fragments/fragments :: footer"></div>
+
+<th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
+
 </body>
 </html>

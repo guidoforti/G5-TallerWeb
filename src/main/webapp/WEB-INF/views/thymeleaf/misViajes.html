@@ -278,6 +278,12 @@
                                 </div>
 
                                 <div class="col-md-5 d-flex flex-column justify-content-center align-items-end">
+                                    <a th:if="${viaje.valoracionPendiente}"
+                                       th:href="@{/valoraciones/conductor/form(viajeId=${viaje.viajeId})}"
+                                       class="btn btn-unrumbo-detail fw-bold mb-2">
+                                        <i class="fas fa-star me-1"></i> Valorar Conductor
+                                    </a>
+
                                     <a th:href="@{/viaje/detalle(id=${viaje.viajeId})}"
                                        class="btn btn-dark fw-bold">
                                         <i class="bi bi-eye me-1"></i> Ver detalles
@@ -304,5 +310,6 @@
 </main>
 <div th:replace="fragments/fragments :: footer"></div>
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+<th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
 </body>
 </html>

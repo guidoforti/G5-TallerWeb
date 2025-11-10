@@ -11,6 +11,7 @@ import com.tallerwebi.dominio.IRepository.RepositorioParada;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
+import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.ServiceImpl.ServicioViajeImpl;
@@ -49,6 +50,7 @@ class ServicioViajeTest {
     private ServicioViaje servicioViaje;
     private RepositorioParada repositorioParada;
     private ReservaRepository reservaRepositoryMock;
+    private ServicioNotificacion servicioNotificacionMock;
 
     @BeforeEach
     void setUp() {
@@ -57,7 +59,8 @@ class ServicioViajeTest {
         servicioVehiculoMock = mock(ServicioVehiculo.class);
         repositorioParada = mock(RepositorioParada.class);
         reservaRepositoryMock = mock(ReservaRepository.class);
-        servicioViaje = new ServicioViajeImpl(viajeRepositoryMock, servicioConductorMock, servicioVehiculoMock, repositorioParada, reservaRepositoryMock);
+        servicioNotificacionMock = mock(ServicioNotificacion.class);
+        servicioViaje = new ServicioViajeImpl(viajeRepositoryMock, servicioConductorMock, servicioVehiculoMock, repositorioParada, reservaRepositoryMock, servicioNotificacionMock);
     }
 
     private Viaje crearViajeDeTest() {

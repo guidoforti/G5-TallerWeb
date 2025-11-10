@@ -6,23 +6,43 @@
 
     <title th:text="${title}">Título por defecto</title>
 
-    <!-- Bootstrap core css -->
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.2.0/css/bootstrap.min.css}"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- custom style -->
     <link rel="stylesheet" th:href="@{/css/new-main.css?v=2}"/>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
 
-    <!-- Tom-select import -->
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
 
-    <!-- Bloque extra opcional -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+
     <th:block th:replace="~{::extra}"></th:block>
 </head>
 
 <body><nav th:fragment="navbar" class="navbar navbar-expand-md navbar-unrumbo fixed-top">
 </nav>
+<th:block th:fragment="scripts-websocket">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+    <script th:src="@{/js/notificaciones.js}"></script>
+
+    <script th:inline="javascript">
+        // Esta sintaxis busca la primera clave disponible:
+        const ID_USUARIO = /*[[${idUsuario != null ? idUsuario :
+                              (idConductor != null ? idConductor :
+                              (idViajero != null ? idViajero : 0))}]]*/ 0;
+
+        const CONTADOR_INICIAL = /*[[${contadorNotificaciones}]]*/ 0;
+
+        if (ID_USUARIO !== 0 && typeof iniciarConexionNotificaciones !== 'undefined') {
+            iniciarConexionNotificaciones(ID_USUARIO, CONTADOR_INICIAL);
+        }
+    </script>
+</th:block>
+
 <footer th:fragment="footer" class="bg-dark text-white mt-5 p-4">
     <style>
         /* [IMPORTANTE] Esto asegura que el footer use el color Marrón Oscuro (#4E3D2F) */

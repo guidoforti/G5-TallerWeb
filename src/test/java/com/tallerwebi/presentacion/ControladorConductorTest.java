@@ -2,6 +2,7 @@ package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
+import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.presentacion.Controller.ControladorConductor;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ConductorPerfilOutPutDTO;
@@ -23,13 +24,15 @@ public class ControladorConductorTest {
 
     private ControladorConductor controladorConductor;
     private ServicioConductor servicioConductorMock;
+    private ServicioNotificacion servicioNotificacionMock;
     private HttpSession sessionMock;
     private Conductor conductorMock;
 
     @BeforeEach
     public void init() {
         servicioConductorMock = mock(ServicioConductor.class);
-        controladorConductor = new ControladorConductor(servicioConductorMock);
+        servicioNotificacionMock = mock(ServicioNotificacion.class);
+        controladorConductor = new ControladorConductor(servicioConductorMock, servicioNotificacionMock);
         sessionMock = mock(HttpSession.class);
         conductorMock = mock(Conductor.class);
 
@@ -74,11 +77,13 @@ public class ControladorConductorTest {
         when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
         when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR");
         when(servicioConductorMock.obtenerConductor(1L)).thenReturn(conductorMock);
-
+        when(servicioNotificacionMock.contarNoLeidas(1L)).thenReturn(5L);
         // Act
         ModelAndView mav = controladorConductor.irAHome(sessionMock);
 
+
         // Assert
+        assertThat(mav.getModel().get("contadorNotificaciones"), equalTo(5));
         assertThat(mav.getViewName(), equalTo("homeConductor"));
         assertThat(mav.getModel().get("nombreConductor").toString(), equalTo(conductorMock.getNombre()));
         assertThat(mav.getModel().get("rol").toString(), equalTo("CONDUCTOR")); // El modelo usa 'rol' minúsculas

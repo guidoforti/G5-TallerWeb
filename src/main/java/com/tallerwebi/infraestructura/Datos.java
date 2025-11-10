@@ -12,8 +12,6 @@ import java.util.List;
 
 public class Datos {
 
-
-
     private static Conductor c1 = new Conductor();
     private static Conductor c2 = new Conductor();
     private static Conductor c3 = new Conductor();
@@ -23,7 +21,6 @@ public class Datos {
     private static Viajero viajero3 = new Viajero();
 
     static {
-        // ==== Conductores ====
         c1.setId(1L);
         c1.setNombre("Juan Perez");
         c1.setEmail("juan.perez@example.com");
@@ -33,6 +30,7 @@ public class Datos {
         c1.setFechaDeVencimientoLicencia(LocalDate.of(2027, 5, 20));
         c1.setViajes(new ArrayList<>());
         c1.setVehiculos(new ArrayList<>());
+        c1.setFechaNacimiento(LocalDate.now().minusYears(35));
 
         c2.setId(2L);
         c2.setNombre("Maria Gomez");
@@ -43,6 +41,7 @@ public class Datos {
         c2.setFechaDeVencimientoLicencia(LocalDate.of(2026, 8, 10));
         c2.setViajes(new ArrayList<>());
         c2.setVehiculos(new ArrayList<>());
+        c2.setFechaNacimiento(LocalDate.now().minusYears(40));
 
         c3.setId(3L);
         c3.setNombre("Carlos Diaz");
@@ -53,15 +52,15 @@ public class Datos {
         c3.setFechaDeVencimientoLicencia(LocalDate.of(2028, 1, 15));
         c3.setViajes(new ArrayList<>());
         c3.setVehiculos(new ArrayList<>());
+        c3.setFechaNacimiento(LocalDate.now().minusYears(28));
 
-        // ==== Viajeros ====
-        viajero1.setId(4L); // IDs deben ser unicos
+        viajero1.setId(4L);
         viajero1.setNombre("Ana Rodriguez");
         viajero1.setEmail("ana@gmail.com");
         viajero1.setContrasenia("passAna123");
         viajero1.setRol("VIAJERO");
         viajero1.setActivo(true);
-        viajero1.setEdad(25);
+        viajero1.setFechaNacimiento(LocalDate.now().minusYears(25));
         viajero1.setReservas(new ArrayList<>());
 
         viajero2.setId(5L);
@@ -70,7 +69,7 @@ public class Datos {
         viajero2.setContrasenia("passLuisg123");
         viajero2.setRol("VIAJERO");
         viajero2.setActivo(true);
-        viajero2.setEdad(30);
+        viajero2.setFechaNacimiento(LocalDate.now().minusYears(30));
         viajero2.setReservas(new ArrayList<>());
 
         viajero3.setId(6L);
@@ -79,7 +78,7 @@ public class Datos {
         viajero3.setContrasenia("sofialL123");
         viajero3.setRol("VIAJERO");
         viajero3.setActivo(true);
-        viajero3.setEdad(28);
+        viajero3.setFechaNacimiento(LocalDate.now().minusYears(28));
         viajero3.setReservas(new ArrayList<>());
     }
 
@@ -121,5 +120,4 @@ public class Datos {
     public static List<Viajero> obtenerViajeros() {
         return new ArrayList<>(viajeros);
     }
-
 }

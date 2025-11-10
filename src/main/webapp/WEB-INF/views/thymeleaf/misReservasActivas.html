@@ -5,51 +5,19 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
         <style>
-            /* [Variables de Color de la Paleta UnRumbo] */
+            /* [Estilos CSS - Sin cambios] */
             :root {
-                --color-primary: #E16A3D;         /* Naranja Principal */
-                --color-taupe: #4E3D2F;           /* Marrón Oscuro */
-                --color-danger-persa: #BA3A3A;     /* Rojo Persa */
-                --color-coffee: #734933;          /* Marrón Medio */
-                --color-success-warm: #44806A;    /* Verde Cálido (Éxito) */
-                --color-warning-light: #FFC107;   /* Amarillo Advertencia */
+                --color-primary: #E16A3D; --color-taupe: #4E3D2F; --color-danger-persa: #BA3A3A;
+                --color-coffee: #734933; --color-success-warm: #44806A; --color-warning-light: #FFC107;
             }
-
-            .reserva-card {
-                transition: transform 0.2s, box-shadow 0.2s;
-                border: 1px solid #e9ecef;
-                border-left: 3px solid var(--color-primary); /* Borde de Marca */
-                border-radius: 8px;
-                overflow: hidden;
-            }
-            .reserva-card:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            }
-            .estado-badge {
-                position: absolute;
-                top: 15px;
-                right: 15px;
-                font-size: 0.8rem;
-                padding: 0.35rem 0.6rem;
-                border-radius: 0.375rem;
-                font-weight: 600;
-            }
-            .ruta-info {
-                padding-left: 1rem;
-            }
-            .section-title {
-                border-bottom: 3px solid var(--color-primary);
-                padding-bottom: 0.5rem;
-                margin-bottom: 1.5rem;
-            }
-
-            /* [Mapeo de Colores de Estado] */
+            .reserva-card { transition: transform 0.2s, box-shadow 0.2s; border: 1px solid #e9ecef; border-left: 3px solid var(--color-primary); border-radius: 8px; overflow: hidden; }
+            .reserva-card:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
+            .estado-badge { position: absolute; top: 15px; right: 15px; font-size: 0.8rem; padding: 0.35rem 0.6rem; border-radius: 0.375rem; font-weight: 600; }
+            .ruta-info { padding-left: 1rem; }
+            .section-title { border-bottom: 3px solid var(--color-primary); padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
             .badge-confirmada { background-color: var(--color-success-warm) !important; color: white; }
             .badge-pendiente { background-color: var(--color-warning-light) !important; color: var(--color-taupe) !important; }
             .badge-rechazada { background-color: var(--color-danger-persa) !important; color: white; }
-
-            /* [Mapeo de Botones] */
             .btn-lg { font-weight: 700; }
             .text-unrumbo-primary { color: var(--color-primary) !important; }
             .text-unrumbo-danger { color: var(--color-danger-persa) !important; }
@@ -97,18 +65,11 @@
                         </span>
 
                             <div class="row align-items-center g-3">
-
                                 <div class="col-md-6 ruta-info">
                                     <p class="mb-1 fw-bold text-unrumbo-primary"><i class="bi bi-geo-alt-fill me-1"></i> <span th:text="${reserva.origenNombre}"></span> → <span th:text="${reserva.destinoNombre}"></span></p>
 
-                                    <div class="d-flex align-items-center mb-2">
-                                        <i class="bi bi-calendar3 me-2 text-unrumbo-primary"></i>
-                                        <span class="ms-1" th:text="${reserva.fechaSalida}">Fecha</span>
-                                    </div>
-                                    <div class="d-flex align-items-center mb-2">
-                                        <i class="bi bi-person me-2 text-info"></i>
-                                        <span class="ms-1" th:text="${reserva.conductorNombre}">Conductor</span>
-                                    </div>
+                                    <div class="d-flex align-items-center mb-2"> <i class="bi bi-calendar3 me-2 text-unrumbo-primary"></i> <span class="ms-1" th:text="${reserva.fechaSalida}">Fecha</span> </div>
+                                    <div class="d-flex align-items-center mb-2"> <i class="bi bi-person me-2 text-info"></i> <span class="ms-1" th:text="${reserva.conductorNombre}">Conductor</span> </div>
                                 </div>
 
                                 <div class="col-md-3 text-center d-flex flex-column justify-content-center">
@@ -123,146 +84,124 @@
                                     </a>
                                     <small class="text-muted mt-0">Usando Mercado Pago</small>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                            </div> </div> </div> </div>
+            </div>
 
-                <div class="row" th:if="${#lists.isEmpty(reservasConfirmadas)}">
-                    <div class="col-12 text-center py-4">
-                        <div class="card border-0 bg-light">
-                            <div class="card-body">
-                                <i class="bi bi-check-lg display-4 text-muted mb-3"></i>
-                                <h5 class="text-muted">No tenés reservas confirmadas pendientes de pago.</h5>
-                            </div>
+            <div class="row" th:if="${#lists.isEmpty(reservasConfirmadas)}">
+                <div class="col-12 text-center py-4">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <i class="bi bi-check-lg display-4 text-muted mb-3"></i>
+                            <h5 class="text-muted">No tenés reservas confirmadas pendientes de pago.</h5>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="row mb-5">
-            <div class="col-12">
-                <h4 class="section-title" style="color: var(--color-warning-light);">
-                    <i class="bi bi-clock-history me-2"></i>Reservas Pendientes
-                </h4>
+    <div class="row mb-5">
+        <div class="col-12">
+            <h4 class="section-title" style="color: var(--color-warning-light);">
+                <i class="bi bi-clock-history me-2"></i>Reservas Pendientes
+            </h4>
 
-                <div class="row" th:if="${not #lists.isEmpty(reservasPendientes)}">
-                    <div class="col-12 mb-4" th:each="reserva : ${reservasPendientes}">
-                        <div class="card reserva-card">
-                            <div class="card-body position-relative">
+            <div class="row" th:if="${not #lists.isEmpty(reservasPendientes)}">
+                <div class="col-12 mb-4" th:each="reserva : ${reservasPendientes}">
+                    <div class="card reserva-card">
+                        <div class="card-body position-relative">
                             <span class="badge badge-pendiente estado-badge">
                                 <i class="bi bi-clock me-1"></i> Pendiente
                             </span>
 
-                                <div class="row align-items-center g-3"> <div class="col-md-8 ruta-info">
+                            <div class="row align-items-center g-3">
+                                <div class="col-md-8 ruta-info">
                                     <p class="mb-1 fw-bold text-unrumbo-primary"><i class="bi bi-geo-alt-fill me-1"></i> <span th:text="${reserva.origenNombre}"></span> → <span th:text="${reserva.destinoNombre}"></span></p>
 
-                                    <div class="d-flex align-items-center mb-2">
-                                        <i class="bi bi-calendar3 me-2 text-unrumbo-primary"></i>
-                                        <span class="ms-1" th:text="${reserva.fechaSalida}">Fecha</span>
-                                    </div>
-                                    <div class="d-flex align-items-center mb-2">
-                                        <i class="bi bi-person me-2 text-info"></i>
-                                        <span class="ms-1" th:text="${reserva.conductorNombre}">Conductor</span>
-                                    </div>
-                                    <div class="d-flex align-items-center">
-                                        <i class="bi bi-currency-dollar me-2 text-unrumbo-primary"></i>
-                                        <strong>Precio:</strong>
-                                        <span class="ms-2 fw-bold text-unrumbo-primary" th:text="'$' + ${reserva.precio}">$0</span>
-                                    </div>
+                                    <div class="d-flex align-items-center mb-2"> <i class="bi bi-calendar3 me-2 text-unrumbo-primary"></i> <span class="ms-1" th:text="${reserva.fechaSalida}">Fecha</span> </div>
+                                    <div class="d-flex align-items-center mb-2"> <i class="bi bi-person me-2 text-info"></i> <span class="ms-1" th:text="${reserva.conductorNombre}">Conductor</span> </div>
+                                    <div class="d-flex align-items-center"> <i class="bi bi-currency-dollar me-2 text-unrumbo-primary"></i> <strong>Precio:</strong> <span class="ms-2 fw-bold text-unrumbo-primary" th:text="'$' + ${reserva.precio}">$0</span> </div>
                                 </div>
 
-                                    <div class="col-md-4 d-flex flex-column justify-content-center align-items-end">
-                                        <a th:href="@{/viaje/detalle(id=${reserva.viajeId})}"
-                                           class="btn btn-dark fw-bold">
-                                            <i class="bi bi-eye me-1"></i> Ver detalle del viaje
-                                        </a>
-                                    </div>
+                                <div class="col-md-4 d-flex flex-column justify-content-center align-items-end">
+                                    <a th:href="@{/viaje/detalle(id=${reserva.viajeId})}"
+                                       class="btn btn-dark fw-bold">
+                                        <i class="bi bi-eye me-1"></i> Ver detalle del viaje
+                                    </a>
                                 </div>
-                            </div>
-                        </div>
+                            </div> </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="row" th:if="${#lists.isEmpty(reservasPendientes)}">
-                    <div class="col-12 text-center py-4">
-                        <div class="card border-0 bg-light">
-                            <div class="card-body">
-                                <i class="bi bi-inbox display-4 text-muted mb-3"></i>
-                                <h5 class="text-muted">No tenés reservas pendientes.</h5>
-                            </div>
+            <div class="row" th:if="${#lists.isEmpty(reservasPendientes)}">
+                <div class="col-12 text-center py-4">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <i class="bi bi-inbox display-4 text-muted mb-3"></i>
+                            <h5 class="text-muted">No tenés reservas pendientes.</h5>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="row">
-            <div class="col-12">
-                <h4 class="section-title" style="color: var(--color-danger-persa);">
-                    <i class="bi bi-x-circle me-2"></i>Reservas Rechazadas
-                </h4>
+    <div class="row">
+        <div class="col-12">
+            <h4 class="section-title" style="color: var(--color-danger-persa);">
+                <i class="bi bi-x-circle me-2"></i>Reservas Rechazadas
+            </h4>
 
-                <div class="row" th:if="${not #lists.isEmpty(reservasRechazadas)}">
-                    <div class="col-12 mb-4" th:each="reserva : ${reservasRechazadas}">
-                        <div class="card reserva-card">
-                            <div class="card-body position-relative">
+            <div class="row" th:if="${not #lists.isEmpty(reservasRechazadas)}">
+                <div class="col-12 mb-4" th:each="reserva : ${reservasRechazadas}">
+                    <div class="card reserva-card">
+                        <div class="card-body position-relative">
                             <span class="badge badge-rechazada estado-badge">
                                 <i class="bi bi-x-circle me-1"></i> Rechazada
                             </span>
 
-                                <div class="row align-items-center g-3"> <div class="col-md-7 ruta-info">
+                            <div class="row align-items-center g-3">
+                                <div class="col-md-7 ruta-info">
                                     <p class="mb-1 fw-bold text-unrumbo-primary"><i class="bi bi-geo-alt-fill me-1"></i> <span th:text="${reserva.origenNombre}"></span> → <span th:text="${reserva.destinoNombre}"></span></p>
 
-                                    <div class="d-flex align-items-center mb-2">
-                                        <i class="bi bi-calendar3 me-2 text-unrumbo-primary"></i>
-                                        <span class="ms-1" th:text="${reserva.fechaSalida}">Fecha</span>
-                                    </div>
-                                    <div class="d-flex align-items-center mb-2">
-                                        <i class="bi bi-person me-2 text-info"></i>
-                                        <span class="ms-1" th:text="${reserva.conductorNombre}">Conductor</span>
-                                    </div>
-                                    <div class="d-flex align-items-center">
-                                        <i class="bi bi-currency-dollar me-2 text-unrumbo-primary"></i>
-                                        <strong>Precio:</strong>
-                                        <span class="ms-2 fw-bold text-unrumbo-primary" th:text="'$' + ${reserva.precio}">$0</span>
-                                    </div>
+                                    <div class="d-flex align-items-center mb-2"> <i class="bi bi-calendar3 me-2 text-unrumbo-primary"></i> <span class="ms-1" th:text="${reserva.fechaSalida}">Fecha</span> </div>
+                                    <div class="d-flex align-items-center mb-2"> <i class="bi bi-person me-2 text-info"></i> <span class="ms-1" th:text="${reserva.conductorNombre}">Conductor</span> </div>
+                                    <div class="d-flex align-items-center"> <i class="bi bi-currency-dollar me-2 text-unrumbo-primary"></i> <strong>Precio:</strong> <span class="ms-2 fw-bold text-unrumbo-primary" th:text="'$' + ${reserva.precio}">$0</span> </div>
                                 </div>
 
-                                    <div class="col-md-5 d-flex flex-column justify-content-center align-items-end">
-                                        <a th:href="@{/viaje/detalle(id=${reserva.viajeId})}"
-                                           class="btn btn-dark fw-bold">
-                                            <i class="bi bi-eye me-1"></i> Ver detalle del viaje
-                                        </a>
-                                    </div>
+                                <div class="col-md-5 d-flex flex-column justify-content-center align-items-end">
+                                    <a th:href="@{/viaje/detalle(id=${reserva.viajeId})}"
+                                       class="btn btn-dark fw-bold">
+                                        <i class="bi bi-eye me-1"></i> Ver detalle del viaje
+                                    </a>
                                 </div>
-
-                                <div class="mt-3 p-3 rounded border" style="background-color: rgba(186, 58, 58, 0.1); border-color: var(--color-danger-persa) !important;" th:if="${reserva.motivoRechazo != null}">
-                                    <p class="mb-0">
-                                        <strong><i class="bi bi-info-circle me-2"></i>Motivo del rechazo:</strong><br>
-                                        <span th:text="${reserva.motivoRechazo}">Motivo del rechazo</span>
-                                    </p>
-                                </div>
-                            </div>
+                            </div> <div class="mt-3 p-3 rounded border" style="background-color: rgba(186, 58, 58, 0.1); border-color: var(--color-danger-persa) !important;" th:if="${reserva.motivoRechazo != null}">
+                            <p class="mb-0">
+                                <strong><i class="bi bi-info-circle me-2"></i>Motivo del rechazo:</strong><br>
+                                <span th:text="${reserva.motivoRechazo}">Motivo del rechazo</span>
+                            </p>
+                        </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="row" th:if="${#lists.isEmpty(reservasRechazadas)}">
-                    <div class="col-12 text-center py-4">
-                        <div class="card border-0 bg-light">
-                            <div class="card-body">
-                                <i class="bi bi-inbox display-4 text-muted mb-3"></i>
-                                <h5 class="text-muted">No tenés reservas rechazadas.</h5>
-                            </div>
+            <div class="row" th:if="${#lists.isEmpty(reservasRechazadas)}">
+                <div class="col-12 text-center py-4">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <i class="bi bi-inbox display-4 text-muted mb-3"></i>
+                            <h5 class="text-muted">No tenés reservas rechazadas.</h5>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 </main>
 <div th:replace="fragments/fragments :: footer"></div>
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+<th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
 </body>
 </html>

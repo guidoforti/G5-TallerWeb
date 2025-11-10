@@ -17,6 +17,8 @@ import lombok.Setter;
 public class ConductorPerfilOutPutDTO {
 
     private String nombre;
+    private Boolean fumador;
+    private String discapacitado;
     private Integer edad;
     private String fotoDePerfil;
     private double promedioValoraciones;
@@ -25,6 +27,8 @@ public class ConductorPerfilOutPutDTO {
 
     public ConductorPerfilOutPutDTO(Conductor conductor, List<ValoracionOutputDTO> valoraciones, double promedio) {
         this.nombre = conductor.getNombre();
+        this.fumador = conductor.getFumador();
+        this.discapacitado = conductor.getDiscapacitado();
         this.edad = conductor.getEdad();
         this.fotoDePerfil = conductor.getFotoDePerfil();
         this.valoraciones = valoraciones;
