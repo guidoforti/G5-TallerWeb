@@ -2,6 +2,7 @@ package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Viajero;
+import com.tallerwebi.dominio.IServicio.ServicioAlmacenamientoFoto;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
 import com.tallerwebi.dominio.excepcion.*;
@@ -23,6 +24,7 @@ public class ControladorRegistroTest {
     private ControladorRegistro controladorRegistro;
     private ServicioConductor servicioConductorMock;
     private ServicioViajero servicioViajeroMock;
+    private ServicioAlmacenamientoFoto servicioAlmacenamientoFotoMock;
     private HttpSession sessionMock;
     private Conductor conductorMock;
     private Viajero viajeroMock;
@@ -31,7 +33,8 @@ public class ControladorRegistroTest {
     public void init() {
         servicioConductorMock = mock(ServicioConductor.class);
         servicioViajeroMock = mock(ServicioViajero.class);
-        controladorRegistro = new ControladorRegistro(servicioConductorMock, servicioViajeroMock);
+        servicioAlmacenamientoFotoMock = mock(ServicioAlmacenamientoFoto.class);
+        controladorRegistro = new ControladorRegistro(servicioConductorMock, servicioViajeroMock, servicioAlmacenamientoFotoMock);
         sessionMock = mock(HttpSession.class);
 
         // Mocks de entidades para simular el registro exitoso
