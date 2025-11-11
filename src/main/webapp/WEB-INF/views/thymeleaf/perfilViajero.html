@@ -41,10 +41,10 @@
         <div class="col-md-4">
             <div class="card shadow-sm mb-4">
                 <div class="card-body text-center">
-                    <img th:if="${perfil.fotoPerfilUrl != null}"
-                         th:src="${perfil.fotoPerfilUrl}"
-                         alt="Foto de perfil"
-                         class="profile-photo mb-3" />
+                    <<img th:if="${perfil.fotoPerfilUrl != null and !#strings.isEmpty(perfil.fotoPerfilUrl)}"
+                          th:src="@{${perfil.fotoPerfilUrl}}"
+                          alt="Foto de perfil"
+                          class="profile-photo mb-3" />
 
                     <div th:if="${perfil.fotoPerfilUrl == null}" class="mb-3">
                         <svg width="140" height="140" viewBox="0 0 24 24" class="profile-photo bg-light d-inline-block"

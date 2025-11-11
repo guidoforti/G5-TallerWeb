@@ -16,6 +16,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -45,7 +46,9 @@ public class ControladorRegistro {
     }
 
     @PostMapping("/validar-registro")
-    public ModelAndView registrar(@ModelAttribute("datosRegistro") RegistroInputDTO registroDTO, HttpSession session) {
+    public ModelAndView registrar(@ModelAttribute("datosRegistro") RegistroInputDTO registroDTO,
+                                  @RequestParam(value = "fotoPerfil", required = false) MultipartFile foto,
+                                  HttpSession session) {
         ModelMap model = new ModelMap();
         String vistaRetorno = "registro";
         model.put("datosRegistro", registroDTO);
@@ -60,7 +63,6 @@ public class ControladorRegistro {
         }
 
         String fotoPerfilUrl = null;
-        MultipartFile foto = registroDTO.getFotoPerfilUrl();
 
         try {
             if (foto != null && !foto.isEmpty()) {

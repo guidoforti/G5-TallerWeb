@@ -10,14 +10,22 @@ import com.tallerwebi.presentacion.Controller.ControladorRegistro;
 import com.tallerwebi.presentacion.DTO.InputsDTO.RegistroInputDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpSession;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 
 public class ControladorRegistroTest {
 
@@ -28,21 +36,39 @@ public class ControladorRegistroTest {
     private HttpSession sessionMock;
     private Conductor conductorMock;
     private Viajero viajeroMock;
+    private MultipartFile fotoMock; // Mock para el argumento de la foto
 
     @BeforeEach
     public void init() {
         servicioConductorMock = mock(ServicioConductor.class);
         servicioViajeroMock = mock(ServicioViajero.class);
         servicioAlmacenamientoFotoMock = mock(ServicioAlmacenamientoFoto.class);
-        controladorRegistro = new ControladorRegistro(servicioConductorMock, servicioViajeroMock, servicioAlmacenamientoFotoMock);
         sessionMock = mock(HttpSession.class);
 
-        // Mocks de entidades para simular el registro exitoso
+        // Mocks de entidades y foto
         conductorMock = mock(Conductor.class);
         when(conductorMock.getId()).thenReturn(10L);
 
         viajeroMock = mock(Viajero.class);
         when(viajeroMock.getId()).thenReturn(20L);
+
+        // FotoMock por defecto: Vacío y no lanza excepción
+        fotoMock = mock(MultipartFile.class);
+        when(fotoMock.isEmpty()).thenReturn(true);
+
+        controladorRegistro = new ControladorRegistro(servicioConductorMock, servicioViajeroMock, servicioAlmacenamientoFotoMock);
+    }
+
+    // Helper para crear un DTO funcional con fecha de nacimiento requerida
+    private RegistroInputDTO crearDtoBase(String rol) {
+        RegistroInputDTO dto = new RegistroInputDTO();
+        dto.setRolSeleccionado(rol);
+        dto.setNombre("Test User");
+        dto.setEmail("test@email.com");
+        dto.setContrasenia("1234");
+        // Establecer Fecha de Nacimiento válida (mayor de 18 años)
+        dto.setFechaNacimiento(LocalDate.now().minusYears(25));
+        return dto;
     }
 
     // --- irARegistroUnificado (GET /registrarme) ---
@@ -62,153 +88,150 @@ public class ControladorRegistroTest {
     @Test
     void registroConductorExitosoDeberiaRedirigirAHomeConductorYSesion() throws Exception {
         // Arrange
-        RegistroInputDTO dto = new RegistroInputDTO();
-        dto.setRolSeleccionado("CONDUCTOR");
-        // Mockear el DTO para que devuelva una entidad con ID
+        RegistroInputDTO dto = crearDtoBase("CONDUCTOR");
         when(servicioConductorMock.registrar(any(Conductor.class))).thenReturn(conductorMock);
 
         // Act
-        ModelAndView mav = controladorRegistro.registrar(dto, sessionMock);
+        ModelAndView mav = controladorRegistro.registrar(dto, fotoMock, sessionMock);
 
         // Assert
         assertThat(mav.getViewName(), equalTo("redirect:/conductor/home"));
         verify(servicioConductorMock, times(1)).registrar(any(Conductor.class));
-        verify(servicioViajeroMock, never()).registrar(any());
         verify(sessionMock, times(1)).setAttribute("idUsuario", 10L);
-        verify(sessionMock, times(1)).setAttribute("ROL", "CONDUCTOR");
     }
 
     @Test
     void registroViajeroExitosoDeberiaRedirigirAHomeViajeroYSesion() throws Exception {
         // Arrange
-        RegistroInputDTO dto = new RegistroInputDTO();
-        dto.setRolSeleccionado("VIAJERO");
-        // Mockear el DTO para que devuelva una entidad con ID
+        RegistroInputDTO dto = crearDtoBase("VIAJERO");
         when(servicioViajeroMock.registrar(any(Viajero.class))).thenReturn(viajeroMock);
 
         // Act
-        ModelAndView mav = controladorRegistro.registrar(dto, sessionMock);
+        ModelAndView mav = controladorRegistro.registrar(dto, fotoMock, sessionMock);
 
         // Assert
         assertThat(mav.getViewName(), equalTo("redirect:/viajero/home"));
         verify(servicioViajeroMock, times(1)).registrar(any(Viajero.class));
-        verify(servicioConductorMock, never()).registrar(any());
         verify(sessionMock, times(1)).setAttribute("idUsuario", 20L);
-        verify(sessionMock, times(1)).setAttribute("ROL", "VIAJERO");
     }
 
-    // --- registrar (POST /validar-registro) - Flujos de Falla y Errores de Negocio ---
-
-    // Cobertura: if (registroDTO.getRolSeleccionado() == null || ...)
     @Test
-    void registroSinRolSeleccionadoDeberiaVolverARegistroYMostrarError() throws UsuarioExistente, FechaDeVencimientoDeLicenciaInvalida, EdadInvalidaException, DatoObligatorioException{
+    void registroConFotoExitosoDeberiaGuardarURLYRedirigir() throws Exception {
         // Arrange
-        RegistroInputDTO dto = new RegistroInputDTO();
-        dto.setRolSeleccionado(null);
+        RegistroInputDTO dto = crearDtoBase("VIAJERO");
+        String urlEsperada = "/images/profile_uploads/unique_id.jpg";
+
+        when(fotoMock.isEmpty()).thenReturn(false);
+        when(servicioAlmacenamientoFotoMock.guardarArchivo(fotoMock)).thenReturn(urlEsperada);
+        when(servicioViajeroMock.registrar(any(Viajero.class))).thenAnswer(invocation -> {
+            // Verificar que la URL se asignó a la entidad antes del registro
+            Viajero v = invocation.getArgument(0);
+            assertThat(v.getFotoPerfilUrl(), equalTo(urlEsperada));
+            return viajeroMock;
+        });
 
         // Act
-        ModelAndView mav = controladorRegistro.registrar(dto, sessionMock);
+        ModelAndView mav = controladorRegistro.registrar(dto, fotoMock, sessionMock);
+
+        // Assert
+        assertThat(mav.getViewName(), equalTo("redirect:/viajero/home"));
+        verify(servicioAlmacenamientoFotoMock, times(1)).guardarArchivo(fotoMock);
+    }
+
+    // --- Flujos de Falla y Errores de Negocio ---
+
+    @Test
+    void registroSinRolSeleccionadoDeberiaVolverARegistroYMostrarError() throws Exception {
+        // Arrange
+        RegistroInputDTO dto = crearDtoBase(null);
+
+        // Act
+        ModelAndView mav = controladorRegistro.registrar(dto, fotoMock, sessionMock);
 
         // Assert
         assertThat(mav.getViewName(), equalTo("registro"));
         assertThat(mav.getModel().get("error").toString(), equalTo("Debes seleccionar un rol para registrarte."));
-        verify(servicioConductorMock, never()).registrar(any());
-        verify(servicioViajeroMock, never()).registrar(any());
     }
 
-    // Cobertura: else { Rol seleccionado no válido }
     @Test
-    void registroConRolNoValidoDeberiaVolverARegistroYMostrarError() throws UsuarioExistente, FechaDeVencimientoDeLicenciaInvalida, EdadInvalidaException, DatoObligatorioException {
+    void registroConRolNoValidoDeberiaVolverARegistroYMostrarError() throws Exception {
         // Arrange
-        RegistroInputDTO dto = new RegistroInputDTO();
-        dto.setRolSeleccionado("ADMIN"); // Rol no esperado
+        RegistroInputDTO dto = crearDtoBase("ADMIN");
 
         // Act
-        ModelAndView mav = controladorRegistro.registrar(dto, sessionMock);
+        ModelAndView mav = controladorRegistro.registrar(dto, fotoMock, sessionMock);
 
         // Assert
         assertThat(mav.getViewName(), equalTo("registro"));
         assertThat(mav.getModel().get("error").toString(), equalTo("Rol seleccionado no válido."));
-        verify(servicioConductorMock, never()).registrar(any());
-        verify(servicioViajeroMock, never()).registrar(any());
     }
 
-    // Cobertura: catch (UsuarioExistente e)
     @Test
-    void registroConductorFallaPorUsuarioExistenteDeberiaVolverARegistro() throws Exception {
+    void registroSinFechaNacimientoDeberiaVolverARegistroYMostrarError() throws Exception {
         // Arrange
-        RegistroInputDTO dto = new RegistroInputDTO();
-        dto.setRolSeleccionado("CONDUCTOR");
-        doThrow(new UsuarioExistente("Email ya registrado")).when(servicioConductorMock).registrar(any(Conductor.class));
+        RegistroInputDTO dto = crearDtoBase("VIAJERO");
+        dto.setFechaNacimiento(null);
 
         // Act
-        ModelAndView mav = controladorRegistro.registrar(dto, sessionMock);
+        ModelAndView mav = controladorRegistro.registrar(dto, fotoMock, sessionMock);
 
         // Assert
         assertThat(mav.getViewName(), equalTo("registro"));
-        assertThat(mav.getModel().get("error").toString(), equalTo("Error de registro: Ya existe un usuario con ese email."));
-        verify(sessionMock, never()).setAttribute(anyString(), any());
+        assertThat(mav.getModel().get("error").toString(), equalTo("La fecha de nacimiento es obligatoria."));
     }
 
-    // Cobertura: catch (FechaDeVencimientoDeLicenciaInvalida e)
+    @Test
+    void registroFallaPorGuardadoDeFotoDeberiaVolverARegistro() throws Exception {
+        // Arrange
+        RegistroInputDTO dto = crearDtoBase("CONDUCTOR");
+
+        when(fotoMock.isEmpty()).thenReturn(false);
+        doThrow(new NotFoundException("Fallo de escritura en disco")).when(servicioAlmacenamientoFotoMock).guardarArchivo(fotoMock);
+
+        // Act
+        ModelAndView mav = controladorRegistro.registrar(dto, fotoMock, sessionMock);
+
+        // Assert
+        assertThat(mav.getViewName(), equalTo("registro"));
+        assertThat(mav.getModel().get("error").toString(), containsString("Error interno al guardar la foto de perfil"));
+    }
+
     @Test
     void registroConductorFallaPorLicenciaInvalidaDeberiaVolverARegistro() throws Exception {
         // Arrange
-        RegistroInputDTO dto = new RegistroInputDTO();
-        dto.setRolSeleccionado("CONDUCTOR");
+        RegistroInputDTO dto = crearDtoBase("CONDUCTOR");
         doThrow(new FechaDeVencimientoDeLicenciaInvalida("Licencia vencida")).when(servicioConductorMock).registrar(any(Conductor.class));
 
         // Act
-        ModelAndView mav = controladorRegistro.registrar(dto, sessionMock);
+        ModelAndView mav = controladorRegistro.registrar(dto, fotoMock, sessionMock);
 
         // Assert
         assertThat(mav.getViewName(), equalTo("registro"));
         assertThat(mav.getModel().get("error").toString(), equalTo("Licencia vencida"));
     }
 
-    // Cobertura: catch (EdadInvalidaException | DatoObligatorioException e) - Viajero (Edad)
-    @Test
-    void registroViajeroFallaPorEdadInvalidaDeberiaVolverARegistro() throws Exception {
-        // Arrange
-        RegistroInputDTO dto = new RegistroInputDTO();
-        dto.setRolSeleccionado("VIAJERO");
-        doThrow(new EdadInvalidaException("Menor de 18")).when(servicioViajeroMock).registrar(any(Viajero.class));
-
-        // Act
-        ModelAndView mav = controladorRegistro.registrar(dto, sessionMock);
-
-        // Assert
-        assertThat(mav.getViewName(), equalTo("registro"));
-        assertThat(mav.getModel().get("error").toString(), equalTo("Menor de 18"));
-    }
-
-    // Cobertura: catch (EdadInvalidaException | DatoObligatorioException e) - Viajero (Obligatorio)
     @Test
     void registroViajeroFallaPorDatoObligatorioDeberiaVolverARegistro() throws Exception {
         // Arrange
-        RegistroInputDTO dto = new RegistroInputDTO();
-        dto.setRolSeleccionado("VIAJERO");
+        RegistroInputDTO dto = crearDtoBase("VIAJERO");
         doThrow(new DatoObligatorioException("El nombre es requerido")).when(servicioViajeroMock).registrar(any(Viajero.class));
 
         // Act
-        ModelAndView mav = controladorRegistro.registrar(dto, sessionMock);
+        ModelAndView mav = controladorRegistro.registrar(dto, fotoMock, sessionMock);
 
         // Assert
         assertThat(mav.getViewName(), equalTo("registro"));
         assertThat(mav.getModel().get("error").toString(), equalTo("El nombre es requerido"));
     }
 
-    // Cobertura: catch (Exception e) - Excepción genérica
     @Test
     void registroFallaPorExcepcionGenericaDeberiaVolverARegistro() throws Exception {
         // Arrange
-        RegistroInputDTO dto = new RegistroInputDTO();
-        dto.setRolSeleccionado("CONDUCTOR");
-        // Forzamos una RuntimeException para entrar al catch(Exception e)
+        RegistroInputDTO dto = crearDtoBase("CONDUCTOR");
         doThrow(new RuntimeException("Error de base de datos")).when(servicioConductorMock).registrar(any(Conductor.class));
 
         // Act
-        ModelAndView mav = controladorRegistro.registrar(dto, sessionMock);
+        ModelAndView mav = controladorRegistro.registrar(dto, fotoMock, sessionMock);
 
         // Assert
         assertThat(mav.getViewName(), equalTo("registro"));

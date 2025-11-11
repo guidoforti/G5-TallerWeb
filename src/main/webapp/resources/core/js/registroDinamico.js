@@ -1,19 +1,14 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Obtención de Elementos (Contenedores Dinámicos)
+    // 1. Obtención de Elementos
     const rolSelector = document.getElementById('rolSeleccionado');
     const camposConductor = document.getElementById('camposConductor');
-    const camposViajero = document.getElementById('camposViajero');
 
-    // 2. Campo específico de Conductor que necesita 'required'
+    // Campo específico de Conductor (Licencia)
     const inputLicencia = document.getElementById('fechaDeVencimientoLicencia');
 
-    // 3. Campo específico de Viajero (para el dummy URL)
-    const inputFotoPerfilUrl = document.getElementById('fotoPerfilUrl');
-
-    // Validación crítica: Si no encontramos los contenedores, el script no puede ejecutarse
-    if (!rolSelector || !camposConductor || !camposViajero) {
-        // Debería ser muy raro si el HTML anterior se copió correctamente
-        console.error("Error: Elementos de rol dinámico no encontrados.");
+    // Validación crítica: Si no encontramos los contenedores principales, el script no puede ejecutarse
+    if (!rolSelector || !camposConductor || !inputLicencia) {
+        console.error("Error: Faltan elementos críticos (selector de rol o camposConductor).");
         return;
     }
 
@@ -22,24 +17,17 @@ document.addEventListener('DOMContentLoaded', function() {
      * @param {string} rol - El valor seleccionado (CONDUCTOR o VIAJERO).
      */
     function actualizarFormulario(rol) {
-        // 1. Ocultar todos por defecto y resetear requerimientos específicos
+        // 1. Ocultar la sección del conductor y resetear requerimientos
         camposConductor.style.display = 'none';
-        camposViajero.style.display = 'none';
+        inputLicencia.required = false;
 
-        // Resetear requerimientos específicos
-        if (inputLicencia) inputLicencia.required = false;
-        if (inputFotoPerfilUrl) inputFotoPerfilUrl.required = false;
-
-        // 2. Mostrar y requerir campos específicos
+        // 2. Mostrar y requerir solo para CONDUCTOR
         if (rol === 'CONDUCTOR') {
             camposConductor.style.display = 'block';
-            if (inputLicencia) inputLicencia.required = true;
+            inputLicencia.required = true;
 
-        } else if (rol === 'VIAJERO') {
-            camposViajero.style.display = 'block';
-            // Dejo el campo fotoPerfilUrl opcional (no requerido) por ahora, según tu indicación
-            // if (inputFotoPerfilUrl) inputFotoPerfilUrl.required = true;
         }
+        // 3. Si es VIAJERO, no hacemos nada (los campos comunes ya se muestran)
     }
 
     // A. Inicializar la visibilidad

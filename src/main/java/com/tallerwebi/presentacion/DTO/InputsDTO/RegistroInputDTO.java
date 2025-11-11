@@ -30,7 +30,6 @@ public class RegistroInputDTO {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate fechaDeVencimientoLicencia;
 
-    private MultipartFile fotoPerfilUrl;
 
     private <T extends Usuario> T setCommonUserFields(T usuario) {
         usuario.setNombre(this.nombre);

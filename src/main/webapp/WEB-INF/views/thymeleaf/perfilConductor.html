@@ -26,11 +26,10 @@
         <div class="profile-header">
             <div class="row align-items-center">
                 <div class="col-md-3 text-center">
-    <img th:if="${perfil.fotoPerfilUrl != null and !#strings.isEmpty(perfil.fotoPerfilUrl)}"
-         th:src="${perfil.fotoPerfilUrl}"
-         alt="Foto de perfil"
-         class="rounded-circle img-fluid shadow-sm"
-         style="max-width: 150px; width: 150px; height: 150px; object-fit: cover; margin-bottom: 1rem !important;" /> 
+                    <<img th:if="${perfil.fotoPerfilUrl != null and !#strings.isEmpty(perfil.fotoPerfilUrl)}"
+                          th:src="@{${perfil.fotoPerfilUrl}}"
+                          alt="Foto de perfil"
+                          class="profile-photo mb-3" />
     <div th:if="${perfil.fotoPerfilUrl == null or #strings.isEmpty(perfil.fotoPerfilUrl)}" 
          class="mb-3 d-flex justify-content-center align-items-center" 
          style="width: 150px; height: 150px; margin: 0 auto;">

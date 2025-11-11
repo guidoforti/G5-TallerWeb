@@ -19,9 +19,10 @@ public class ServicioAlmacenamientoFotoImpl implements ServicioAlmacenamientoFot
 
     // Ruta donde se guardarán los archivos.
     // AJUSTA ESTA RUTA si la estructura de tu proyecto es diferente.
-    private static final String UPLOAD_ROOT = "src/main/resources/static/images/profile_uploads/";
-    private static final String UPLOAD_DIR_PATH = Paths.get(System.getProperty("user.dir"), UPLOAD_ROOT).toString();
-    private static final String PUBLIC_PATH_PREFIX = "/images/profile_uploads/"; // Ruta pública para Thymeleaf
+    private static final String UPLOAD_DIR_NAME = "profile_uploads";
+    private static final String UPLOAD_DIR_PATH = Paths.get(System.getProperty("user.dir"), UPLOAD_DIR_NAME).toString();
+
+    private static final String PUBLIC_PATH_PREFIX = "/uploads/";
     
     @Override
     public String guardarArchivo(MultipartFile file) throws IOException {

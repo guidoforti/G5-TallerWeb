@@ -72,17 +72,6 @@
                             <label for="nombre" class="form-label fw-bold"><i class="fas fa-user me-1"></i> Nombre completo</label>
                             <input th:field="*{nombre}" id="nombre" type="text" class="form-control" placeholder="Juan Pérez" required>
                         </div>
-
-                        <div class="mb-3">
-                            <label for="email" class="form-label fw-bold"><i class="fas fa-envelope me-1"></i> Email</label>
-                            <input th:field="*{email}" id="email" type="email" class="form-control" placeholder="ejemplo@mail.com" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="contrasenia" class="form-label fw-bold"><i class="fas fa-lock me-1"></i> Contraseña</label>
-                            <input th:field="*{contrasenia}" id="contrasenia" type="password" class="form-control" placeholder="********" required>
-                        </div>
-
                         <div class="mb-3">
                             <label for="fechaNacimiento" class="form-label fw-bold">
                                 <i class="fas fa-calendar-alt me-1"></i> Fecha de Nacimiento *
@@ -108,17 +97,17 @@
                         </div>
 
                         <div class="mb-3">
-                                <label for="fotoPerfilUrl" class="form-label fw-bold">
-                                    <i class="fas fa-camera me-1"></i> Subir Foto de Perfil (.jpg, .png)
-                                </label>
-                                <input id="fotoPerfilUrl" type="file" class="form-control" accept="image/jpeg, image/png, image/jpg">
-                                <small class="form-text text-muted">Tamaño máximo recomendado: 2MB.</small>
-                            </div>
+                            <label for="fotoPerfilUrl" class="form-label fw-bold">
+                                <i class="fas fa-camera me-1"></i> Subir Foto de Perfil (.jpg, .png)
+                            </label>
+                            <input name="fotoPerfil" id="fotoPerfilUrl" type="file" class="form-control" accept="image/*">
+                            <small class="form-text text-muted">Tamaño máximo recomendado: 2MB.</small>
+                        </div>
 
                         <hr/>
 
                         <div id="camposConductor" class="p-3 border rounded mb-3 bg-light" style="border-color: var(--color-coffee) !important;">
-                            <h6 class="fw-bold h6-conductor"><i class="fas fa-car me-2"></i> Datos de Conductor</h6>
+                            <h6 class="fw-bold h6-conductor"><i class="fas fa-car me-2"></i> Datos de Licencia (Solo Conductor)</h6>
                             <div class="mb-3">
                                 <label for="fechaDeVencimientoLicencia" class="form-label">
                                     <i class="fas fa-calendar-check me-1"></i> Fecha de vencimiento de licencia *
@@ -128,15 +117,14 @@
                         </div>
 
                         <div id="camposViajero" class="p-3 border rounded mb-3 bg-light" style="border-color: var(--color-success-warm) !important;">
-                            <h6 class="fw-bold h6-viajero"><i class="fas fa-hiking me-2"></i> Datos de Viajero</h6>
+                            <h6 class="fw-bold h6-viajero"><i class="fas fa-hiking me-2"></i> Notas de Viajero</h6>
+                            <p class="text-muted small mb-0">No requiere campos adicionales específicos.</p>
                         </div>
 
 
                         <button type="submit" class="btn btn-unrumbo w-100 fw-bold">
                             <i class="fas fa-paper-plane me-1"></i> Registrarme
                         </button>
-
-                        <p th:if="${error != null}" class="alert alert-danger mt-3" th:text="${error}"></p>
                     </form>
 
                     <div class="text-center mt-3">
