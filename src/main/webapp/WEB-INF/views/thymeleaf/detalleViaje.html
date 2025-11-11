@@ -219,6 +219,44 @@
                                 <a th:href="@{/historial/viaje(idViaje=${viajeId})}" class="btn btn-outline-unrumbo fw-bold">
                                     <i class="fas fa-history me-2"></i> Historial
                                 </a>
+
+                                <form th:if="${detalle.estado.name() == 'DISPONIBLE' || detalle.estado.name() == 'COMPLETO'}"
+                                      th:action="@{/viaje/{id}/iniciar(id=${viajeId})}"
+                                      method="post"
+                                      style="display: inline;">
+                                    <button type="submit"
+                                            class="btn btn-primary fw-bold"
+                                            onclick="return confirm('¿Estás seguro de iniciar este viaje?');">
+                                        <i class="fas fa-play-circle me-2"></i> Iniciar Viaje
+                                    </button>
+                                </form>
+
+                                <form th:if="${detalle.estado.name() == 'EN_CURSO'}"
+                                      th:action="@{/viaje/{id}/finalizar(id=${viajeId})}"
+                                      method="post"
+                                      style="display: inline;">
+                                    <button type="submit"
+                                            class="btn btn-danger fw-bold"
+                                            onclick="return confirm('¿Estás seguro de finalizar este viaje?');">
+                                        <i class="fas fa-stop-circle me-2"></i> Finalizar Viaje
+                                    </button>
+                                </form>
+
+                                <div class="d-flex align-items-center me-3 ms-3">
+                                    <span class="badge fs-6 px-3 py-2"
+                                          th:classappend="${detalle.estado.name() == 'DISPONIBLE' ? 'bg-primary' :
+                                                          detalle.estado.name() == 'COMPLETO' ? 'bg-info' :
+                                                          detalle.estado.name() == 'EN_CURSO' ? 'bg-warning text-dark' :
+                                                          detalle.estado.name() == 'FINALIZADO' ? 'bg-success' :
+                                                          detalle.estado.name() == 'CANCELADO' ? 'bg-secondary' : 'bg-dark'}">
+                                        <i class="fas fa-circle me-1" style="font-size: 0.6em;"></i>
+                                        <span th:text="${detalle.estado.name() == 'DISPONIBLE' ? 'Disponible' :
+                                                       detalle.estado.name() == 'COMPLETO' ? 'Completo' :
+                                                       detalle.estado.name() == 'EN_CURSO' ? 'En Curso' :
+                                                       detalle.estado.name() == 'FINALIZADO' ? 'Finalizado' :
+                                                       detalle.estado.name() == 'CANCELADO' ? 'Cancelado' : 'Desconocido'}"></span>
+                                    </span>
+                                </div>
                             </th:block>
 
                             <a th:if="${userRole != null && userRole == 'VIAJERO'}"

@@ -41,7 +41,7 @@
         <div class="col-md-4">
             <div class="card shadow-sm mb-4">
                 <div class="card-body text-center">
-                    <<img th:if="${perfil.fotoPerfilUrl != null and !#strings.isEmpty(perfil.fotoPerfilUrl)}"
+                    <img th:if="${perfil.fotoPerfilUrl != null and !#strings.isEmpty(perfil.fotoPerfilUrl)}"
                           th:src="@{${perfil.fotoPerfilUrl}}"
                           alt="Foto de perfil"
                           class="profile-photo mb-3" />
