@@ -695,4 +695,37 @@ public class ControladorViaje {
     }
 
 
+    @PostMapping("/cancelarViajeConReservasPagadas")
+public ModelAndView cancelarViajeConReservasPagadas(@RequestParam Long id, HttpSession session) {
+    ModelMap model = new ModelMap();
+
+    Object usuarioIdObj = session.getAttribute("idUsuario");
+    String rol = (String) session.getAttribute("ROL");
+
+    if (usuarioIdObj == null || !"CONDUCTOR".equals(rol)) {
+        return new ModelAndView("redirect:/login");
+    }
+
+    Long conductorId = (Long) usuarioIdObj;
+    try {
+        Conductor conductorEnSesion = servicioConductor.obtenerConductor(conductorId);
+        servicioViaje.cancelarViajeConReservasPagadas(id, conductorEnSesion);
+
+        model.put("exito", "El viaje y todas las reservas asociadas fueron canceladas exitosamente.");
+        return new ModelAndView("redirect:/viaje/listar");
+
+    } catch (ViajeNoEncontradoException e) {
+        model.put("error", "No se encontró el viaje especificado.");
+    } catch (UsuarioNoAutorizadoException e) {
+        model.put("error", "No tiene permisos para cancelar este viaje.");
+    } catch (ViajeNoCancelableException e) {
+        model.put("error", "El viaje no se puede cancelar en este estado.");
+    } catch (Exception e) {
+        model.put("error", "Ocurrió un error al intentar cancelar el viaje.");
+    }
+
+    return new ModelAndView("errorCancelarViaje", model);
+}
+
+
 }
