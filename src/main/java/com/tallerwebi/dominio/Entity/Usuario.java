@@ -27,6 +27,7 @@ public abstract class Usuario {
     private LocalDate fechaNacimiento;
     private Boolean fumador;
     private String discapacitado;
+    private String fotoPerfilUrl;
 
     public boolean activo() {
         return activo;

@@ -7,6 +7,8 @@ import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Viajero;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.time.LocalDate;
 
 @Getter
@@ -25,12 +27,10 @@ public class RegistroInputDTO {
     private Boolean fumador;
     private String discapacitado;
 
-
-    private String fotoPerfilUrl;
-
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate fechaDeVencimientoLicencia;
 
+    private MultipartFile fotoPerfilUrl;
 
     private <T extends Usuario> T setCommonUserFields(T usuario) {
         usuario.setNombre(this.nombre);
@@ -50,7 +50,6 @@ public class RegistroInputDTO {
 
     public Viajero toViajeroEntity() {
         Viajero viajero = setCommonUserFields(new Viajero());
-        viajero.setFotoPerfilUrl(this.fotoPerfilUrl);
         return viajero;
     }
 }
