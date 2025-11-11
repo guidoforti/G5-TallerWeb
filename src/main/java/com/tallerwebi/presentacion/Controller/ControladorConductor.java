@@ -58,38 +58,71 @@ public class ControladorConductor {
         }
     }
 
-    @GetMapping("/verPerfilConductor/{conductorId}")
-    public ModelAndView verPerfilConductor(@PathVariable Long conductorId, HttpSession session) {
-        String rol = (String) session.getAttribute("ROL");
-        if (rol == null || !rol.equals("VIAJERO")) {
-            return new ModelAndView("redirect:/login");
-        }
-
-        try {
-            ConductorPerfilOutPutDTO perfil = servicioConductor.obtenerPerfilDeConductor(conductorId);
-            ModelMap modelo = new ModelMap();
-            modelo.put("perfil", perfil);
-            return new ModelAndView("perfilConductor", modelo);
-        } catch (UsuarioInexistente e) {
-            ModelMap modelo = new ModelMap();
-            modelo.put("error", e.getMessage());
-            return new ModelAndView("error", modelo);
-        }
-    }
-
     @GetMapping("/perfil")
-    public ModelAndView verPerfilConductor(HttpSession session) throws UsuarioInexistente {
+    public ModelAndView verMiPerfil(HttpSession session) throws UsuarioInexistente, NotFoundException {
+        ModelMap model = new ModelMap();
         Long idConductor = (Long) session.getAttribute("idUsuario");
+        String rol = (String) session.getAttribute("ROL");
 
         if (idConductor == null) {
             return new ModelAndView("redirect:/login");
         }
 
-        ConductorPerfilOutPutDTO perfil = servicioConductor.obtenerPerfilDeConductor(idConductor);
+        // 🚀 INYECCIÓN DE WEB SOCKET / NAVBAR
+        Long contador = servicioNotificacion.contarNoLeidas(idConductor);
+        model.put("contadorNotificaciones", contador.intValue());
+        model.put("idUsuario", idConductor);
+        model.put("ROL", rol);
+        model.put("userRole", rol);
 
+        try {
+            ConductorPerfilOutPutDTO perfil = servicioConductor.obtenerPerfilDeConductor(idConductor);
+            model.put("perfil", perfil);
+            return new ModelAndView("perfilConductor", model);
+
+        } catch (UsuarioInexistente e) {
+            model.put("error", "Su perfil no existe.");
+            return new ModelAndView("errorPerfilConductor", model);
+        }
+    }
+
+    /**
+     * Muestra el perfil de OTRO Conductor (por ID).
+     * URL: /conductor/perfil/{id}
+     */
+    @GetMapping("/perfil/{id}")
+    public ModelAndView verPerfilConductorPorId(@PathVariable Long id, HttpSession session) {
         ModelMap model = new ModelMap();
-        model.put("perfil", perfil);
+        Long usuarioEnSesionId = (Long) session.getAttribute("idUsuario");
+        String rol = (String) session.getAttribute("ROL");
 
-        return new ModelAndView("perfilConductor", model);
+        if (usuarioEnSesionId == null) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        try {
+            Long contador = servicioNotificacion.contarNoLeidas(usuarioEnSesionId);
+            model.put("contadorNotificaciones", contador.intValue());
+        } catch (NotFoundException e) {
+            model.put("contadorNotificaciones", 0);
+        }
+        model.put("idUsuario", usuarioEnSesionId);
+        model.put("ROL", rol);
+        model.put("userRole", rol);
+
+        if (!"VIAJERO".equals(rol)) {
+            model.put("error", "Solo los viajeros pueden ver perfiles de otros conductores.");
+            return new ModelAndView("errorAutorizacion", model);
+        }
+
+        try {
+            ConductorPerfilOutPutDTO perfil = servicioConductor.obtenerPerfilDeConductor(id);
+            model.put("perfil", perfil);
+            return new ModelAndView("perfilConductor", model);
+
+        } catch (UsuarioInexistente e) {
+            model.put("error", "El perfil solicitado no existe.");
+            return new ModelAndView("errorPerfilConductor", model);
+        }
     }
 }

@@ -124,7 +124,7 @@ public class ControladorConductorTest {
         when(servicioConductorMock.obtenerPerfilDeConductor(conductorId)).thenReturn(perfilDTO);
 
         // when
-        ModelAndView mav = controladorConductor.verPerfilConductor(conductorId, sessionMock);
+        ModelAndView mav = controladorConductor.verPerfilConductorPorId(conductorId, sessionMock);
 
         // then
         assertThat(mav.getViewName(), is("perfilConductor"));

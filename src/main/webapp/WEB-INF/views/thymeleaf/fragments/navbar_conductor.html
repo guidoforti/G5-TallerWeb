@@ -20,20 +20,17 @@
 
         <div class="collapse navbar-collapse" id="navbarNavConductor">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-
                 <li class="nav-item">
                     <a class="nav-link fw-bold" style="color: #E16A3D;" th:href="@{/viaje/publicar}">
                         <i class="fas fa-route me-1"></i>
                         <span class="d-none d-lg-inline">Publicar</span> </a>
                 </li>
-
                 <li class="nav-item">
                     <a class="nav-link fw-bold" style="color: #E16A3D;" th:href="@{/viaje/listar}">
                         <i class="fas fa-list-alt me-1"></i>
                         <span class="d-none d-lg-inline">Mis Viajes</span>
                     </a>
                 </li>
-
                 <li class="nav-item">
                     <a class="nav-link fw-bold" style="color: #E16A3D;" th:href="@{/vehiculos/listarVehiculos}">
                         <i class="fas fa-car me-1"></i>
@@ -54,10 +51,10 @@
                 </li>
 
                 <li class="nav-item">
-                    <span class="nav-link fw-bold" style="color: #4E3D2F;">
+                    <a class="nav-link fw-bold" style="color: #4E3D2F;" th:href="@{/conductor/perfil}">
                         <i class="fas fa-user-tie me-1 d-lg-none"></i>
                         <span class="d-none d-lg-inline">CONDUCTOR</span>
-                    </span>
+                    </a>
                 </li>
             </ul>
         </div>

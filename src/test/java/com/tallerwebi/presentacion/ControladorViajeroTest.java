@@ -121,7 +121,7 @@ public class ControladorViajeroTest {
     when(servicioViajeroMock.obtenerPerfilViajero(viajeroId)).thenReturn(perfil);
 
     // Act
-    ModelAndView mav = controladorViajero.verPerfilViajero(viajeroId, sessionMock);
+    ModelAndView mav = controladorViajero.verPerfilViajeroPorId(viajeroId, sessionMock);
 
     // Assert
     assertThat(mav.getViewName(), equalTo("perfilViajero"));
@@ -137,7 +137,7 @@ public class ControladorViajeroTest {
     when(sessionMock.getAttribute("usuario")).thenReturn(usuarioNoConductor);
 
     // Act
-    ModelAndView mav = controladorViajero.verPerfilViajero(viajeroId, sessionMock);
+    ModelAndView mav = controladorViajero.verPerfilViajeroPorId(viajeroId, sessionMock);
 
     // Assert
     assertEquals("errorAutorizacion", mav.getViewName());
@@ -157,7 +157,7 @@ public class ControladorViajeroTest {
         .thenThrow(new UsuarioInexistente("Viajero no encontrado"));
 
     // Act
-    ModelAndView mav = controladorViajero.verPerfilViajero(viajeroId, sessionMock);
+    ModelAndView mav = controladorViajero.verPerfilViajeroPorId(viajeroId, sessionMock);
 
     // Assert
     assertEquals("errorPerfilViajero", mav.getViewName());
