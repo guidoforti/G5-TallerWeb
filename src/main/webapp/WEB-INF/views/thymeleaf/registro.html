@@ -73,6 +73,14 @@
                             <input th:field="*{nombre}" id="nombre" type="text" class="form-control" placeholder="Juan Pérez" required>
                         </div>
                         <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input th:field="*{email}" id="email" type="email" class="form-control" placeholder="ejemplo@mail.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Contraseña</label>
+                            <input th:field="*{contrasenia}" id="contrasenia" type="password" class="form-control" placeholder="********" required>
+                        </div>
+                        <div class="mb-3">
                             <label for="fechaNacimiento" class="form-label fw-bold">
                                 <i class="fas fa-calendar-alt me-1"></i> Fecha de Nacimiento *
                             </label>
