@@ -6,7 +6,14 @@
 </head>
 
 <body>
-<nav th:replace="fragments/navbar_conductor :: navbar"></nav>
+<th:block th:switch="${userRole}">
+    <th:block th:case="'CONDUCTOR'">
+        <div th:replace="fragments/navbar_conductor :: navbar"></div>
+    </th:block>
+    <th:block th:case="'VIAJERO'">
+        <div th:replace="fragments/navbar_viajero :: navbar"></div>
+    </th:block>
+</th:block>
 <style>
     /* [Estilo del Badge de Notificación] */
     #notificacion-contador {
