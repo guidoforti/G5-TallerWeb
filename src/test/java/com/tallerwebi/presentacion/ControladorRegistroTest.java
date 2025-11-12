@@ -193,7 +193,7 @@ public class ControladorRegistroTest {
 
         // Assert
         assertThat(mav.getViewName(), equalTo("registro"));
-        assertThat(mav.getModel().get("error").toString(), containsString("Error interno al guardar la foto de perfil"));
+        assertThat(mav.getModel().get("error").toString(), containsString("Error desconocido durante el registro. Inténtalo de nuevo."));
     }
 
     @Test

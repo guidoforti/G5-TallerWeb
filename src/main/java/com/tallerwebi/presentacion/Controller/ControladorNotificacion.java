@@ -73,8 +73,6 @@ public class ControladorNotificacion {
         }
     }
 
-    // Endpoint para que el JS marque una notificación como leída (al hacer click en el toast)
-    // Es un POST para ser RESTful.
     @PostMapping("/marcar-leida/{idNotificacion}")
     @ResponseBody // Retorna un código de estado, no una vista
     public ResponseEntity<Void> marcarComoLeida(@PathVariable Long idNotificacion, HttpSession session) {
@@ -85,8 +83,6 @@ public class ControladorNotificacion {
         }
 
         try {
-            // El Servicio debería validar que el usuario es el dueño de la notificacion
-            // Por simplicidad, solo la marcamos:
             servicioNotificacion.marcarComoLeida(idNotificacion);
             return ResponseEntity.ok().build(); // 200 OK
         } catch (NotFoundException e) {

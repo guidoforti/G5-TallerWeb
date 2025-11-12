@@ -6,6 +6,21 @@
 </head>
 
 <body>
+<style>
+    html, body {
+        height: 100%;
+    }
+    body {
+        display: flex;
+        flex-direction: column;
+    }
+    main {
+        flex-grow: 1;
+    }
+    .container {
+        margin-top: 120px !important;
+    }
+</style>
 <th:block th:switch="${userRole}">
     <th:block th:case="'CONDUCTOR'">
         <div th:replace="fragments/navbar_conductor :: navbar"></div>

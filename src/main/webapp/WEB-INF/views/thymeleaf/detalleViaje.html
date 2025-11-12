@@ -190,7 +190,7 @@
 
                                                 <a th:if="${userRole == 'CONDUCTOR'}"
                                                    th:href="@{/viajero/perfil/{id}(id=${viajero.id})}"
-                                                   class="btn btn-sm btn-view-profile">
+                                                   class="btn btn-sm btn-view-profile" >
                                                     <i class="fas fa-id-card me-1"></i> Perfil
                                                 </a>
                                             </li>
@@ -212,6 +212,7 @@
                             </a>
 
                             <th:block th:if="${userRole != null && userRole == 'CONDUCTOR'}">
+
                                 <a th:href="@{/reserva/viajerosConfirmados(viajeId=${viajeId})}" class="btn btn-dark fw-bold">
                                     <i class="fas fa-users me-2"></i> Ver Viajeros Confirmados
                                 </a>
@@ -220,43 +221,40 @@
                                     <i class="fas fa-history me-2"></i> Historial
                                 </a>
 
-                                <form th:if="${detalle.estado.name() == 'DISPONIBLE' || detalle.estado.name() == 'COMPLETO'}"
-                                      th:action="@{/viaje/{id}/iniciar(id=${viajeId})}"
-                                      method="post"
-                                      style="display: inline;">
-                                    <button type="submit"
+                                <th:block th:if="${detalle.estado.name() == 'DISPONIBLE' || detalle.estado.name() == 'COMPLETO'}">
+                                    <button type="button"
                                             class="btn btn-primary fw-bold"
-                                            onclick="return confirm('¿Estás seguro de iniciar este viaje?');">
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#confirmStartModal">
                                         <i class="fas fa-play-circle me-2"></i> Iniciar Viaje
                                     </button>
-                                </form>
+                                </th:block>
 
-                                <form th:if="${detalle.estado.name() == 'EN_CURSO'}"
-                                      th:action="@{/viaje/{id}/finalizar(id=${viajeId})}"
-                                      method="post"
-                                      style="display: inline;">
-                                    <button type="submit"
+                                <th:block th:if="${detalle.estado.name() == 'EN_CURSO'}">
+                                    <button type="button"
                                             class="btn btn-danger fw-bold"
-                                            onclick="return confirm('¿Estás seguro de finalizar este viaje?');">
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#confirmFinishModal">
                                         <i class="fas fa-stop-circle me-2"></i> Finalizar Viaje
                                     </button>
-                                </form>
+                                </th:block>
 
                                 <div class="d-flex align-items-center me-3 ms-3">
                                     <span class="badge fs-6 px-3 py-2"
-                                          th:classappend="${detalle.estado.name() == 'DISPONIBLE' ? 'bg-primary' :
-                                                          detalle.estado.name() == 'COMPLETO' ? 'bg-info' :
-                                                          detalle.estado.name() == 'EN_CURSO' ? 'bg-warning text-dark' :
-                                                          detalle.estado.name() == 'FINALIZADO' ? 'bg-success' :
-                                                          detalle.estado.name() == 'CANCELADO' ? 'bg-secondary' : 'bg-dark'}">
-                                        <i class="fas fa-circle me-1" style="font-size: 0.6em;"></i>
-                                        <span th:text="${detalle.estado.name() == 'DISPONIBLE' ? 'Disponible' :
-                                                       detalle.estado.name() == 'COMPLETO' ? 'Completo' :
-                                                       detalle.estado.name() == 'EN_CURSO' ? 'En Curso' :
-                                                       detalle.estado.name() == 'FINALIZADO' ? 'Finalizado' :
-                                                       detalle.estado.name() == 'CANCELADO' ? 'Cancelado' : 'Desconocido'}"></span>
-                                    </span>
+                                         th:classappend="${detalle.estado.name() == 'DISPONIBLE' ? 'bg-primary' :
+                                  detalle.estado.name() == 'COMPLETO' ? 'bg-info' :
+                                  detalle.estado.name() == 'EN_CURSO' ? 'bg-warning text-dark' :
+                                  detalle.estado.name() == 'FINALIZADO' ? 'bg-success' :
+                                  detalle.estado.name() == 'CANCELADO' ? 'bg-secondary' : 'bg-dark'}">
+                                    <i class="fas fa-circle me-1" style="font-size: 0.6em;"></i>
+                                    <span th:text="${detalle.estado.name() == 'DISPONIBLE' ? 'Disponible' :
+                               detalle.estado.name() == 'COMPLETO' ? 'Completo' :
+                               detalle.estado.name() == 'EN_CURSO' ? 'En Curso' :
+                               detalle.estado.name() == 'FINALIZADO' ? 'Finalizado' :
+                               detalle.estado.name() == 'CANCELADO' ? 'Cancelado' : 'Desconocido'}"></span>
+                                          </span>
                                 </div>
+
                             </th:block>
 
                             <a th:if="${userRole != null && userRole == 'VIAJERO'}"
@@ -274,6 +272,55 @@
         </div>
     </div>
 </main>
+<div class="modal fade" id="confirmStartModal" tabindex="-1" aria-labelledby="confirmStartModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="confirmStartModalLabel"><i class="fas fa-play-circle me-1"></i> Confirmar Inicio de Viaje</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Estás a punto de <strong>INICIAR</strong> el viaje de <strong><span th:text="${detalle.origen.nombre}"></span></strong> a <strong><span th:text="${detalle.destino.nombre}"></span></strong>.</p>
+                <p class="fw-bold text-success">¿Confirmas que deseas comenzar el viaje ahora?</p>
+                <p class="small text-muted">Los viajeros confirmados serán notificados.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+
+                <form th:action="@{/viaje/{id}/iniciar(id=${viajeId})}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-primary fw-bold">
+                        <i class="fas fa-check me-1"></i> Sí, Iniciar Viaje
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmFinishModal" tabindex="-1" aria-labelledby="confirmFinishModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="confirmFinishModalLabel"><i class="fas fa-stop-circle me-1"></i> Confirmar Finalización</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Estás a punto de <strong>FINALIZAR</strong> el viaje de <strong><span th:text="${detalle.origen.nombre}"></span></strong> a <strong><span th:text="${detalle.destino.nombre}"></span></strong>.</p>
+                <p class="fw-bold text-danger">¿Deseas confirmar la finalización del viaje?</p>
+                <p class="small text-muted">El viaje pasará a estado Finalizado.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+
+                <form th:action="@{/viaje/{id}/finalizar(id=${viajeId})}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-danger fw-bold">
+                        <i class="fas fa-check me-1"></i> Sí, Finalizar Viaje
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 <div th:replace="fragments/fragments :: footer"></div>
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
 <script src="https://kit.fontawesome.com/your-code.js" crossorigin="anonymous"></script>

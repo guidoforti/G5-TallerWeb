@@ -132,7 +132,7 @@ class ServicioConductorTest {
                 () -> servicio.registrar(menor)
         );
 
-        assertThat(exception.getMessage(), containsString("Debe ser mayor de 18 años"));
+        assertThat(exception.getMessage(), containsString("El usuario debe ser mayor de 18 años"));
         verify(servicioLoginMock, never()).registrar(any());
     }
 

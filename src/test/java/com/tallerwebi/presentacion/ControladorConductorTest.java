@@ -135,5 +135,68 @@ public class ControladorConductorTest {
         assertThat(perfil.getEdad(), is(35));
         assertThat(perfil.getPromedioValoraciones(), closeTo(4.5, 0.01));
     }
+    @Test
+    void verMiPerfil_siUsuarioNoEstaEnSesionDeberiaRedirigirALogin() throws UsuarioInexistente {
+        // Arrange
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(null);
 
+        // Act
+        ModelAndView mav = controladorConductor.verMiPerfil(sessionMock);
+
+        // Assert
+        assertThat(mav.getViewName(), equalTo("redirect:/login"));
+        verify(servicioConductorMock, never()).obtenerPerfilDeConductor(anyLong());
+    }
+
+    @Test
+    void verMiPerfil_siServicioLanzaUsuarioInexistenteDeberiaMostrarVistaDeError() throws UsuarioInexistente {
+        // Arrange
+        Long conductorId = 1L;
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+        when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR"); // No es relevante aquí, pero se usa.
+
+        // Simula la falla del servicio
+        doThrow(new UsuarioInexistente("El conductor no existe")).when(servicioConductorMock).obtenerPerfilDeConductor(conductorId);
+
+        // Act
+        ModelAndView mav = controladorConductor.verMiPerfil(sessionMock);
+
+        // Assert
+        assertThat(mav.getViewName(), is("errorPerfilConductor"));
+        assertThat(mav.getModel().get("error").toString(), is("Su perfil no existe."));
+    }
+
+    @Test
+    void verPerfilConductorPorId_siUsuarioEnSesionNoEsViajeroDeberiaDenegarAcceso() throws UsuarioInexistente {
+        // Arrange: El usuario en sesión es CONDUCTOR, intentando ver el perfil de otro (ID=2)
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
+        when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR"); // Rol Incorrecto
+
+        // Act
+        ModelAndView mav = controladorConductor.verPerfilConductorPorId(2L, sessionMock);
+
+        // Assert
+        assertThat(mav.getViewName(), is("errorAutorizacion"));
+        assertThat(mav.getModel().get("error").toString(), is("Solo los viajeros pueden ver perfiles de otros conductores."));
+        verify(servicioConductorMock, never()).obtenerPerfilDeConductor(anyLong());
+    }
+
+    @Test
+    public void verPerfilConductorPorId_siConductorSolicitadoNoExisteDeberiaMostrarVistaDeError() throws UsuarioInexistente {
+        // Arrange
+        Long conductorSolicitadoId = 99L;
+        Long usuarioEnSesionId = 1L;
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(usuarioEnSesionId);
+        when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO"); // Rol Correcto
+
+        doThrow(new UsuarioInexistente("Conductor no existe")).when(servicioConductorMock).obtenerPerfilDeConductor(conductorSolicitadoId);
+
+        // Act
+        ModelAndView mav = controladorConductor.verPerfilConductorPorId(conductorSolicitadoId, sessionMock);
+
+        // Then
+        assertThat(mav.getViewName(), is("errorPerfilConductor"));
+        assertThat(mav.getModel().get("error").toString(), is("El perfil solicitado no existe."));
+    }
 }
