@@ -47,39 +47,39 @@ public class VistaViajeroE2E {
 
     @Test
     void viajeroDeberiaBuscarViajeYSolicitarReserva() throws MalformedURLException {
-        // DADO - Inicio de sesión como viajero
+        // GIVEN - Inicio de sesión como viajero
         dadoQueElViajeroInicioSesion("viajero@test.com", "test123");
         cuandoElViajeroTocaElBotonDeLogin();
         entoncesDeberiaSerRedirigidoAlHomeViajero();
 
-        // CUANDO - Navega a buscar viajes
+        // WHEN - Navega a buscar viajes
         VistaHomeViajero vistaHome = new VistaHomeViajero(page);
         cuandoElViajeroNavegaABuscarViajes(vistaHome);
 
-        // Y - Busca viajes
+        // AND - Busca viajes
         VistaBuscarViaje vistaBuscar = new VistaBuscarViaje(page);
         cuandoElViajeroSeleccionaOrigen(vistaBuscar, "Buenos Aires");
         cuandoElViajeroSeleccionaDestino(vistaBuscar, "Cordoba");
         cuandoElViajeroEnviaElFormularioDeBusqueda(vistaBuscar);
 
-        // Y - Ve el detalle del primer viaje
+        // AND - Ve el detalle del primer viaje
         cuandoElViajeroSeleccionaElPrimerViaje(vistaBuscar);
 
-        // ENTONCES - Debería estar en la página de detalle
+        // THEN - Debería estar en la página de detalle
         VistaDetalleViaje vistaDetalle = new VistaDetalleViaje(page);
         entoncesDeberiaEstarEnDetalleViaje();
 
-        // CUANDO - Solicita reserva
+        // WHEN - Solicita reserva
         cuandoElViajeroSolicitaReserva(vistaDetalle);
 
-        // ENTONCES - Debería estar en la página de solicitar reserva
+        // THEN - Debería estar en la página de solicitar reserva
         VistaSolicitarReserva vistaSolicitar = new VistaSolicitarReserva(page);
         entoncesDeberiaEstarEnSolicitarReserva();
 
-        // CUANDO - Confirma la solicitud
+        // WHEN - Confirma la solicitud
         cuandoElViajeroConfirmaLaSolicitud(vistaSolicitar);
 
-        // ENTONCES - Debería estar en la página de éxito con mensaje
+        // THEN - Debería estar en la página de éxito con mensaje
         VistaReservaExitosa vistaExitosa = new VistaReservaExitosa(page);
         entoncesDeberiaVerMensajeDeExito(vistaExitosa);
     }
