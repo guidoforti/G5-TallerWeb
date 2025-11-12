@@ -481,4 +481,23 @@ public class ServicioReservaImpl implements ServicioReserva {
         return reservaRepository.findByViajeroIdAndViajeIdAndEstadoIn(viajeroId, viajeId, estadosActivos).isPresent();
     }
 
+    @Override
+    public List<Reserva> listarViajesCanceladosPorViajero(Long viajeroId) throws UsuarioInexistente {
+        
+    Viajero viajero = servicioViajero.obtenerViajero(viajeroId);
+
+    List<Reserva> reservas = reservaRepository.findCanceladasByViajero(viajero);
+
+    reservas.forEach(reserva -> {
+        if (reserva.getViaje() != null) {
+            org.hibernate.Hibernate.initialize(reserva.getViaje().getOrigen());
+            org.hibernate.Hibernate.initialize(reserva.getViaje().getDestino());
+            org.hibernate.Hibernate.initialize(reserva.getViaje().getConductor());
+            org.hibernate.Hibernate.initialize(reserva.getViaje().getVehiculo());
+        }
+    });
+
+    return reservas;
+    }
+
 }

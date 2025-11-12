@@ -137,6 +137,15 @@ public interface ServicioReserva {
      */
     List<Reserva> listarViajesConfirmadosPorViajero(Long viajeroId) throws UsuarioInexistente;
 
+    /**
+     * Lista todos los viajes cancelados de un viajero (reservas con estado CANCELADO_POR_CONDUCTOR)
+     *
+     * @param viajeroId El ID del viajero
+     * @return Lista de reservas canceladas
+     * @throws UsuarioInexistente Si no se encuentra el viajero
+     */
+    List<Reserva> listarViajesCanceladosPorViajero(Long viajeroId) throws UsuarioInexistente;
+
     Preference crearPreferenciaDePago (Long reservaId, Long viajeroId) throws UsuarioInexistente, NotFoundException, UsuarioNoAutorizadoException, BadRequestException, MPException, MPApiException, AccionNoPermitidaException;
 
     Reserva confirmarPagoReserva (Long reservaId, Long usuarioIdObj) throws NotFoundException, UsuarioNoAutorizadoException, AccionNoPermitidaException;

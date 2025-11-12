@@ -587,6 +587,9 @@ public class ControladorReserva {
             // Obtener todas las reservas confirmadas del viajero
             List<Reserva> reservas = servicioReserva.listarViajesConfirmadosPorViajero(viajeroId);
 
+            // Obtengo las reservas que fueron canceladas
+            List<Reserva> reservasCanceladas = servicioReserva.listarViajesCanceladosPorViajero(viajeroId);
+
             // Categorizar por estado del viaje: (SIN CAMBIOS)
             List<Reserva> viajesProximos = reservas.stream()
                     .filter(r -> r.getViaje().getEstado() == EstadoDeViaje.DISPONIBLE ||
@@ -600,8 +603,11 @@ public class ControladorReserva {
                     .collect(Collectors.toList());
 
             List<Reserva> viajesFinalizados = reservas.stream()
-                    .filter(r -> r.getViaje().getEstado() == EstadoDeViaje.FINALIZADO ||
-                            r.getViaje().getEstado() == EstadoDeViaje.CANCELADO)
+                    .filter(r -> r.getViaje().getEstado() == EstadoDeViaje.FINALIZADO)
+                    .sorted((r1, r2) -> r2.getViaje().getFechaHoraDeSalida().compareTo(r1.getViaje().getFechaHoraDeSalida()))
+                    .collect(Collectors.toList());
+
+            List<Reserva> viajesCancelados = reservasCanceladas.stream()
                     .sorted((r1, r2) -> r2.getViaje().getFechaHoraDeSalida().compareTo(r1.getViaje().getFechaHoraDeSalida()))
                     .collect(Collectors.toList());
 
@@ -631,9 +637,14 @@ public class ControladorReserva {
                     })
                     .collect(Collectors.toList());
 
+            List<ViajeConfirmadoViajeroDTO> canceladosDTO = viajesCancelados.stream()
+                    .map(ViajeConfirmadoViajeroDTO::new)
+                    .collect(Collectors.toList());
+
             model.put("viajesProximos", proximosDTO);
             model.put("viajesEnCurso", enCursoDTO);
             model.put("viajesFinalizados", finalizadosDTO);
+            model.put("viajesCancelados", canceladosDTO);
 
             return new ModelAndView("misViajes", model);
 
