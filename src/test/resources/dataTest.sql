@@ -22,10 +22,9 @@ VALUES (4, 'Sofia Torres', 'sofia@correo.com', 'pass1', 'VIAJERO', TRUE, '2000-0
 
 
 -- 1️⃣ CIUDADES
-INSERT INTO ciudad (id, nombre, latitud, longitud)
-VALUES (1, 'Buenos Aires', -34.6037, -58.3816),
-       (2, 'Cordoba', -31.4201, -64.1888),
-       (3, 'Rosario', -32.9587, -60.6930);
+INSERT INTO ciudad (id, nombre, latitud, longitud) VALUES (1, 'Buenos Aires', -34.6095579, -58.3887904);
+INSERT INTO ciudad (id, nombre, latitud, longitud) VALUES (2, 'Córdoba', -31.4166867, -64.1834193);
+INSERT INTO ciudad (id, nombre, latitud, longitud) VALUES (3, 'Rosario', -32.9593609, -60.6617024);
 
 -- 2️⃣ TABLAS DE ROL ESPECÍFICAS
 -- CONDUCTORES ESPECÍFICOS
