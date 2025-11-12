@@ -8,16 +8,21 @@ const contadorElement = document.getElementById('notificacion-contador');
 const contextPath = '/spring';
 
 // 1. CONFIGURACIÓN GLOBAL DE TOASTR
+// Se fuerzan las opciones de Easing a 'linear' para evitar el S.easing error
 toastr.options = {
     "closeButton": true,
-    "progressBar": true,
+    "progressBar": false,
     "positionClass": "toast-top-right",
-    "showDuration": "300",
-    "hideDuration": "1000",
+
+    "showDuration": "0",
+    "hideDuration": "0",
     "timeOut": "5000",
-    "extendedTimeOut": "1000",
+    "extendedTimeOut": "0",
     "showEasing": "swing",
-    "hideEasing": "fadeOut"
+    "hideEasing": "swing",
+    "showMethod": "fadeIn",
+    "hideMethod": "fadeOut",
+    "escapeHtml": true
 };
 
 /**
@@ -60,24 +65,33 @@ function mostrarToastNotificacion(notificacionDTO) {
     const titulo = "¡Notificación de Viaje!";
     const toast = toastr.info(notificacionDTO.mensaje, titulo);
 
-    // 🔥 CORRECCIÓN CLAVE: Aplicar la redirección solo al cuerpo y detener la propagación del botón 'X'.
     if (toast && notificacionDTO.urlDestino) {
 
         // 1. Manejador de clic para el cuerpo del toast (redirige)
         toast.on('click', function() {
+            // Detenemos la animación/cierre automático para evitar conflictos con la redirección
+            toastr.clear(toast, {force: true});
+
             if (contadorNotificaciones > 0) {
                 marcarNotificacionComoLeida(notificacionDTO.idNotificacion);
             }
-            window.location.href = contextPath + notificacionDTO.urlDestino;
+            // Pequeño delay para permitir que el clear termine
+            setTimeout(() => {
+                window.location.href = contextPath + notificacionDTO.urlDestino;
+            }, 100);
         });
 
-        // 2. Manejador para el botón de cerrar (¡previene el bucle!)
-        // Seleccionamos el botón de cierre que está DENTRO del toast.
+        // 2. Manejador para el botón de cerrar ('X').
         toast.find('.toast-close-button').on('click', function(e) {
-            // Detenemos el evento para que no se propague al manejador de clic del toast (punto 1).
             e.stopPropagation();
-            // Nota: Toastr ya maneja el cierre, esto es solo para el bug de redirección.
+            toastr.clear(toast, {force: true});
         });
+
+        // Manejador de hover (Evita que se cierre mientras el cursor está encima)
+        toast.hover(
+            function() { toastr.options.timeOut = 0; },
+            function() { toastr.options.timeOut = 5000; }
+        );
     }
 }
 

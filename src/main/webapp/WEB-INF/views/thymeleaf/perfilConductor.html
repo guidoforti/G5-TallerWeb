@@ -27,7 +27,14 @@
 </head>
 <body>
 
-<nav th:replace="fragments/navbar_conductor :: navbar"></nav>
+<th:block th:switch="${ROL_ACTUAL}">
+    <th:block th:case="'CONDUCTOR'">
+        <div th:replace="fragments/navbar_conductor :: navbar"></div>
+    </th:block>
+    <th:block th:case="'VIAJERO'">
+        <div th:replace="fragments/navbar_viajero :: navbar"></div>
+    </th:block>
+</th:block>
 <main class="container mt-5 mb-5" style="margin-top: 120px !important;">
     <div class="card shadow-lg p-4 rounded-4">
 
@@ -99,8 +106,9 @@
         </div>
 
         <div class="text-center mt-4">
-            <a href="/spring/conductor/home" class="btn btn-unrumbo px-4 py-2 fw-bold">
-                <i class="fas fa-arrow-left me-2"></i> Volver al home
+            <a th:href="@{${ROL_ACTUAL == 'CONDUCTOR' ? '/conductor/home' : '/viajero/home'}}"
+               class="btn btn-outline-secondary btn-sm">
+                Volver al home
             </a>
         </div>
 

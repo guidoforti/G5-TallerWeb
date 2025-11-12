@@ -50,6 +50,7 @@ public class ControladorViajero {
             Long contador = servicioNotificacion.contarNoLeidas(viajeroId);
             model.put("idUsuario", viajeroId);
             model.put("ROL", rol);
+            model.put("ROL_ACTUAL", rol);
             model.put("contadorNotificaciones", contador.intValue());
 
             model.put("nombreViajero", viajero.getNombre());
@@ -80,6 +81,7 @@ public class ControladorViajero {
         }
         model.put("idUsuario", viajeroId);
         model.put("ROL", rol);
+        model.put("ROL_ACTUAL", rol);
         model.put("userRole", rol);
 
         try {
@@ -111,6 +113,7 @@ public class ControladorViajero {
         }
         model.put("idUsuario", usuarioEnSesionId);
         model.put("ROL", rol);
+        model.put("ROL_ACTUAL", rol);
         model.put("userRole", rol);
 
         if (!"CONDUCTOR".equals(rol)) {
