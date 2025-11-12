@@ -13,6 +13,8 @@ import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
+import com.tallerwebi.dominio.IServicio.ServicioValoracion;
+import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
 import com.tallerwebi.dominio.excepcion.*;
 import com.tallerwebi.presentacion.DTO.InputsDTO.MarcarAsistenciaInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.RechazoReservaInputDTO;
@@ -42,16 +44,22 @@ public class ControladorReserva {
     private final ServicioViaje servicioViaje;
     private final ServicioViajero servicioViajero;
     private final ServicioConductor servicioConductor;
+    private final ServicioValoracion servicioValoracion;
+    private final ServicioNotificacion servicioNotificacion;
 
     @Autowired
     public ControladorReserva(ServicioReserva servicioReserva,
                               ServicioViaje servicioViaje,
                               ServicioViajero servicioViajero,
-                              ServicioConductor servicioConductor) {
+                              ServicioConductor servicioConductor,
+                              ServicioValoracion servicioValoracion,
+                              ServicioNotificacion servicioNotificacion) {
         this.servicioReserva = servicioReserva;
         this.servicioViaje = servicioViaje;
         this.servicioViajero = servicioViajero;
         this.servicioConductor = servicioConductor;
+        this.servicioValoracion = servicioValoracion;
+        this.servicioNotificacion = servicioNotificacion;
     }
 
     /**
@@ -66,6 +74,7 @@ public class ControladorReserva {
 
         // Validar sesión
         Object usuarioId = session.getAttribute("idUsuario");
+        String rol = (String) session.getAttribute("ROL");
         if (usuarioId == null) {
             return new ModelAndView("redirect:/login");
         }
@@ -82,6 +91,8 @@ public class ControladorReserva {
             // Crear un DTO para pasar fechas formateadas y otros datos al template
             ViajeReservaSolicitudDTO viajeDTO = new ViajeReservaSolicitudDTO(viaje);
 
+            model.put("idUsuario", usuarioId);
+            model.put("ROL", rol);
             model.put("viaje", viajeDTO);
             model.put("solicitud", solicitudDTO);
             return new ModelAndView("solicitarReserva", model);
@@ -174,7 +185,7 @@ public class ControladorReserva {
 
             model.put("viaje", viaje);
             model.put("reservas", reservasDTO);
-            return new ModelAndView("listarReservasViaje", model);
+            return new ModelAndView("misReservas", model);
 
         } catch (NotFoundException | ViajeNoEncontradoException | UsuarioNoAutorizadoException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
@@ -199,7 +210,7 @@ public class ControladorReserva {
         try {
             Conductor conductor = servicioConductor.obtenerConductor((Long) usuarioIdObj);
             List<Viaje> viajes = servicioViaje.listarViajesPorConductor(conductor);
-
+            model.put("contadorNotificaciones", servicioNotificacion.contarNoLeidas(conductor.getId()));
             // Obtener todas las reservas de los viajes
             List<ReservaVistaDTO> reservasDTO = new ArrayList<>();
             for (Viaje viaje : viajes) {
@@ -372,8 +383,8 @@ public class ControladorReserva {
      */
     @GetMapping("/viajerosConfirmados")
     public ModelAndView listarViajerosConfirmados(@RequestParam("viajeId") Long viajeId,
-                                                   HttpSession session,
-                                                   RedirectAttributes redirectAttributes) {
+                                                  HttpSession session,
+                                                  RedirectAttributes redirectAttributes) {
         ModelMap model = new ModelMap();
 
         // Validar sesión
@@ -385,7 +396,7 @@ public class ControladorReserva {
         }
 
         Long conductorId = (Long) conductorIdObj;
-
+        model.put("contadorNotificaciones", servicioNotificacion.contarNoLeidas(conductorId));
         try {
             // Obtener el viaje para mostrar información en la vista
             Viaje viaje = servicioViaje.obtenerViajePorId(viajeId);
@@ -507,7 +518,9 @@ public class ControladorReserva {
         }
 
         Long viajeroId = (Long) usuarioIdObj;
-
+        model.put("idUsuario", viajeroId);
+        model.put("ROL", rol);
+        model.put("contadorNotificaciones", servicioNotificacion.contarNoLeidas(viajeroId));
         try {
             // Obtener todas las reservas pendientes y rechazadas del viajero
             List<Reserva> reservas = servicioReserva.listarReservasActivasPorViajero(viajeroId);
@@ -567,18 +580,17 @@ public class ControladorReserva {
         }
 
         Long viajeroId = (Long) usuarioIdObj;
-
+        model.put("idUsuario", viajeroId);
+        model.put("ROL", rol);
+        model.put("contadorNotificaciones", servicioNotificacion.contarNoLeidas(viajeroId));
         try {
             // Obtener todas las reservas confirmadas del viajero
             List<Reserva> reservas = servicioReserva.listarViajesConfirmadosPorViajero(viajeroId);
 
-            // Categorizar por estado del viaje:
-            // Próximos: DISPONIBLE, COMPLETO
-            // En curso: EN_CURSO
-            // Finalizados: FINALIZADO, CANCELADO
+            // Categorizar por estado del viaje: (SIN CAMBIOS)
             List<Reserva> viajesProximos = reservas.stream()
                     .filter(r -> r.getViaje().getEstado() == EstadoDeViaje.DISPONIBLE ||
-                                 r.getViaje().getEstado() == EstadoDeViaje.COMPLETO)
+                            r.getViaje().getEstado() == EstadoDeViaje.COMPLETO)
                     .sorted((r1, r2) -> r1.getViaje().getFechaHoraDeSalida().compareTo(r2.getViaje().getFechaHoraDeSalida()))
                     .collect(Collectors.toList());
 
@@ -589,11 +601,10 @@ public class ControladorReserva {
 
             List<Reserva> viajesFinalizados = reservas.stream()
                     .filter(r -> r.getViaje().getEstado() == EstadoDeViaje.FINALIZADO ||
-                                 r.getViaje().getEstado() == EstadoDeViaje.CANCELADO)
+                            r.getViaje().getEstado() == EstadoDeViaje.CANCELADO)
                     .sorted((r1, r2) -> r2.getViaje().getFechaHoraDeSalida().compareTo(r1.getViaje().getFechaHoraDeSalida()))
                     .collect(Collectors.toList());
 
-            // Convertir a DTOs
             List<ViajeConfirmadoViajeroDTO> proximosDTO = viajesProximos.stream()
                     .map(ViajeConfirmadoViajeroDTO::new)
                     .collect(Collectors.toList());
@@ -603,7 +614,21 @@ public class ControladorReserva {
                     .collect(Collectors.toList());
 
             List<ViajeConfirmadoViajeroDTO> finalizadosDTO = viajesFinalizados.stream()
-                    .map(ViajeConfirmadoViajeroDTO::new)
+                    .map(reserva -> {
+                        ViajeConfirmadoViajeroDTO dto = new ViajeConfirmadoViajeroDTO(reserva);
+
+                        if (reserva.getViaje().getEstado() == EstadoDeViaje.FINALIZADO) {
+
+                            Long conductorId = reserva.getViaje().getConductor().getId();
+                            Long viajeId = reserva.getViaje().getId();
+
+                            boolean yaExiste = servicioValoracion.yaHaValorado(viajeroId, conductorId, viajeId);
+
+                            dto.setValoracionPendiente(!yaExiste);
+                        }
+
+                        return dto;
+                    })
                     .collect(Collectors.toList());
 
             model.put("viajesProximos", proximosDTO);
@@ -694,13 +719,15 @@ public class ControladorReserva {
         try {
             Reserva reserva = servicioReserva.confirmarPagoReserva(reservaId, (Long)usuarioIdObj);
             ReservaActivaDTO reservaActivaDTO = new ReservaActivaDTO(reserva);
+            model.put("idUsuario", usuarioIdObj);
+            model.put("ROL", rol);
             model.put("reserva" , reservaActivaDTO);
             model.put("pagoOK" , "El pago fue exitoso");
             return new ModelAndView("pagoExitoso" , model);
         } catch (NotFoundException | UsuarioNoAutorizadoException | AccionNoPermitidaException e){
             redirectAttributes.addFlashAttribute("error" , e.getMessage());
             return new ModelAndView("redirect:/reserva/misReservasActivas");
-    }
+        }
     }
 
 
@@ -717,6 +744,8 @@ public class ControladorReserva {
         ModelMap model = new ModelMap();
         try {
             Reserva reserva = servicioReserva.obtenerReservaPorId(reservaId);
+            model.put("idUsuario", usuarioIdObj);
+            model.put("ROL", rol);
             model.put("reserva", new ReservaActivaDTO(reserva));
             model.put("error", "Tu pago fue rechazado o cancelado.");
             return new ModelAndView("pagoFallido", model);
@@ -732,8 +761,8 @@ public class ControladorReserva {
 
     @GetMapping("/pago/pendiente")
     public ModelAndView devolverPagoPendiente(HttpSession session,
-                                            @RequestParam Long reservaId,
-                                            RedirectAttributes redirectAttributes) {
+                                              @RequestParam Long reservaId,
+                                              RedirectAttributes redirectAttributes) {
         Object usuarioIdObj = session.getAttribute("idUsuario");
         Object rol = session.getAttribute("ROL");
 
@@ -742,6 +771,8 @@ public class ControladorReserva {
         }
         ModelMap model = new ModelMap();
         try {
+            model.put("idUsuario", usuarioIdObj);
+            model.put("ROL", rol);
             Reserva reserva = servicioReserva.obtenerReservaPorId(reservaId);
             model.put("reserva", new ReservaActivaDTO(reserva));
             model.put("error", "Tu pago esta pendiente");

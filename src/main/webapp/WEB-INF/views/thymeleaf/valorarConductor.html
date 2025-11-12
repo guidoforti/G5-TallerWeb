@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/fragments :: head('Valorar Conductor')">
+    <th:block th:fragment="extra">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    </th:block>
+</head>
+
+<body>
+<nav th:replace="fragments/navbar_viajero :: navbar"></nav>
+
+<main role="main" class="container" style="margin-top: 120px;">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <h2 class="text-center fw-bold text-dark mb-4">Valorar a <span th:text="${conductorNombre}"></span></h2>
+            <p class="text-center text-muted mb-4">Tu opinión es importante para la comunidad de UnRumbo.</p>
+
+            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+            <div class="card p-4 shadow-sm">
+                <form th:action="@{/valoraciones/unidad}" th:object="${valoracionDto}" method="post">
+
+                    <input type="hidden" th:field="*{receptorId}" />
+                    <input type="hidden" name="viajeId" th:value="${viaje.id}" />
+
+                    <div class="mb-4 alert alert-light">
+                        <p class="mb-1"><strong>Viaje:</strong> <span th:text="${viaje.origen.nombre}"></span> a <span th:text="${viaje.destino.nombre}"></span></p>
+                        <p class="mb-0"><strong>Salida:</strong> <span th:text="${viaje.fechaHoraDeSalida}"></span></p>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Puntuación (1 a 5):</label>
+                        <input type="number" th:field="*{puntuacion}" min="1" max="5" class="form-control" required/>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Comentario:</label>
+                        <textarea th:field="*{comentario}" rows="3" class="form-control" placeholder="Describe tu experiencia"></textarea>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-unrumbo fw-bold w-100">
+                            Enviar Valoración
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+<div th:replace="fragments/fragments :: footer"></div>
+<script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+<th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
+</body>
+</html>

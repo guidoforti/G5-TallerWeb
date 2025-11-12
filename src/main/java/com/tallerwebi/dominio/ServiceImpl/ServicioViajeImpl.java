@@ -4,10 +4,12 @@ import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.*;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
+import com.tallerwebi.dominio.Enums.TipoNotificacion;
 import com.tallerwebi.dominio.IRepository.RepositorioParada;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
+import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.excepcion.*;
@@ -33,16 +35,18 @@ public class ServicioViajeImpl implements ServicioViaje {
     private ServicioVehiculo servicioVehiculo;
     private RepositorioParada repositorioParada;
     private ReservaRepository reservaRepository;
+    private ServicioNotificacion servicioNotificacion;
 
     @Autowired
     public ServicioViajeImpl(ViajeRepository viajeRepository, ServicioConductor servicioConductor,
                              ServicioVehiculo servicioVehiculo, RepositorioParada repositorioParada,
-                             ReservaRepository reservaRepository) {
+                             ReservaRepository reservaRepository, ServicioNotificacion servicioNotificacion) {
         this.viajeRepository = viajeRepository;
         this.servicioConductor = servicioConductor;
         this.servicioVehiculo = servicioVehiculo;
         this.repositorioParada = repositorioParada;
         this.reservaRepository = reservaRepository;
+        this.servicioNotificacion = servicioNotificacion;
     }
 
     @Override
@@ -122,9 +126,26 @@ public class ServicioViajeImpl implements ServicioViaje {
             }
         }
 
+        Hibernate.initialize(viajeExistente.getReservas());
+        List<Reserva> reservasAfectadas = viajeExistente.getReservas();
+
         // 5. Guardar cambios
         viajeRepository.modificarViaje(viajeExistente);
 
+        for (Reserva reserva : reservasAfectadas) {
+            if (reserva.getEstado() == EstadoReserva.CONFIRMADA || reserva.getEstado() == EstadoReserva.PENDIENTE) {
+                Usuario viajero = reserva.getViajero();
+                String mensaje = String.format("El viaje a %s fue modificado. Revisá los cambios.",
+                        viajeExistente.getDestino().getNombre());
+                String url = "/viaje/detalle?id=" + viajeExistente.getId();
+
+                try {
+                    servicioNotificacion.crearYEnviar(viajero, TipoNotificacion.VIAJE_EDITADO, mensaje, url);
+                } catch (Exception e) {
+                    System.err.println("Fallo al notificar edición: " + e.getMessage());
+                }
+            }
+        }
     }
 
     @Override
@@ -350,11 +371,27 @@ public class ServicioViajeImpl implements ServicioViaje {
         // Calcular minutos de retraso (puede ser negativo si inicia antes)
         int minutosRetraso = (int) Duration.between(viaje.getFechaHoraDeSalida(), ahora).toMinutes();
 
+        Hibernate.initialize(viaje.getReservas());
+        List<Reserva> reservasAfectadas = viaje.getReservas();
         // Iniciar viaje
         viaje.setEstado(EstadoDeViaje.EN_CURSO);
         viaje.setFechaHoraInicioReal(ahora);
         viaje.setMinutosDeRetraso(minutosRetraso);
         viajeRepository.modificarViaje(viaje);
+        for (Reserva reserva : reservasAfectadas) {
+            if (reserva.getEstado() == EstadoReserva.CONFIRMADA) {
+                Usuario viajero = reserva.getViajero();
+                String mensaje = String.format("¡Tu viaje a %s ha comenzado!", viaje.getDestino().getNombre());
+                String url = "/reserva/misViajes";
+
+                try {
+                    servicioNotificacion.crearYEnviar(viajero, TipoNotificacion.VIAJE_INICIADO, mensaje, url);
+                } catch (Exception e) {
+                    //DEJAMOS ESTO ASI PARA DEBBUGEAR
+                    System.err.println("Fallo al notificar inicio al viajero: " + viajero.getId());
+                }
+            }
+        }
     }
 
     @Override
@@ -375,11 +412,27 @@ public class ServicioViajeImpl implements ServicioViaje {
             throw new ViajeYaFinalizadoException("El viaje no está en curso");
         }
 
+        Hibernate.initialize(viaje.getReservas());
+        List<Reserva> reservasAfectadas = viaje.getReservas();
+
         // Finalizar viaje
         viaje.setEstado(EstadoDeViaje.FINALIZADO);
         viaje.setFechaHoraFinReal(LocalDateTime.now());
         viaje.setCierreAutomatico(false);
         viajeRepository.modificarViaje(viaje);
+        for (Reserva reserva : reservasAfectadas) {
+            if (reserva.getEstado() == EstadoReserva.CONFIRMADA) {
+                Usuario viajero = reserva.getViajero();
+                String mensaje = String.format("El viaje a %s finalizó. ¡Dejanos tu valoración al conductor!", viaje.getDestino().getNombre());
+                String url = "/reserva/misViajes"; // El botón de valoración aparecerá aquí
+
+                try {
+                    servicioNotificacion.crearYEnviar(viajero, TipoNotificacion.VALORACION_PENDIENTE, mensaje, url);
+                } catch (Exception e) {
+                    System.err.println("Fallo al notificar valoración pendiente: " + e.getMessage());
+                }
+            }
+        }
     }
 
     @Override

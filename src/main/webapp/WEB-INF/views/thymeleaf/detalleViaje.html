@@ -6,20 +6,36 @@
         <style>
             /* [🟢 AJUSTE DE ESPACIADO PARA COMPACTAR] */
             .card {
-                /* Mantener estilo básico */
                 box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-                margin-bottom: 1rem; /* Reducir margen inferior */
+                margin-bottom: 1rem;
             }
             .card-header {
                 background-color: #E16A3D;
                 color: white;
                 font-weight: 600;
-                padding: 0.5rem 1rem; /* Reducir padding */
+                padding: 0.5rem 1rem;
             }
             .card-body {
-                padding: 1rem; /* Reducir padding interno */
+                padding: 1rem;
             }
-            /* Los estilos de botones y colores se asumen cargados desde new-main.css */
+            /* Clases de utilidad para los botones de perfil */
+            .btn-view-profile {
+                background-color: #734933; /* Marrón medio */
+                border-color: #734933;
+                color: white;
+            }
+            .btn-view-profile:hover {
+                background-color: #5d3b2a;
+            }
+            .info-label {
+                font-size: 0.8rem;
+                color: #6c757d;
+                margin-bottom: 0 !important;
+            }
+            .info-value {
+                font-weight: 500;
+                color: #333;
+            }
         </style>
     </th:block>
 </head>
@@ -60,6 +76,7 @@
 
                     <div th:if="${detalle}">
                         <div class="row g-3">
+
                             <div class="col-md-6">
                                 <div class="card h-100">
                                     <div class="card-header">
@@ -69,12 +86,12 @@
                                         <div class="d-flex align-items-center mb-3">
                                             <div class="me-3" style="color: #E16A3D;"><i class="fas fa-map-marker-alt fa-lg"></i></div>
                                             <div><p class="mb-1 info-label">Origen</p>
-                                                <p class="mb-0 info-value" th:text="${detalle.getOrigen().getNombre()}"></p></div>
+                                                <p class="mb-0 info-value" th:text="${detalle.origen.nombre}"></p></div>
                                         </div>
                                         <div class="d-flex align-items-center mb-3">
                                             <div class="me-3" style="color: #E16A3D;"><i class="fas fa-flag-checkered fa-lg"></i></div>
                                             <div><p class="mb-1 info-label">Destino</p>
-                                                <p class="mb-0 info-value" th:text="${detalle.getDestino().getNombre()}"></p></div>
+                                                <p class="mb-0 info-value" th:text="${detalle.destino.nombre}"></p></div>
                                         </div>
                                         <div class="d-flex align-items-center mb-3">
                                             <div class="me-3" style="color: #E16A3D;"><i class="fas fa-calendar-check fa-lg"></i></div>
@@ -91,25 +108,40 @@
                                             <div><p class="mb-1 info-label">Hora de Llegada Estimada</p>
                                                 <p class="mb-0 info-value" th:text="${detalle.horaLlegadaEstimada != null ? detalle.horaLlegadaEstimada : 'No disponible'}"></p></div>
                                         </div>
+
+                                        <hr/>
+                                        <div class="d-flex align-items-center mb-1">
+                                            <div class="me-3" style="color: #4E3D2F;"><i class="fas fa-user-tie fa-lg"></i></div>
+                                            <div>
+                                                <p class="mb-1 info-label fw-bold">Conductor del Viaje</p>
+                                                <p class="mb-0 info-value">
+                                                    <span th:text="${detalle.conductorNombre}">Nombre Conductor</span>
+
+                                                    <a th:if="${userRole == 'VIAJERO'}"
+                                                       th:href="@{/conductor/perfil/{id}(id=${detalle.conductorId})}"
+                                                       class="btn btn-sm btn-view-profile ms-3">
+                                                        <i class="fas fa-id-card me-1"></i> Ver Perfil
+                                                    </a>
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="col-md-6">
                                 <div class="card h-100">
-                                    <div class="card-header">
-                                        <h5 class="mb-0"><i class="fas fa-car me-2"></i> Vehículo</h5>
-                                    </div>
+                                    <div class="card-header"> <h5 class="mb-0"><i class="fas fa-car me-2"></i> Vehículo</h5> </div>
                                     <div class="card-body py-3">
                                         <div th:if="${detalle.getVehiculo()}" class="mb-3">
                                             <p class="mb-1 info-label">Vehículo</p>
-                                            <p class="mb-2 info-value" th:text="${detalle.getVehiculo().getModelo()} + ' ' + ${detalle.getVehiculo().getAnio()}"></p>
+                                            <p class="mb-2 info-value" th:text="${detalle.vehiculo.modelo} + ' ' + ${detalle.vehiculo.anio}"></p>
 
                                             <p class="mb-1 info-label">Patente</p>
-                                            <p class="mb-2 info-value" th:text="${detalle.getVehiculo().getPatente()}"></p>
+                                            <p class="mb-2 info-value" th:text="${detalle.vehiculo.patente}"></p>
 
                                             <p class="mb-0 info-label">Asientos Disponibles</p>
-                                            <p class="mb-0 info-value" th:text="${detalle.getAsientosDisponibles()}"></p>
+                                            <p class="mb-0 info-value" th:text="${detalle.asientosDisponibles}"></p>
                                         </div>
                                     </div>
                                 </div>
@@ -121,14 +153,14 @@
                                         <h5 class="mb-0"><i class="fas fa-signpost me-2"></i> Paradas Intermedias</h5>
                                     </div>
                                     <div class="card-body py-3">
-                                        <div th:if="${#lists.isEmpty(detalle.getParadas())}" class="text-muted text-center py-3">
+                                        <div th:if="${#lists.isEmpty(detalle.paradas)}" class="text-muted text-center py-3">
                                             <i class="fas fa-map-marker-slash fa-2x mb-2" style="color: #adb5bd;"></i>
                                             <p class="mb-0">Este viaje no tiene paradas intermedias.</p>
                                         </div>
-                                        <ul th:unless="${#lists.isEmpty(detalle.getParadas())}" class="list-unstyled mb-0">
-                                            <li th:each="parada : ${detalle.getParadas()}" class="d-flex align-items-center mb-2">
+                                        <ul th:unless="${#lists.isEmpty(detalle.paradas)}" class="list-unstyled mb-0">
+                                            <li th:each="parada : ${detalle.paradas}" class="d-flex align-items-center mb-2">
                                                 <i class="fas fa-map-marker-alt me-2" style="color: #E16A3D;"></i>
-                                                <span th:text="${parada.getCiudadDTO().getNombre()}"></span>
+                                                <span th:text="${parada.ciudadDTO.nombre}"></span>
                                             </li>
                                         </ul>
                                     </div>
@@ -146,12 +178,21 @@
                                             <p class="mb-0">Aún no hay viajeros confirmados.</p>
                                         </div>
                                         <ul th:unless="${#lists.isEmpty(detalle.getViajeros())}" class="list-unstyled mb-0">
-                                            <li th:each="viajero : ${detalle.getViajeros()}" class="d-flex align-items-center mb-2">
-                                                <i class="fas fa-user-circle me-2" style="color: #E16A3D;"></i>
-                                                <div>
-                                                    <div th:text="${viajero.getNombre()}" class="fw-medium"></div>
-                                                    <div class="text-muted small" th:text="${viajero.getEmail()}"></div>
+                                            <li th:each="viajero : ${detalle.viajeros}" class="d-flex align-items-center mb-2 justify-content-between">
+
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-user-circle me-2" style="color: #E16A3D;"></i>
+                                                    <div>
+                                                        <div th:text="${viajero.nombre}" class="fw-medium"></div>
+                                                        <div class="text-muted small" th:text="${viajero.email}"></div>
+                                                    </div>
                                                 </div>
+
+                                                <a th:if="${userRole == 'CONDUCTOR'}"
+                                                   th:href="@{/viajero/perfil/{id}(id=${viajero.id})}"
+                                                   class="btn btn-sm btn-view-profile" >
+                                                    <i class="fas fa-id-card me-1"></i> Perfil
+                                                </a>
                                             </li>
                                         </ul>
                                     </div>
@@ -172,53 +213,48 @@
 
                             <th:block th:if="${userRole != null && userRole == 'CONDUCTOR'}">
 
-                                <form th:if="${detalle.estado.name() == 'DISPONIBLE' || detalle.estado.name() == 'COMPLETO'}"
-                                      th:action="@{/viaje/{id}/iniciar(id=${viajeId})}"
-                                      method="post"
-                                      style="display: inline;">
-                                    <button type="submit"
-                                            class="btn btn-primary fw-bold"
-                                            onclick="return confirm('¿Estás seguro de iniciar este viaje?');">
-                                        <i class="fas fa-play-circle me-2"></i> Iniciar Viaje
-                                    </button>
-                                </form>
-
-                                <form th:if="${detalle.estado.name() == 'EN_CURSO'}"
-                                      th:action="@{/viaje/{id}/finalizar(id=${viajeId})}"
-                                      method="post"
-                                      style="display: inline;">
-                                    <button type="submit"
-                                            class="btn btn-danger fw-bold"
-                                            onclick="return confirm('¿Estás seguro de finalizar este viaje?');">
-                                        <i class="fas fa-stop-circle me-2"></i> Finalizar Viaje
-                                    </button>
-                                </form>
-
-                                <div class="d-flex align-items-center me-3 ms-3">
-                                    <span class="badge fs-6 px-3 py-2"
-                                          th:classappend="${detalle.estado.name() == 'DISPONIBLE' ? 'bg-primary' :
-                                                          detalle.estado.name() == 'COMPLETO' ? 'bg-info' :
-                                                          detalle.estado.name() == 'EN_CURSO' ? 'bg-warning text-dark' :
-                                                          detalle.estado.name() == 'FINALIZADO' ? 'bg-success' :
-                                                          detalle.estado.name() == 'CANCELADO' ? 'bg-secondary' : 'bg-dark'}">
-                                        <i class="fas fa-circle me-1" style="font-size: 0.6em;"></i>
-                                        <span th:text="${detalle.estado.name() == 'DISPONIBLE' ? 'Disponible' :
-                                                       detalle.estado.name() == 'COMPLETO' ? 'Completo' :
-                                                       detalle.estado.name() == 'EN_CURSO' ? 'En Curso' :
-                                                       detalle.estado.name() == 'FINALIZADO' ? 'Finalizado' :
-                                                       detalle.estado.name() == 'CANCELADO' ? 'Cancelado' : 'Desconocido'}"></span>
-                                    </span>
-                                </div>
-
-                                <a th:href="@{/reserva/viajerosConfirmados(viajeId=${viajeId})}"
-                                   class="btn btn-dark fw-bold">
+                                <a th:href="@{/reserva/viajerosConfirmados(viajeId=${viajeId})}" class="btn btn-dark fw-bold">
                                     <i class="fas fa-users me-2"></i> Ver Viajeros Confirmados
                                 </a>
 
-                                <a th:href="@{/historial/viaje(idViaje=${viajeId})}"
-                                   class="btn btn-outline-unrumbo fw-bold">
+                                <a th:href="@{/historial/viaje(idViaje=${viajeId})}" class="btn btn-outline-unrumbo fw-bold">
                                     <i class="fas fa-history me-2"></i> Historial
                                 </a>
+
+                                <th:block th:if="${detalle.estado.name() == 'DISPONIBLE' || detalle.estado.name() == 'COMPLETO'}">
+                                    <button type="button"
+                                            class="btn btn-primary fw-bold"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#confirmStartModal">
+                                        <i class="fas fa-play-circle me-2"></i> Iniciar Viaje
+                                    </button>
+                                </th:block>
+
+                                <th:block th:if="${detalle.estado.name() == 'EN_CURSO'}">
+                                    <button type="button"
+                                            class="btn btn-danger fw-bold"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#confirmFinishModal">
+                                        <i class="fas fa-stop-circle me-2"></i> Finalizar Viaje
+                                    </button>
+                                </th:block>
+
+                                <div class="d-flex align-items-center me-3 ms-3">
+                                    <span class="badge fs-6 px-3 py-2"
+                                         th:classappend="${detalle.estado.name() == 'DISPONIBLE' ? 'bg-primary' :
+                                  detalle.estado.name() == 'COMPLETO' ? 'bg-info' :
+                                  detalle.estado.name() == 'EN_CURSO' ? 'bg-warning text-dark' :
+                                  detalle.estado.name() == 'FINALIZADO' ? 'bg-success' :
+                                  detalle.estado.name() == 'CANCELADO' ? 'bg-secondary' : 'bg-dark'}">
+                                    <i class="fas fa-circle me-1" style="font-size: 0.6em;"></i>
+                                    <span th:text="${detalle.estado.name() == 'DISPONIBLE' ? 'Disponible' :
+                               detalle.estado.name() == 'COMPLETO' ? 'Completo' :
+                               detalle.estado.name() == 'EN_CURSO' ? 'En Curso' :
+                               detalle.estado.name() == 'FINALIZADO' ? 'Finalizado' :
+                               detalle.estado.name() == 'CANCELADO' ? 'Cancelado' : 'Desconocido'}"></span>
+                                          </span>
+                                </div>
+
                             </th:block>
 
                             <a th:if="${userRole != null && userRole == 'VIAJERO'}"
@@ -236,9 +272,58 @@
         </div>
     </div>
 </main>
+<div class="modal fade" id="confirmStartModal" tabindex="-1" aria-labelledby="confirmStartModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="confirmStartModalLabel"><i class="fas fa-play-circle me-1"></i> Confirmar Inicio de Viaje</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Estás a punto de <strong>INICIAR</strong> el viaje de <strong><span th:text="${detalle.origen.nombre}"></span></strong> a <strong><span th:text="${detalle.destino.nombre}"></span></strong>.</p>
+                <p class="fw-bold text-success">¿Confirmas que deseas comenzar el viaje ahora?</p>
+                <p class="small text-muted">Los viajeros confirmados serán notificados.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+
+                <form th:action="@{/viaje/{id}/iniciar(id=${viajeId})}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-primary fw-bold">
+                        <i class="fas fa-check me-1"></i> Sí, Iniciar Viaje
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmFinishModal" tabindex="-1" aria-labelledby="confirmFinishModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="confirmFinishModalLabel"><i class="fas fa-stop-circle me-1"></i> Confirmar Finalización</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Estás a punto de <strong>FINALIZAR</strong> el viaje de <strong><span th:text="${detalle.origen.nombre}"></span></strong> a <strong><span th:text="${detalle.destino.nombre}"></span></strong>.</p>
+                <p class="fw-bold text-danger">¿Deseas confirmar la finalización del viaje?</p>
+                <p class="small text-muted">El viaje pasará a estado Finalizado.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+
+                <form th:action="@{/viaje/{id}/finalizar(id=${viajeId})}" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-danger fw-bold">
+                        <i class="fas fa-check me-1"></i> Sí, Finalizar Viaje
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 <div th:replace="fragments/fragments :: footer"></div>
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
 <script src="https://kit.fontawesome.com/your-code.js" crossorigin="anonymous"></script>
-
+<th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
 </body>
 </html>

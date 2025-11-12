@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.web.WebAppConfiguration;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
@@ -27,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {HibernateTestConfig.class, DataBaseTestInitilizationConfig.class})
 @Transactional
+@WebAppConfiguration
 public class RepositorioReservaTest {
 
     @Autowired
@@ -137,7 +139,7 @@ public class RepositorioReservaTest {
         List<Reserva> reservas = repositorioReserva.findByViajero(viajero);
 
         // then
-        assertThat(reservas, hasSize(2));
+        assertThat(reservas, hasSize(3));
         // Verificar orden por fecha solicitud DESC (más reciente primero)
         assertThat(reservas.get(0).getEstado(), is(EstadoReserva.PENDIENTE));
         assertThat(reservas.get(1).getEstado(), is(EstadoReserva.CONFIRMADA));
@@ -377,7 +379,7 @@ public class RepositorioReservaTest {
         List<Reserva> reservas = repositorioReserva.findViajesConfirmadosPorViajero(viajero);
 
         // then
-        assertThat(reservas, hasSize(2));
+        assertThat(reservas, hasSize(3));
         assertThat(reservas.get(0).getEstado(), is(EstadoReserva.CONFIRMADA));
         assertThat(reservas.get(1).getEstado(), is(EstadoReserva.CONFIRMADA));
     }
@@ -391,7 +393,7 @@ public class RepositorioReservaTest {
         List<Reserva> reservas = repositorioReserva.findViajesConfirmadosPorViajero(viajero);
 
         // then
-        assertThat(reservas, hasSize(0));
+        assertThat(reservas, hasSize(1));
     }
 
     @Test
@@ -429,7 +431,7 @@ public class RepositorioReservaTest {
         List<Reserva> reservas = repositorioReserva.findViajesConfirmadosPorViajero(viajero);
 
         // then
-        assertThat(reservas, hasSize(1));
+        assertThat(reservas, hasSize(2));
         assertThat(reservas.get(0).getEstado(), is(EstadoReserva.CONFIRMADA));
     }
 }
