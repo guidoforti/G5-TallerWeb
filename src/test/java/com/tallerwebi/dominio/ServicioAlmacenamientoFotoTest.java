@@ -31,7 +31,7 @@ class ServicioAlmacenamientoFotoTest {
     private ServicioAlmacenamientoFoto servicioAlmacenamientoFoto;
     private MultipartFile fileMock;
 
-    private static final String PUBLIC_PATH_PREFIX = "/uploads/";
+    private static final String PUBLIC_PATH_PREFIX = "/img/profile_uploads/";
 
     @BeforeEach
     void setUp() {
