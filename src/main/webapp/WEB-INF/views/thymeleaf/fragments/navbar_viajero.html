@@ -49,13 +49,13 @@
             <ul class="navbar-nav">
 
                 <li class="nav-item me-1 mt-md-0 mt-2">
-                    <a class="nav-link p-2" th:href="@{/notificaciones/historial}" id="notificacion-campana" style="color: #E16A3D;">
+                    <a class="nav-link p-2" th:href="@{/notificaciones/historial}" id="notificacion-campana" style="color: #E16A3D; position: relative; display: inline-block;">
                         <i class="fas fa-bell fa-lg"></i>
-                        <span class="d-md-none ms-2">Notificaciones</span>
                         <span id="notificacion-contador" class="badge rounded-pill bg-danger"
-                              style="position: absolute; top: 5px; right: 0px; display: none;">
+                              style="position: absolute; top: -5px; right: -8px; font-size: 0.65rem; min-width: 18px; height: 18px; display: none; padding: 2px 5px;">
                             0
                         </span>
+                        <span class="d-md-none ms-2">Notificaciones</span>
                     </a>
                 </li>
 
