@@ -1,5 +1,4 @@
 package com.tallerwebi.dominio;
-
 import com.tallerwebi.dominio.Entity.*;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.Enums.EstadoPago;

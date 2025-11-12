@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +28,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class ServicioReservaTest {
@@ -1259,4 +1262,114 @@ class ServicioReservaTest {
                 anyString()
         );
     }
+
+
+    @Test
+    void deberiaListarReservasCanceladasEInicializarViajesCorrectamente() throws Exception {
+        // given
+        Long viajeroId = 1L;
+        Viajero viajeroMock = crearViajeroMock(viajeroId);
+        
+        // 1. Crear un Viaje MOCK
+        Viaje viajeMock = mock(Viaje.class);
+        
+        when(viajeMock.getOrigen()).thenReturn(mock(Ciudad.class));
+        when(viajeMock.getDestino()).thenReturn(mock(Ciudad.class));
+        when(viajeMock.getConductor()).thenReturn(mock(Conductor.class));
+        when(viajeMock.getVehiculo()).thenReturn(mock(Vehiculo.class));
+
+        Reserva reserva = crearReservaMock(100L, EstadoReserva.CANCELADA_POR_CONDUCTOR);
+        reserva.setViaje(viajeMock); 
+        
+        // 4. Mockear el flujo de los servicios
+        when(servicioViajero.obtenerViajero(viajeroId)).thenReturn(viajeroMock);
+        when(repositorioReservaMock.findCanceladasByViajero(viajeroMock)).thenReturn(Arrays.asList(reserva));
+
+        // when
+        List<Reserva> reservasObtenidas = servicioReserva.listarViajesCanceladosPorViajero(viajeroId);
+
+        // then
+        // Verificación principal del resultado
+        assertThat(reservasObtenidas, hasSize(1));
+        assertThat(reservasObtenidas.get(0).getViaje(), is(viajeMock)); 
+
+        verify(viajeMock, times(1)).getOrigen();
+        verify(viajeMock, times(1)).getDestino();
+        verify(viajeMock, times(1)).getConductor();
+        verify(viajeMock, times(1)).getVehiculo();
+        
+        verify(servicioViajero, times(1)).obtenerViajero(viajeroId);
+        verify(repositorioReservaMock, times(1)).findCanceladasByViajero(viajeroMock);
+    }
+
+    @Test
+    void deberiaListarReservasCanceladasSinInicializarSiViajeEsNull() throws Exception {
+        // given
+        Long viajeroId = 2L;
+        Viajero viajeroMock = crearViajeroMock(viajeroId);
+     
+        Reserva reservaSinViaje = crearReservaMock(200L, EstadoReserva.CANCELADA_POR_CONDUCTOR);
+        reservaSinViaje.setViaje(null); 
+        
+        Viaje viajeNoLlamado = mock(Viaje.class); 
+
+        // Mocking del servicio y repositorio
+        when(servicioViajero.obtenerViajero(viajeroId)).thenReturn(viajeroMock);
+        when(repositorioReservaMock.findCanceladasByViajero(viajeroMock)).thenReturn(Arrays.asList(reservaSinViaje));
+
+        // when
+        List<Reserva> reservasObtenidas = servicioReserva.listarViajesCanceladosPorViajero(viajeroId);
+
+        // then
+        assertThat(reservasObtenidas, hasSize(1));
+        
+        // Verificaciones para cubrir el 'else' (if = FALSE)
+        verify(viajeNoLlamado, never()).getOrigen();
+        verify(viajeNoLlamado, never()).getDestino();
+        verify(viajeNoLlamado, never()).getConductor();
+        verify(viajeNoLlamado, never()).getVehiculo();
+
+        // Verificaciones del flujo principal
+        verify(servicioViajero, times(1)).obtenerViajero(viajeroId);
+        verify(repositorioReservaMock, times(1)).findCanceladasByViajero(viajeroMock);
+    }
+    
+    @Test
+    void deberiaRetornarListaVaciaSiNoHayReservasCanceladas() throws Exception {
+        // given
+        Long viajeroId = 3L;
+        Viajero viajeroMock = crearViajeroMock(viajeroId);
+        List<Reserva> listaVacia = Collections.emptyList();
+
+        when(servicioViajero.obtenerViajero(viajeroId)).thenReturn(viajeroMock);
+        when(repositorioReservaMock.findCanceladasByViajero(viajeroMock)).thenReturn(listaVacia);
+
+        // when
+        List<Reserva> reservasObtenidas = servicioReserva.listarViajesCanceladosPorViajero(viajeroId);
+
+        // then
+        assertThat(reservasObtenidas, is(listaVacia));
+        assertThat(reservasObtenidas, hasSize(0));
+        
+        verify(servicioViajero, times(1)).obtenerViajero(viajeroId);
+        verify(repositorioReservaMock, times(1)).findCanceladasByViajero(viajeroMock);
+        
+    }
+    
+    @Test
+    void deberiaLanzarExcepcionCuandoElViajeroNoExiste() throws Exception {
+        // given
+        Long viajeroIdInexistente = 99L;
+        
+        doThrow(new UsuarioInexistente("El viajero no fue encontrado")).when(servicioViajero).obtenerViajero(viajeroIdInexistente);
+
+        // when & then
+        assertThrows(UsuarioInexistente.class, () -> {
+            servicioReserva.listarViajesCanceladosPorViajero(viajeroIdInexistente);
+        });
+
+        verify(servicioViajero, times(1)).obtenerViajero(viajeroIdInexistente);
+        verify(repositorioReservaMock, never()).findCanceladasByViajero(any());
+    }
+
 }

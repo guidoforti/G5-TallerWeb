@@ -12,20 +12,25 @@ import com.tallerwebi.presentacion.DTO.InputsDTO.RechazoReservaInputDTO;
 import com.tallerwebi.presentacion.DTO.InputsDTO.SolicitudReservaInputDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ReservaActivaDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ReservaVistaDTO;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeConfirmadoViajeroDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeReservaSolicitudDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.ui.ModelMap;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.servlet.http.HttpSession;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 public class ControladorReservaTest {
@@ -1180,4 +1185,153 @@ public class ControladorReservaTest {
         verify(servicioReservaMock, times(1)).marcarAsistencia(reservaId, conductorId, inputDTO.getAsistencia());
         verify(servicioViajeMock, times(1)).obtenerViajePorId(viajeId);
     }
+
+
+
+
+@Test
+public void deberiaRedirigirALoginSiNoEsViajero() {
+    when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
+    when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR");
+
+    ModelAndView mav = controladorReserva.listarMisViajes(sessionMock);
+
+    assertThat(mav.getViewName(), is("redirect:/login"));
+    verifyNoInteractions(servicioReservaMock, servicioNotificacionMock);
+}
+
+@Test
+public void deberiaListarMisViajesCorrectamente() throws UsuarioInexistente {
+    // given
+    Long viajeroId = 1L;
+    when(sessionMock.getAttribute("idUsuario")).thenReturn(viajeroId);
+    when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
+    when(servicioNotificacionMock.contarNoLeidas(viajeroId)).thenReturn(3L);
+
+    // --- crear datos de prueba ---
+    Conductor conductor = new Conductor();
+    conductor.setId(9L);
+
+    Viaje viajeDisponible = new Viaje();
+    viajeDisponible.setId(100L);
+    viajeDisponible.setEstado(EstadoDeViaje.DISPONIBLE);
+    viajeDisponible.setFechaHoraDeSalida(LocalDateTime.now().plusDays(1));
+    viajeDisponible.setConductor(conductor);
+
+    Viaje viajeEnCurso = new Viaje();
+    viajeEnCurso.setId(200L);
+    viajeEnCurso.setEstado(EstadoDeViaje.EN_CURSO);
+    viajeEnCurso.setFechaHoraDeSalida(LocalDateTime.now());
+    viajeEnCurso.setConductor(conductor);
+
+    Viaje viajeFinalizado = new Viaje();
+    viajeFinalizado.setId(300L);
+    viajeFinalizado.setEstado(EstadoDeViaje.FINALIZADO);
+    viajeFinalizado.setFechaHoraDeSalida(LocalDateTime.now().minusDays(1));
+    viajeFinalizado.setConductor(conductor);
+
+    Viaje viajeCompleto = new Viaje();
+    viajeCompleto.setId(400L);
+    viajeCompleto.setEstado(EstadoDeViaje.COMPLETO);
+    viajeCompleto.setFechaHoraDeSalida(LocalDateTime.now().plusHours(2));
+    viajeCompleto.setConductor(conductor);
+
+    Viaje viajeCancelado = new Viaje();
+    viajeCancelado.setId(500L);
+    viajeCancelado.setEstado(EstadoDeViaje.CANCELADO);
+    viajeCancelado.setFechaHoraDeSalida(LocalDateTime.now().minusDays(2));
+    viajeCancelado.setConductor(conductor);
+
+    Reserva r1 = new Reserva(); r1.setViaje(viajeDisponible);
+    Reserva r2 = new Reserva(); r2.setViaje(viajeEnCurso);
+    Reserva r3 = new Reserva(); r3.setViaje(viajeFinalizado);
+    Reserva r4 = new Reserva(); r4.setViaje(viajeCompleto);
+    Reserva r5 = new Reserva(); r5.setViaje(viajeCancelado);
+
+    List<Reserva> reservasConfirmadas = Arrays.asList(r1, r2, r3, r4);
+    List<Reserva> reservasCanceladas = List.of(r5);
+
+    when(servicioReservaMock.listarViajesConfirmadosPorViajero(viajeroId)).thenReturn(reservasConfirmadas);
+    when(servicioReservaMock.listarViajesCanceladosPorViajero(viajeroId)).thenReturn(reservasCanceladas);
+    when(servicioValoracionMock.yaHaValorado(viajeroId, conductor.getId(), viajeFinalizado.getId())).thenReturn(false);
+
+    // when
+    ModelAndView mav = controladorReserva.listarMisViajes(sessionMock);
+
+    // then
+    assertThat(mav.getViewName(), is("misViajes"));
+    ModelMap model = (ModelMap) mav.getModel();
+
+    assertThat(model.get("idUsuario"), is(viajeroId));
+    assertThat(model.get("ROL"), is("VIAJERO"));
+    assertThat(model.get("contadorNotificaciones"), is(3L));
+
+    List<?> proximos = (List<?>) model.get("viajesProximos");
+    List<?> enCurso = (List<?>) model.get("viajesEnCurso");
+    List<?> finalizados = (List<?>) model.get("viajesFinalizados");
+    List<?> cancelados = (List<?>) model.get("viajesCancelados");
+
+    assertThat(proximos.size(), is(2)); // DISPONIBLE + COMPLETO
+    assertThat(enCurso.size(), is(1));
+    assertThat(finalizados.size(), is(1));
+    assertThat(cancelados.size(), is(1));
+
+    ViajeConfirmadoViajeroDTO dtoFinalizado = (ViajeConfirmadoViajeroDTO) finalizados.get(0);
+    assertThat(dtoFinalizado.getValoracionPendiente(), is(true));
+
+    verify(servicioNotificacionMock).contarNoLeidas(viajeroId);
+    verify(servicioReservaMock).listarViajesConfirmadosPorViajero(viajeroId);
+    verify(servicioReservaMock).listarViajesCanceladosPorViajero(viajeroId);
+    verify(servicioValoracionMock).yaHaValorado(viajeroId, conductor.getId(), viajeFinalizado.getId());
+}
+
+@Test
+public void deberiaMarcarFinalizadoSinValoracionPendienteCuandoYaHaValorado() throws UsuarioInexistente {
+    Long viajeroId = 2L;
+    when(sessionMock.getAttribute("idUsuario")).thenReturn(viajeroId);
+    when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
+    when(servicioNotificacionMock.contarNoLeidas(viajeroId)).thenReturn(0L);
+
+    Conductor conductor = new Conductor();
+    conductor.setId(99L);
+
+    Viaje viajeFinalizado = new Viaje();
+    viajeFinalizado.setId(999L);
+    viajeFinalizado.setEstado(EstadoDeViaje.FINALIZADO);
+    viajeFinalizado.setFechaHoraDeSalida(LocalDateTime.now().minusHours(3));
+    viajeFinalizado.setConductor(conductor);
+
+    Reserva reservaFinalizada = new Reserva();
+    reservaFinalizada.setViaje(viajeFinalizado);
+
+    when(servicioReservaMock.listarViajesConfirmadosPorViajero(viajeroId)).thenReturn(List.of(reservaFinalizada));
+    when(servicioReservaMock.listarViajesCanceladosPorViajero(viajeroId)).thenReturn(Collections.emptyList());
+    when(servicioValoracionMock.yaHaValorado(viajeroId, conductor.getId(), viajeFinalizado.getId())).thenReturn(true);
+
+    ModelAndView mav = controladorReserva.listarMisViajes(sessionMock);
+
+    assertThat(mav.getViewName(), is("misViajes"));
+    List<ViajeConfirmadoViajeroDTO> finalizados = (List<ViajeConfirmadoViajeroDTO>) mav.getModel().get("viajesFinalizados");
+    assertThat(finalizados.get(0).getValoracionPendiente(), is(false));
+}
+
+@Test
+public void deberiaMostrarErrorSiUsuarioInexistente() throws UsuarioInexistente {
+    Long viajeroId = 5L;
+    when(sessionMock.getAttribute("idUsuario")).thenReturn(viajeroId);
+    when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
+    when(servicioNotificacionMock.contarNoLeidas(viajeroId)).thenReturn(2L);
+
+    when(servicioReservaMock.listarViajesConfirmadosPorViajero(viajeroId))
+            .thenThrow(new UsuarioInexistente("El usuario no existe"));
+
+    ModelAndView mav = controladorReserva.listarMisViajes(sessionMock);
+
+    assertThat(mav.getViewName(), is("error"));
+    assertThat(mav.getModel().get("error"), is("El usuario no existe"));
+}
+
+
+
+   
 }
