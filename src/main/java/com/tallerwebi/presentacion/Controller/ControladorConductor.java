@@ -49,6 +49,7 @@ public class ControladorConductor {
             model.put("idConductor", conductorId);
             model.put("nombreConductor", conductor.getNombre());
             model.put("rol", rol);
+            model.put("ROL_ACTUAL", rol);
             return new ModelAndView("homeConductor", model);
 
         } catch (UsuarioInexistente | NotFoundException e) {
@@ -68,11 +69,11 @@ public class ControladorConductor {
             return new ModelAndView("redirect:/login");
         }
 
-        // 🚀 INYECCIÓN DE WEB SOCKET / NAVBAR
         Long contador = servicioNotificacion.contarNoLeidas(idConductor);
         model.put("contadorNotificaciones", contador.intValue());
         model.put("idUsuario", idConductor);
         model.put("ROL", rol);
+        model.put("ROL_ACTUAL", rol);
         model.put("userRole", rol);
 
         try {
@@ -108,6 +109,7 @@ public class ControladorConductor {
         }
         model.put("idUsuario", usuarioEnSesionId);
         model.put("ROL", rol);
+        model.put("ROL_ACTUAL", rol);
         model.put("userRole", rol);
 
         if (!"VIAJERO".equals(rol)) {

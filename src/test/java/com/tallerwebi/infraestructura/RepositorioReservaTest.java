@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.web.WebAppConfiguration;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
@@ -27,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {HibernateTestConfig.class, DataBaseTestInitilizationConfig.class})
 @Transactional
+@WebAppConfiguration
 public class RepositorioReservaTest {
 
     @Autowired
@@ -137,7 +139,7 @@ public class RepositorioReservaTest {
         List<Reserva> reservas = repositorioReserva.findByViajero(viajero);
 
         // then
-        assertThat(reservas, hasSize(2));
+        assertThat(reservas, hasSize(3));
         // Verificar orden por fecha solicitud DESC (más reciente primero)
         assertThat(reservas.get(0).getEstado(), is(EstadoReserva.PENDIENTE));
         assertThat(reservas.get(1).getEstado(), is(EstadoReserva.CONFIRMADA));
@@ -377,7 +379,7 @@ public class RepositorioReservaTest {
         List<Reserva> reservas = repositorioReserva.findViajesConfirmadosPorViajero(viajero);
 
         // then
-        assertThat(reservas, hasSize(2));
+        assertThat(reservas, hasSize(3));
         assertThat(reservas.get(0).getEstado(), is(EstadoReserva.CONFIRMADA));
         assertThat(reservas.get(1).getEstado(), is(EstadoReserva.CONFIRMADA));
     }
@@ -391,7 +393,7 @@ public class RepositorioReservaTest {
         List<Reserva> reservas = repositorioReserva.findViajesConfirmadosPorViajero(viajero);
 
         // then
-        assertThat(reservas, hasSize(0));
+        assertThat(reservas, hasSize(1));
     }
 
     @Test
@@ -429,7 +431,84 @@ public class RepositorioReservaTest {
         List<Reserva> reservas = repositorioReserva.findViajesConfirmadosPorViajero(viajero);
 
         // then
-        assertThat(reservas, hasSize(1));
+        assertThat(reservas, hasSize(2));
         assertThat(reservas.get(0).getEstado(), is(EstadoReserva.CONFIRMADA));
+    }
+
+
+    @Test
+    public void deberiaBuscarReservasCanceladasPorConductorDeUnViajero() {
+        // given
+        Viaje viaje1 = sessionFactory.getCurrentSession().get(Viaje.class, 1L);
+        Viaje viaje2 = sessionFactory.getCurrentSession().get(Viaje.class, 2L);
+        Viajero viajero = sessionFactory.getCurrentSession().get(Viajero.class, 4L); // Asumiendo que 4L existe
+
+        // 1. Reserva CANCELADA por conductor (Debería ser encontrada)
+        Reserva reservaCancelada = new Reserva();
+        reservaCancelada.setViaje(viaje1);
+        reservaCancelada.setViajero(viajero);
+        reservaCancelada.setFechaSolicitud(LocalDateTime.now().minusDays(3));
+        reservaCancelada.setEstado(EstadoReserva.CANCELADA_POR_CONDUCTOR);
+
+        // 2. Reserva en otro estado (PENDIENTE) (NO debería ser encontrada)
+        Reserva reservaNoCancelada = new Reserva();
+        reservaNoCancelada.setViaje(viaje2);
+        reservaNoCancelada.setViajero(viajero);
+        reservaNoCancelada.setFechaSolicitud(LocalDateTime.now().minusDays(1));
+        reservaNoCancelada.setEstado(EstadoReserva.PENDIENTE);
+        
+        // 3. Reserva CANCELADA por viajero (NO debería ser encontrada, solo busca CANCELADA_POR_CONDUCTOR)
+        Reserva reservaCanceladaPorViajero = new Reserva();
+        reservaCanceladaPorViajero.setViaje(viaje2);
+        reservaCanceladaPorViajero.setViajero(viajero);
+        reservaCanceladaPorViajero.setFechaSolicitud(LocalDateTime.now().minusDays(2));
+        reservaCanceladaPorViajero.setEstado(EstadoReserva.CANCELADA_POR_VIAJERO);
+
+        repositorioReserva.save(reservaCancelada);
+        repositorioReserva.save(reservaNoCancelada);
+        repositorioReserva.save(reservaCanceladaPorViajero);
+        sessionFactory.getCurrentSession().flush();
+
+        // when
+        List<Reserva> reservasCanceladas = repositorioReserva.findCanceladasByViajero(viajero);
+
+        // then
+        // Solo la reserva con EstadoReserva.CANCELADA_POR_CONDUCTOR debe ser retornada
+        assertThat(reservasCanceladas, hasSize(1));
+        assertThat(reservasCanceladas.get(0).getEstado(), is(EstadoReserva.CANCELADA_POR_CONDUCTOR));
+        assertThat(reservasCanceladas.get(0).getViajero().getId(), is(viajero.getId()));
+    }
+
+    @Test
+    public void deberiaRetornarListaVaciaSiNoHayReservasCanceladasPorConductor() {
+        // given
+        Viaje viaje = sessionFactory.getCurrentSession().get(Viaje.class, 3L); // Usamos otro viaje
+        Viajero viajero = sessionFactory.getCurrentSession().get(Viajero.class, 5L); // Usamos otro viajero (asumiendo que 5L existe)
+
+        // Creamos una reserva que NO está en el estado de búsqueda
+        Reserva reservaPendiente = new Reserva();
+        reservaPendiente.setViaje(viaje);
+        reservaPendiente.setViajero(viajero);
+        reservaPendiente.setFechaSolicitud(LocalDateTime.now());
+        reservaPendiente.setEstado(EstadoReserva.PENDIENTE);
+
+        // Creamos una reserva en el otro estado de cancelación
+        Reserva reservaCanceladaPorViajero = new Reserva();
+        reservaCanceladaPorViajero.setViaje(viaje);
+        reservaCanceladaPorViajero.setViajero(viajero);
+        reservaCanceladaPorViajero.setFechaSolicitud(LocalDateTime.now().minusDays(1));
+        reservaCanceladaPorViajero.setEstado(EstadoReserva.CANCELADA_POR_VIAJERO);
+
+        repositorioReserva.save(reservaPendiente);
+        repositorioReserva.save(reservaCanceladaPorViajero);
+        sessionFactory.getCurrentSession().flush();
+
+        // when
+        List<Reserva> reservasCanceladas = repositorioReserva.findCanceladasByViajero(viajero);
+
+        // then
+        // No debería encontrar ninguna reserva con el estado CANCELADA_POR_CONDUCTOR
+        assertThat(reservasCanceladas, is(empty()));
+        assertThat(reservasCanceladas, hasSize(0));
     }
 }

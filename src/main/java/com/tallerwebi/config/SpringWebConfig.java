@@ -15,28 +15,22 @@ import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.spring5.view.ThymeleafViewResolver;
 import org.thymeleaf.templatemode.TemplateMode;
 
-import java.nio.file.Paths;
-
 @EnableWebMvc
 @Configuration
 @ComponentScan({"com.tallerwebi.presentacion", "com.tallerwebi.dominio", "com.tallerwebi.infraestructura", "com.tallerwebi.config"})
 @Import({WebSocketConfig.class})
 public class SpringWebConfig implements WebMvcConfigurer {
 
-    private static final String UPLOAD_DIR_PATH_STRING = Paths.get(System.getProperty("user.dir"), "profile_uploads").toString();
     // Spring + Thymeleaf need this
     @Autowired
     private ApplicationContext applicationContext;
 
     @Override
     public void addResourceHandlers(final ResourceHandlerRegistry registry) {
-        String absoluteUploadURI = Paths.get(UPLOAD_DIR_PATH_STRING).toUri().toString();
         registry.addResourceHandler("/css/**").addResourceLocations("/resources/core/css/");
         registry.addResourceHandler("/js/**").addResourceLocations("/resources/core/js/");
         registry.addResourceHandler("/img/**").addResourceLocations("/resources/core/img/");
         registry.addResourceHandler("/webjars/**").addResourceLocations("/webjars/");
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations(absoluteUploadURI);
     }
 
     // https://www.thymeleaf.org/doc/tutorials/3.0/thymeleafspring.html

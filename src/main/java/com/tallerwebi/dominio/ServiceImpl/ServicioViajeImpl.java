@@ -374,11 +374,27 @@ public class ServicioViajeImpl implements ServicioViaje {
         // Calcular minutos de retraso (puede ser negativo si inicia antes)
         int minutosRetraso = (int) Duration.between(viaje.getFechaHoraDeSalida(), ahora).toMinutes();
 
+        Hibernate.initialize(viaje.getReservas());
+        List<Reserva> reservasAfectadas = viaje.getReservas();
         // Iniciar viaje
         viaje.setEstado(EstadoDeViaje.EN_CURSO);
         viaje.setFechaHoraInicioReal(ahora);
         viaje.setMinutosDeRetraso(minutosRetraso);
         viajeRepository.modificarViaje(viaje);
+        for (Reserva reserva : reservasAfectadas) {
+            if (reserva.getEstado() == EstadoReserva.CONFIRMADA) {
+                Usuario viajero = reserva.getViajero();
+                String mensaje = String.format("¡Tu viaje a %s ha comenzado!", viaje.getDestino().getNombre());
+                String url = "/reserva/misViajes";
+
+                try {
+                    servicioNotificacion.crearYEnviar(viajero, TipoNotificacion.VIAJE_INICIADO, mensaje, url);
+                } catch (Exception e) {
+                    //DEJAMOS ESTO ASI PARA DEBBUGEAR
+                    System.err.println("Fallo al notificar inicio al viajero: " + viajero.getId());
+                }
+            }
+        }
     }
 
     @Override

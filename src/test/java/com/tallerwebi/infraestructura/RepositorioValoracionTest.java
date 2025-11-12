@@ -1,13 +1,12 @@
 package com.tallerwebi.infraestructura;
 
-
-import com.tallerwebi.dominio.Entity.Usuario;
+import com.tallerwebi.integracion.config.HibernateTestConfig;
+import com.tallerwebi.integracion.config.DataBaseTestInitilizationConfig;
+import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Valoracion;
 import com.tallerwebi.dominio.Entity.Viaje;
-import com.tallerwebi.dominio.Enums.EstadoDeViaje;
+import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.IRepository.RepositorioValoracion;
-import com.tallerwebi.integracion.config.DataBaseTestInitilizationConfig;
-import com.tallerwebi.integracion.config.HibernateTestConfig;
 import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,13 +17,18 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Test de Integración para RepositorioValoracionImpl.
+ * Depende de los datos pre-cargados en dataTest.sql (Usuarios, Viajes).
+ */
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {HibernateTestConfig.class, DataBaseTestInitilizationConfig.class})
 @Transactional
@@ -34,166 +38,157 @@ public class RepositorioValoracionTest {
     private SessionFactory sessionFactory;
 
     private RepositorioValoracion repositorioValoracion;
-    private Viaje viajeDummy;
 
-    // --- HELPERS ---
-
-    private Viaje crearViajeFinalizado(Long id) {
-        Viaje viaje = new Viaje();
-        viaje.setId(id);
-        viaje.setEstado(EstadoDeViaje.FINALIZADO);
-        sessionFactory.getCurrentSession().save(viaje); // Persistir el viaje dummy
-        return viaje;
-    }
-
-    private Usuario obtenerUsuario(Long id) {
-        return sessionFactory.getCurrentSession().get(Usuario.class, id);
-    }
+    // Entidades de referencia de dataTest.sql
+    private final Long EMISOR_ID = 4L; // Viajero Sofia Torres (ID 4 en dataTest.sql)
+    private final Long RECEPTOR_ID = 1L; // Conductor Carlos Perez (ID 1 en dataTest.sql)
+    private final Long VIAJE_ID_FINALIZADO = 3L; // Viaje 3 (FINALIZADO en dataTest.sql)
+    private Viajero viajeroEmisor;
+    private Conductor conductorReceptor;
+    private Viaje viajeFinalizado;
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         this.repositorioValoracion = new RepositorioValoracionImpl(this.sessionFactory);
 
-        // Crear un viaje base para usar en todos los constructores de Valoracion
-        this.viajeDummy = crearViajeFinalizado(99L);
+        // ARRANGE: Cargar las entidades necesarias desde la sesión (que ya fueron insertadas por dataTest.sql)
+        viajeroEmisor = sessionFactory.getCurrentSession().get(Viajero.class, EMISOR_ID);
+        conductorReceptor = sessionFactory.getCurrentSession().get(Conductor.class, RECEPTOR_ID);
+        viajeFinalizado = sessionFactory.getCurrentSession().get(Viaje.class, VIAJE_ID_FINALIZADO);
     }
 
-    // --- TEST PARA: save(Valoracion valoracion) ---
+    // --------------------------------------------------------------------------------
+    // Tests: save(Valoracion)
+    // --------------------------------------------------------------------------------
 
     @Test
-    public void deberiaGuardarValoracionCorrectamente() {
-        // given
-        Usuario emisor = obtenerUsuario(1L);
-        Usuario receptor = obtenerUsuario(2L);
+    public void save_deberiaGuardarValoracionCorrectamente() {
+        // GIVEN: Una nueva valoración
+        Valoracion valoracion = new Valoracion();
+        valoracion.setEmisor(viajeroEmisor);
+        valoracion.setReceptor(conductorReceptor);
+        valoracion.setViaje(viajeFinalizado);
+        valoracion.setPuntuacion(5);
+        valoracion.setComentario("Excelente viaje");
+        valoracion.setFecha(LocalDate.now());
 
-        // CLAVE: Añadir el viajeDummy al constructor
-        Valoracion valoracion = new Valoracion(emisor, receptor, 5, "Excelente experiencia, muy puntual.", viajeDummy);
-
-        // when
+        // WHEN: Guardo la valoración
         repositorioValoracion.save(valoracion);
         sessionFactory.getCurrentSession().flush();
-
-        // then
-        assertNotNull(valoracion.getId(), "La valoración guardada debería tener un ID asignado");
-
-        Valoracion valoracionRecuperada = sessionFactory.getCurrentSession().get(Valoracion.class, valoracion.getId());
-        assertNotNull(valoracionRecuperada, "La valoración debe ser recuperable");
-        assertThat(valoracionRecuperada.getPuntuacion(), is(5));
-        assertThat(valoracionRecuperada.getReceptor().getId(), is(receptor.getId()));
-        assertThat(valoracionRecuperada.getViaje().getId(), is(viajeDummy.getId()));
-    }
-
-    // --- TEST PARA: findByReceptorId(Long receptorId) ---
-
-    @Test
-    public void deberiaObtenerValoracionesDeUsuarioOrdenadasPorFechaDesc() {
-        // given
-        Usuario emisor1 = obtenerUsuario(1L);
-        Usuario receptor = obtenerUsuario(2L);
-        Usuario emisor2 = obtenerUsuario(3L);
-
-        Viaje viaje1 = crearViajeFinalizado(10L);
-        Viaje viaje2 = crearViajeFinalizado(20L);
-
-        // 1. Valoración Antigua (Fecha -2 días)
-        Valoracion valoracionAntigua = new Valoracion(emisor1, receptor, 3, "Regular", viajeDummy);
-        valoracionAntigua.setFecha(LocalDate.now().minusDays(2));
-
-        // 2. Valoración Reciente (Fecha -1 día)
-        Valoracion valoracionReciente = new Valoracion(emisor2, receptor, 5, "Genial!", viaje1);
-        valoracionReciente.setFecha(LocalDate.now().minusDays(1));
-
-        // 3. Valoración Hoy (Más Reciente)
-        Valoracion valoracionHoy = new Valoracion(emisor1, receptor, 4, "Buena", viaje2);
-        valoracionHoy.setFecha(LocalDate.now());
-
-        // Guardar para probar el ORDER BY
-        repositorioValoracion.save(valoracionAntigua);
-        repositorioValoracion.save(valoracionHoy);
-        repositorioValoracion.save(valoracionReciente);
-        sessionFactory.getCurrentSession().flush();
         sessionFactory.getCurrentSession().clear();
 
-        // when
-        List<Valoracion> valoraciones = repositorioValoracion.findByReceptorId(receptor.getId());
+        // THEN: La valoración debe tener un ID asignado y ser recuperable
+        assertThat(valoracion.getId(), is(notNullValue()));
 
-        // then
-        assertThat(valoraciones, hasSize(3));
-
-        // Verificar el orden (DESC por fecha: Hoy > Reciente > Antigua)
-        assertThat(valoraciones.get(0).getComentario(), is("Buena"));
-        assertThat(valoraciones.get(1).getComentario(), is("Genial!"));
-        assertThat(valoraciones.get(2).getComentario(), is("Regular"));
+        // Verifico que se pueda recuperar directamente de la sesión
+        Valoracion recuperada = sessionFactory.getCurrentSession().get(Valoracion.class, valoracion.getId());
+        assertThat(recuperada, is(notNullValue()));
+        assertThat(recuperada.getPuntuacion(), is(5));
+        assertThat(recuperada.getEmisor().getId(), is(EMISOR_ID));
     }
 
-    @Test
-    public void deberiaRetornarListaVaciaCuandoUsuarioNoTieneValoraciones() {
-        // given
-        Long idUsuarioSinValoraciones = 99L;
-
-        // when
-        List<Valoracion> valoraciones = repositorioValoracion.findByReceptorId(idUsuarioSinValoraciones);
-
-        // then
-        assertNotNull(valoraciones);
-        assertTrue(valoraciones.isEmpty());
-        assertThat(valoraciones, hasSize(0));
-    }
-
-    // --- NUEVO TEST PARA: yaExisteValoracionParaViaje(emisorId, receptorId, viajeId) ---
+    // --------------------------------------------------------------------------------
+    // Tests: findByReceptorId(Long receptorId)
+    // --------------------------------------------------------------------------------
 
     @Test
-    public void deberiaRetornarTrueSiYaExisteValoracionParaElViajeEspecifico() {
-        // given
-        Long emisorId = 1L;
-        Long receptorId = 2L;
-        Long viajeObjetivoId = 50L;
+    public void findByReceptorId_deberiaRetornarValoracionesOrdenadasPorFechaDesc() {
+        // GIVEN: Varias valoraciones para el mismo receptor con diferentes fechas
+        // Nota: Usamos un Viajero temporal como emisor, no importa que no sea el mismo de dataTest
+        Viajero emisor2 = new Viajero();
+        emisor2.setId(90L);
+        emisor2.setEmail("emisor2@test.com");
+        sessionFactory.getCurrentSession().save(emisor2); // Persistimos para la FK
 
-        Usuario emisor = obtenerUsuario(emisorId);
-        Usuario receptor = obtenerUsuario(receptorId);
-        Viaje viajeObjetivo = crearViajeFinalizado(viajeObjetivoId);
-
-        // Guardar la valoración que estamos buscando
-        Valoracion valoracionExistente = new Valoracion(emisor, receptor, 5, "Ya calificado.", viajeObjetivo);
-        repositorioValoracion.save(valoracionExistente);
-
-        // Guardar otra valoración para otro viaje (para asegurar que la consulta es precisa)
-        Viaje otroViaje = crearViajeFinalizado(51L);
-        Valoracion otraValoracion = new Valoracion(emisor, receptor, 3, "Otro viaje.", otroViaje);
-        repositorioValoracion.save(otraValoracion);
+        // Valoración 1 (Antigua)
+        Valoracion v1 = crearYGuardarValoracion(emisor2, conductorReceptor, viajeFinalizado, 4, "Viejo", LocalDate.now().minusDays(2));
+        // Valoración 2 (Reciente)
+        Valoracion v2 = crearYGuardarValoracion(viajeroEmisor, conductorReceptor, viajeFinalizado, 5, "Nuevo", LocalDate.now());
+        // Valoración 3 (Intermedia)
+        Valoracion v3 = crearYGuardarValoracion(emisor2, conductorReceptor, viajeFinalizado, 3, "Intermedio", LocalDate.now().minusDays(1));
 
         sessionFactory.getCurrentSession().flush();
-        sessionFactory.getCurrentSession().clear();
 
-        // when
-        boolean existe = repositorioValoracion.yaExisteValoracionParaViaje(emisorId, receptorId, viajeObjetivoId);
+        // WHEN: Busco las valoraciones por el ID del conductor receptor
+        List<Valoracion> lista = repositorioValoracion.findByReceptorId(RECEPTOR_ID);
 
-        // then
-        assertTrue(existe, "Debería retornar TRUE porque la valoración para este Viaje 50 ya existe.");
+        // THEN: La lista debe tener 3 elementos y estar ordenada por fecha DESC (V2 -> V3 -> V1)
+        assertThat(lista, hasSize(3));
+        assertThat(lista.get(0).getComentario(), is("Nuevo")); // Más reciente (V2)
+        assertThat(lista.get(1).getComentario(), is("Intermedio")); // Intermedio (V3)
+        assertThat(lista.get(2).getComentario(), is("Viejo")); // Más antiguo (V1)
     }
 
     @Test
-    public void deberiaRetornarFalseSiNoExisteValoracionParaElViajeEspecifico() {
-        // given
-        Long emisorId = 1L;
-        Long receptorId = 2L;
-        Long viajeObjetivoId = 60L;
-
-        Usuario emisor = obtenerUsuario(emisorId);
-        Usuario receptor = obtenerUsuario(receptorId);
-
-        // Solo guardamos una valoración para otro viaje, no para el objetivo (60)
-        Viaje otroViaje = crearViajeFinalizado(61L);
-        Valoracion otraValoracion = new Valoracion(emisor, receptor, 3, "Para viaje 61.", otroViaje);
-        repositorioValoracion.save(otraValoracion);
-
+    public void findByReceptorId_deberiaRetornarListaVaciaSiNoHayValoraciones() {
+        // GIVEN: Un nuevo conductor que no tiene valoraciones
+        Conductor conductorNuevo = new Conductor();
+        conductorNuevo.setId(99L);
+        conductorNuevo.setEmail("nuevo@conductor.com");
+        sessionFactory.getCurrentSession().save(conductorNuevo);
         sessionFactory.getCurrentSession().flush();
-        sessionFactory.getCurrentSession().clear();
 
-        // when
-        boolean existe = repositorioValoracion.yaExisteValoracionParaViaje(emisorId, receptorId, viajeObjetivoId);
+        // WHEN: Busco valoraciones para el nuevo conductor
+        List<Valoracion> lista = repositorioValoracion.findByReceptorId(99L);
 
-        // then
-        assertTrue(!existe, "Debería retornar FALSE porque la valoración para el Viaje 60 no existe.");
+        // THEN: La lista debe estar vacía
+        assertThat(lista, is(empty()));
+    }
+
+    // --------------------------------------------------------------------------------
+    // Tests: yaExisteValoracionParaViaje(Long emisorId, Long receptorId, Long viajeId)
+    // --------------------------------------------------------------------------------
+
+    @Test
+    public void yaExisteValoracionParaViaje_deberiaRetornarTrueCuandoLaValoracionExiste() {
+        // GIVEN: Una valoración guardada con los 3 IDs clave
+        crearYGuardarValoracion(viajeroEmisor, conductorReceptor, viajeFinalizado, 5, "Test Unicidad", LocalDate.now());
+        sessionFactory.getCurrentSession().flush();
+
+        // WHEN: Verifico si existe la valoración con la misma combinación
+        boolean existe = repositorioValoracion.yaExisteValoracionParaViaje(EMISOR_ID, RECEPTOR_ID, VIAJE_ID_FINALIZADO);
+
+        // THEN: Debe retornar verdadero
+        assertTrue(existe, "Debería retornar TRUE porque la valoración ya fue guardada");
+    }
+
+    @Test
+    public void yaExisteValoracionParaViaje_deberiaRetornarFalseCuandoLaValoracionNoExiste() {
+        // GIVEN: Ninguna valoración guardada
+
+        // WHEN: Verifico si existe una valoración que no ha sido creada
+        boolean existe = repositorioValoracion.yaExisteValoracionParaViaje(EMISOR_ID, RECEPTOR_ID, VIAJE_ID_FINALIZADO);
+
+        // THEN: Debe retornar falso
+        assertFalse(existe, "Debería retornar FALSE porque no hay valoraciones para esa combinación de IDs");
+    }
+
+    @Test
+    public void yaExisteValoracionParaViaje_deberiaRetornarFalseCuandoCambiaElViaje() {
+        // GIVEN: Una valoración guardada para el Viaje 5
+        crearYGuardarValoracion(viajeroEmisor, conductorReceptor, viajeFinalizado, 5, "Test Viaje 5", LocalDate.now());
+        sessionFactory.getCurrentSession().flush();
+
+        // WHEN: Verifico si existe la valoración para la misma combinación de Emisor/Receptor, pero con el Viaje 1
+        boolean existe = repositorioValoracion.yaExisteValoracionParaViaje(EMISOR_ID, RECEPTOR_ID, 1L); // Viaje 1
+
+        // THEN: Debe retornar falso
+        assertFalse(existe, "Debería retornar FALSE porque el Viaje ID es diferente");
+    }
+
+    // --------------------------------------------------------------------------------
+    // Métodos Auxiliares
+    // --------------------------------------------------------------------------------
+
+    private Valoracion crearYGuardarValoracion(Viajero emisor, Conductor receptor, Viaje viaje, Integer puntuacion, String comentario, LocalDate fecha) {
+        Valoracion valoracion = new Valoracion();
+        valoracion.setEmisor(emisor);
+        valoracion.setReceptor(receptor);
+        valoracion.setViaje(viaje);
+        valoracion.setPuntuacion(puntuacion);
+        valoracion.setComentario(comentario);
+        valoracion.setFecha(fecha);
+        repositorioValoracion.save(valoracion);
+        return valoracion;
     }
 }

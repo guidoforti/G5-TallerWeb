@@ -2,14 +2,20 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Fragmento Navbar Viajero</title>
+    <link rel="stylesheet" th:href="@{/css/new-main.css}"/>
 </head>
 <body>
+<style>
+    body{
+    font-family: 'Lato', sans-serif;
+    }
 
-<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-unrumbo fixed-top border-bottom">
+</style>
+<nav th:fragment="navbar" class="navbar navbar-expand-md navbar-unrumbo fixed-top border-bottom">
     <div class="container-fluid">
 
         <a class="navbar-brand fw-bold text-dark" th:href="@{/viajero/home}">
-            <img th:src="@{/img/unrumbo-logo.png}" alt="UnRumbo" width="40" class="me-2">
+            <img th:src="@{/img/unrumbo-logo.png}" alt="UnRumbo" width="40" class="me-1">
             <img th:src="@{/img/home.svg}" alt="Home" width="20" class="me-1" style="filter: brightness(0.6) sepia(1) hue-rotate(-25deg) saturate(3);">
             UnRumbo
         </a>
@@ -19,42 +25,44 @@
         </button>
 
         <div class="collapse navbar-collapse" id="navbarNavViajero">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <ul class="navbar-nav me-auto mb-2 mb-md-0">
                 <li class="nav-item">
-                    <a class="nav-link fw-bold" style="color: #E16A3D;" th:href="@{/viaje/buscar}">
-                        <i class="fas fa-search me-1"></i>
-                        <span class="d-none d-lg-inline">Buscar Viaje</span>
+                    <a class="nav-link fw-bold p-2" style="color: #E16A3D;" th:href="@{/viaje/buscar}">
+                        <i class="fas fa-search"></i>
+                        <span class="d-md-inline ms-1">Buscar Viaje</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link fw-bold" style="color: #E16A3D;" th:href="@{/reserva/misReservasActivas}">
-                        <i class="fas fa-clock me-1"></i>
-                        <span class="d-none d-lg-inline">Reservas Pendientes</span>
+                    <a class="nav-link fw-bold p-2" style="color: #E16A3D;" th:href="@{/reserva/misReservasActivas}">
+                        <i class="fas fa-clock"></i>
+                        <span class="d-md-inline ms-1">Reservas Pendientes</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link fw-bold" style="color: #E16A3D;" th:href="@{/reserva/misViajes}">
-                        <i class="fas fa-list-alt me-1"></i>
-                        <span class="d-none d-lg-inline">Mis Viajes</span>
+                    <a class="nav-link fw-bold p-2" style="color: #E16A3D;" th:href="@{/reserva/misViajes}">
+                        <i class="fas fa-list-alt"></i>
+                        <span class="d-md-inline ms-1">Mis Viajes</span>
                     </a>
                 </li>
             </ul>
 
             <ul class="navbar-nav">
-                <li class="nav-item me-3">
-                    <a class="nav-link" th:href="@{/notificaciones/historial}" id="notificacion-campana" style="color: #E16A3D;">
+
+                <li class="nav-item me-1 mt-md-0 mt-2">
+                    <a class="nav-link p-2" th:href="@{/notificaciones/historial}" id="notificacion-campana" style="color: #E16A3D; position: relative; display: inline-block;">
                         <i class="fas fa-bell fa-lg"></i>
                         <span id="notificacion-contador" class="badge rounded-pill bg-danger"
-                              style="position: absolute; top: 5px; right: 0px; display: none;">
+                              style="position: absolute; top: -5px; right: -8px; font-size: 0.65rem; min-width: 18px; height: 18px; display: none; padding: 2px 5px;">
                             0
-                    </span>
+                        </span>
+                        <span class="d-md-none ms-2">Notificaciones</span>
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link fw-bold" style="color: #4E3D2F;" th:href="@{/viajero/perfil}">
-                        <i class="fas fa-user me-1 d-lg-none"></i>
-                        <span class="d-none d-lg-inline">VIAJERO</span>
+                    <a class="nav-link fw-bold p-2" style="color: #4E3D2F;" th:href="@{/viajero/perfil}">
+                        <i class="fas fa-user-circle fa-lg"></i>
+                        <span class="d-md-none ms-1">Perfil</span>
                     </a>
                 </li>
             </ul>

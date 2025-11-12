@@ -73,11 +73,11 @@
                             <input th:field="*{nombre}" id="nombre" type="text" class="form-control" placeholder="Juan Pérez" required>
                         </div>
                         <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
+                            <label for="email" class="form-label"><i class="fa-solid fa-envelope"></i> Email</label>
                             <input th:field="*{email}" id="email" type="email" class="form-control" placeholder="ejemplo@mail.com" required>
                         </div>
                         <div class="mb-3">
-                            <label for="password" class="form-label">Contraseña</label>
+                            <label for="password" class="form-label"><i class="fa-solid fa-key"></i> Contraseña</label>
                             <input th:field="*{contrasenia}" id="contrasenia" type="password" class="form-control" placeholder="********" required>
                         </div>
                         <div class="mb-3">
@@ -108,7 +108,7 @@
                             <label for="fotoPerfilUrl" class="form-label fw-bold">
                                 <i class="fas fa-camera me-1"></i> Subir Foto de Perfil (.jpg, .png)
                             </label>
-                            <input name="fotoPerfil" id="fotoPerfilUrl" type="file" class="form-control" accept="image/*">
+                            <input name="fotoPerfil" id="fotoPerfilUrl" type="file" class="form-control" accept="image/*" required>
                             <small class="form-text text-muted">Tamaño máximo recomendado: 2MB.</small>
                         </div>
 
@@ -124,7 +124,7 @@
                             </div>
                         </div>
 
-                        <div id="camposViajero" class="p-3 border rounded mb-3 bg-light" style="border-color: var(--color-success-warm) !important;">
+                        <div id="camposViajero" class="p-3 border rounded mb-3 bg-light" style="border-color: var(--color-success-warm) !important; display:none">
                             <h6 class="fw-bold h6-viajero"><i class="fas fa-hiking me-2"></i> Notas de Viajero</h6>
                             <p class="text-muted small mb-0">No requiere campos adicionales específicos.</p>
                         </div>

@@ -14,12 +14,27 @@
             .star-icon { color: gold; }
             .profile-header { background-color: #f7f7f7; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
             .datos-secundarios { font-size: 0.9rem; }
+
+            .profile-photo {
+                width: 140px;
+                height: 140px;
+                object-fit: cover;
+                border-radius: 10px; /* Opcional: ajusta según tu preferencia */
+                border: 1px solid #e9ecef;
+            }
         </style>
     </th:block>
 </head>
 <body>
 
-<nav th:replace="fragments/navbar_conductor :: navbar"></nav>
+<th:block th:switch="${ROL_ACTUAL}">
+    <th:block th:case="'CONDUCTOR'">
+        <div th:replace="fragments/navbar_conductor :: navbar"></div>
+    </th:block>
+    <th:block th:case="'VIAJERO'">
+        <div th:replace="fragments/navbar_viajero :: navbar"></div>
+    </th:block>
+</th:block>
 <main class="container mt-5 mb-5" style="margin-top: 120px !important;">
     <div class="card shadow-lg p-4 rounded-4">
 
@@ -34,13 +49,11 @@
          class="mb-3 d-flex justify-content-center align-items-center" 
          style="width: 150px; height: 150px; margin: 0 auto;">
         
-        <svg width="150" height="150" viewBox="0 0 24 24" 
-             class="bg-light d-inline-block rounded-circle"
-             xmlns="http://www.w3.org/2000/svg" fill="#ced4da"
-             style="border: 1px solid #e9ecef;">
-            <rect width="24" height="24" rx="4"></rect>
-            <path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 20a8 8 0 0 1 16 0H4z" fill="#adb5bd"/>
-        </svg>
+        <svg width="140" height="140" viewBox="0 0 24 24" class="profile-photo bg-light d-inline-block"
+                             xmlns="http://www.w3.org/2000/svg" fill="#ced4da">
+                            <rect width="24" height="24" rx="4"></rect>
+                            <path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 20a8 8 0 0 1 16 0H4z" fill="#adb5bd"/>
+                        </svg>
     </div>
 </div>
 
@@ -93,8 +106,9 @@
         </div>
 
         <div class="text-center mt-4">
-            <a href="/spring/conductor/home" class="btn btn-unrumbo px-4 py-2 fw-bold">
-                <i class="fas fa-arrow-left me-2"></i> Volver al home
+            <a th:href="@{${ROL_ACTUAL == 'CONDUCTOR' ? '/conductor/home' : '/viajero/home'}}"
+               class="btn btn-outline-secondary btn-sm">
+                Volver al home
             </a>
         </div>
 

@@ -17,12 +17,14 @@ import com.tallerwebi.dominio.IServicio.ServicioAlmacenamientoFoto;
 @Transactional
 public class ServicioAlmacenamientoFotoImpl implements ServicioAlmacenamientoFoto{
 
-    // Ruta donde se guardarán los archivos.
-    // AJUSTA ESTA RUTA si la estructura de tu proyecto es diferente.
-    private static final String UPLOAD_DIR_NAME = "profile_uploads";
-    private static final String UPLOAD_DIR_PATH = Paths.get(System.getProperty("user.dir"), UPLOAD_DIR_NAME).toString();
+    // Ruta donde se guardarán los archivos dentro de webapp/resources/core/img/
+    private static final String UPLOAD_DIR_PATH = Paths.get(
+        System.getProperty("user.dir"),
+        "src", "main", "webapp", "resources", "core", "img", "profile_uploads"
+    ).toString();
 
-    private static final String PUBLIC_PATH_PREFIX = "/uploads/";
+    // Ruta pública para acceder a las imágenes desde el navegador
+    private static final String PUBLIC_PATH_PREFIX = "/img/profile_uploads/";
     
     @Override
     public String guardarArchivo(MultipartFile file) throws IOException {
