@@ -101,23 +101,7 @@ public class Datos {
             origen1, destino1, origen2, destino2, origen3, destino3
     );
 
-    private static final List<Conductor> conductores = Arrays.asList(c1, c2, c3);
-    private static final List<Vehiculo> vehiculos = Arrays.asList(v1, v2, v3);
-    private static final List<Viajero> viajeros = Arrays.asList(viajero1, viajero2, viajero3);
-
     public static List<Ciudad> obtenerCiudades() {
         return new ArrayList<>(ciudades);
-    }
-
-    public static List<Conductor> obtenerConductores() {
-        return new ArrayList<>(conductores);
-    }
-
-    public static List<Vehiculo> obtenerVehiculos() {
-        return new ArrayList<>(vehiculos);
-    }
-
-    public static List<Viajero> obtenerViajeros() {
-        return new ArrayList<>(viajeros);
     }
 }

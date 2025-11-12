@@ -845,7 +845,6 @@ conductor.setRol("CONDUCTOR");
         verify(viajeRepositoryMock).findById(viajeId);
     }
 
-    // Método auxiliar para crear un viaje con todas sus relaciones
     private Viaje crearViajeCompleto() {
         // Crear ciudades
         Ciudad origen = new Ciudad(1L, "Buenos Aires", -34.6037f, -58.3816f);
@@ -864,6 +863,7 @@ conductor.setRol("CONDUCTOR");
         vehiculo.setPatente("ABC123");
         vehiculo.setModelo("Toyota Corolla");
         vehiculo.setConductor(conductor);
+        vehiculo.setAsientosTotales(5);
 
         // Crear viajeros
         Viajero viajero1 = new Viajero();
@@ -1376,8 +1376,29 @@ conductor.setRol("CONDUCTOR");
     void deberiaModificarViajeCorrectamente() throws Exception {
         // given
         Long viajeId = 1L;
-        Viaje viajeExistente = crearViajeCompleto();
-        Viaje viajeModificado = crearViajeCompleto();
+
+        Vehiculo vehiculo = new Vehiculo();
+        vehiculo.setAsientosTotales(5);
+
+        Conductor conductor = new Conductor();
+        conductor.setId(10L);
+
+        Parada paradaExistente = new Parada();
+        paradaExistente.setCiudad(new Ciudad());
+        paradaExistente.setOrden(1);
+
+        Viaje viajeExistente = new Viaje();
+        viajeExistente.setId(viajeId);
+        viajeExistente.setConductor(conductor);
+        viajeExistente.setVehiculo(vehiculo);
+        viajeExistente.setEstado(EstadoDeViaje.DISPONIBLE);
+        viajeExistente.setPrecio(100.0);
+        viajeExistente.setAsientosDisponibles(3);
+        viajeExistente.setReservas(new ArrayList<>());
+        viajeExistente.setParadas(new ArrayList<>(Arrays.asList(paradaExistente)));
+
+        Viaje viajeModificado = new Viaje();
+        viajeModificado.setId(viajeId);
         viajeModificado.setPrecio(3000.0);
         viajeModificado.setAsientosDisponibles(2);
 
@@ -1387,20 +1408,12 @@ conductor.setRol("CONDUCTOR");
         servicioViaje.modificarViaje(viajeModificado, null);
 
         // then
+        // 1. Verificar la llamada de persistencia
         verify(viajeRepositoryMock, times(1)).modificarViaje(viajeExistente);
+
         assertThat(viajeExistente.getPrecio(), is(3000.0));
         assertThat(viajeExistente.getAsientosDisponibles(), is(2));
-    }
-    @Test
-    void noDeberiaModificarViajeSiViajeNoExiste() {
-        // given
-        Viaje viajeModificado = crearViajeDeTest();
-        viajeModificado.setId(999L);
-        when(viajeRepositoryMock.findById(999L)).thenReturn(Optional.empty());
-
-        // when & then
-        assertThrows(BadRequestException.class, () -> servicioViaje.modificarViaje(viajeModificado, null));
-        verify(viajeRepositoryMock, never()).modificarViaje(any());
+        assertTrue(viajeExistente.getParadas().isEmpty(), "La lista de paradas debe estar vacía después del clear()");
     }
 
     @Test

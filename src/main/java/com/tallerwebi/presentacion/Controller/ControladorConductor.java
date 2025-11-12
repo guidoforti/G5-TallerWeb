@@ -68,7 +68,6 @@ public class ControladorConductor {
             return new ModelAndView("redirect:/login");
         }
 
-        // 🚀 INYECCIÓN DE WEB SOCKET / NAVBAR
         Long contador = servicioNotificacion.contarNoLeidas(idConductor);
         model.put("contadorNotificaciones", contador.intValue());
         model.put("idUsuario", idConductor);
