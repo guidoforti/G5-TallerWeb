@@ -1,7 +1,7 @@
 package com.tallerwebi.infraestructura;
 
 import com.tallerwebi.integracion.config.HibernateTestConfig;
-import com.tallerwebi.config.SpringWebConfig;
+import com.tallerwebi.integracion.config.DataBaseTestInitilizationConfig;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Valoracion;
 import com.tallerwebi.dominio.Entity.Viaje;
@@ -14,7 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -31,9 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Depende de los datos pre-cargados en dataTest.sql (Usuarios, Viajes).
  */
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {SpringWebConfig.class, HibernateTestConfig.class})
+@ContextConfiguration(classes = {HibernateTestConfig.class, DataBaseTestInitilizationConfig.class})
 @Transactional
-@WebAppConfiguration
 public class RepositorioValoracionTest {
 
     @Autowired
@@ -42,9 +40,9 @@ public class RepositorioValoracionTest {
     private RepositorioValoracion repositorioValoracion;
 
     // Entidades de referencia de dataTest.sql
-    private final Long EMISOR_ID = 3L; // Viajero María Gómez
-    private final Long RECEPTOR_ID = 2L; // Conductor Juan Pérez
-    private final Long VIAJE_ID_FINALIZADO = 5L; // Viaje 5 (Finalizado)
+    private final Long EMISOR_ID = 4L; // Viajero Sofia Torres (ID 4 en dataTest.sql)
+    private final Long RECEPTOR_ID = 1L; // Conductor Carlos Perez (ID 1 en dataTest.sql)
+    private final Long VIAJE_ID_FINALIZADO = 3L; // Viaje 3 (FINALIZADO en dataTest.sql)
     private Viajero viajeroEmisor;
     private Conductor conductorReceptor;
     private Viaje viajeFinalizado;

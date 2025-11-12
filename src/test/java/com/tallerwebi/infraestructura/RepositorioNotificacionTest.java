@@ -1,7 +1,7 @@
 package com.tallerwebi.infraestructura;
 
 import com.tallerwebi.integracion.config.HibernateTestConfig;
-import com.tallerwebi.config.SpringWebConfig;
+import com.tallerwebi.integracion.config.DataBaseTestInitilizationConfig;
 import com.tallerwebi.dominio.Entity.Notificacion;
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Viajero; // Usamos Viajero, una clase concreta de Usuario
@@ -14,7 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -33,9 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @ExtendWith(SpringExtension.class)
 // Se asumen estas configuraciones para la carga del contexto y la base de datos de prueba
-@ContextConfiguration(classes = {SpringWebConfig.class, HibernateTestConfig.class /*, DataBaseTestInitilizationConfig.class */})
+@ContextConfiguration(classes = {HibernateTestConfig.class, DataBaseTestInitilizationConfig.class})
 @Transactional
-@WebAppConfiguration
 public class RepositorioNotificacionTest {
 
     @Autowired

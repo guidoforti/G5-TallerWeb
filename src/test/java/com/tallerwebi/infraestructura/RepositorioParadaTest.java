@@ -2,7 +2,7 @@ package com.tallerwebi.infraestructura;
 
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.integracion.config.HibernateTestConfig;
-import com.tallerwebi.config.SpringWebConfig;
+import com.tallerwebi.integracion.config.DataBaseTestInitilizationConfig;
 import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Entity.Viaje;
@@ -16,7 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -35,9 +34,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * respetando las relaciones (Ciudad) de la entidad Parada.
  */
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {SpringWebConfig.class, HibernateTestConfig.class})
+@ContextConfiguration(classes = {HibernateTestConfig.class, DataBaseTestInitilizationConfig.class})
 @Transactional
-@WebAppConfiguration
 public class RepositorioParadaTest {
 
     @Autowired
