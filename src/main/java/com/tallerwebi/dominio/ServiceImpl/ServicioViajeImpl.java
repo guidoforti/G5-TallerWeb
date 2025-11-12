@@ -483,7 +483,7 @@ public class ServicioViajeImpl implements ServicioViaje {
     }
 
     @Override
-public void cancelarViajeConReservasPagadas(Long id, Usuario usuarioEnSesion)
+    public void cancelarViajeConReservasPagadas(Long id, Usuario usuarioEnSesion)
         throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeNoCancelableException {
     
     // Valida que el usuario sea conductor
