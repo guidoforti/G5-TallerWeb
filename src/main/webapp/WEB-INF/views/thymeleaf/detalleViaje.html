@@ -166,6 +166,7 @@
                                             && !reservaExistente
                                             && (detalle.estado.name() == 'DISPONIBLE' || detalle.estado.name() == 'COMPLETO')}"
                                th:href="@{/reserva/solicitar(viajeId=${viajeId})}"
+                               id="btn-solicitar-reserva"
                                class="btn btn-unrumbo fw-bold">
                                 <i class="fas fa-ticket-alt me-2"></i> Solicitar Reserva
                             </a>
@@ -177,6 +178,7 @@
                                       method="post"
                                       style="display: inline;">
                                     <button type="submit"
+                                            id="btn-iniciar-viaje"
                                             class="btn btn-primary fw-bold"
                                             onclick="return confirm('¿Estás seguro de iniciar este viaje?');">
                                         <i class="fas fa-play-circle me-2"></i> Iniciar Viaje
@@ -188,6 +190,7 @@
                                       method="post"
                                       style="display: inline;">
                                     <button type="submit"
+                                            id="btn-finalizar-viaje"
                                             class="btn btn-danger fw-bold"
                                             onclick="return confirm('¿Estás seguro de finalizar este viaje?');">
                                         <i class="fas fa-stop-circle me-2"></i> Finalizar Viaje
@@ -211,22 +214,28 @@
                                 </div>
 
                                 <a th:href="@{/reserva/viajerosConfirmados(viajeId=${viajeId})}"
+                                   id="btn-ver-viajeros-confirmados"
                                    class="btn btn-dark fw-bold">
                                     <i class="fas fa-users me-2"></i> Ver Viajeros Confirmados
                                 </a>
 
                                 <a th:href="@{/historial/viaje(idViaje=${viajeId})}"
+                                   id="btn-ver-historial"
                                    class="btn btn-outline-unrumbo fw-bold">
                                     <i class="fas fa-history me-2"></i> Historial
                                 </a>
                             </th:block>
 
                             <a th:if="${userRole != null && userRole == 'VIAJERO'}"
-                               th:href="@{/viajero/home}" class="btn btn-outline-unrumbo fw-bold">
+                               th:href="@{/viajero/home}"
+                               id="btn-volver-home-viajero"
+                               class="btn btn-outline-unrumbo fw-bold">
                                 <i class="fas fa-arrow-left me-2"></i> Volver al Home
                             </a>
                             <a th:if="${userRole != null && userRole == 'CONDUCTOR'}"
-                               th:href="@{/conductor/home}" class="btn btn-outline-unrumbo fw-bold">
+                               th:href="@{/conductor/home}"
+                               id="btn-volver-home-conductor"
+                               class="btn btn-outline-unrumbo fw-bold">
                                 <i class="fas fa-arrow-left me-2"></i> Volver a Home
                             </a>
                         </div>

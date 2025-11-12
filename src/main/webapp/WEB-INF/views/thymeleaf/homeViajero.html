@@ -16,23 +16,23 @@
                     <h4 class="fw-bold text-dark">¡Bienvenido, <span th:text="${nombreViajero}">Viajero</span>!</h4>
                     <p class="text-muted mt-3">Nos alegra verte nuevamente en UnRumbo.</p>
 
-                    <a th:href="@{/viaje/buscar}" class="btn btn-unrumbo text-white w-100 fw-bold mt-3">
+                    <a th:href="@{/viaje/buscar}" id="btn-buscar-viajes" class="btn btn-unrumbo text-white w-100 fw-bold mt-3">
                         <i class="bi bi-search me-2"></i>Buscar Viajes
                     </a>
 
-                    <a th:href="@{/reserva/misReservasActivas}" class="btn btn-unrumbo text-white w-100 fw-bold mt-3">
+                    <a th:href="@{/reserva/misReservasActivas}" id="btn-mis-reservas-activas" class="btn btn-unrumbo text-white w-100 fw-bold mt-3">
                         <i class="bi bi-clock-history me-2"></i>Mis Reservas Pendientes
                     </a>
 
-                    <a th:href="@{/reserva/misViajes}" class="btn btn-unrumbo text-white w-100 fw-bold mt-3">
+                    <a th:href="@{/reserva/misViajes}" id="btn-mis-viajes" class="btn btn-unrumbo text-white w-100 fw-bold mt-3">
                         <i class="bi bi-car-front me-2"></i>Mis Viajes
                     </a>
 
-                    <a th:href="@{/viajero/perfil}" class="btn btn-unrumbo text-white w-100 fw-bold mt-3">
+                    <a th:href="@{/viajero/perfil}" id="btn-mi-perfil" class="btn btn-unrumbo text-white w-100 fw-bold mt-3">
                         <i class="bi bi-person-circle me-2"></i>Mi Perfil
                     </a>
 
-                    <a th:href="@{/logout}" class="btn btn-unrumbo w-100 text-white fw-bold mt-4">Cerrar sesión</a>
+                    <a th:href="@{/logout}" id="btn-cerrar-sesion" class="btn btn-unrumbo w-100 text-white fw-bold mt-4">Cerrar sesión</a>
                 </div>
             </div>
         </div>
