@@ -346,6 +346,31 @@ class ServicioReservaTest {
     }
 
     @Test
+    void deberiaLanzarExcepcionSiAsistenciaEsNoMarcado() {
+        // given
+        Long reservaId = 1L;
+        Long conductorId = 1L;
+        String asistenciaValor = "NO_MARCADO";
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+
+        Viaje viaje = crearViajeMock(1L, 2, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusMinutes(20));
+        viaje.setConductor(conductor);
+
+        Reserva reserva = crearReservaConViajero(reservaId, EstadoReserva.CONFIRMADA, crearViajeroMock(1L));
+        reserva.setViaje(viaje);
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+        DatoObligatorioException exception = assertThrows(DatoObligatorioException.class, () -> {
+            servicioReserva.marcarAsistencia(reservaId, conductorId, asistenciaValor);
+        });
+
+        assertThat(exception.getMessage(), is("El valor de asistencia debe ser PRESENTE o AUSENTE"));
+        verify(repositorioReservaMock, never()).update(any());
+    }
+
+    @Test
     void deberiaMarcarAsistenciaComoAusente() throws Exception {
         // given
         Long reservaId = 1L;
@@ -935,6 +960,44 @@ class ServicioReservaTest {
         assertThat(resultado, notNullValue());
 
         verify(preferenceClient, times(1)).create(any(PreferenceRequest.class));
+    }
+
+    @Test
+    public void deberiaEnviarNotificacionAlConductorAlConfirmarPago() throws Exception {
+        // given
+        Long reservaId = 1L;
+        Long viajeroId = 10L;
+        Long conductorId = 50L;
+
+        // Configuración detallada para que la notificación no falle:
+        Viajero viajero = mock(Viajero.class);
+        when(viajero.getId()).thenReturn(viajeroId);
+        when(viajero.getNombre()).thenReturn("Viajero Test");
+
+        Conductor conductor = mock(Conductor.class);
+        when(conductor.getId()).thenReturn(conductorId);
+
+        Ciudad destino = mock(Ciudad.class);
+        when(destino.getNombre()).thenReturn("Córdoba");
+
+        Viaje viaje = mock(Viaje.class);
+        when(viaje.getId()).thenReturn(5L);
+        when(viaje.getConductor()).thenReturn(conductor);
+        when(viaje.getDestino()).thenReturn(destino);
+
+        Reserva reserva = crearReservaCompletaParaPago(reservaId, viajeroId, EstadoReserva.CONFIRMADA, EstadoPago.NO_PAGADO);
+        // Sobrescribir mocks parciales:
+        reserva.setViajero(viajero);
+        reserva.setViaje(viaje);
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
+        servicioReserva.confirmarPagoReserva(reservaId, viajeroId);
+        verify(repositorioReservaMock, times(1)).update(reserva);
+        verify(servicioNotificacionMock, times(1)).crearYEnviar(
+                eq(conductor), // Debe ir al conductor
+                eq(TipoNotificacion.PAGO_RECIBIDO),
+                anyString(),
+                anyString()
+        );
     }
 
     @Test
