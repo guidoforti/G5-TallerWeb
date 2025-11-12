@@ -4,6 +4,7 @@ import com.mercadopago.exceptions.MPApiException;
 import com.mercadopago.exceptions.MPException;
 import com.mercadopago.resources.preference.Preference;
 import com.tallerwebi.dominio.Entity.Reserva;
+import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.excepcion.*;
@@ -128,6 +129,15 @@ public interface ServicioReserva {
      */
     List<Reserva> listarReservasActivasPorViajero(Long viajeroId) throws UsuarioInexistente;
 
+     /**
+     * Lista todos los viajes cancelados de un viajero (reservas con estado CANCELADO_POR_CONDUCTOR)
+     *
+     * @param viajeroId El ID del viajero
+     * @return Lista de reservas canceladas
+     * @throws UsuarioInexistente Si no se encuentra el viajero
+     */
+    List<Reserva> listarViajesCanceladosPorViajero(Long viajeroId) throws UsuarioInexistente;
+
     /**
      * Lista todos los viajes confirmados de un viajero (reservas con estado CONFIRMADA)
      *
@@ -137,17 +147,11 @@ public interface ServicioReserva {
      */
     List<Reserva> listarViajesConfirmadosPorViajero(Long viajeroId) throws UsuarioInexistente;
 
-    /**
-     * Lista todos los viajes cancelados de un viajero (reservas con estado CANCELADO_POR_CONDUCTOR)
-     *
-     * @param viajeroId El ID del viajero
-     * @return Lista de reservas canceladas
-     * @throws UsuarioInexistente Si no se encuentra el viajero
-     */
-    List<Reserva> listarViajesCanceladosPorViajero(Long viajeroId) throws UsuarioInexistente;
-
     Preference crearPreferenciaDePago (Long reservaId, Long viajeroId) throws UsuarioInexistente, NotFoundException, UsuarioNoAutorizadoException, BadRequestException, MPException, MPApiException, AccionNoPermitidaException;
 
     Reserva confirmarPagoReserva (Long reservaId, Long usuarioIdObj) throws NotFoundException, UsuarioNoAutorizadoException, AccionNoPermitidaException;
     Boolean tieneReservaActiva(Long viajeroId, Long viajeId);
+
+    Reserva cancelarReservaPorViajero(Long idReserva, Usuario usuarioEnSesion)
+            throws UsuarioNoAutorizadoException, ReservaNoEncontradaException;
 }

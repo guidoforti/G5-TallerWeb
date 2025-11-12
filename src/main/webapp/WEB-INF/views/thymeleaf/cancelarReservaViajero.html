@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/fragments :: head('Cancelar reserva')">
+    <th:block th:fragment="extra">
+    </th:block>
+</head>
+<body>
+    <nav th:replace="fragments/navbar_viajero :: navbar"></nav>
+
+    <main class="container mt-5 text-center">
+        <div th:if="${exito}">
+            <h1 class="text-success mb-4">Reserva cancelada</h1>
+            <p th:text="'Tu reserva para el viaje a ' + ${viaje.destino} + ' fue cancelada exitosamente.'"></p>
+        </div>
+
+        <div th:if="${!exito}">
+            <h1 class="text-danger mb-4">No se pudo cancelar la reserva</h1>
+            <p th:text="${mensaje}">Ocurrió un error al procesar la cancelación.</p>
+        </div>
+
+        <div class="mt-4">
+            <a th:href="@{/reserva/misReservasActivas}" class="btn btn-primary">Volver a mis reservas</a>
+        </div>
+    </main>
+
+    <footer th:replace="fragments/fragments :: footer"></footer>
+</body>
+</html>

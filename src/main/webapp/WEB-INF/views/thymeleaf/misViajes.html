@@ -142,6 +142,13 @@
                                        class="btn btn-dark fw-bold">
                                         <i class="bi bi-eye me-1"></i> Ver detalles
                                     </a>
+                                    <form th:action="@{/reserva/cancelar/{id}(id=${viaje.reservaId})}" method="post">
+                                    <button type="submit"
+                                    class="btn btn-outline-danger fw-bold"
+                                    onclick="return confirm('¿Seguro que querés cancelar esta reserva?');">
+                                    <i class="bi bi-x-circle me-1"></i> Cancelar reserva
+                                    </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>

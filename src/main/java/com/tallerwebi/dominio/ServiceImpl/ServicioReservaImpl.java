@@ -481,7 +481,7 @@ public class ServicioReservaImpl implements ServicioReserva {
         return reservaRepository.findByViajeroIdAndViajeIdAndEstadoIn(viajeroId, viajeId, estadosActivos).isPresent();
     }
 
-    @Override
+     @Override
     public List<Reserva> listarViajesCanceladosPorViajero(Long viajeroId) throws UsuarioInexistente {
         
     Viajero viajero = servicioViajero.obtenerViajero(viajeroId);
@@ -500,4 +500,77 @@ public class ServicioReservaImpl implements ServicioReserva {
     return reservas;
     }
 
+    @Override
+public Reserva cancelarReservaPorViajero(Long idReserva, Usuario usuarioEnSesion)
+        throws UsuarioNoAutorizadoException, ReservaNoEncontradaException {
+
+    // Validar que sea viajero
+    if (usuarioEnSesion.getRol() == null || !usuarioEnSesion.getRol().equalsIgnoreCase("VIAJERO")) {
+        throw new UsuarioNoAutorizadoException("Solo los viajeros pueden cancelar sus reservas.");
+    }
+
+    Optional<Reserva> reservaOpt = reservaRepository.findById(idReserva);
+    if (reservaOpt.isEmpty()) {
+        throw new ReservaNoEncontradaException("No se encontró la reserva especificada.");
+    }
+
+    Reserva reserva = reservaOpt.get();
+    Viaje viaje = reserva.getViaje();
+
+    // Verificar que la reserva pertenezca al viajero en sesión
+    if (!reserva.getViajero().getId().equals(usuarioEnSesion.getId())) {
+        throw new UsuarioNoAutorizadoException("No puede cancelar una reserva que no le pertenece.");
+    }
+
+    // Verificar estado cancelable
+    if (!(reserva.getEstado() == EstadoReserva.CONFIRMADA || reserva.getEstado() == EstadoReserva.PENDIENTE)) {
+        throw new IllegalStateException("La reserva no puede cancelarse en este estado.");
+    }
+
+    // Guardar estado anterior para el historial
+    EstadoReserva estadoAnterior = reserva.getEstado();
+
+    // Actualizar estado
+    reserva.setEstado(EstadoReserva.CANCELADA_POR_VIAJERO);
+
+    // Cambiar estado de pago
+    if (reserva.getEstadoPago() == EstadoPago.PAGADO) {
+        reserva.setEstadoPago(EstadoPago.REEMBOLSO_PENDIENTE);
+    }
+
+    reservaRepository.update(reserva);
+
+    // Crear historial
+    HistorialReserva historial = new HistorialReserva();
+    historial.setReserva(reserva);
+    historial.setViaje(viaje);
+    historial.setViajero((Viajero) usuarioEnSesion);
+    historial.setConductor(viaje.getConductor());
+    historial.setFechaEvento(LocalDateTime.now());
+    historial.setEstadoAnterior(estadoAnterior);
+    historial.setEstadoNuevo(reserva.getEstado());
+    repositorioHistorialReserva.save(historial);
+
+    // Enviar notificación al conductor
+    try {
+        String mensaje = String.format(
+                "El viajero %s ha cancelado su reserva en el viaje hacia %s.",
+                usuarioEnSesion.getNombre(),
+                viaje.getDestino().getNombre()
+        );
+
+        String url = "/reserva/listarReservasConductor";
+        servicioNotificacion.crearYEnviar(
+                viaje.getConductor(),
+                TipoNotificacion.VIAJE_CANCELADO,
+                mensaje,
+                url
+        );
+    } catch (Exception e) {
+        System.err.println("Error al enviar notificación al conductor: " + e.getMessage());
+    }
+
+    // 🔹 Retornar la reserva actualizada
+    return reserva;
+}
 }
