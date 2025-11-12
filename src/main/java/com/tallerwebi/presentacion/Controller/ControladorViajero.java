@@ -1,14 +1,18 @@
 package com.tallerwebi.presentacion.Controller;
 
 import com.tallerwebi.dominio.Entity.Conductor;
+import com.tallerwebi.dominio.Entity.Reserva;
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Viajero;
+import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
 import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
+import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.dominio.excepcion.NotFoundException;
 
 import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeConfirmadoViajeroDTO;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeroPerfilOutPutDTO;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +23,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 import javax.servlet.http.HttpSession;
 
 @Controller
@@ -27,11 +35,13 @@ public class ControladorViajero {
 
     private final ServicioViajero servicioViajero;
     private final ServicioNotificacion servicioNotificacion;
+    private final ServicioReserva servicioReserva;
 
     @Autowired
-    public ControladorViajero(ServicioViajero servicioViajero, ServicioNotificacion servicioNotificacion) {
+    public ControladorViajero(ServicioViajero servicioViajero, ServicioNotificacion servicioNotificacion, ServicioReserva servicioReserva) {
         this.servicioViajero = servicioViajero;
         this.servicioNotificacion = servicioNotificacion;
+        this.servicioReserva = servicioReserva;
     }
 
     @GetMapping("/home")
@@ -48,6 +58,18 @@ public class ControladorViajero {
             Long viajeroId = (Long) usuarioId;
             Viajero viajero = servicioViajero.obtenerViajero(viajeroId);
             Long contador = servicioNotificacion.contarNoLeidas(viajeroId);
+            List<Reserva> reservasConfirmadas = servicioReserva.listarViajesConfirmadosPorViajero(viajeroId);
+
+            List<Reserva> viajesProximos = reservasConfirmadas.stream()
+                    .filter(r -> r.getViaje().getEstado() == EstadoDeViaje.DISPONIBLE ||
+                                r.getViaje().getEstado() == EstadoDeViaje.COMPLETO)
+                    .sorted((r1, r2) -> r1.getViaje().getFechaHoraDeSalida().compareTo(r2.getViaje().getFechaHoraDeSalida()))
+                    .limit(3) 
+                    .collect(Collectors.toList());
+            List<ViajeConfirmadoViajeroDTO> proximosDTO = viajesProximos.stream()
+                    .map(ViajeConfirmadoViajeroDTO::new)
+                    .collect(Collectors.toList());
+            model.put("viajesProximos", proximosDTO);
             model.put("idUsuario", viajeroId);
             model.put("ROL", rol);
             model.put("ROL_ACTUAL", rol);

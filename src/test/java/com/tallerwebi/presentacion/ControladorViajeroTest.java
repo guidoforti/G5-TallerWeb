@@ -3,6 +3,7 @@ package com.tallerwebi.presentacion;
 import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
+import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.excepcion.NotFoundException;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.presentacion.Controller.ControladorViajero;
@@ -24,6 +25,7 @@ public class ControladorViajeroTest {
     private ControladorViajero controladorViajero;
     private ServicioViajero servicioViajeroMock;
     private ServicioNotificacion servicioNotificacionMock;
+    private ServicioReserva servicioReservaMock;
     private HttpSession sessionMock;
     private Viajero viajeroMock;
 
@@ -34,7 +36,7 @@ public class ControladorViajeroTest {
     public void init() throws NotFoundException {
         servicioViajeroMock = mock(ServicioViajero.class);
         servicioNotificacionMock = mock(ServicioNotificacion.class);
-        controladorViajero = new ControladorViajero(servicioViajeroMock, servicioNotificacionMock);
+        controladorViajero = new ControladorViajero(servicioViajeroMock, servicioNotificacionMock, servicioReservaMock);
         sessionMock = mock(HttpSession.class);
         viajeroMock = mock(Viajero.class);
 
