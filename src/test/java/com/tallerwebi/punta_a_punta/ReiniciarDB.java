@@ -11,9 +11,21 @@ public class ReiniciarDB {
             String dbUser = System.getenv("DB_USER") != null ? System.getenv("DB_USER") : "user";
             String dbPassword = System.getenv("DB_PASSWORD") != null ? System.getenv("DB_PASSWORD") : "user";
 
-            String sqlCommands = "DELETE FROM Usuario;\n" +
-                               "ALTER TABLE Usuario AUTO_INCREMENT = 1;\n" +
-                               "INSERT INTO Usuario(id, email, password, rol, activo) VALUES(null, 'test@unlam.edu.ar', 'test', 'ADMIN', true);";
+            String sqlCommands = "SET FOREIGN_KEY_CHECKS=0;\n" +
+                               "DELETE FROM reserva;\n" +
+                               "DELETE FROM parada;\n" +
+                               "DELETE FROM viaje;\n" +
+                               "DELETE FROM vehiculo;\n" +
+                               "DELETE FROM conductor;\n" +
+                               "DELETE FROM viajero;\n" +
+                               "DELETE FROM usuario;\n" +
+                               "ALTER TABLE usuario AUTO_INCREMENT = 1;\n" +
+                               "ALTER TABLE vehiculo AUTO_INCREMENT = 1;\n" +
+                               "ALTER TABLE viaje AUTO_INCREMENT = 1;\n" +
+                               "ALTER TABLE reserva AUTO_INCREMENT = 1;\n" +
+                               "SET FOREIGN_KEY_CHECKS=1;\n" +
+                               "INSERT INTO usuario(id, email, contrasenia, nombre, rol, activo) VALUES(1, 'conductor@test.com', 'test123', 'Test Conductor', 'CONDUCTOR', true);\n" +
+                               "INSERT INTO conductor(usuario_id, fecha_de_vencimiento_licencia) VALUES(1, '2027-12-31');";
 
             String comando = String.format(
                 "docker exec tallerwebi-mysql mysql -h %s -P %s -u %s -p%s %s -e \"%s\"",
