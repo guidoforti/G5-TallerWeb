@@ -93,6 +93,8 @@ public class VistaViajeroE2E {
 
     private void cuandoElViajeroTocaElBotonDeLogin() {
         vistaLogin.darClickEnIniciarSesion();
+        // Wait for redirect to complete after form submission
+        page.waitForURL("**/viajero/home**");
     }
 
     private void entoncesDeberiaSerRedirigidoAlHomeViajero() throws MalformedURLException {

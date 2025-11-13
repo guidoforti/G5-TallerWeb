@@ -90,6 +90,8 @@ public class VistaConductorE2E {
 
     private void cuandoElConductorTocaElBotonDeLogin() {
         vistaLogin.darClickEnIniciarSesion();
+        // Wait for redirect to complete after form submission
+        context.pages().get(0).waitForURL("**/conductor/home**");
     }
 
     private void entoncesDeberiaSerRedirigidoAlHomeConductor() throws MalformedURLException {
