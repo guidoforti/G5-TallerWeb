@@ -1,6 +1,7 @@
 package com.tallerwebi.punta_a_punta;
 
 import com.microsoft.playwright.*;
+import com.tallerwebi.punta_a_punta.vistas.*;
 import com.tallerwebi.punta_a_punta.vistas.VistaHomeConductor;
 import com.tallerwebi.punta_a_punta.vistas.VistaLogin;
 import com.tallerwebi.punta_a_punta.vistas.VistaPublicarViaje;
@@ -101,9 +102,13 @@ public class VistaConductorCrearViajeE2E {
     }
 
     private void cuandoElConductorNavegarARegistrarVehiculo(VistaHomeConductor vistaHome) {
-        // Navega directamente a la URL de registro de vehículo
-        // (Alternativa: podría hacer click en "Ver vehículos" y luego "Registrar")
-        page.navigate("localhost:8080/spring/vehiculos/registrar");
+        // Navigate using UI buttons: Home -> Ver Vehículos -> Registrar Vehículo
+        vistaHome.darClickEnVerVehiculos();
+        page.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
+
+        VistaListarVehiculos vistaListar = new VistaListarVehiculos(page);
+        vistaListar.darClickEnRegistrarVehiculo();
+        page.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
     }
 
     private void cuandoElConductorLlenaElFormularioDeVehiculo(

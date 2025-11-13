@@ -121,8 +121,9 @@ public class VistaConductorIniciarFinalizarViajeE2E {
         // Wait for navigation/reload to complete
         page.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
 
-        // Navigate back to trip detail page to verify state changed
-        page.navigate("http://localhost:8080/spring/viaje/detalle?id=2");
+        // Navigate back to trip detail page using UI button
+        VistaAccionViajeCompletada vistaAccion = new VistaAccionViajeCompletada(page);
+        vistaAccion.darClickEnVerDetalleViaje();
         page.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
     }
 
@@ -144,8 +145,9 @@ public class VistaConductorIniciarFinalizarViajeE2E {
         // Wait for navigation/reload to complete
         page.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
 
-        // Navigate back to trip detail page to verify state changed
-        page.navigate("http://localhost:8080/spring/viaje/detalle?id=2");
+        // Navigate back to trip detail page using UI button
+        VistaAccionViajeCompletada vistaAccion = new VistaAccionViajeCompletada(page);
+        vistaAccion.darClickEnVerDetalleViaje();
         page.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
     }
 
