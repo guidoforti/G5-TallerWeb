@@ -40,7 +40,11 @@ public class ReiniciarDB {
                                // Insert available Viaje (3 days from now, 3 seats available)
                                // Estado: 0=DISPONIBLE, 1=COMPLETO, 2=FINALIZADO, 3=CANCELADO, 4=EN_CURSO
                                "INSERT INTO viaje(id, conductor_id, vehiculo_id, origen_id, destino_id, fecha_hora_de_salida, precio, asientos_disponibles, duracion_estimada_minutos, estado, fecha_de_creacion, version) " +
-                               "VALUES(1, 1, 1, 1, 2, DATE_ADD(NOW(), INTERVAL 3 DAY), 1500.00, 3, 838, 0, NOW(), 0);";
+                               "VALUES(1, 1, 1, 1, 2, DATE_ADD(NOW(), INTERVAL 3 DAY), 1500.00, 3, 838, 0, NOW(), 0);\n" +
+                               // Insert pending reservation from viajero for this trip
+                               // Estado: 0=PENDIENTE, 1=CONFIRMADA, 2=RECHAZADA, 3=CANCELADA_POR_VIAJERO
+                               "INSERT INTO reserva(id, viaje_id, viajero_id, fecha_solicitud, estado, motivo_rechazo, estado_pago, asistencia) " +
+                               "VALUES(1, 1, 2, NOW(), 0, NULL, 'NO_PAGADO', 'NO_MARCADO');";
 
             String comando = String.format(
                 "docker exec tallerwebi-mysql mysql -h %s -P %s -u %s -p%s %s -e \"%s\"",
