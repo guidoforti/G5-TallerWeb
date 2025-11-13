@@ -42,4 +42,8 @@ public class Ciudad {
         return Objects.hash(latitud, longitud);
     }
 
+    @Override
+    public String toString(){
+        return this.nombre;
+    }
 }

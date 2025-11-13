@@ -59,6 +59,13 @@ public interface ReservaRepository {
      */
     List<Reserva> findConfirmadasByViaje(Viaje viaje);
 
+     /**
+     * Busca todas las reservas canceladas de un viaje
+     * @param viaje El viaje
+     * @return Lista de reservas canceladas
+     */
+    List<Reserva> findCanceladasByViajero(Viajero viajero);
+
     /**
      * Busca todas las reservas de un viajero filtradas por estados específicos
      * ordenadas por fecha de salida del viaje (ASC - más cercano primero)

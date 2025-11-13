@@ -27,4 +27,6 @@ public interface ServicioViaje {
     void finalizarViaje(Long viajeId, Long conductorId) throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeYaFinalizadoException;
     void cerrarViajesOlvidados();
     void iniciarViajesAtrasados();
+    void cancelarViajeConReservasPagadas(Long id, Usuario usuarioEnSesion)
+            throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeNoCancelableException;
 }

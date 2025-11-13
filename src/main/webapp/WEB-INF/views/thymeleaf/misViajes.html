@@ -142,6 +142,15 @@
                                        class="btn btn-dark fw-bold">
                                         <i class="bi bi-eye me-1"></i> Ver detalles
                                     </a>
+                                    <form id="cancelarReservaForm" 
+                                        th:action="@{/reserva/cancelar/{id}(id=${viaje.reservaId})}" method="post">
+                                        <button type="button"
+                                            class="btn btn-outline-danger fw-bold"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#confirmCancelacionModal"> 
+                                            <i class="bi bi-x-circle me-1"></i> Cancelar reserva
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -307,7 +316,100 @@
             </div>
         </div>
     </div>
+
+    <div class="row mb-5">
+        <div class="col-12">
+            <h4 class="section-title" style="color: var(--color-danger-persa);">
+                <i class="bi bi-x-circle me-2"></i>Viajes Cancelados
+            </h4>
+
+            <div class="row" th:if="${not #lists.isEmpty(viajesCancelados)}">
+                <div class="col-12 mb-4" th:each="viaje : ${viajesCancelados}">
+                    <div class="card viaje-card">
+                        <div class="card-body position-relative">
+                            <span class="badge badge-cancelado estado-badge">
+                                <i class="bi bi-x-circle-fill me-1"></i> Cancelado
+                            </span>
+
+                            <div class="row align-items-center">
+                                <div class="col-md-7 ruta-info">
+                                    <div class="d-flex flex-column">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-geo-alt-fill me-2 icon-origen"></i>
+                                            <strong>Origen:</strong>
+                                            <span class="ms-2" th:text="${viaje.origenNombre}">Origen</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-flag-fill me-2 icon-destino"></i>
+                                            <strong>Destino:</strong>
+                                            <span class="ms-2" th:text="${viaje.destinoNombre}">Destino</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-calendar3 me-2 text-unrumbo"></i>
+                                            <strong>Fecha Original:</strong>
+                                            <span class="ms-2" th:text="${viaje.fechaSalida}">Fecha y hora</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-person me-2" style="color: var(--color-coffee);"></i>
+                                            <strong>Conductor:</strong>
+                                            <span class="ms-2" th:text="${viaje.conductorNombre}">Conductor</span>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-currency-dollar me-2 icon-destino"></i>
+                                            <strong>Precio:</strong>
+                                            <span class="ms-2 fw-bold" th:text="'$' + ${viaje.precio}">$0</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-5 d-flex flex-column justify-content-center align-items-end">
+                                    <span class="text-danger fw-bold mb-2">
+                                        <i class="bi bi-info-circle me-1"></i> La reserva fue cancelada.
+                                    </span>
+                                    <a th:href="@{/viaje/detalle(id=${viaje.viajeId})}"
+                                       class="btn btn-outline-secondary fw-bold">
+                                        <i class="bi bi-eye me-1"></i> Ver detalles
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" th:if="${#lists.isEmpty(viajesCancelados)}">
+                <div class="col-12 text-center py-4">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <i class="bi bi-x-octagon display-4 text-muted mb-3"></i>
+                            <h5 class="text-muted">No tenés viajes cancelados en el historial.</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </main>
+<div class="modal fade" id="confirmCancelacionModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="modalLabel">⚠️ Confirmar Cancelación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                ¿Estás **seguro** que deseas cancelar esta reserva? Esta acción no se puede deshacer.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Volver / No Cancelar</button>
+                
+                <button type="button" class="btn btn-danger" onclick="document.getElementById('cancelarReservaForm').submit();">
+                    Sí, Cancelar Definitivamente
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 <div th:replace="fragments/fragments :: footer"></div>
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
 <th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>

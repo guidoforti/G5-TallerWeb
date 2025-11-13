@@ -344,7 +344,7 @@ public class ControladorViaje {
         }
     }
 
-    @PostMapping("/cancelarViaje")
+   @PostMapping("/cancelarViaje")
     public ModelAndView cancelarViaje(@RequestParam Long id, HttpSession session) {
         ModelMap model = new ModelMap();
 
@@ -352,28 +352,22 @@ public class ControladorViaje {
         Object usuarioIdObj = session.getAttribute("idUsuario");
         String rol = (String) session.getAttribute("ROL");
 
+        // Validación de sesión
         if (usuarioIdObj == null || !"CONDUCTOR".equals(rol)) {
             return new ModelAndView("redirect:/login");
         }
 
-
         Long conductorId = (Long) usuarioIdObj;
-        Conductor conductorEnSesion;
 
         try {
-            Viaje viajeACancelar = servicioViaje.obtenerViajePorId(id);
-            conductorEnSesion = servicioConductor.obtenerConductor(conductorId);
-            servicioViaje.cancelarViaje(id, conductorEnSesion);
-            List<Viajero> todosLosViajeros = servicioReserva.obtenerViajerosConfirmados(viajeACancelar);
+            // 1. Obtener el conductor, ya que el servicio lo requiere como 'Usuario' para validaciones.
+            Conductor conductorEnSesion = servicioConductor.obtenerConductor(conductorId);
 
-            for (Viajero viajero : todosLosViajeros) {
-                String mensaje = String.format("¡ATENCIÓN! El viaje a %s ha sido CANCELADO.", viajeACancelar.getDestino().getNombre());
-                String url = "/reserva/misReservasActivas"; // Redirigir al listado de sus reservas
+            // 2. Usar el nuevo método que maneja TODA la lógica interna (viaje, reservas, pagos, notificaciones).
+            servicioViaje.cancelarViajeConReservasPagadas(id, conductorEnSesion);
 
-                servicioNotificacion.crearYEnviar(viajero, TipoNotificacion.VIAJE_CANCELADO, mensaje, url);
-            }
             model.put("exito", "El viaje fue cancelado exitosamente.");
-            return new ModelAndView("redirect:/viaje/listar");
+            return new ModelAndView("redirect:/viaje/listar"); // Éxito
 
         } catch (ViajeNoEncontradoException e) {
             model.put("error", "No se encontró el viaje especificado.");
@@ -382,16 +376,13 @@ public class ControladorViaje {
         } catch (ViajeNoCancelableException e) {
             model.put("error", "El viaje no se puede cancelar en este estado.");
         } catch (UsuarioInexistente e) {
-            // Manejamos UsuarioInexistente que puede lanzar obtenerConductor, aunque el flujo no lo cubra directamente en el try/catch
             model.put("error", "Error interno: El conductor de la sesión no fue encontrado.");
         } catch (Exception e) {
             model.put("error", "Ocurrió un error al intentar cancelar el viaje.");
         }
 
-        return new ModelAndView("errorCancelarViaje", model);
-
+        return new ModelAndView("errorCancelarViaje", model); // Error
     }
-
 
     @GetMapping("/detalle")
     public ModelAndView verDetalleDeUnViaje(HttpSession httpSession, @RequestParam("id") Long id) {
@@ -694,5 +685,65 @@ public class ControladorViaje {
         return new ModelAndView("accionViajeCompletada", model);
     }
 
+  /*   @GetMapping("/confirmarCancelacion/{id}")
+    public ModelAndView confirmarCancelacion(@PathVariable Long id, HttpSession session) {
+        ModelMap model = new ModelMap();
 
+        Object usuarioIdObj = session.getAttribute("idUsuario");
+        String rol = (String) session.getAttribute("ROL");
+
+        if (usuarioIdObj == null || !"CONDUCTOR".equals(rol)) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        try {
+            Viaje viaje = servicioViaje.obtenerViajePorId(id);
+            
+            model.put("viaje", viaje);
+
+            return new ModelAndView("confirmarCancelacion", model); 
+
+        } catch (ViajeNoEncontradoException e) {
+            model.put("error", "No se encontró el viaje especificado.");
+            return new ModelAndView("errorCancelarViaje", model);
+        } catch (Exception e) {
+            model.put("error", "Ocurrió un error al cargar la información del viaje para la cancelación.");
+            return new ModelAndView("errorCancelarViaje", model);
+        }
+    }
+
+
+    @PostMapping("/cancelarViaje")
+public ModelAndView cancelarViajeConReservasPagadas(@RequestParam Long id, HttpSession session) {
+    ModelMap model = new ModelMap();
+
+    Object usuarioIdObj = session.getAttribute("idUsuario");
+    String rol = (String) session.getAttribute("ROL");
+
+    if (usuarioIdObj == null || !"CONDUCTOR".equals(rol)) {
+        return new ModelAndView("redirect:/login");
+    }
+
+    Long conductorId = (Long) usuarioIdObj;
+    try {
+        Conductor conductorEnSesion = servicioConductor.obtenerConductor(conductorId);
+        servicioViaje.cancelarViajeConReservasPagadas(id, conductorEnSesion);
+
+        model.put("exito", "El viaje y todas las reservas asociadas fueron canceladas exitosamente.");
+        return new ModelAndView("redirect:/viaje/listar");
+
+    } catch (ViajeNoEncontradoException e) {
+        model.put("error", "No se encontró el viaje especificado.");
+    } catch (UsuarioNoAutorizadoException e) {
+        model.put("error", "No tiene permisos para cancelar este viaje.");
+    } catch (ViajeNoCancelableException e) {
+        model.put("error", "El viaje no se puede cancelar en este estado.");
+    } catch (Exception e) {
+        model.put("error", "Ocurrió un error al intentar cancelar el viaje.");
+    }
+
+    return new ModelAndView("errorCancelarViaje", model);
+}
+
+*/
 }
