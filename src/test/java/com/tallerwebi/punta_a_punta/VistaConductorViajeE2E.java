@@ -47,12 +47,6 @@ public class VistaConductorViajeE2E {
 
     @Test
     void conductorDeberiaIniciarYFinalizarViaje() throws MalformedURLException {
-        // Set up single dialog handler for all confirmation dialogs
-        page.onDialog(dialog -> {
-            System.out.println("Dialog: " + dialog.message());
-            dialog.accept();
-        });
-
         // GIVEN - Inicio de sesión como conductor
         dadoQueElConductorInicioSesion("conductor@test.com", "test123");
         cuandoElConductorTocaElBotonDeLogin();
@@ -89,6 +83,8 @@ public class VistaConductorViajeE2E {
 
     private void cuandoElConductorTocaElBotonDeLogin() {
         vistaLogin.darClickEnIniciarSesion();
+        // Wait for redirect to complete after form submission
+        page.waitForURL("**/conductor/home**");
     }
 
     private void entoncesDeberiaSerRedirigidoAlHomeConductor() throws MalformedURLException {
@@ -113,9 +109,16 @@ public class VistaConductorViajeE2E {
     }
 
     private void cuandoElConductorIniciaElViaje(VistaDetalleViaje vistaDetalle) {
+        // Click button to open modal
         vistaDetalle.darClickEnIniciarViaje();
 
-        // Wait for navigation to complete
+        // Wait for modal to appear
+        page.waitForSelector("#confirmStartModal", new Page.WaitForSelectorOptions().setTimeout(2000));
+
+        // Click confirmation button in modal
+        vistaDetalle.darClickEnConfirmarIniciarViaje();
+
+        // Wait for navigation/reload to complete
         page.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
 
         // Navigate back to trip detail page to verify state changed
@@ -129,9 +132,16 @@ public class VistaConductorViajeE2E {
     }
 
     private void cuandoElConductorFinalizaElViaje(VistaDetalleViaje vistaDetalle) {
+        // Click button to open modal
         vistaDetalle.darClickEnFinalizarViaje();
 
-        // Wait for navigation to complete
+        // Wait for modal to appear
+        page.waitForSelector("#confirmFinishModal", new Page.WaitForSelectorOptions().setTimeout(2000));
+
+        // Click confirmation button in modal
+        vistaDetalle.darClickEnConfirmarFinalizarViaje();
+
+        // Wait for navigation/reload to complete
         page.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
 
         // Navigate back to trip detail page to verify state changed
@@ -145,8 +155,8 @@ public class VistaConductorViajeE2E {
             String mensaje = page.locator(".alert-success").textContent();
             assertThat(mensaje, containsString("finalizado"));
         } else {
-            // Check trip state badge
-            String estado = page.locator(".badge").first().textContent();
+            // Check trip state badge using semantic ID
+            String estado = page.locator("#badge-estado-viaje").textContent();
             assertThat(estado.toLowerCase(), containsString("finalizado"));
         }
     }

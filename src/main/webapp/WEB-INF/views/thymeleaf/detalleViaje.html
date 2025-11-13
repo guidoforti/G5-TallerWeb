@@ -243,7 +243,7 @@
                                 </th:block>
 
                                 <div class="d-flex align-items-center me-3 ms-3">
-                                    <span class="badge fs-6 px-3 py-2"
+                                    <span id="badge-estado-viaje" class="badge fs-6 px-3 py-2"
                                          th:classappend="${detalle.estado.name() == 'DISPONIBLE' ? 'bg-primary' :
                                   detalle.estado.name() == 'COMPLETO' ? 'bg-info' :
                                   detalle.estado.name() == 'EN_CURSO' ? 'bg-warning text-dark' :

@@ -22,8 +22,16 @@ public class VistaDetalleViaje extends VistaWeb {
         darClickEnElElemento("#btn-iniciar-viaje");
     }
 
+    public void darClickEnConfirmarIniciarViaje() {
+        darClickEnElElemento("#btn-confirm-iniciar-viaje");
+    }
+
     public void darClickEnFinalizarViaje() {
         darClickEnElElemento("#btn-finalizar-viaje");
+    }
+
+    public void darClickEnConfirmarFinalizarViaje() {
+        darClickEnElElemento("#btn-confirm-finalizar-viaje");
     }
 
     public void darClickEnVerViajerosConfirmados() {
