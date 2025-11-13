@@ -13,7 +13,7 @@ import java.net.URL;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.matchesPattern;
 
-public class VistaConductorE2E {
+public class VistaConductorCrearViajeE2E {
 
     static Playwright playwright;
     static Browser browser;

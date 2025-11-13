@@ -308,15 +308,21 @@ return repository.findById(id)
 
 ```
 /src/test/java/com/tallerwebi/punta_a_punta/
-├── VistaConductorE2E.java          # E2E test class
-├── VistaLoginE2E.java              # Login E2E tests
-├── ReiniciarDB.java                # Database cleanup utility
-└── /vistas/                        # Page Objects
-    ├── VistaWeb.java               # Base class with common methods
-    ├── VistaLogin.java             # Login page object
-    ├── VistaHomeConductor.java     # Conductor home page object
-    ├── VistaRegistrarVehiculo.java # Vehicle registration page object
-    └── VistaPublicarViaje.java     # Publish travel page object
+├── VistaConductorCrearViajeE2E.java         # E2E test: Conductor creates vehicle and publishes trip
+├── VistaViajeroSolicitarReservaE2E.java     # E2E test: Viajero searches and reserves trip
+├── VistaConductorReservasE2E.java           # E2E test: Conductor manages reservations
+├── VistaConductorIniciarFinalizarViajeE2E.java  # E2E test: Conductor starts and finalizes trip
+├── ReiniciarDB.java                         # Database cleanup utility
+└── /vistas/                                 # Page Objects
+    ├── VistaWeb.java                        # Base class with common methods
+    ├── VistaLogin.java                      # Login page object
+    ├── VistaHomeConductor.java              # Conductor home page object
+    ├── VistaHomeViajero.java                # Viajero home page object
+    ├── VistaRegistrarVehiculo.java          # Vehicle registration page object
+    ├── VistaPublicarViaje.java              # Publish travel page object
+    ├── VistaBuscarViaje.java                # Search trip page object
+    ├── VistaDetalleViaje.java               # Trip detail page object
+    └── (other page objects)
 ```
 
 ### Test Structure
@@ -328,10 +334,11 @@ return repository.findById(id)
 
 **Example Test Class:**
 ```java
-public class VistaConductorE2E {
+public class VistaConductorCrearViajeE2E {
     static Playwright playwright;
     static Browser browser;
     BrowserContext context;
+    Page page;  // IMPORTANT: page as class property
     VistaLogin vistaLogin;
 
     @BeforeAll
@@ -346,7 +353,7 @@ public class VistaConductorE2E {
     void crearContextoYPagina() {
         ReiniciarDB.limpiarBaseDeDatos();  // CRITICAL: Clean DB before each test
         context = browser.newContext();
-        Page page = context.newPage();
+        page = context.newPage();  // IMPORTANT: Initialize page property
         vistaLogin = new VistaLogin(page);
     }
 
@@ -416,9 +423,11 @@ public class VistaHomeConductor extends VistaWeb {
 
 **Naming Convention:**
 - Buttons: `#btn-[action]` (e.g., `#btn-login`, `#btn-submit-viaje`)
+- Confirmation buttons in modals: `#btn-confirm-[action]` (e.g., `#btn-confirm-iniciar-viaje`)
 - Links: `#btn-[action]` or `#link-[destination]`
 - Forms: `#form-[name]`
 - Messages: `#mensaje-[type]` (e.g., `#mensaje-error`, `#mensaje-exito`)
+- Badges/Status: `#badge-[type]` (e.g., `#badge-estado-viaje`)
 
 **Example:**
 ```html
@@ -532,10 +541,10 @@ void conductorDeberiaCrearVehiculoYPublicarViaje() throws MalformedURLException 
     entoncesDeberiaSerRedirigidoAlHomeConductor();
 
     // WHEN - Actions
-    VistaHomeConductor vistaHome = new VistaHomeConductor(context.pages().get(0));
+    VistaHomeConductor vistaHome = new VistaHomeConductor(page);
     cuandoElConductorNavegaAPublicarViaje(vistaHome);
 
-    VistaPublicarViaje vistaViaje = new VistaPublicarViaje(context.pages().get(0));
+    VistaPublicarViaje vistaViaje = new VistaPublicarViaje(page);
     cuandoElConductorSeleccionaOrigen(vistaViaje, "Buenos Aires");
     cuandoElConductorSeleccionaDestino(vistaViaje, "Cordoba");
     cuandoElConductorIngresaFechaSalida(vistaViaje, "2025-12-25T14:00");
@@ -569,7 +578,7 @@ private void entoncesDeberiaSerRedirigidoAlHomeConductor() throws MalformedURLEx
 private void cuandoElConductorEnviaElFormularioDeViaje(VistaPublicarViaje vistaViaje) {
     vistaViaje.darClickEnSubmit();
     // Wait for redirect
-    context.pages().get(0).waitForURL("**/conductor/home**");
+    page.waitForURL("**/conductor/home**");
 }
 ```
 
@@ -599,6 +608,35 @@ public void seleccionarVehiculo(String valorVehiculo) {
 assertThat(url.getPath(), matchesPattern("^/spring/conductor/home(?:;jsessionid=[^/\\s]+)?$"));
 ```
 
+**5. Bootstrap Modal Confirmations:**
+```java
+// IMPORTANT: Use Bootstrap modals instead of JavaScript confirm() dialogs
+// Pattern: Click button → Wait for modal → Click confirmation in modal
+
+private void cuandoElConductorIniciaElViaje(VistaDetalleViaje vistaDetalle) {
+    // Click button to open modal
+    vistaDetalle.darClickEnIniciarViaje();
+
+    // Wait for modal to appear
+    page.waitForSelector("#confirmStartModal", new Page.WaitForSelectorOptions().setTimeout(2000));
+
+    // Click confirmation button in modal
+    vistaDetalle.darClickEnConfirmarIniciarViaje();
+
+    // Wait for navigation/reload
+    page.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
+}
+
+// Page Object methods needed:
+public void darClickEnIniciarViaje() {
+    darClickEnElElemento("#btn-iniciar-viaje");  // Opens modal
+}
+
+public void darClickEnConfirmarIniciarViaje() {
+    darClickEnElElemento("#btn-confirm-iniciar-viaje");  // Confirms in modal
+}
+```
+
 ### E2E Test Development Workflow
 
 1. **Identify Core Workflow:** Choose user journey to test
@@ -612,10 +650,17 @@ assertThat(url.getPath(), matchesPattern("^/spring/conductor/home(?:;jsessionid=
    - Use Given-When-Then pattern
    - Create private helper methods for readability
    - Add assertions at key checkpoints
+   - **CRITICAL:** Use unique vehicle patentes and unique trip routes to avoid conflicts with ReiniciarDB.java
 6. **Run Test:**
    - Run with `setHeadless(false)` and `setSlowMo(500)` for debugging
-   - Use `mvn test -Dtest=VistaConductorE2E`
+   - Use `mvn test -Dtest=VistaConductorCrearViajeE2E`
 7. **Iterate:** Fix issues, refine selectors, improve waits
+
+**IMPORTANT - Test Data Uniqueness:**
+- Each test should create unique data to avoid conflicts
+- Vehicle patentes must be unique (e.g., Test #1 uses "DEF456", ReiniciarDB uses "ABC123")
+- Trip routes must be unique (e.g., Buenos Aires → Mendoza vs Buenos Aires → Córdoba)
+- Check ReiniciarDB.java to see what data already exists before creating test data
 
 ### Running E2E Tests
 
@@ -634,7 +679,10 @@ docker compose up -d --build
 **Run Tests:**
 ```bash
 # Run specific E2E test
-mvn test -Dtest=VistaConductorE2E
+mvn test -Dtest=VistaConductorCrearViajeE2E
+mvn test -Dtest=VistaViajeroSolicitarReservaE2E
+mvn test -Dtest=VistaConductorReservasE2E
+mvn test -Dtest=VistaConductorIniciarFinalizarViajeE2E
 
 # Run all E2E tests
 mvn test -Dtest="*E2E"
@@ -696,8 +744,14 @@ System.out.println("Element exists: " + exists);
 - **Cause:** Not waiting for JavaScript to initialize
 - **Solution:** Add small wait or ensure Tom Select library is loaded
 
+**Issue:** "JavaScript confirm() dialogs not working in E2E tests"
+- **Cause:** JavaScript confirm() dialogs require special handling in Playwright
+- **Solution:** Use Bootstrap modals instead for better UX and easier E2E testing. Add semantic IDs to modal buttons (`#btn-confirm-[action]`)
+
 ### E2E Test Checklist
 
+- [ ] `Page page;` declared as class property (NOT local variable)
+- [ ] All Page Objects instantiated with `page` (NOT `context.pages().get(0)`)
 - [ ] All interactive elements have semantic IDs
 - [ ] Page Objects created for all views
 - [ ] Database cleanup works correctly
@@ -706,16 +760,22 @@ System.out.println("Element exists: " + exists);
 - [ ] Waits properly for async operations (API calls, redirects)
 - [ ] Date inputs use `.fill()` not `.type()`
 - [ ] Tom Select dropdowns properly scoped
+- [ ] Bootstrap modals used instead of JavaScript confirm() dialogs
 - [ ] Assertions check key outcomes
 - [ ] Test runs successfully with headless mode
 
 ### Reference Tests
 
 **Existing E2E Tests:**
-- `VistaConductorE2E.conductorDeberiaCrearVehiculoYPublicarViaje()` - Complete driver workflow
-- `VistaLoginE2E.deberiaRegistrarUnUsuarioEIniciarSesionExistosamente()` - Registration + login flow
+- `VistaConductorCrearViajeE2E.conductorDeberiaCrearVehiculoYPublicarViaje()` - Complete driver workflow: create vehicle and publish trip
+- `VistaViajeroSolicitarReservaE2E.viajeroDeberiaBuscarViajeYSolicitarReserva()` - Passenger workflow: search trip and request reservation
+- `VistaConductorReservasE2E` - Driver manages reservations: accept/reject passenger requests
+- `VistaConductorIniciarFinalizarViajeE2E.conductorDeberiaIniciarYFinalizarViaje()` - Driver manages trip lifecycle: start and finalize trip
 
 **Key Files:**
 - Base class: `src/test/java/com/tallerwebi/punta_a_punta/vistas/VistaWeb.java`
 - DB cleanup: `src/test/java/com/tallerwebi/punta_a_punta/ReiniciarDB.java`
-- Test example: `src/test/java/com/tallerwebi/punta_a_punta/VistaConductorE2E.java`
+- Test examples:
+  - `src/test/java/com/tallerwebi/punta_a_punta/VistaConductorCrearViajeE2E.java`
+  - `src/test/java/com/tallerwebi/punta_a_punta/VistaViajeroSolicitarReservaE2E.java`
+  - `src/test/java/com/tallerwebi/punta_a_punta/VistaConductorIniciarFinalizarViajeE2E.java`

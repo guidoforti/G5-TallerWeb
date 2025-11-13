@@ -11,7 +11,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.matchesPattern;
 
-public class VistaConductorViajeE2E {
+public class VistaConductorIniciarFinalizarViajeE2E {
 
     static Playwright playwright;
     static Browser browser;
