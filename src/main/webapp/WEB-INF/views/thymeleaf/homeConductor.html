@@ -24,11 +24,11 @@
                 <div class="col-lg-6 col-md-12 d-flex">
                     <div class="card shadow-lg border-0 w-100 rounded-4 p-4" style="background-color: #ffffff;">
                         <div class="card-body text-center d-flex flex-column justify-content-between">
-                            
+
                             <h4 class="fw-bold text-dark mb-4">
                                 ¡Bienvenido, <span th:text="${nombreConductor}">Conductor</span>! 🚗
                             </h4>
-                            
+
                             <div class="mb-4">
                                 <img th:src="@{/img/ruta.jpg}" alt="Comunidad de carpooling en carretera" class="img-fluid rounded shadow-sm mb-3" style="max-height: 200px; object-fit: cover; width: 100%;">
                                 <p class="lead fw-bold mb-1" style="color: #E16A3D;">
@@ -37,7 +37,7 @@
                                 <p class="text-muted small">Ganancias y comodidad garantizadas.</p>
                             </div>
 
-                            <a th:href="@{/viaje/publicar}" class="btn btn-primary w-100 fw-bold btn-lg">
+                            <a th:href="@{/viaje/publicar}" id="btn-publicar-viaje" class="btn btn-primary w-100 fw-bold btn-lg">
                                 <i class="fas fa-route me-2"></i> Publicar Viaje
                             </a>
                         </div>
@@ -49,24 +49,24 @@
                         <div class="card-body d-flex flex-column">
 
                             <h5 class="fw-bold text-start mb-3" style="color: #4E3D2F;">Mi Gestión</h5>
-                            
-                            <a th:href="@{/viaje/listar}" class="btn btn-dark w-100 fw-bold">
+
+                            <a th:href="@{/viaje/listar}" id="btn-mis-viajes" class="btn btn-dark w-100 fw-bold">
                                 <i class="fas fa-list-alt me-2"></i> Mis Viajes
                             </a>
                             <p class="text-muted small text-center mt-1 mb-3">Administrá tus viajes y seguí el estado.</p>
-                            
-                            <a th:href="@{/reserva/misReservas}" class="btn btn-dark w-100 fw-bold">
+
+                            <a th:href="@{/reserva/misReservas}" id="btn-ver-reservas" class="btn btn-dark w-100 fw-bold">
                                 <i class="fas fa-users-cog me-2"></i> Gestionar Reservas
                             </a>
                             <p class="text-muted small text-center mt-1 mb-3">Aceptá o rechazá solicitudes de viajeros.</p>
 
-                            <a th:href="@{/vehiculos/listarVehiculos}" class="btn btn-dark w-100 fw-bold">
+                            <a th:href="@{/vehiculos/listarVehiculos}" id="btn-ver-vehiculos" class="btn btn-dark w-100 fw-bold">
                                 <i class="fas fa-car me-2"></i> Mis Vehículos
                             </a>
                             <p class="text-muted small text-center mt-1 mb-4">Mantené tu flota actualizada.</p>
 
                             <div class="mt-auto pt-3 border-top">
-                                <a th:href="@{/logout}" class="btn btn-danger w-100 fw-bold btn-lg">
+                                <a th:href="@{/logout}" id="btn-cerrar-sesion" class="btn btn-danger w-100 fw-bold btn-lg">
                                     <i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión
                                 </a>
                             </div>
@@ -74,9 +74,9 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="row g-4">
-                
+
                 <div class="col-lg-6 col-md-12">
                     <div class="card shadow-sm border-0 rounded-4">
                         <div class="card-header fw-bold" style="background-color: #734933; color: white;">

@@ -207,22 +207,24 @@
                                             && !reservaExistente
                                             && (detalle.estado.name() == 'DISPONIBLE' || detalle.estado.name() == 'COMPLETO')}"
                                th:href="@{/reserva/solicitar(viajeId=${viajeId})}"
+                               id="btn-solicitar-reserva"
                                class="btn btn-unrumbo fw-bold">
                                 <i class="fas fa-ticket-alt me-2"></i> Solicitar Reserva
                             </a>
 
                             <th:block th:if="${userRole != null && userRole == 'CONDUCTOR'}">
 
-                                <a th:href="@{/reserva/viajerosConfirmados(viajeId=${viajeId})}" class="btn btn-dark fw-bold">
+                                <a th:href="@{/reserva/viajerosConfirmados(viajeId=${viajeId})}" id="btn-ver-viajeros-confirmados" class="btn btn-dark fw-bold">
                                     <i class="fas fa-users me-2"></i> Ver Viajeros Confirmados
                                 </a>
 
-                                <a th:href="@{/historial/viaje(idViaje=${viajeId})}" class="btn btn-outline-unrumbo fw-bold">
+                                <a th:href="@{/historial/viaje(idViaje=${viajeId})}" id="btn-ver-historial" class="btn btn-outline-unrumbo fw-bold">
                                     <i class="fas fa-history me-2"></i> Historial
                                 </a>
 
                                 <th:block th:if="${detalle.estado.name() == 'DISPONIBLE' || detalle.estado.name() == 'COMPLETO'}">
                                     <button type="button"
+                                            id="btn-iniciar-viaje"
                                             class="btn btn-primary fw-bold"
                                             data-bs-toggle="modal"
                                             data-bs-target="#confirmStartModal">
@@ -232,6 +234,7 @@
 
                                 <th:block th:if="${detalle.estado.name() == 'EN_CURSO'}">
                                     <button type="button"
+                                            id="btn-finalizar-viaje"
                                             class="btn btn-danger fw-bold"
                                             data-bs-toggle="modal"
                                             data-bs-target="#confirmFinishModal">
@@ -240,7 +243,7 @@
                                 </th:block>
 
                                 <div class="d-flex align-items-center me-3 ms-3">
-                                    <span class="badge fs-6 px-3 py-2"
+                                    <span id="badge-estado-viaje" class="badge fs-6 px-3 py-2"
                                          th:classappend="${detalle.estado.name() == 'DISPONIBLE' ? 'bg-primary' :
                                   detalle.estado.name() == 'COMPLETO' ? 'bg-info' :
                                   detalle.estado.name() == 'EN_CURSO' ? 'bg-warning text-dark' :
@@ -258,11 +261,15 @@
                             </th:block>
 
                             <a th:if="${userRole != null && userRole == 'VIAJERO'}"
-                               th:href="@{/viajero/home}" class="btn btn-outline-unrumbo fw-bold">
+                               th:href="@{/viajero/home}"
+                               id="btn-volver-home-viajero"
+                               class="btn btn-outline-unrumbo fw-bold">
                                 <i class="fas fa-arrow-left me-2"></i> Volver al Home
                             </a>
                             <a th:if="${userRole != null && userRole == 'CONDUCTOR'}"
-                               th:href="@{/conductor/home}" class="btn btn-outline-unrumbo fw-bold">
+                               th:href="@{/conductor/home}"
+                               id="btn-volver-home-conductor"
+                               class="btn btn-outline-unrumbo fw-bold">
                                 <i class="fas fa-arrow-left me-2"></i> Volver a Home
                             </a>
                         </div>
@@ -288,7 +295,7 @@
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
 
                 <form th:action="@{/viaje/{id}/iniciar(id=${viajeId})}" method="post" style="display: inline;">
-                    <button type="submit" class="btn btn-primary fw-bold">
+                    <button type="submit" id="btn-confirm-iniciar-viaje" class="btn btn-primary fw-bold">
                         <i class="fas fa-check me-1"></i> Sí, Iniciar Viaje
                     </button>
                 </form>
@@ -313,7 +320,7 @@
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
 
                 <form th:action="@{/viaje/{id}/finalizar(id=${viajeId})}" method="post" style="display: inline;">
-                    <button type="submit" class="btn btn-danger fw-bold">
+                    <button type="submit" id="btn-confirm-finalizar-viaje" class="btn btn-danger fw-bold">
                         <i class="fas fa-check me-1"></i> Sí, Finalizar Viaje
                     </button>
                 </form>

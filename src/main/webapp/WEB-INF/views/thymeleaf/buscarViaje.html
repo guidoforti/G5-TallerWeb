@@ -98,11 +98,11 @@
                         </div>
 
                         <div class="text-center mt-4 d-flex justify-content-center gap-3">
-                            <button type="submit" class="btn btn-unrumbo w-50 fw-bold"> <i class="fas fa-route me-1"></i> Buscar Viajes
+                            <button type="submit" id="btn-buscar-viajes" class="btn btn-unrumbo w-50 fw-bold"> <i class="fas fa-route me-1"></i> Buscar Viajes
                             </button>
                         </div>
                         <div class="text-center mt-3">
-                            <a th:href="@{/viajero/home}" class="btn btn-outline-secondary fw-bold">
+                            <a th:href="@{/viajero/home}" id="btn-volver-home" class="btn btn-outline-secondary fw-bold">
                                 <i class="fas fa-arrow-left me-1"></i> Volver al Inicio
                             </a>
                         </div>
@@ -146,6 +146,7 @@
                                                     $<span th:text="${viaje.precio}">0</span>
                                                 </h5>
                                                 <a th:href="@{/viaje/detalle(id=${viaje.id})}"
+                                                   id="btn-ver-detalle"
                                                    class="btn btn-sm btn-unrumbo-detail fw-bold">
                                                     <i class="fas fa-eye me-1"></i> Ver detalle
                                                 </a>
