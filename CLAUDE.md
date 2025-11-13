@@ -779,3 +779,4 @@ System.out.println("Element exists: " + exists);
   - `src/test/java/com/tallerwebi/punta_a_punta/VistaConductorCrearViajeE2E.java`
   - `src/test/java/com/tallerwebi/punta_a_punta/VistaViajeroSolicitarReservaE2E.java`
   - `src/test/java/com/tallerwebi/punta_a_punta/VistaConductorIniciarFinalizarViajeE2E.java`
+- Always redeploy the application with mvn clean package and docker compose commands when changing HTML views for E2E tests

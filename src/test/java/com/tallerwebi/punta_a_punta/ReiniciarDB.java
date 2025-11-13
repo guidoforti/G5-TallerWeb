@@ -12,6 +12,7 @@ public class ReiniciarDB {
             String dbPassword = System.getenv("DB_PASSWORD") != null ? System.getenv("DB_PASSWORD") : "user";
 
             String sqlCommands = "SET FOREIGN_KEY_CHECKS=0;\n" +
+                               "DELETE FROM valoracion;\n" +
                                "DELETE FROM reserva;\n" +
                                "DELETE FROM parada;\n" +
                                "DELETE FROM viaje;\n" +
@@ -25,6 +26,7 @@ public class ReiniciarDB {
                                "ALTER TABLE viaje AUTO_INCREMENT = 1;\n" +
                                "ALTER TABLE reserva AUTO_INCREMENT = 1;\n" +
                                "ALTER TABLE ciudad AUTO_INCREMENT = 1;\n" +
+                               "ALTER TABLE valoracion AUTO_INCREMENT = 1;\n" +
                                "SET FOREIGN_KEY_CHECKS=1;\n" +
                                // Insert Conductor user
                                "INSERT INTO usuario(id, email, contrasenia, nombre, rol, activo, fecha_nacimiento, fumador, discapacitado) VALUES(1, 'conductor@test.com', 'test123', 'Test Conductor', 'CONDUCTOR', true, '1990-01-01', false, NULL);\n" +

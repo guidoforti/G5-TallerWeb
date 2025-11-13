@@ -80,13 +80,15 @@
                                 <div class="rating d-flex justify-content-end mb-2">
                                     <span class="text-muted small me-2">Puntuación:</span>
                                     <input type="number"
+                                           th:id="'puntuacion-viajero-' + ${stat.index}"
                                            th:field="*{valoraciones[__${stat.index}__].puntuacion}"
                                            min="1" max="5"
                                            class="form-control form-control-sm"
                                            style="width: 60px;" required />
                                 </div>
 
-                                <textarea th:field="*{valoraciones[__${stat.index}__].comentario}"
+                                <textarea th:id="'comentario-viajero-' + ${stat.index}"
+                                          th:field="*{valoraciones[__${stat.index}__].comentario}"
                                           placeholder="Comentario (opcional)"
                                           rows="2"
                                           class="form-control form-control-sm"></textarea>
@@ -96,7 +98,7 @@
                 </div>
 
                 <div class="mt-5 text-center">
-                    <button type="submit" class="btn btn-unrumbo w-50 fw-bold">
+                    <button type="submit" id="btn-enviar-valoraciones-viajeros" class="btn btn-unrumbo w-50 fw-bold">
                         <i class="fas fa-paper-plane me-2"></i> Enviar Valoraciones
                     </button>
                 </div>

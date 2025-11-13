@@ -30,16 +30,16 @@
 
                     <div class="mb-4">
                         <label class="form-label fw-bold">Puntuación (1 a 5):</label>
-                        <input type="number" th:field="*{puntuacion}" min="1" max="5" class="form-control" required/>
+                        <input type="number" id="puntuacion" th:field="*{puntuacion}" min="1" max="5" class="form-control" required/>
                     </div>
 
                     <div class="mb-4">
                         <label class="form-label fw-bold">Comentario:</label>
-                        <textarea th:field="*{comentario}" rows="3" class="form-control" placeholder="Describe tu experiencia"></textarea>
+                        <textarea id="comentario" th:field="*{comentario}" rows="3" class="form-control" placeholder="Describe tu experiencia"></textarea>
                     </div>
 
                     <div class="text-center">
-                        <button type="submit" class="btn btn-unrumbo fw-bold w-100">
+                        <button type="submit" id="btn-enviar-valoracion" class="btn btn-unrumbo fw-bold w-100">
                             Enviar Valoración
                         </button>
                     </div>
