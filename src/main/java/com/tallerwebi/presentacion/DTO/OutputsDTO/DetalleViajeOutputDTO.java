@@ -26,6 +26,8 @@ public class DetalleViajeOutputDTO {
     private List<ViajeroDTO> viajeros;
     private List<ParadaDTO> paradas;
     private LocalDateTime fechaHoraDeSalida;
+    private Long conductorId;
+    private String conductorNombre;
     private Integer asientosDisponibles;
     private EstadoDeViaje estado;
     private Integer duracionEstimadaMinutos;
@@ -46,6 +48,12 @@ public class DetalleViajeOutputDTO {
         this.estado = viaje.getEstado();
         this.duracionEstimadaMinutos = viaje.getDuracionEstimadaMinutos();
 
+        if (viaje.getConductor() != null) {
+            this.conductorId = viaje.getConductor().getId();
+            this.conductorNombre = viaje.getConductor().getNombre();
+        } else {
+            this.conductorNombre = "Conductor no asignado";
+        }
         // Format duration as "X.X horas (Y minutos)"
         if (duracionEstimadaMinutos != null) {
             double horas = duracionEstimadaMinutos / 60.0;

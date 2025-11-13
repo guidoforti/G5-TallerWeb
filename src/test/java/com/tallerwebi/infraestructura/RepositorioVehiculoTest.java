@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -23,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = { HibernateTestConfig.class, DataBaseTestInitilizationConfig.class })
 @Transactional
+@WebAppConfiguration
 public class RepositorioVehiculoTest {
 
     @Autowired
@@ -58,7 +60,7 @@ public class RepositorioVehiculoTest {
     @Test
     public void deberiaEncontrarVehiculoPorPatenteExistente() {
         // Arrange: Patente del vehículo precargado: 'AB123CD' (ID=1)
-        String patenteExistente = "AB123CD";
+        String patenteExistente = "AC456EF";
 
         Optional<Vehiculo> optionalVehiculo = repositorioVehiculo.encontrarVehiculoConPatente(patenteExistente);
 
@@ -97,7 +99,6 @@ public class RepositorioVehiculoTest {
         final Long ID_CONDUCTOR_CON_VEHICULOS = 2L;
         Conductor conductorLista = sessionFactory.getCurrentSession().get(Conductor.class, ID_CONDUCTOR_CON_VEHICULOS);
 
-        // Insertamos un segundo vehículo para este conductor para probar la lista > 1
         repositorioVehiculo.guardarVehiculo(
                 new Vehiculo(null, "AUX999", "AutoExtra", "2023", 4, EstadoVerificacion.PENDIENTE, conductorLista));
 
@@ -107,7 +108,7 @@ public class RepositorioVehiculoTest {
         List<Vehiculo> lista = repositorioVehiculo.obtenerVehiculosParaConductor(ID_CONDUCTOR_CON_VEHICULOS);
 
         assertNotNull(lista, "La lista no debe ser null.");
-        assertEquals(2, lista.size(), "Debería retornar 2 vehículos.");
+        assertEquals(2, lista.size(), "Debería retornar 6 vehículos.");
     }
 
     @Test
