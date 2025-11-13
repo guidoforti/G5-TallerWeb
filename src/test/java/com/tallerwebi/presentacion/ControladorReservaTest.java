@@ -1332,6 +1332,167 @@ public void deberiaMostrarErrorSiUsuarioInexistente() throws UsuarioInexistente 
 }
 
 
+@Test
+public void deberiaIrACancelarReservaCuandoUsuarioViajeroYReservaValida() throws Exception {
+    // given
+    Long reservaId = 10L;
+    Long viajeroId = 1L;
+
+    Viajero viajero = new Viajero();
+    viajero.setId(viajeroId);
+
+    Viaje viaje = new Viaje();
+    viaje.setId(5L);
+
+    Reserva reserva = new Reserva();
+    reserva.setId(reservaId);
+    reserva.setViajero(viajero);
+    reserva.setViaje(viaje);
+
+    when(sessionMock.getAttribute("idUsuario")).thenReturn(viajeroId);
+    when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
+    when(servicioReservaMock.obtenerReservaPorId(reservaId)).thenReturn(reserva);
+
+    // when
+    ModelAndView mav = controladorReserva.irACancelarReserva(reservaId, sessionMock);
+
+    // then
+    assertThat(mav.getViewName(), is("cancelarReserva"));
+    assertThat(mav.getModel().get("reserva"), is(reserva));
+    assertThat(mav.getModel().get("viaje"), is(viaje));
+    verify(servicioReservaMock, times(1)).obtenerReservaPorId(reservaId);
+}
+
+@Test
+public void deberiaRedirigirALoginSiNoHaySesionEnIrACancelarReserva() {
+    // given
+    when(sessionMock.getAttribute("idUsuario")).thenReturn(null);
+
+    // when
+    ModelAndView mav = controladorReserva.irACancelarReserva(1L, sessionMock);
+
+    // then
+    assertThat(mav.getViewName(), is("redirect:/login"));
+    verify(servicioReservaMock, never()).obtenerReservaPorId(anyLong());
+}
+
+@Test
+public void deberiaRedirigirALoginSiRolNoEsViajero() {
+    // given
+    when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
+    when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR");
+
+    // when
+    ModelAndView mav = controladorReserva.irACancelarReserva(1L, sessionMock);
+
+    // then
+    assertThat(mav.getViewName(), is("redirect:/login"));
+    verify(servicioReservaMock, never()).obtenerReservaPorId(anyLong());
+}
+
+@Test
+public void deberiaMostrarErrorSiReservaNoPerteneceAlViajero() throws Exception {
+    // given
+    Long reservaId = 10L;
+    Long viajeroId = 1L;
+
+    Viajero otroViajero = new Viajero();
+    otroViajero.setId(2L);
+
+    Reserva reserva = new Reserva();
+    reserva.setId(reservaId);
+    reserva.setViajero(otroViajero);
+    reserva.setViaje(new Viaje());
+
+    when(sessionMock.getAttribute("idUsuario")).thenReturn(viajeroId);
+    when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
+    when(servicioReservaMock.obtenerReservaPorId(reservaId)).thenReturn(reserva);
+
+    // when
+    ModelAndView mav = controladorReserva.irACancelarReserva(reservaId, sessionMock);
+
+    // then
+    assertThat(mav.getViewName(), is("errorCancelarReserva"));
+    assertThat(mav.getModel().get("error"), is("No se pudo acceder a la reserva."));
+    verify(servicioReservaMock, times(1)).obtenerReservaPorId(reservaId);
+}
+
+@Test
+public void deberiaMostrarErrorSiServicioLanzaExcepcionEnIrACancelar() throws Exception {
+    // given
+    Long reservaId = 10L;
+    Long viajeroId = 1L;
+
+    when(sessionMock.getAttribute("idUsuario")).thenReturn(viajeroId);
+    when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
+    when(servicioReservaMock.obtenerReservaPorId(reservaId)).thenThrow(new RuntimeException("Error interno"));
+
+    // when
+    ModelAndView mav = controladorReserva.irACancelarReserva(reservaId, sessionMock);
+
+    // then
+    assertThat(mav.getViewName(), is("errorCancelarReserva"));
+    assertThat(mav.getModel().get("error"), is("No se pudo acceder a la reserva."));
+    verify(servicioReservaMock, times(1)).obtenerReservaPorId(reservaId);
+}
+
+@Test
+public void deberiaCancelarReservaViajeroExitosamente() throws Exception {
+    // given
+    Long reservaId = 10L;
+    Long viajeroId = 1L;
+
+    Viajero usuarioMock = new Viajero();
+    usuarioMock.setId(viajeroId);
+
+    Viaje viajeMock = new Viaje();
+    viajeMock.setId(20L);
+
+    Reserva reservaMock = new Reserva();
+    reservaMock.setId(reservaId);
+    reservaMock.setViaje(viajeMock);
+
+    when(sessionMock.getAttribute("idUsuario")).thenReturn(viajeroId);
+    when(servicioViajeroMock.obtenerViajero(viajeroId)).thenReturn(usuarioMock);
+    when(servicioReservaMock.cancelarReservaPorViajero(reservaId, usuarioMock)).thenReturn(reservaMock);
+
+    // when
+    ModelAndView mav = controladorReserva.cancelarReservaViajero(reservaId, sessionMock);
+
+    // then
+    assertThat(mav.getViewName(), is("cancelarReservaViajero"));
+    assertThat(mav.getModel().get("exito"), is(true));
+    assertThat(mav.getModel().get("mensaje"), is("Tu reserva fue cancelada exitosamente."));
+    assertThat(mav.getModel().get("reserva"), is(reservaMock));
+    assertThat(mav.getModel().get("viaje"), is(viajeMock));
+    verify(servicioReservaMock, times(1)).cancelarReservaPorViajero(reservaId, usuarioMock);
+}
+
+@Test
+public void deberiaMostrarErrorSiServicioLanzaExcepcionEnCancelarReserva() throws Exception {
+    // given
+    Long reservaId = 10L;
+    Long viajeroId = 1L;
+
+    Viajero usuarioMock = new Viajero();
+    usuarioMock.setId(viajeroId);
+
+    when(sessionMock.getAttribute("idUsuario")).thenReturn(viajeroId);
+    when(servicioViajeroMock.obtenerViajero(viajeroId)).thenReturn(usuarioMock);
+    when(servicioReservaMock.cancelarReservaPorViajero(reservaId, usuarioMock))
+            .thenThrow(new RuntimeException("Error al cancelar reserva"));
+
+    // when
+    ModelAndView mav = controladorReserva.cancelarReservaViajero(reservaId, sessionMock);
+
+    // then
+    assertThat(mav.getViewName(), is("cancelarReservaViajero"));
+    assertThat(mav.getModel().get("exito"), is(false));
+    assertThat(mav.getModel().get("mensaje"), is("Error al cancelar reserva"));
+    verify(servicioReservaMock, times(1)).cancelarReservaPorViajero(reservaId, usuarioMock);
+}
+
+
 
    
 }
