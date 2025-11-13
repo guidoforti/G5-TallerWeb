@@ -2,39 +2,102 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="fragments/fragments :: head('UnRumbo - Home')">
     <th:block th:fragment="extra">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     </th:block>
 </head>
 
 <body>
 <nav th:replace="fragments/navbar_viajero :: navbar"></nav>
 
-<main role="main" class="container" style="margin-top: 120px;">
+<main role="main" class="container" style="margin-top: 120px; margin-bottom: 50px;">
     <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card shadow-sm border-0">
-                <div class="card-body text-center">
-                    <h4 class="fw-bold text-dark">¡Bienvenido, <span th:text="${nombreViajero}">Viajero</span>!</h4>
-                    <p class="text-muted mt-3">Nos alegra verte nuevamente en UnRumbo.</p>
+        <div class="col-md-10 col-lg-10">
+            
+            <div class="row g-4 align-items-stretch mb-4">
+                
+                <div class="col-lg-6 col-md-12 d-flex">
+                    <div class="card shadow-lg border-0 w-100 rounded-4 p-4" style="background-color: #ffffff;">
+                        <div class="card-body text-center d-flex flex-column justify-content-between">
+                            
+                            <h4 class="fw-bold text-dark mb-4">
+                                ¡Bienvenido, <span th:text="${nombreViajero}">Viajero</span>!
+                            </h4>
+                            
+                            <div class="mb-4">
+                                <img th:src="@{/img/autoEnRuta.jpg}" alt="Auto en ruta" class="img-fluid rounded shadow-sm mb-3" style="max-height: 200px; object-fit: cover; width: 100%;">
+                                <p class="lead fw-bold mb-1" style="color: #E16A3D;">
+                                    Comenzá tu viaje con nosotros.
+                                </p>
+                                <p class="text-muted small">Encontrá el trayecto ideal y viajá seguro.</p>
+                            </div>
 
-                    <a th:href="@{/viaje/buscar}" class="btn btn-unrumbo text-white w-100 fw-bold mt-3">
-                        <i class="bi bi-search me-2"></i>Buscar Viajes
-                    </a>
+                            <a th:href="@{/viaje/buscar}" class="btn btn-primary w-100 fw-bold btn-lg">
+                                <i class="fas fa-search me-2"></i> Buscar Viajes
+                            </a>
+                        </div>
+                    </div>
+                </div>
 
-                    <a th:href="@{/reserva/misReservasActivas}" class="btn btn-unrumbo text-white w-100 fw-bold mt-3">
-                        <i class="bi bi-clock-history me-2"></i>Mis Reservas Pendientes
-                    </a>
+                <div class="col-lg-6 col-md-12 d-flex">
+                    <div class="card shadow-lg border-0 w-100 rounded-4 p-4" style="background-color: #ffffff;">
+                        <div class="card-body d-flex flex-column">
 
-                    <a th:href="@{/reserva/misViajes}" class="btn btn-unrumbo text-white w-100 fw-bold mt-3">
-                        <i class="bi bi-car-front me-2"></i>Mis Viajes
-                    </a>
+                            <h5 class="fw-bold text-start mb-3" style="color: #4E3D2F;">Mi Gestión</h5>
+                            
+                            <a th:href="@{/reserva/misReservasActivas}" class="btn btn-dark w-100 fw-bold">
+                                <i class="fas fa-clock me-2"></i> Mis Reservas
+                            </a>
+                            <p class="text-muted small text-center mt-1 mb-3">Consulta el estado de tus solicitudes y pagos.</p>
+                            
+                            <a th:href="@{/reserva/misViajes}" class="btn btn-dark w-100 fw-bold">
+                                <i class="fas fa-list-alt me-2"></i> Mis Viajes
+                            </a>
+                            <div class="mt-3 mb-4">
+                                <img th:src="@{/img/autoEnPlaya2.jpeg}" alt="Auto en destino" class="img-fluid rounded shadow-sm" style="max-height: 100px; object-fit: cover; width: 100%;">
+                                <p class="text-muted small text-center mt-1">Consultá tus viajes y recordá tus destinos.</p>
+                            </div>
+                            
+                            <div class="mt-auto pt-3 border-top">
+                                <a th:href="@{/logout}" class="btn btn-danger w-100 fw-bold btn-lg">
+                                    <i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                    <a th:href="@{/viajero/perfil}" class="btn btn-unrumbo text-white w-100 fw-bold mt-3">
-                        <i class="bi bi-person-circle me-2"></i>Mi Perfil
-                    </a>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-12"> <div class="card shadow-sm border-0 rounded-4">
+                        <div class="card-header fw-bold" style="background-color: #4E3D2F; color: white;">
+                             <i class="fas fa-road me-2"></i> Tus Próximos Viajes Confirmados
+                        </div>
+                        <div class="card-body p-3">
+                            <div th:if="${viajesProximos != null and !viajesProximos.isEmpty()}">
+                                <ul class="list-group list-group-flush">
+                                    <li th:each="viaje : ${viajesProximos}" class="list-group-item d-flex justify-content-between align-items-center p-2">
+                                        <div>
+                                            <strong th:text="${viaje.origenNombre}">Origen</strong> a 
+                                            <span th:text="${viaje.destinoNombre}">Destino</span>
+                                            <small class="text-muted d-block" th:text="${viaje.fechaSalida}"></small> 
+                                        </div>
+                                        <a th:href="@{/viaje/detalle(id=${viaje.viajeId})}" class="btn btn-sm btn-info">
+                                            Detalle
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div th:unless="${viajesProximos != null and !viajesProximos.isEmpty()}" class="text-center py-2">
+                                <i class="fas fa-info-circle me-1 text-muted"></i>
+                                <p class="small mb-0 text-muted">No tienes viajes confirmados próximamente.</p>
+                            </div>
+                        </div>
+                    </div>
 
-                    <a th:href="@{/logout}" class="btn btn-unrumbo w-100 text-white fw-bold mt-4">Cerrar sesión</a>
                 </div>
             </div>
+            
         </div>
     </div>
 </main>
