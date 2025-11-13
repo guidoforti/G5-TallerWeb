@@ -18,6 +18,7 @@ public class VistaConductorE2E {
     static Playwright playwright;
     static Browser browser;
     BrowserContext context;
+    Page page;
     VistaLogin vistaLogin;
 
     @BeforeAll
@@ -37,7 +38,7 @@ public class VistaConductorE2E {
         ReiniciarDB.limpiarBaseDeDatos();
 
         context = browser.newContext();
-        Page page = context.newPage();
+        page = context.newPage();
         vistaLogin = new VistaLogin(page);
     }
 
@@ -54,25 +55,25 @@ public class VistaConductorE2E {
         entoncesDeberiaSerRedirigidoAlHomeConductor();
 
         // WHEN - Navega a registrar vehículo
-        VistaHomeConductor vistaHome = new VistaHomeConductor(context.pages().get(0));
+        VistaHomeConductor vistaHome = new VistaHomeConductor(page);
         cuandoElConductorNavegarARegistrarVehiculo(vistaHome);
 
         // AND - Registra un vehículo
-        VistaRegistrarVehiculo vistaVehiculo = new VistaRegistrarVehiculo(context.pages().get(0));
-        cuandoElConductorLlenaElFormularioDeVehiculo(vistaVehiculo, "Toyota Corolla", "2020", "ABC123", "4");
+        VistaRegistrarVehiculo vistaVehiculo = new VistaRegistrarVehiculo(page);
+        cuandoElConductorLlenaElFormularioDeVehiculo(vistaVehiculo, "Toyota Corolla", "2020", "DEF456", "4");
         cuandoElConductorEnviaElFormularioDeVehiculo(vistaVehiculo);
 
         // THEN - Vuelve al home
-        vistaHome = new VistaHomeConductor(context.pages().get(0));
+        vistaHome = new VistaHomeConductor(page);
 
         // WHEN - Navega a publicar viaje
         cuandoElConductorNavegaAPublicarViaje(vistaHome);
 
         // AND - Llena el formulario de viaje
-        VistaPublicarViaje vistaViaje = new VistaPublicarViaje(context.pages().get(0));
-        cuandoElConductorSeleccionaElVehiculo(vistaViaje, "1");
+        VistaPublicarViaje vistaViaje = new VistaPublicarViaje(page);
+        cuandoElConductorSeleccionaElVehiculo(vistaViaje, "2");
         cuandoElConductorSeleccionaOrigen(vistaViaje, "Buenos Aires");
-        cuandoElConductorSeleccionaDestino(vistaViaje, "Cordoba");
+        cuandoElConductorSeleccionaDestino(vistaViaje, "Mendoza");
         cuandoElConductorIngresaFechaSalida(vistaViaje, "2025-12-25T14:00");
         cuandoElConductorIngresaPrecioYAsientos(vistaViaje, "1500", "3");
         cuandoElConductorEnviaElFormularioDeViaje(vistaViaje);
@@ -91,7 +92,7 @@ public class VistaConductorE2E {
     private void cuandoElConductorTocaElBotonDeLogin() {
         vistaLogin.darClickEnIniciarSesion();
         // Wait for redirect to complete after form submission
-        context.pages().get(0).waitForURL("**/conductor/home**");
+        page.waitForURL("**/conductor/home**");
     }
 
     private void entoncesDeberiaSerRedirigidoAlHomeConductor() throws MalformedURLException {
@@ -102,7 +103,7 @@ public class VistaConductorE2E {
     private void cuandoElConductorNavegarARegistrarVehiculo(VistaHomeConductor vistaHome) {
         // Navega directamente a la URL de registro de vehículo
         // (Alternativa: podría hacer click en "Ver vehículos" y luego "Registrar")
-        context.pages().get(0).navigate("localhost:8080/spring/vehiculos/registrar");
+        page.navigate("localhost:8080/spring/vehiculos/registrar");
     }
 
     private void cuandoElConductorLlenaElFormularioDeVehiculo(
@@ -145,6 +146,6 @@ public class VistaConductorE2E {
     private void cuandoElConductorEnviaElFormularioDeViaje(VistaPublicarViaje vistaViaje) {
         vistaViaje.darClickEnSubmit();
         // Wait for navigation to complete after form submission
-        context.pages().get(0).waitForURL("**/conductor/home**");
+        page.waitForURL("**/conductor/home**");
     }
 }
