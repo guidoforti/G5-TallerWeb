@@ -3,7 +3,9 @@ package com.tallerwebi.presentacion;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
+import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
+import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
 import com.tallerwebi.presentacion.Controller.ControladorConductor;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ConductorPerfilOutPutDTO;
 
@@ -25,6 +27,7 @@ public class ControladorConductorTest {
     private ControladorConductor controladorConductor;
     private ServicioConductor servicioConductorMock;
     private ServicioNotificacion servicioNotificacionMock;
+    private ServicioViaje servicioViajeMock;
     private HttpSession sessionMock;
     private Conductor conductorMock;
 
@@ -32,7 +35,8 @@ public class ControladorConductorTest {
     public void init() {
         servicioConductorMock = mock(ServicioConductor.class);
         servicioNotificacionMock = mock(ServicioNotificacion.class);
-        controladorConductor = new ControladorConductor(servicioConductorMock, servicioNotificacionMock);
+        servicioViajeMock = mock(ServicioViaje.class);
+        controladorConductor = new ControladorConductor(servicioConductorMock, servicioNotificacionMock, servicioViajeMock);
         sessionMock = mock(HttpSession.class);
         conductorMock = mock(Conductor.class);
 
@@ -41,7 +45,7 @@ public class ControladorConductorTest {
     }
 
     @Test
-    void siUsuarioNoEstaEnSesionEnHomeDeberiaRedirigirALoginCentral() {
+    void siUsuarioNoEstaEnSesionEnHomeDeberiaRedirigirALoginCentral() throws UsuarioNoAutorizadoException {
         // Arrange: Mockeamos las claves CORRECTAS
         when(sessionMock.getAttribute("idUsuario")).thenReturn(null);
         when(sessionMock.getAttribute("ROL")).thenReturn(null);
@@ -58,7 +62,7 @@ public class ControladorConductorTest {
     }
 
     @Test
-    void siUsuarioNoEsConductorDeberiaRedirigirALoginCentral() throws UsuarioInexistente {
+    void siUsuarioNoEsConductorDeberiaRedirigirALoginCentral() throws UsuarioInexistente, UsuarioNoAutorizadoException {
         // Arrange: Mockeamos las claves CORRECTAS
         when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
         when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO"); // Rol incorrecto
@@ -72,7 +76,7 @@ public class ControladorConductorTest {
     }
 
     @Test
-    void siUsuarioEstaEnSesionYEsConductorDeberiaMostrarHomeConNombre() throws UsuarioInexistente {
+    void siUsuarioEstaEnSesionYEsConductorDeberiaMostrarHomeConNombre() throws UsuarioInexistente, UsuarioNoAutorizadoException {
         // Arrange: Mockeamos las claves CORRECTAS
         when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
         when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR");
@@ -91,7 +95,7 @@ public class ControladorConductorTest {
     }
 
     @Test
-    void siUsuarioInexistenteEnSesionDeberiaInvalidarSesionYRedirigirALogin() throws UsuarioInexistente {
+    void siUsuarioInexistenteEnSesionDeberiaInvalidarSesionYRedirigirALogin() throws UsuarioInexistente, UsuarioNoAutorizadoException {
         // Arrange: Mockeamos las claves CORRECTAS
         when(sessionMock.getAttribute("idUsuario")).thenReturn(99L);
         when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR");

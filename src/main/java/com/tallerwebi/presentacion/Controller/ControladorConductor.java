@@ -1,11 +1,15 @@
 package com.tallerwebi.presentacion.Controller;
 
 import com.tallerwebi.dominio.Entity.Conductor;
+import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
+import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
 import com.tallerwebi.dominio.excepcion.NotFoundException;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
+import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ConductorPerfilOutPutDTO;
+import com.tallerwebi.presentacion.DTO.OutputsDTO.ViajeVistaDTO;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -15,6 +19,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import javax.servlet.http.HttpSession;
 
 @Controller
@@ -23,15 +30,17 @@ public class ControladorConductor {
 
     private final ServicioConductor servicioConductor;
     private final ServicioNotificacion servicioNotificacion;
+    private final ServicioViaje servicioViaje;
 
     @Autowired
-    public ControladorConductor(ServicioConductor servicioConductor, ServicioNotificacion servicioNotificacion) {
+    public ControladorConductor(ServicioConductor servicioConductor, ServicioNotificacion servicioNotificacion, ServicioViaje servicioViaje) {
         this.servicioConductor = servicioConductor;
         this.servicioNotificacion = servicioNotificacion;
+        this.servicioViaje = servicioViaje;
     }
 
     @GetMapping("/home")
-    public ModelAndView irAHome(HttpSession session) {
+    public ModelAndView irAHome(HttpSession session) throws UsuarioNoAutorizadoException {
         ModelMap model = new ModelMap();
         // CLAVES CORREGIDAS: Usar "idUsuario" y "ROL" (mayúsculas)
         Object usuarioId = session.getAttribute("idUsuario");
@@ -45,6 +54,22 @@ public class ControladorConductor {
             Long conductorId = (Long) usuarioId;
             Conductor conductor = servicioConductor.obtenerConductor(conductorId);
             Long contador = servicioNotificacion.contarNoLeidas(conductorId);
+            List<Viaje> todosLosViajes = servicioViaje.listarViajesPorConductor(conductor);
+
+            List<Viaje> viajesEnCurso = todosLosViajes.stream()
+                .filter(v -> v.getEstado().name().equals("EN_CURSO"))
+                .collect(Collectors.toList());
+
+            List<Viaje> viajesProximos = todosLosViajes.stream()
+                .filter(v -> v.getEstado().name().equals("DISPONIBLE") || v.getEstado().name().equals("COMPLETO"))
+                .sorted((v1, v2) -> v1.getFechaHoraDeSalida().compareTo(v2.getFechaHoraDeSalida())) 
+                .limit(4) 
+                .collect(Collectors.toList());
+            List<ViajeVistaDTO> enCursoDTO = viajesEnCurso.stream().map(ViajeVistaDTO::new).collect(Collectors.toList());
+            List<ViajeVistaDTO> proximosDTO = viajesProximos.stream().map(ViajeVistaDTO::new).collect(Collectors.toList());
+            
+            model.put("viajesEnCurso", enCursoDTO);
+            model.put("viajesProximos", proximosDTO);
             model.put("contadorNotificaciones", contador.intValue());
             model.put("idConductor", conductorId);
             model.put("nombreConductor", conductor.getNombre());
