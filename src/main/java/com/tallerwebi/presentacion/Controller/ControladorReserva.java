@@ -798,7 +798,6 @@ public class ControladorReserva {
         }
     }
 
-    // Pantalla de confirmación
     @GetMapping("/cancelar/{idReserva}")
     public ModelAndView irACancelarReserva(@PathVariable Long idReserva, HttpSession session) {
         ModelMap model = new ModelMap();
@@ -828,23 +827,23 @@ public class ControladorReserva {
     }
 
     @PostMapping("/cancelar/{id}")
-public ModelAndView cancelarReservaViajero(@PathVariable Long id, HttpSession session) {
-    Long viajeroId = (Long) session.getAttribute("idUsuario");
-    ModelAndView mav = new ModelAndView("cancelarReservaViajero");
+    public ModelAndView cancelarReservaViajero(@PathVariable Long id, HttpSession session) {
+        Long viajeroId = (Long) session.getAttribute("idUsuario");
+        ModelAndView mav = new ModelAndView("cancelarReservaViajero");
 
-    try {
-        Usuario usuarioEnSesion = servicioViajero.obtenerViajero(viajeroId);
-        Reserva reserva = servicioReserva.cancelarReservaPorViajero(id, usuarioEnSesion);
+        try {
+            Usuario usuarioEnSesion = servicioViajero.obtenerViajero(viajeroId);
+            Reserva reserva = servicioReserva.cancelarReservaPorViajero(id, usuarioEnSesion);
 
-        mav.addObject("reserva", reserva);
-        mav.addObject("viaje", reserva.getViaje());
-        mav.addObject("exito", true);
-        mav.addObject("mensaje", "Tu reserva fue cancelada exitosamente.");
-    } catch (Exception e) {
-        mav.addObject("exito", false);
-        mav.addObject("mensaje", e.getMessage());
+            mav.addObject("reserva", reserva);
+            mav.addObject("viaje", reserva.getViaje());
+            mav.addObject("exito", true);
+            mav.addObject("mensaje", "Tu reserva fue cancelada exitosamente.");
+        } catch (Exception e) {
+            mav.addObject("exito", false);
+            mav.addObject("mensaje", e.getMessage());
+        }
+
+        return mav;
     }
-
-    return mav;
-}
 }

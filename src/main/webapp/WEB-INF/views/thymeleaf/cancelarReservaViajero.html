@@ -2,24 +2,50 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="fragments/fragments :: head('Cancelar reserva')">
     <th:block th:fragment="extra">
-    </th:block>
+        <style>
+            :root {
+                --primary-orange: #E16A3D; /* Definición si no está en otro lugar */
+                --color-danger-persa: #BA3A3A; /* Mantener color para el error */
+            }
+        </style>
+        </th:block>
 </head>
 <body>
     <nav th:replace="fragments/navbar_viajero :: navbar"></nav>
 
-    <main class="container mt-5 text-center">
-        <div th:if="${exito}">
-            <h1 class="text-success mb-4">Reserva cancelada</h1>
-            <p th:text="'Tu reserva para el viaje a ' + ${viaje.destino} + ' fue cancelada exitosamente.'"></p>
-        </div>
+    <main class="container py-5 mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-7 col-lg-6 text-center">
+                <div th:if="${exito}">
+                    <i class="bi bi-check-circle-fill display-1 mb-3" style="color: var(--primary-orange);"></i>
+                    <h1 class="display-3 fw-bold mb-4 text-uppercase" style="color: var(--primary-orange);">
+                        ¡Cancelación Exitosa!
+                    </h1>
 
-        <div th:if="${!exito}">
-            <h1 class="text-danger mb-4">No se pudo cancelar la reserva</h1>
-            <p th:text="${mensaje}">Ocurrió un error al procesar la cancelación.</p>
-        </div>
+                    <p class="lead text-muted mb-4">
+                        Tu reserva para el viaje a <strong th:text="${viaje.destino.nombre}">[Destino]</strong> ha sido Cancelada exitosamente!
+                    </p>
+                    <p class="text-secondary">El conductor ha sido notificado del cambio.</p>
+                </div>
 
-        <div class="mt-4">
-            <a th:href="@{/reserva/misReservasActivas}" class="btn btn-primary">Volver a mis reservas</a>
+                <div th:if="${!exito}">
+                    <i class="bi bi-x-octagon-fill display-1 mb-3" style="color: var(--color-danger-persa);"></i>
+                    <h1 class="display-3 fw-bold mb-4 text-uppercase" style="color: var(--color-danger-persa);">
+                        Error al Cancelar
+                    </h1>
+                    
+                    <p class="lead mb-3 text-danger" th:text="${mensaje}">Ocurrió un error al procesar la cancelación.</p>
+                    <p class="text-secondary">Por favor, revisa tus reservas o contacta a soporte.</p>
+                </div>
+
+                <div class="mt-5">
+                    <a th:href="@{/reserva/misReservasActivas}" 
+                       class="btn btn-lg fw-bold"
+                       style="background-color: var(--color-primary); color: black;">
+                        <i class="bi bi-arrow-left me-2"></i> Volver a mis reservas
+                    </a>
+                </div>
+            </div>
         </div>
     </main>
 
