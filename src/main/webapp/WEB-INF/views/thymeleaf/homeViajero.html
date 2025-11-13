@@ -31,7 +31,7 @@
                                 <p class="text-muted small">Encontrá el trayecto ideal y viajá seguro.</p>
                             </div>
 
-                            <a th:href="@{/viaje/buscar}" class="btn btn-primary w-100 fw-bold btn-lg">
+                            <a th:href="@{/viaje/buscar}" id="btn-buscar-viajes" class="btn btn-primary w-100 fw-bold btn-lg">
                                 <i class="fas fa-search me-2"></i> Buscar Viajes
                             </a>
                         </div>
@@ -43,22 +43,22 @@
                         <div class="card-body d-flex flex-column">
 
                             <h5 class="fw-bold text-start mb-3" style="color: #4E3D2F;">Mi Gestión</h5>
-                            
-                            <a th:href="@{/reserva/misReservasActivas}" class="btn btn-dark w-100 fw-bold">
+
+                            <a th:href="@{/reserva/misReservasActivas}" id="btn-mis-reservas-activas" class="btn btn-dark w-100 fw-bold">
                                 <i class="fas fa-clock me-2"></i> Mis Reservas
                             </a>
                             <p class="text-muted small text-center mt-1 mb-3">Consulta el estado de tus solicitudes y pagos.</p>
-                            
-                            <a th:href="@{/reserva/misViajes}" class="btn btn-dark w-100 fw-bold">
+
+                            <a th:href="@{/reserva/misViajes}" id="btn-mis-viajes" class="btn btn-dark w-100 fw-bold">
                                 <i class="fas fa-list-alt me-2"></i> Mis Viajes
                             </a>
                             <div class="mt-3 mb-4">
                                 <img th:src="@{/img/autoEnPlaya2.jpeg}" alt="Auto en destino" class="img-fluid rounded shadow-sm" style="max-height: 100px; object-fit: cover; width: 100%;">
                                 <p class="text-muted small text-center mt-1">Consultá tus viajes y recordá tus destinos.</p>
                             </div>
-                            
+
                             <div class="mt-auto pt-3 border-top">
-                                <a th:href="@{/logout}" class="btn btn-danger w-100 fw-bold btn-lg">
+                                <a th:href="@{/logout}" id="btn-cerrar-sesion" class="btn btn-danger w-100 fw-bold btn-lg">
                                     <i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión
                                 </a>
                             </div>
@@ -67,7 +67,7 @@
                 </div>
 
             </div>
-            
+
             <div class="row g-4">
                 <div class="col-12"> <div class="card shadow-sm border-0 rounded-4">
                         <div class="card-header fw-bold" style="background-color: #4E3D2F; color: white;">
@@ -78,9 +78,9 @@
                                 <ul class="list-group list-group-flush">
                                     <li th:each="viaje : ${viajesProximos}" class="list-group-item d-flex justify-content-between align-items-center p-2">
                                         <div>
-                                            <strong th:text="${viaje.origenNombre}">Origen</strong> a 
+                                            <strong th:text="${viaje.origenNombre}">Origen</strong> a
                                             <span th:text="${viaje.destinoNombre}">Destino</span>
-                                            <small class="text-muted d-block" th:text="${viaje.fechaSalida}"></small> 
+                                            <small class="text-muted d-block" th:text="${viaje.fechaSalida}"></small>
                                         </div>
                                         <a th:href="@{/viaje/detalle(id=${viaje.viajeId})}" class="btn btn-sm btn-info">
                                             Detalle

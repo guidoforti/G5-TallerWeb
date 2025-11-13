@@ -1,4 +1,4 @@
-# Usa la imagen base de OpenJDK 11
+# Usa la imagen base de Eclipse Temurin (reemplazo oficial de OpenJDK)
 FROM eclipse-temurin:11-jdk
 
 # Define una variable para la versión de Jetty

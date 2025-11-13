@@ -77,15 +77,15 @@
                                     <input th:field="*{password}" id="password" type="password" class="form-control" placeholder="********" required>
                                 </div>
 
-                                <button type="submit" class="btn btn-unrumbo w-100 text-white fw-bold">
-                                    Acceder
+                                <button type="submit" id="btn-login" class="btn btn-unrumbo w-100 text-white fw-bold">
+                                    Iniciar sesión
                                 </button>
 
                                 <p th:if="${error != null}" class="alert alert-danger mt-3" th:text="${error}"></p>
                             </form>
 
                             <div class="text-center mt-3">
-                                <a th:href="@{/registrarme}" class="text-unrumbo-link fw-bold">
+                                <a th:href="@{/registrarme}" id="btn-register" class="text-unrumbo-link fw-bold">
                                     ¿No tenés cuenta? Registrate
                                 </a>
                             </div>
