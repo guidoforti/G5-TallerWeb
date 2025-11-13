@@ -59,7 +59,7 @@ public class VistaViajeroE2E {
         // AND - Busca viajes
         VistaBuscarViaje vistaBuscar = new VistaBuscarViaje(page);
         cuandoElViajeroSeleccionaOrigen(vistaBuscar, "Buenos Aires");
-        cuandoElViajeroSeleccionaDestino(vistaBuscar, "Cordoba");
+        cuandoElViajeroSeleccionaDestino(vistaBuscar, "Rosario");
         cuandoElViajeroEnviaElFormularioDeBusqueda(vistaBuscar);
 
         // AND - Ve el detalle del primer viaje

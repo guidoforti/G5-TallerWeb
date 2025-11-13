@@ -27,14 +27,16 @@ public class ReiniciarDB {
                                "ALTER TABLE ciudad AUTO_INCREMENT = 1;\n" +
                                "SET FOREIGN_KEY_CHECKS=1;\n" +
                                // Insert Conductor user
-                               "INSERT INTO usuario(id, email, contrasenia, nombre, rol, activo) VALUES(1, 'conductor@test.com', 'test123', 'Test Conductor', 'CONDUCTOR', true);\n" +
+                               "INSERT INTO usuario(id, email, contrasenia, nombre, rol, activo, fecha_nacimiento, fumador, discapacitado) VALUES(1, 'conductor@test.com', 'test123', 'Test Conductor', 'CONDUCTOR', true, '1990-01-01', false, NULL);\n" +
                                "INSERT INTO conductor(usuario_id, fecha_de_vencimiento_licencia) VALUES(1, '2027-12-31');\n" +
                                // Insert Viajero user
-                               "INSERT INTO usuario(id, email, contrasenia, nombre, rol, activo) VALUES(2, 'viajero@test.com', 'test123', 'Test Viajero', 'VIAJERO', true);\n" +
-                               "INSERT INTO viajero(usuario_id, edad, fumador) VALUES(2, 25, false);\n" +
-                               // Insert Cities (using exact coordinates from data.sql)
+                               "INSERT INTO usuario(id, email, contrasenia, nombre, rol, activo, fecha_nacimiento, fumador, discapacitado) VALUES(2, 'viajero@test.com', 'test123', 'Test Viajero', 'VIAJERO', true, '1995-05-15', false, NULL);\n" +
+                               "INSERT INTO viajero(usuario_id) VALUES(2);\n" +
+                               // Insert Cities (all from data.sql)
                                "INSERT INTO ciudad(id, nombre, latitud, longitud) VALUES(1, 'Buenos Aires', -34.6095579, -58.3887904);\n" +
                                "INSERT INTO ciudad(id, nombre, latitud, longitud) VALUES(2, 'Córdoba', -31.4166867, -64.1834193);\n" +
+                               "INSERT INTO ciudad(id, nombre, latitud, longitud) VALUES(3, 'Rosario', -32.9593609, -60.6617024);\n" +
+                               "INSERT INTO ciudad(id, nombre, latitud, longitud) VALUES(4, 'Ciudad de Mendoza', -32.8894155, -68.8446177);\n" +
                                // Insert Vehicle for conductor
                                "INSERT INTO vehiculo(id, conductor_id, patente, modelo, anio, asientos_totales, estado_verificacion) VALUES(1, 1, 'ABC123', 'Toyota Corolla', '2020', 4, 1);\n" +
                                // Insert available Viaje (3 days from now, 3 seats available) - For reservation tests
@@ -48,7 +50,12 @@ public class ReiniciarDB {
                                // Insert second Viaje (starting NOW) - For trip lifecycle tests
                                // This trip can be started immediately since departure time is now
                                "INSERT INTO viaje(id, conductor_id, vehiculo_id, origen_id, destino_id, fecha_hora_de_salida, precio, asientos_disponibles, duracion_estimada_minutos, estado, fecha_de_creacion, version) " +
-                               "VALUES(2, 1, 1, 2, 1, NOW(), 2000.00, 4, 838, 0, NOW(), 0);";
+                               "VALUES(2, 1, 1, 2, 1, NOW(), 2000.00, 4, 838, 0, NOW(), 0);\n" +
+                               // Insert third Viaje (2 days from now, NO reservations) - For search/reserve tests (Test #2)
+                               // Route: Buenos Aires → Rosario (UNIQUE route, no conflicts with other trips)
+                               // This trip is available for viajero to search and reserve without conflicts
+                               "INSERT INTO viaje(id, conductor_id, vehiculo_id, origen_id, destino_id, fecha_hora_de_salida, precio, asientos_disponibles, duracion_estimada_minutos, estado, fecha_de_creacion, version) " +
+                               "VALUES(3, 1, 1, 1, 3, DATE_ADD(NOW(), INTERVAL 2 DAY), 1800.00, 4, 386, 0, NOW(), 0);";
 
             String comando = String.format(
                 "docker exec tallerwebi-mysql mysql -h %s -P %s -u %s -p%s %s -e \"%s\"",
