@@ -1408,7 +1408,7 @@ class ServicioReservaTest {
                 eq(conductor),
                 eq(TipoNotificacion.VIAJE_CANCELADO),
                 contains("Lucas ha cancelado"),
-                eq("/reserva/listarReservasConductor")
+                eq("/reserva/misReservas")
         );
     }
 

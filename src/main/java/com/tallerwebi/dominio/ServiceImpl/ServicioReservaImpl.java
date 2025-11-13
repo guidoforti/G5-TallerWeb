@@ -559,7 +559,7 @@ public Reserva cancelarReservaPorViajero(Long idReserva, Usuario usuarioEnSesion
                 viaje.getDestino().getNombre()
         );
 
-        String url = "/reserva/listarReservasConductor";
+        String url = "/reserva/misReservas";
         servicioNotificacion.crearYEnviar(
                 viaje.getConductor(),
                 TipoNotificacion.VIAJE_CANCELADO,

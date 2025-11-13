@@ -41,8 +41,6 @@ public class ControladorNotificacion {
         }
     }
 
-    // Endpoint para la vista de listado de notificaciones (al hacer clic en la campana)
-    // También funciona como la acción de marcar TODAS como leídas.
     @GetMapping("/historial")
     public ModelAndView verHistorial(HttpSession session) {
         ModelMap model = new ModelMap();
@@ -54,8 +52,6 @@ public class ControladorNotificacion {
         }
 
         try {
-            // 1. Obtener la lista y marcarlas todas como leídas en una sola transacción
-            // (Asumo que has creado NotificacionHistorialDTO para no exponer la entidad Notificacion)
             List<NotificacionHistorialDTO> historialDTO = servicioNotificacion.obtenerYMarcarComoLeidas(idUsuario)
                     .stream()
                     .map(NotificacionHistorialDTO::new)
@@ -63,9 +59,9 @@ public class ControladorNotificacion {
 
             model.put("userRole", rol);
             model.put("notificaciones", historialDTO);
-            model.put("idUsuario", idUsuario); // Necesario para la navbar si se incluye aquí.
+            model.put("idUsuario", idUsuario); 
 
-            return new ModelAndView("historialNotificaciones", model); // Necesitas crear esta vista
+            return new ModelAndView("historialNotificaciones", model); 
 
         } catch (NotFoundException e) {
             model.put("error", "Error: Usuario no encontrado.");
@@ -74,7 +70,7 @@ public class ControladorNotificacion {
     }
 
     @PostMapping("/marcar-leida/{idNotificacion}")
-    @ResponseBody // Retorna un código de estado, no una vista
+    @ResponseBody 
     public ResponseEntity<Void> marcarComoLeida(@PathVariable Long idNotificacion, HttpSession session) {
         Long idUsuario = (Long) session.getAttribute("idUsuario");
 
