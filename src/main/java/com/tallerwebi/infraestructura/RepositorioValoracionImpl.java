@@ -20,7 +20,6 @@ public class RepositorioValoracionImpl implements RepositorioValoracion {
 
     private SessionFactory sessionFactory;
 
-    // Inyección de dependencias a través del constructor, al igual que en RepositorioViajeImpl
     @Autowired
     public RepositorioValoracionImpl(SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
@@ -31,7 +30,6 @@ public class RepositorioValoracionImpl implements RepositorioValoracion {
      */
     @Override
     public void save(Valoracion valoracion) {
-        // La lógica de guardado es idéntica a la de guardarViaje
         this.sessionFactory.getCurrentSession().save(valoracion);
     }
 
@@ -42,12 +40,27 @@ public class RepositorioValoracionImpl implements RepositorioValoracion {
     public List<Valoracion> findByReceptorId(Long receptorId) {
         Session session = this.sessionFactory.getCurrentSession();
         
-        // HQL: Busca valoraciones dirigidas al usuario con el ID especificado.
-        // Se añade 'ORDER BY v.fecha DESC' para obtener las más recientes primero.
         String hql = "FROM Valoracion v WHERE v.receptor.id = :receptorId ORDER BY v.fecha DESC";
         
         return session.createQuery(hql, Valoracion.class)
                       .setParameter("receptorId", receptorId)
                       .getResultList();
+    }
+
+    @Override
+    public boolean yaExisteValoracionParaViaje(Long emisorId, Long receptorId, Long viajeId) {
+        String hql = "SELECT COUNT(v.id) FROM Valoracion v "
+                + "WHERE v.emisor.id = :emisorId "
+                + "AND v.receptor.id = :receptorId "
+                + "AND v.viaje.id = :viajeId";
+
+        Long count = sessionFactory.getCurrentSession()
+                .createQuery(hql, Long.class)
+                .setParameter("emisorId", emisorId)
+                .setParameter("receptorId", receptorId)
+                .setParameter("viajeId", viajeId)
+                .uniqueResult();
+
+        return count != null && count > 0;
     }
 }

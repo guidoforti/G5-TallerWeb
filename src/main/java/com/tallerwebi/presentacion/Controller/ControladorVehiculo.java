@@ -4,6 +4,7 @@ package com.tallerwebi.presentacion.Controller;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
+import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.excepcion.NotFoundException;
 import com.tallerwebi.dominio.excepcion.PatenteDuplicadaException;
@@ -36,11 +37,13 @@ public class ControladorVehiculo {
 
     private final ServicioVehiculo servicioVehiculo;
     private final ServicioConductor servicioConductor;
+    private final ServicioNotificacion servicioNotificacion;
 
     @Autowired
-    public ControladorVehiculo(ServicioVehiculo servicioVehiculo , ServicioConductor servicioConductor) {
+    public ControladorVehiculo(ServicioVehiculo servicioVehiculo , ServicioConductor servicioConductor, ServicioNotificacion servicioNotificacion) {
         this.servicioVehiculo = servicioVehiculo;
         this.servicioConductor = servicioConductor;
+        this.servicioNotificacion = servicioNotificacion;
     }
 
     private String encodeUrl(String value) {
@@ -74,6 +77,7 @@ public class ControladorVehiculo {
             return new ModelAndView("usuarioNoAutorizado", model);
         }
         Long conductorId = (Long) usuarioId;
+        model.put("contadorNotificaciones", servicioNotificacion.contarNoLeidas(conductorId));
         try {
             // Usamos obtenerTodosLosVehiculosDeConductor para mostrar la lista completa (incluidos DESACTIVADO)
             List<Vehiculo> ListaDeVehiculos = servicioVehiculo.obtenerTodosLosVehiculosDeConductor(conductorId);
@@ -106,6 +110,8 @@ public class ControladorVehiculo {
             model.put("error", e.getMessage());
             return new ModelAndView("usuarioNoAutorizado", model);
         }
+        Long conductorId = (Long) usuarioId;
+        model.put("contadorNotificaciones", servicioNotificacion.contarNoLeidas(conductorId));
 
         model.put("vehiculoInputDTO", new VehiculoInputDTO());
         return new ModelAndView("registrarVehiculo", model);

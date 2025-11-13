@@ -2,9 +2,11 @@ package com.tallerwebi.presentacion.Controller;
 
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.IServicio.ServicioHistorialReserva;
+import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.HistorialReservaDTO;
 import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
 import com.tallerwebi.dominio.excepcion.ViajeNoEncontradoException;
+import com.tallerwebi.dominio.excepcion.NotFoundException;
 import org.springframework.stereotype.Controller;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
@@ -22,15 +24,17 @@ import java.util.List;
 public class ControladorHistorialReserva {
 
     private ServicioHistorialReserva servicioHistorialReserva;
+    private final ServicioNotificacion servicioNotificacion;
     private final ServicioConductor servicioConductor;
     private static final String ATTRIBUTE_ID_USUARIO = "idUsuario";
     private static final String ATTRIBUTE_ROL = "ROL";
     private static final String ROLES_CONDUCTOR = "CONDUCTOR";
 
     public ControladorHistorialReserva(ServicioHistorialReserva servicioHistorialReserva,
-                                       ServicioConductor servicioConductor) {
+                                       ServicioConductor servicioConductor, ServicioNotificacion servicioNotificacion) {
         this.servicioHistorialReserva = servicioHistorialReserva;
         this.servicioConductor = servicioConductor;
+        this.servicioNotificacion = servicioNotificacion;
     }
 
     /**
@@ -54,6 +58,7 @@ public class ControladorHistorialReserva {
 
         try {
             Long usuarioId = (Long) usuarioIdObj;
+            modelAndView.addObject("contadorNotificaciones", servicioNotificacion.contarNoLeidas(usuarioId));
             Usuario usuarioEnSesion = servicioConductor.obtenerConductor(usuarioId);
             // 2. Llamada al servicio que contiene la lógica de autorización
             List<HistorialReservaDTO> historial = 

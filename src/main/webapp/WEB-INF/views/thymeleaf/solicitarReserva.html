@@ -181,10 +181,14 @@
                             <input type="hidden" th:field="*{viajeroId}" th:value="${session.idUsuario}"/>
 
                             <div class="d-flex justify-content-between gap-3 mt-4">
-                                <a th:href="@{/viaje/buscar}" class="btn btn-outline-unrumbo flex-fill">
+                                <a th:href="@{/viaje/buscar}"
+                                   id="btn-cancelar-solicitud"
+                                   class="btn btn-outline-unrumbo flex-fill">
                                     <i class="fas fa-arrow-left me-2"></i>Cancelar
                                 </a>
-                                <button type="submit" class="btn btn-unrumbo flex-fill">
+                                <button type="submit"
+                                        id="btn-confirmar-solicitud"
+                                        class="btn btn-unrumbo flex-fill">
                                     <i class="fas fa-check me-2"></i>Confirmar Solicitud
                                 </button>
                             </div>
@@ -196,7 +200,9 @@
                         <i class="fas fa-exclamation-circle fa-3x mb-3" style="color: #E16A3D;"></i>
                         <h4 class="mb-3">Viaje no encontrado</h4>
                         <p class="text-muted mb-4">El viaje que intentas reservar no existe o no está disponible.</p>
-                        <a th:href="@{/viaje/buscar}" class="btn btn-unrumbo">
+                        <a th:href="@{/viaje/buscar}"
+                           id="btn-buscar-viajes-error"
+                           class="btn btn-unrumbo">
                             <i class="fas fa-search me-2"></i>Buscar Viajes
                         </a>
                     </div>
@@ -210,6 +216,6 @@
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
 <!-- Font Awesome for icons -->
 <script src="https://kit.fontawesome.com/your-code.js" crossorigin="anonymous"></script>
-
+<th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
 </body>
 </html>

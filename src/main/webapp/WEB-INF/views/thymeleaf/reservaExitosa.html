@@ -95,7 +95,7 @@
                     <div class="text-center mb-4">
                         <h2 class="fw-bold text-dark mb-3">Solicitud Enviada</h2>
                         <div class="divider mx-auto mb-3" style="width: 80px; height: 3px; background-color: #E16A3D;"></div>
-                        <p class="lead text-muted" th:text="${mensaje}">
+                        <p id="mensaje-exito" class="lead text-muted" th:text="${mensaje}">
                             Reserva solicitada exitosamente. Está en estado PENDIENTE.
                         </p>
                     </div>
@@ -185,10 +185,14 @@
 
                     <!-- Action buttons -->
                     <div class="d-flex justify-content-center gap-3 mt-4">
-                        <a th:href="@{/reserva/misReservasActivas}" class="btn btn-outline-unrumbo">
+                        <a th:href="@{/reserva/misReservasActivas}"
+                           id="btn-ver-mis-reservas"
+                           class="btn btn-outline-unrumbo">
                         <i class="fas fa-list me-2"></i>Ver Mis Reservas
                         </a>
-                        <a th:href="@{/viaje/buscar}" class="btn btn-unrumbo">
+                        <a th:href="@{/viaje/buscar}"
+                           id="btn-buscar-mas-viajes"
+                           class="btn btn-unrumbo">
                             <i class="fas fa-search me-2"></i>Buscar Más Viajes
                         </a>
                     </div>
@@ -202,6 +206,6 @@
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
 <!-- Font Awesome for icons -->
 <script src="https://kit.fontawesome.com/your-code.js" crossorigin="anonymous"></script>
-
+<th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
 </body>
 </html>

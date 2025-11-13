@@ -2,7 +2,10 @@ package com.tallerwebi.presentacion;
 
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
+import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
+import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
+import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
 import com.tallerwebi.presentacion.Controller.ControladorConductor;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.ConductorPerfilOutPutDTO;
 
@@ -23,13 +26,17 @@ public class ControladorConductorTest {
 
     private ControladorConductor controladorConductor;
     private ServicioConductor servicioConductorMock;
+    private ServicioNotificacion servicioNotificacionMock;
+    private ServicioViaje servicioViajeMock;
     private HttpSession sessionMock;
     private Conductor conductorMock;
 
     @BeforeEach
     public void init() {
         servicioConductorMock = mock(ServicioConductor.class);
-        controladorConductor = new ControladorConductor(servicioConductorMock);
+        servicioNotificacionMock = mock(ServicioNotificacion.class);
+        servicioViajeMock = mock(ServicioViaje.class);
+        controladorConductor = new ControladorConductor(servicioConductorMock, servicioNotificacionMock, servicioViajeMock);
         sessionMock = mock(HttpSession.class);
         conductorMock = mock(Conductor.class);
 
@@ -38,7 +45,7 @@ public class ControladorConductorTest {
     }
 
     @Test
-    void siUsuarioNoEstaEnSesionEnHomeDeberiaRedirigirALoginCentral() {
+    void siUsuarioNoEstaEnSesionEnHomeDeberiaRedirigirALoginCentral() throws UsuarioNoAutorizadoException {
         // Arrange: Mockeamos las claves CORRECTAS
         when(sessionMock.getAttribute("idUsuario")).thenReturn(null);
         when(sessionMock.getAttribute("ROL")).thenReturn(null);
@@ -55,7 +62,7 @@ public class ControladorConductorTest {
     }
 
     @Test
-    void siUsuarioNoEsConductorDeberiaRedirigirALoginCentral() throws UsuarioInexistente {
+    void siUsuarioNoEsConductorDeberiaRedirigirALoginCentral() throws UsuarioInexistente, UsuarioNoAutorizadoException {
         // Arrange: Mockeamos las claves CORRECTAS
         when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
         when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO"); // Rol incorrecto
@@ -69,16 +76,18 @@ public class ControladorConductorTest {
     }
 
     @Test
-    void siUsuarioEstaEnSesionYEsConductorDeberiaMostrarHomeConNombre() throws UsuarioInexistente {
+    void siUsuarioEstaEnSesionYEsConductorDeberiaMostrarHomeConNombre() throws UsuarioInexistente, UsuarioNoAutorizadoException {
         // Arrange: Mockeamos las claves CORRECTAS
         when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
         when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR");
         when(servicioConductorMock.obtenerConductor(1L)).thenReturn(conductorMock);
-
+        when(servicioNotificacionMock.contarNoLeidas(1L)).thenReturn(5L);
         // Act
         ModelAndView mav = controladorConductor.irAHome(sessionMock);
 
+
         // Assert
+        assertThat(mav.getModel().get("contadorNotificaciones"), equalTo(5));
         assertThat(mav.getViewName(), equalTo("homeConductor"));
         assertThat(mav.getModel().get("nombreConductor").toString(), equalTo(conductorMock.getNombre()));
         assertThat(mav.getModel().get("rol").toString(), equalTo("CONDUCTOR")); // El modelo usa 'rol' minúsculas
@@ -86,7 +95,7 @@ public class ControladorConductorTest {
     }
 
     @Test
-    void siUsuarioInexistenteEnSesionDeberiaInvalidarSesionYRedirigirALogin() throws UsuarioInexistente {
+    void siUsuarioInexistenteEnSesionDeberiaInvalidarSesionYRedirigirALogin() throws UsuarioInexistente, UsuarioNoAutorizadoException {
         // Arrange: Mockeamos las claves CORRECTAS
         when(sessionMock.getAttribute("idUsuario")).thenReturn(99L);
         when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR");
@@ -119,7 +128,7 @@ public class ControladorConductorTest {
         when(servicioConductorMock.obtenerPerfilDeConductor(conductorId)).thenReturn(perfilDTO);
 
         // when
-        ModelAndView mav = controladorConductor.verPerfilConductor(conductorId, sessionMock);
+        ModelAndView mav = controladorConductor.verPerfilConductorPorId(conductorId, sessionMock);
 
         // then
         assertThat(mav.getViewName(), is("perfilConductor"));
@@ -130,5 +139,68 @@ public class ControladorConductorTest {
         assertThat(perfil.getEdad(), is(35));
         assertThat(perfil.getPromedioValoraciones(), closeTo(4.5, 0.01));
     }
+    @Test
+    void verMiPerfil_siUsuarioNoEstaEnSesionDeberiaRedirigirALogin() throws UsuarioInexistente {
+        // Arrange
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(null);
 
+        // Act
+        ModelAndView mav = controladorConductor.verMiPerfil(sessionMock);
+
+        // Assert
+        assertThat(mav.getViewName(), equalTo("redirect:/login"));
+        verify(servicioConductorMock, never()).obtenerPerfilDeConductor(anyLong());
+    }
+
+    @Test
+    void verMiPerfil_siServicioLanzaUsuarioInexistenteDeberiaMostrarVistaDeError() throws UsuarioInexistente {
+        // Arrange
+        Long conductorId = 1L;
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(conductorId);
+        when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR"); // No es relevante aquí, pero se usa.
+
+        // Simula la falla del servicio
+        doThrow(new UsuarioInexistente("El conductor no existe")).when(servicioConductorMock).obtenerPerfilDeConductor(conductorId);
+
+        // Act
+        ModelAndView mav = controladorConductor.verMiPerfil(sessionMock);
+
+        // Assert
+        assertThat(mav.getViewName(), is("errorPerfilConductor"));
+        assertThat(mav.getModel().get("error").toString(), is("Su perfil no existe."));
+    }
+
+    @Test
+    void verPerfilConductorPorId_siUsuarioEnSesionNoEsViajeroDeberiaDenegarAcceso() throws UsuarioInexistente {
+        // Arrange: El usuario en sesión es CONDUCTOR, intentando ver el perfil de otro (ID=2)
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(1L);
+        when(sessionMock.getAttribute("ROL")).thenReturn("CONDUCTOR"); // Rol Incorrecto
+
+        // Act
+        ModelAndView mav = controladorConductor.verPerfilConductorPorId(2L, sessionMock);
+
+        // Assert
+        assertThat(mav.getViewName(), is("errorAutorizacion"));
+        assertThat(mav.getModel().get("error").toString(), is("Solo los viajeros pueden ver perfiles de otros conductores."));
+        verify(servicioConductorMock, never()).obtenerPerfilDeConductor(anyLong());
+    }
+
+    @Test
+    public void verPerfilConductorPorId_siConductorSolicitadoNoExisteDeberiaMostrarVistaDeError() throws UsuarioInexistente {
+        // Arrange
+        Long conductorSolicitadoId = 99L;
+        Long usuarioEnSesionId = 1L;
+
+        when(sessionMock.getAttribute("idUsuario")).thenReturn(usuarioEnSesionId);
+        when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO"); // Rol Correcto
+
+        doThrow(new UsuarioInexistente("Conductor no existe")).when(servicioConductorMock).obtenerPerfilDeConductor(conductorSolicitadoId);
+
+        // Act
+        ModelAndView mav = controladorConductor.verPerfilConductorPorId(conductorSolicitadoId, sessionMock);
+
+        // Then
+        assertThat(mav.getViewName(), is("errorPerfilConductor"));
+        assertThat(mav.getModel().get("error").toString(), is("El perfil solicitado no existe."));
+    }
 }

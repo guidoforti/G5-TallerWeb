@@ -1,7 +1,10 @@
 <!DOCTYPE HTML>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="fragments/fragments :: head('UnRumbo - Pago Fallido')"></head>
+<head th:replace="fragments/fragments :: head('UnRumbo - Pago Fallido')">
+    <th:block th:fragment="extra">
+    </th:block>
+</head>
 
 <body>
 <nav th:replace="fragments/navbar_viajero :: navbar"></nav>
@@ -46,7 +49,7 @@
                         <a th:href="@{/reserva/pagar(reservaId=*{reservaId})}" class="btn btn-unrumbo text-white fw-bold">
                             Reintentar Pago
                         </a>
-                        <a th:href="@{/reserva/misReservasPendientes}" class="btn btn-outline-secondary fw-bold ms-2">
+                        <a th:href="@{/reserva/misReservas}" class="btn btn-outline-secondary fw-bold ms-2">
                             Volver a Mis Reservas
                         </a>
                     </div>
@@ -57,5 +60,6 @@
 </main>
 <div th:replace="fragments/fragments :: footer"></div>
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+<th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
 </body>
 </html>

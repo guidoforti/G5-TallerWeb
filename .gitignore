@@ -21,3 +21,10 @@ hs_err_pid*
 
 **/node_modules/
 .vscode/
+
+# User uploaded profile photos (but keep the directory structure)
+src/main/webapp/resources/core/img/profile_uploads/*
+!src/main/webapp/resources/core/img/profile_uploads/.gitkeep
+
+# Old profile uploads directory (if it exists)
+profile_uploads/

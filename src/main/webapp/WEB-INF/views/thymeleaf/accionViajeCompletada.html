@@ -90,9 +90,17 @@
                         </div>
                     </div>
 
+                    <a th:if="${accionFinalizada}"
+                       id="btn-valorar-viajeros"
+                       th:href="@{/valoraciones/viaje/{viajeId}(viajeId=${viajeId})}"
+                       class="btn btn-unrumbo">
+
+                        <i class="fas fa-star me-2"></i> Valorar a Viajeros
+                    </a>
+
                     <!-- Action buttons -->
                     <div class="d-flex justify-content-center gap-3 mt-4">
-                        <a th:href="@{/viaje/detalle(id=${viajeId})}" class="btn btn-unrumbo">
+                        <a id="btn-ver-detalle-viaje" th:href="@{/viaje/detalle(id=${viajeId})}" class="btn btn-unrumbo">
                             <i class="fas fa-eye me-2"></i>Ver Detalle del Viaje
                         </a>
                         <a th:href="@{/viaje/listar}" class="btn btn-outline-unrumbo">

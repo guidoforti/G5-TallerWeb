@@ -18,13 +18,13 @@ public interface ServicioViaje {
     Viaje obtenerDetalleDeViaje(Long id) throws NotFoundException;
 
     void modificarViaje(Viaje viaje ,  List<Parada> paradas) throws BadRequestException;
-    // En ServicioViaje.java
     Viaje obtenerViajeConParadas(Long id) throws NotFoundException;
     List<Viaje> buscarViajesDisponibles(Ciudad origen, Ciudad destino, LocalDateTime fechaSalida, Double precioMin, Double precioMax) throws DatoObligatorioException;
 
-    // Métodos para gestión de inicio/fin de viaje
     void iniciarViaje(Long viajeId, Long conductorId) throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeYaIniciadoException, VentanaHorariaException;
     void finalizarViaje(Long viajeId, Long conductorId) throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeYaFinalizadoException;
     void cerrarViajesOlvidados();
     void iniciarViajesAtrasados();
+    void cancelarViajeConReservasPagadas(Long id, Usuario usuarioEnSesion)
+            throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeNoCancelableException;
 }

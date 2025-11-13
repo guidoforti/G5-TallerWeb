@@ -71,10 +71,10 @@
                         <hr class="my-4">
 
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                            <a th:href="@{/conductor/home}" class="btn btn-outline-secondary me-md-2 fw-bold">
+                            <a th:href="@{/conductor/home}" id="btn-cancelar-vehiculo" class="btn btn-outline-secondary me-md-2 fw-bold">
                                 <i class="fas fa-times me-1"></i> Cancelar
                             </a>
-                            <button type="submit" class="btn btn-primary fw-bold">
+                            <button type="submit" id="btn-submit-vehiculo" class="btn btn-primary fw-bold">
                                 <i class="fas fa-check-circle me-1"></i> Registrar Vehículo
                             </button>
                         </div>
@@ -86,5 +86,6 @@
 </main>
 <div th:replace="fragments/fragments :: footer"></div>
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+<th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
 </body>
 </html>

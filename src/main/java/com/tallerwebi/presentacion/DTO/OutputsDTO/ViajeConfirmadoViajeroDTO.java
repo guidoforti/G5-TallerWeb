@@ -20,6 +20,7 @@ import java.time.format.DateTimeFormatter;
 public class ViajeConfirmadoViajeroDTO {
 
     private Long viajeId;
+    private Long reservaId; 
     private String origenNombre;
     private String destinoNombre;
     private String fechaSalida;
@@ -27,12 +28,14 @@ public class ViajeConfirmadoViajeroDTO {
     private Double precio;
     private EstadoDeViaje estadoViaje;
     private Integer asientosOcupados;
+    private Boolean valoracionPendiente = false;
 
     /**
      * Constructor que convierte una entidad Reserva a DTO
      * con valores por defecto null-safe
      */
     public ViajeConfirmadoViajeroDTO(Reserva reserva) {
+        this.reservaId = reserva.getId();
         // Información del viaje
         if (reserva.getViaje() != null) {
             this.viajeId = reserva.getViaje().getId();

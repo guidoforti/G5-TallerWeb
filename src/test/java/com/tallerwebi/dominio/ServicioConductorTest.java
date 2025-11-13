@@ -1,7 +1,9 @@
 package com.tallerwebi.dominio;
 
 import com.tallerwebi.dominio.Entity.Conductor;
+import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Valoracion;
+import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.IRepository.RepositorioConductor;
 import com.tallerwebi.dominio.IRepository.RepositorioValoracion;
@@ -33,6 +35,16 @@ class ServicioConductorTest {
     private ServicioLogin servicioLoginMock;
     private RepositorioValoracion repositorioValoracionMock;
 
+    private final LocalDate FECHA_VENCIMIENTO_VALIDA = LocalDate.now().plusDays(10);
+    private final LocalDate FECHA_NACIMIENTO_VALIDA = LocalDate.now().minusYears(30);
+    private final LocalDate FECHA_NACIMIENTO_MENOR = LocalDate.now().minusYears(17);
+
+    private Viaje crearViajeDummy(Long id) {
+        Viaje viaje = new Viaje();
+        viaje.setId(id);
+        return viaje;
+    }
+
     @BeforeEach
     void setUp() {
         repositorioMock = mock(RepositorioConductor.class);
@@ -42,19 +54,17 @@ class ServicioConductorTest {
     }
 
 
-    // 1. Cobertura: registrar() - Éxito
     @Test
-    void deberiaRegistrarConductorSiNoExiste() throws UsuarioExistente, FechaDeVencimientoDeLicenciaInvalida, EdadInvalidaException {
+    void deberiaRegistrarConductorSiNoExiste() throws UsuarioExistente, FechaDeVencimientoDeLicenciaInvalida, EdadInvalidaException, DatoObligatorioException {
         // Arrange
         Conductor nuevo = new Conductor();
         nuevo.setNombre("Ana");
         nuevo.setEmail("ana@mail.com");
         nuevo.setContrasenia("123");
-        nuevo.setEdad(20);
-        // Licencia futura
-        nuevo.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(10));
+        // 🔥 CAMBIO CLAVE: Usar Fecha de Nacimiento (equivalente a 30 años)
+        nuevo.setFechaNacimiento(FECHA_NACIMIENTO_VALIDA);
+        nuevo.setFechaDeVencimientoLicencia(FECHA_VENCIMIENTO_VALIDA);
 
-        // Mock: ServicioLogin no lanza excepción (email es nuevo)
         doNothing().when(servicioLoginMock).registrar(any(Conductor.class));
 
         // Act
@@ -66,18 +76,16 @@ class ServicioConductorTest {
         assertThat(nuevo.getActivo(), equalTo(true));
     }
 
-    // 2. Cobertura: registrar() - Usuario Existente (Lanzado por ServicioLogin)
     @Test
-    void noDeberiaRegistrarSiUsuarioYaExiste() throws UsuarioExistente {
+    void noDeberiaRegistrarSiUsuarioYaExiste() throws UsuarioExistente, DatoObligatorioException {
         // Arrange
         Conductor nuevo = new Conductor();
         nuevo.setNombre("Ana");
         nuevo.setEmail("ana@mail.com");
         nuevo.setContrasenia("123");
-        nuevo.setEdad(20);
-        nuevo.setFechaDeVencimientoLicencia(LocalDate.now().plusDays(10));
+        nuevo.setFechaNacimiento(FECHA_NACIMIENTO_VALIDA);
+        nuevo.setFechaDeVencimientoLicencia(FECHA_VENCIMIENTO_VALIDA);
 
-        // Mock: ServicioLogin lanza la excepción (simulando que el email ya existe)
         doThrow(new UsuarioExistente("Ya existe un usuario con ese email"))
                 .when(servicioLoginMock).registrar(any(Conductor.class));
 
@@ -85,18 +93,17 @@ class ServicioConductorTest {
         assertThrows(UsuarioExistente.class,
                 () -> servicio.registrar(nuevo));
 
-        // Verificamos que el Repositorio de Rol NUNCA fue consultado
         verify(repositorioMock, never()).buscarPorId(anyLong());
     }
 
-    // 3. Cobertura: registrar() - Licencia Vencida (Ruta condicional IF)
     @Test
-    void noDeberiaRegistrarConductorSiLicenciaEstaVencida() throws UsuarioExistente{
+    void noDeberiaRegistrarConductorSiLicenciaEstaVencida() throws UsuarioExistente, DatoObligatorioException {
         // Arrange
         Conductor vencido = new Conductor();
         vencido.setNombre("Carlos");
         vencido.setEmail("carlos@mail.com");
         vencido.setContrasenia("1234");
+        vencido.setFechaNacimiento(FECHA_NACIMIENTO_VALIDA);
         // Licencia pasada
         vencido.setFechaDeVencimientoLicencia(LocalDate.now().minusDays(1));
 
@@ -107,9 +114,28 @@ class ServicioConductorTest {
         );
 
         assertThat(exception.getMessage(), equalTo("La fecha de vencimiento de la licencia debe ser mayor a la actual"));
-        // Verificamos que el ServicioLogin NUNCA fue llamado
         verify(servicioLoginMock, never()).registrar(any());
     }
+
+    @Test
+    void noDeberiaRegistrarSiEdadEsMenorA18() throws UsuarioExistente {
+        // Arrange
+        Conductor menor = new Conductor();
+        menor.setNombre("Ana");
+        // Fecha que resulta en una edad de 17
+        menor.setFechaNacimiento(FECHA_NACIMIENTO_MENOR);
+        menor.setFechaDeVencimientoLicencia(FECHA_VENCIMIENTO_VALIDA);
+
+        // Act & Assert
+        EdadInvalidaException exception = assertThrows(
+                EdadInvalidaException.class,
+                () -> servicio.registrar(menor)
+        );
+
+        assertThat(exception.getMessage(), containsString("El usuario debe ser mayor de 18 años"));
+        verify(servicioLoginMock, never()).registrar(any());
+    }
+
 
     // 4. Cobertura: obtenerConductor() - Éxito
     @Test
@@ -119,7 +145,6 @@ class ServicioConductorTest {
         Conductor esperado = new Conductor();
         esperado.setId(id);
 
-        // Mock: Repositorio devuelve Optional con el Conductor
         when(repositorioMock.buscarPorId(id)).thenReturn(Optional.of(esperado));
 
         // Act
@@ -130,53 +155,47 @@ class ServicioConductorTest {
         verify(repositorioMock).buscarPorId(id);
     }
 
-    // 5. Cobertura: obtenerConductor() - Conductor Inexistente (Ruta orElseThrow)
+    // 5. Cobertura: obtenerConductor() - Conductor Inexistente
     @Test
     void obtenerConductor_noExistente_deberiaLanzarExcepcion() {
         // Arrange
         Long id = 1L;
-        // Mock: Repositorio devuelve Optional vacío
         when(repositorioMock.buscarPorId(id)).thenReturn(Optional.empty());
 
         // Act & Assert
-        // Verificamos que se lanza la excepción correcta
         assertThrows(UsuarioInexistente.class, () -> servicio.obtenerConductor(id));
         verify(repositorioMock).buscarPorId(id);
     }
 
     @Test
     public void deberiaObtenerPerfilDeConductorCorrectamente() throws UsuarioInexistente {
-         // given
-    Long conductorId = 1L;
-    Conductor conductor = new Conductor();
-    conductor.setId(conductorId);
-    conductor.setNombre("Carlos");
+        // given
+        Long conductorId = 1L;
 
-    Viajero viajero = new Viajero();
-    viajero.setNombre("Juan"); // emisor de la valoración
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+        conductor.setNombre("Carlos");
+        conductor.setFechaNacimiento(FECHA_NACIMIENTO_VALIDA);
 
-    Valoracion valoracion1 = new Valoracion();
-    valoracion1.setPuntuacion(5);
-    valoracion1.setComentario("Excelente viaje");
-    valoracion1.setEmisor(viajero);
-    valoracion1.setReceptor(conductor);
+        Viajero viajero = new Viajero();
+        viajero.setNombre("Juan"); // emisor de la valoración
 
-    Valoracion valoracion2 = new Valoracion();
-    valoracion2.setPuntuacion(3);
-    valoracion2.setComentario("Podría mejorar");
-    valoracion2.setEmisor(viajero);
-    valoracion2.setReceptor(conductor);
+        Viaje viajeDummy = crearViajeDummy(10L);
 
-    when(repositorioMock.buscarPorId(conductorId)).thenReturn(Optional.of(conductor));
-    when(repositorioValoracionMock.findByReceptorId(conductorId))
-            .thenReturn(Arrays.asList(valoracion1, valoracion2));
+        Valoracion valoracion1 = new Valoracion(viajero, conductor, 5, "Excelente viaje", viajeDummy);
+        Valoracion valoracion2 = new Valoracion(viajero, conductor, 3, "Podría mejorar", viajeDummy);
 
-    // when
-    ConductorPerfilOutPutDTO resultado = servicio.obtenerPerfilDeConductor(conductorId);
+        when(repositorioMock.buscarPorId(conductorId)).thenReturn(Optional.of(conductor));
+        when(repositorioValoracionMock.findByReceptorId(conductorId))
+                .thenReturn(Arrays.asList(valoracion1, valoracion2));
 
-    // then
-    assertThat(resultado, is(notNullValue()));
-    assertThat(resultado.getPromedioValoraciones(), equalTo(4.0));
-    assertThat(resultado.getValoraciones().size(), equalTo(2));
+        // when
+        ConductorPerfilOutPutDTO resultado = servicio.obtenerPerfilDeConductor(conductorId);
+
+        // then
+        assertThat(resultado, is(notNullValue()));
+        assertThat(resultado.getPromedioValoraciones(), equalTo(4.0));
+        assertThat(resultado.getValoraciones().size(), equalTo(2));
+        assertThat(resultado.getEdad(), is(30));
     }
 }

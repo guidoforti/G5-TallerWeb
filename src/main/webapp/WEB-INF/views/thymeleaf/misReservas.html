@@ -94,7 +94,9 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="mb-3">
-                <a th:href="@{/conductor/home}" class="btn btn-outline-secondary fw-bold">
+                <a th:href="@{/conductor/home}"
+                   id="btn-volver-home"
+                   class="btn btn-outline-secondary fw-bold">
                     <i class="bi bi-arrow-left me-1"></i> Volver al Home
                 </a>
             </div>
@@ -104,7 +106,10 @@
             </h2>
             <p class="text-muted">Gestiona las solicitudes de viaje de los pasajeros</p>
 
-            <div th:if="${mensaje}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <div th:if="${mensaje}"
+                 id="mensaje-exito"
+                 class="alert alert-success alert-dismissible fade show"
+                 role="alert">
                 <i class="fas fa-check-circle me-2"></i>
                 <span th:text="${mensaje}"></span>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -175,6 +180,7 @@
                             <div class="d-flex flex-column w-100" th:if="${reserva.estado == 'PENDIENTE'}">
 
                                 <button type="button"
+                                        id="btn-aceptar-reserva"
                                         class="btn btn-outline-success btn-accion fw-bold mb-2"
                                         data-bs-toggle="modal"
                                         th:data-bs-target="'#confirmarModal' + ${reserva.id}">
@@ -182,12 +188,14 @@
                                 </button>
 
                                 <a th:href="@{/reserva/rechazar?reservaId={id}(id=${reserva.id})}"
+                                   id="btn-rechazar-reserva"
                                    class="btn btn-outline-danger btn-accion fw-bold text-decoration-none">
                                     <i class="bi bi-x-lg me-1"></i> Rechazar
                                 </a>
                             </div>
 
                             <a th:href="@{/reserva/viajerosConfirmados(viajeId=${reserva.viajeId})}"
+                               id="btn-gestion-viaje"
                                class="btn btn-dark btn-accion fw-bold text-decoration-none mt-3">
                                 <i class="bi bi-people me-1"></i> Gestión del Viaje
                             </a>
@@ -228,7 +236,10 @@
                             </button>
                             <form th:action="@{/reserva/confirmar}" method="post" style="display: inline;">
                                 <input type="hidden" name="reservaId" th:value="${reserva.id}" />
-                                <button type="submit" class="btn btn-success fw-bold" style="background-color: var(--color-secondary) !important;">
+                                <button type="submit"
+                                        id="btn-confirmar-aceptar"
+                                        class="btn btn-success fw-bold"
+                                        style="background-color: var(--color-secondary) !important;">
                                     <i class="bi bi-check-lg me-1"></i>
                                     Sí, Aceptar
                                 </button>
@@ -254,5 +265,6 @@
 </main>
 <div th:replace="fragments/fragments :: footer"></div>
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+<th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
 </body>
 </html>

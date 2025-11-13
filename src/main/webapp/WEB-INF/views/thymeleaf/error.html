@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <th:block th:fragment="extra">
+    </th:block>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Error - UnRumbo</title>
@@ -39,11 +41,12 @@
         </div>
 
         <div class="back-button">
-            <a href="/" class="btn btn-primary">Volver al inicio</a>
+            <a href="/login" class="btn btn-primary">Volver al inicio</a>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
 </body>
 </html>

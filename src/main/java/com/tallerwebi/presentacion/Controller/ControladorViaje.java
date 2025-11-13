@@ -6,12 +6,8 @@ import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Parada;
 import com.tallerwebi.dominio.Entity.Vehiculo;
 import com.tallerwebi.dominio.Entity.Viaje;
-import com.tallerwebi.dominio.IServicio.ServicioCiudad;
-import com.tallerwebi.dominio.IServicio.ServicioNominatim;
-import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
-import com.tallerwebi.dominio.IServicio.ServicioViaje;
-import com.tallerwebi.dominio.IServicio.ServicioConductor;
-import com.tallerwebi.dominio.IServicio.ServicioReserva;
+import com.tallerwebi.dominio.Enums.TipoNotificacion;
+import com.tallerwebi.dominio.IServicio.*;
 import com.tallerwebi.dominio.excepcion.DatoObligatorioException;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
@@ -50,6 +46,7 @@ public class ControladorViaje {
     private final ServicioCiudad servicioCiudad;
     private final ServicioConductor servicioConductor;
     private final ServicioReserva servicioReserva;
+    private final ServicioNotificacion servicioNotificacion;
 
     @Autowired
     public ControladorViaje(ServicioViaje servicioViaje,
@@ -57,14 +54,17 @@ public class ControladorViaje {
                             ServicioNominatim servicioNominatim,
                             ServicioCiudad servicioCiudad,
                             ServicioConductor servicioConductor,
-                            ServicioReserva servicioReserva) {
+                            ServicioReserva servicioReserva,
+                            ServicioNotificacion servicioNotificacion) {
         this.servicioViaje = servicioViaje;
         this.servicioVehiculo = servicioVehiculo;
         this.servicioNominatim = servicioNominatim;
         this.servicioCiudad = servicioCiudad;
         this.servicioConductor = servicioConductor;
         this.servicioReserva = servicioReserva;
+        this.servicioNotificacion = servicioNotificacion;
     }
+
 
 
     @GetMapping("/buscar")
@@ -73,9 +73,21 @@ public class ControladorViaje {
 
         // Validar sesión
         Object usuarioId = session.getAttribute("idUsuario");
+        String rol = (String) session.getAttribute("ROL");
         if (usuarioId == null) {
             return new ModelAndView("redirect:/login");
         }
+        Long userId = (Long) usuarioId;
+        try {
+            Long contador = servicioNotificacion.contarNoLeidas(userId);
+            model.put("contadorNotificaciones", contador.intValue());
+        } catch (NotFoundException e) {
+            model.put("contadorNotificaciones", 0);
+        }
+        model.put("idUsuario", userId);
+        model.put("ROL", rol);
+
+
 
         // Retornar vista con formulario vacío
         model.put("busqueda", new BusquedaViajeInputDTO());
@@ -89,8 +101,21 @@ public class ControladorViaje {
 
         // Validar sesión
         Object usuarioId = session.getAttribute("idUsuario");
+        String rol = (String) session.getAttribute("ROL");
         if (usuarioId == null) {
             return new ModelAndView("redirect:/login");
+        }
+
+        if (usuarioId != null) {
+            Long userId = (Long) usuarioId;
+            try {
+                Long contador = servicioNotificacion.contarNoLeidas(userId);
+                model.put("contadorNotificaciones", contador.intValue());
+            } catch (NotFoundException e) {
+                model.put("contadorNotificaciones", 0);
+            }
+            model.put("idUsuario", userId);
+            model.put("ROL", rol);
         }
 
         try {
@@ -156,7 +181,7 @@ public class ControladorViaje {
         //prueba
         // CLAVES CORREGIDAS
         Object usuarioId = session.getAttribute("idUsuario");
-        Object rol = session.getAttribute("ROL");
+        String rol = (String) session.getAttribute("ROL");
 
         if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
             return new ModelAndView("redirect:/login");
@@ -164,6 +189,14 @@ public class ControladorViaje {
 
         Long conductorId = (Long) usuarioId;
 
+        try {
+            Long contador = servicioNotificacion.contarNoLeidas(conductorId);
+            model.put("contadorNotificaciones", contador.intValue());
+        } catch (NotFoundException e) {
+            model.put("contadorNotificaciones", 0);
+        }
+        model.put("idUsuario", conductorId);
+        model.put("ROL", rol);
         // Obtener los vehículos del conductor
         List<Vehiculo> vehiculos = servicioVehiculo.obtenerVehiculosParaConductor(conductorId);
 
@@ -183,7 +216,7 @@ public class ControladorViaje {
 
         // CLAVES CORREGIDAS
         Object usuarioIdObj = session.getAttribute("idUsuario");
-        Object rol = session.getAttribute("ROL");
+        String rol = (String) session.getAttribute("ROL");
 
         if (usuarioIdObj == null || !"CONDUCTOR".equals(rol)) {
             return new ModelAndView("redirect:/login");
@@ -228,7 +261,7 @@ public class ControladorViaje {
 
         // CLAVES CORREGIDAS
         Object usuarioIdObj = session.getAttribute("idUsuario");
-        Object rol = session.getAttribute("ROL");
+        String rol = (String) session.getAttribute("ROL");
 
         // 1. Validación de Sesión y Rol
         if (usuarioIdObj == null || !"CONDUCTOR".equals(rol)) {
@@ -237,6 +270,14 @@ public class ControladorViaje {
         }
 
         Long conductorId = (Long) usuarioIdObj;
+        try {
+            Long contador = servicioNotificacion.contarNoLeidas(conductorId);
+            model.put("contadorNotificaciones", contador.intValue());
+        } catch (NotFoundException e) {
+            model.put("contadorNotificaciones", 0);
+        }
+        model.put("idUsuario", conductorId);
+        model.put("ROL", rol);
 
         try {
             // 2. BUSCAR AL CONDUCTOR
@@ -271,12 +312,21 @@ public class ControladorViaje {
 
         // CLAVES CORREGIDAS
         Object usuarioId = session.getAttribute("idUsuario");
-        Object rol = session.getAttribute("ROL");
+        String rol = (String) session.getAttribute("ROL");
 
         // Validación de sesión
         if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
             return new ModelAndView("redirect:/login");
         }
+        Long conductorId = (Long) usuarioId;
+        try {
+            Long contador = servicioNotificacion.contarNoLeidas(conductorId);
+            model.put("contadorNotificaciones", contador.intValue());
+        } catch (NotFoundException e) {
+            model.put("contadorNotificaciones", 0);
+        }
+        model.put("idUsuario", conductorId);
+        model.put("ROL", rol);
 
         try {
             Viaje viaje = servicioViaje.obtenerViajePorId(id);
@@ -294,27 +344,30 @@ public class ControladorViaje {
         }
     }
 
-    @PostMapping("/cancelarViaje")
+   @PostMapping("/cancelarViaje")
     public ModelAndView cancelarViaje(@RequestParam Long id, HttpSession session) {
         ModelMap model = new ModelMap();
 
         // CLAVES CORREGIDAS
         Object usuarioIdObj = session.getAttribute("idUsuario");
-        Object rol = session.getAttribute("ROL");
+        String rol = (String) session.getAttribute("ROL");
 
+        // Validación de sesión
         if (usuarioIdObj == null || !"CONDUCTOR".equals(rol)) {
             return new ModelAndView("redirect:/login");
         }
 
-
         Long conductorId = (Long) usuarioIdObj;
-        Conductor conductorEnSesion;
 
         try {
-            conductorEnSesion = servicioConductor.obtenerConductor(conductorId);
-            servicioViaje.cancelarViaje(id, conductorEnSesion);
+            // 1. Obtener el conductor, ya que el servicio lo requiere como 'Usuario' para validaciones.
+            Conductor conductorEnSesion = servicioConductor.obtenerConductor(conductorId);
+
+            // 2. Usar el nuevo método que maneja TODA la lógica interna (viaje, reservas, pagos, notificaciones).
+            servicioViaje.cancelarViajeConReservasPagadas(id, conductorEnSesion);
+
             model.put("exito", "El viaje fue cancelado exitosamente.");
-            return new ModelAndView("redirect:/viaje/listar");
+            return new ModelAndView("redirect:/viaje/listar"); // Éxito
 
         } catch (ViajeNoEncontradoException e) {
             model.put("error", "No se encontró el viaje especificado.");
@@ -323,53 +376,65 @@ public class ControladorViaje {
         } catch (ViajeNoCancelableException e) {
             model.put("error", "El viaje no se puede cancelar en este estado.");
         } catch (UsuarioInexistente e) {
-            // Manejamos UsuarioInexistente que puede lanzar obtenerConductor, aunque el flujo no lo cubra directamente en el try/catch
             model.put("error", "Error interno: El conductor de la sesión no fue encontrado.");
         } catch (Exception e) {
             model.put("error", "Ocurrió un error al intentar cancelar el viaje.");
         }
 
-        return new ModelAndView("errorCancelarViaje", model);
-
+        return new ModelAndView("errorCancelarViaje", model); // Error
     }
-
 
     @GetMapping("/detalle")
     public ModelAndView verDetalleDeUnViaje(HttpSession httpSession, @RequestParam("id") Long id) {
         ModelMap model = new ModelMap();
 
         Object usuarioIdObj = httpSession.getAttribute("idUsuario");
-        Object rolObj = httpSession.getAttribute("ROL");
+        String rolObj = (String) httpSession.getAttribute("ROL");
+        if (usuarioIdObj == null || rolObj == null) {
+            return new ModelAndView("redirect:/login");
+        }
 
-        // Asignar 'ANONIMO' si no hay rol en sesión
-        String userRole = (rolObj != null) ? rolObj.toString() : "ANONIMO";
-        model.put("userRole", userRole); // Pasa el rol definido a la vista
+        Long userId = (Long) usuarioIdObj;
+        try {
+            Long contador = servicioNotificacion.contarNoLeidas(userId);
+            model.put("contadorNotificaciones", contador.intValue());
+        } catch (NotFoundException e) {
+            model.put("contadorNotificaciones", 0);
+        }
+        model.put("idUsuario", userId);
+        model.put("ROL", rolObj);
+
+        String userRole = rolObj.toString();
+        model.put("userRole", userRole);
+
+        if (!userRole.equals("CONDUCTOR") && !userRole.equals("VIAJERO")) {
+            model.put("error", "Su rol no tiene acceso a la visualización de detalles de viaje.");
+            return new ModelAndView("usuarioNoAutorizado", model);
+        }
 
         try {
             Viaje viaje = servicioViaje.obtenerDetalleDeViaje(id);
 
-            // Obtener viajeros confirmados a través de ServicioReserva
             List<Viajero> viajerosConfirmados = servicioReserva.obtenerViajerosConfirmados(viaje);
             List<ViajeroDTO> viajerosDTO = viajerosConfirmados.stream()
                     .map(ViajeroDTO::new)
                     .collect(Collectors.toList());
 
             boolean reservaExistente = false;
-            if (userRole.equals("VIAJERO") && usuarioIdObj != null) {
+            if (userRole.equals("VIAJERO")) {
                 Long viajeroId = (Long) usuarioIdObj;
                 reservaExistente = servicioReserva.tieneReservaActiva(viajeroId, id);
             }
 
-            model.put("reservaExistente", reservaExistente); // Pasa el resultado a la vista (boolean)
+            model.put("reservaExistente", reservaExistente);
 
             DetalleViajeOutputDTO detalleViajeOutputDTO = new DetalleViajeOutputDTO(viaje, viajerosDTO);
             model.put("detalle", detalleViajeOutputDTO);
-            model.put("viajeId", id);  // Pasar el ID del viaje para el botón de reserva
+            model.put("viajeId", id);
 
             return new ModelAndView("detalleViaje", model);
 
         } catch (NotFoundException | ViajeNoEncontradoException | UsuarioNoAutorizadoException e) {
-            // [Manejo de Error] Se mantiene el rol para la navbar, aunque el detalle falle.
             model.put("error", e.getMessage());
             return new ModelAndView("detalleViaje", model);
         }
@@ -381,12 +446,23 @@ public class ControladorViaje {
         //prueba
         // CLAVES CORREGIDAS
         Object usuarioId = httpSession.getAttribute("idUsuario");
-        Object rol = httpSession.getAttribute("ROL");
+        String rol = (String) httpSession.getAttribute("ROL");
         if (usuarioId == null || !"CONDUCTOR".equals(rol)) {
             Exception e = new UsuarioNoAutorizadoException("usuario no autorizado");
             model.addAttribute("error", e.getMessage());
             return new ModelAndView("usuarioNoAutorizado", model);
         }
+
+        Long conductorId = (Long) usuarioId;
+
+        try {
+            Long contador = servicioNotificacion.contarNoLeidas(conductorId);
+            model.put("contadorNotificaciones", contador.intValue());
+        } catch (NotFoundException e) {
+            model.put("contadorNotificaciones", 0);
+        }
+        model.put("idUsuario", conductorId);
+        model.put("ROL", rol);
 
 
         // Obtener el viaje existente
@@ -396,7 +472,6 @@ public class ControladorViaje {
         if (!viaje.getConductor().getId().equals(usuarioId)) {
             throw new UsuarioNoAutorizadoException("No tienes permiso para editar este viaje");
         }
-        Long conductorId = (Long) usuarioId;
         Conductor conductorEnSesion;
         conductorEnSesion = servicioConductor.obtenerConductor(conductorId);
         // Convertir a DTO para el formulario
@@ -558,6 +633,13 @@ public class ControladorViaje {
 
         try {
             servicioViaje.iniciarViaje(id, conductorId);
+            Viaje viaje = servicioViaje.obtenerViajePorId(id);
+            List<Viajero> viajerosConfirmados = servicioReserva.obtenerViajerosConfirmados(viaje);
+            for (Viajero viajero : viajerosConfirmados) {
+                String mensaje = String.format("¡Tu viaje a %s ha comenzado!", viaje.getDestino().getNombre());
+                String url = "/reserva/misViajes";
+                servicioNotificacion.crearYEnviar(viajero, TipoNotificacion.VIAJE_INICIADO, mensaje, url);
+            }
             model.put("mensaje", "Viaje iniciado correctamente");
         } catch (ViajeNoEncontradoException e) {
             model.put("error", "Viaje no encontrado");
@@ -584,6 +666,7 @@ public class ControladorViaje {
             return new ModelAndView("redirect:/login");
         }
 
+
         try {
             servicioViaje.finalizarViaje(id, conductorId);
             model.put("mensaje", "Viaje finalizado correctamente");
@@ -594,8 +677,73 @@ public class ControladorViaje {
         } catch (Exception e) {
             model.put("error", e.getMessage());
         }
-
+        model.put("idUsuario", conductorId);
+        model.put("ROL", session.getAttribute("ROL"));
         model.put("viajeId", id);
+        model.put("accionFinalizada", true);
+        model.put("idUsuario", conductorId);
         return new ModelAndView("accionViajeCompletada", model);
     }
+
+  /*   @GetMapping("/confirmarCancelacion/{id}")
+    public ModelAndView confirmarCancelacion(@PathVariable Long id, HttpSession session) {
+        ModelMap model = new ModelMap();
+
+        Object usuarioIdObj = session.getAttribute("idUsuario");
+        String rol = (String) session.getAttribute("ROL");
+
+        if (usuarioIdObj == null || !"CONDUCTOR".equals(rol)) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        try {
+            Viaje viaje = servicioViaje.obtenerViajePorId(id);
+            
+            model.put("viaje", viaje);
+
+            return new ModelAndView("confirmarCancelacion", model); 
+
+        } catch (ViajeNoEncontradoException e) {
+            model.put("error", "No se encontró el viaje especificado.");
+            return new ModelAndView("errorCancelarViaje", model);
+        } catch (Exception e) {
+            model.put("error", "Ocurrió un error al cargar la información del viaje para la cancelación.");
+            return new ModelAndView("errorCancelarViaje", model);
+        }
+    }
+
+
+    @PostMapping("/cancelarViaje")
+public ModelAndView cancelarViajeConReservasPagadas(@RequestParam Long id, HttpSession session) {
+    ModelMap model = new ModelMap();
+
+    Object usuarioIdObj = session.getAttribute("idUsuario");
+    String rol = (String) session.getAttribute("ROL");
+
+    if (usuarioIdObj == null || !"CONDUCTOR".equals(rol)) {
+        return new ModelAndView("redirect:/login");
+    }
+
+    Long conductorId = (Long) usuarioIdObj;
+    try {
+        Conductor conductorEnSesion = servicioConductor.obtenerConductor(conductorId);
+        servicioViaje.cancelarViajeConReservasPagadas(id, conductorEnSesion);
+
+        model.put("exito", "El viaje y todas las reservas asociadas fueron canceladas exitosamente.");
+        return new ModelAndView("redirect:/viaje/listar");
+
+    } catch (ViajeNoEncontradoException e) {
+        model.put("error", "No se encontró el viaje especificado.");
+    } catch (UsuarioNoAutorizadoException e) {
+        model.put("error", "No tiene permisos para cancelar este viaje.");
+    } catch (ViajeNoCancelableException e) {
+        model.put("error", "El viaje no se puede cancelar en este estado.");
+    } catch (Exception e) {
+        model.put("error", "Ocurrió un error al intentar cancelar el viaje.");
+    }
+
+    return new ModelAndView("errorCancelarViaje", model);
+}
+
+*/
 }

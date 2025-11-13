@@ -116,4 +116,17 @@ public class RepositorioReservaImpl implements ReservaRepository {
 
         return resultados.isEmpty() ? Optional.empty() : Optional.of(resultados.get(0));
     }
+
+    @Override
+    public List<Reserva> findCanceladasByViajero(Viajero viajero) {
+        String hql = "SELECT r FROM Reserva r " +
+            "WHERE r.viajero.id = :viajeroId " +
+            "AND r.estado = :estadoCancelado"; 
+            
+    return sessionFactory.getCurrentSession()
+            .createQuery(hql, Reserva.class)
+            .setParameter("viajeroId", viajero.getId())
+            .setParameter("estadoCancelado", EstadoReserva.CANCELADA_POR_CONDUCTOR) 
+            .getResultList();
+    }
 }

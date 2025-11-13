@@ -2,6 +2,38 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="fragments/fragments :: head('UnRumbo - Iniciar Sesión')">
     <th:block th:fragment="extra">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <style>
+            :root {
+                --color-primary: #E16A3D;
+                --color-taupe: #4E3D2F;
+            }
+            .btn-unrumbo {
+                background-color: var(--color-primary) !important;
+                border-color: var(--color-primary) !important;
+            }
+            .btn-unrumbo:hover {
+                background-color: #cf5930 !important;
+                border-color: #cf5930 !important;
+            }
+            .bg-image-container {
+                background-color: #f7f7f7;
+                border-radius: 0.5rem;
+                overflow: hidden;
+                position: relative; 
+            }
+            .registration-card {
+                padding: 0;
+            }
+            .text-unrumbo-link {
+                color: var(--color-primary) !important;
+                text-decoration: none;
+            }
+            .text-unrumbo-link:hover {
+                color: #cf5930 !important;
+                text-decoration: underline;
+            }
+        </style>
     </th:block>
 </head>
 
@@ -9,44 +41,63 @@
 <nav th:replace="fragments/navbar_anonimo :: navbar"></nav>
 
 <main role="main" class="container" style="margin-top: 120px;">
-
     <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
-                    <div class="text-center mb-4">
-                        <h4 class="fw-bold text-dark">Iniciar Sesión</h4>
-                        <p class="text-muted">Ingresá tus credenciales para continuar</p>
+        <div class="col-lg-10 col-md-10"> <div class="card shadow-lg border-0 registration-card">
+                <div class="row g-0 align-items-stretch">
+                    
+                    <div class="col-lg-5 d-none d-lg-block bg-image-container">
+                        <img th:src="@{/img/entradaRuta.jpeg}" alt="Persona entrando a un espacio de conexión" class="img-fluid h-100" style="object-fit: cover;">
+                        <div class="position-absolute p-4 text-white" style="top: 0; background: rgba(0, 0, 0, 0.4); width: 100%;">
+                            <h3 class="fw-bold mb-1">Accedé a tu próxima aventura</h3>
+                            <p class="small">Iniciá sesión para buscar viajes y gestionar tus reservas.</p>
+                        </div>
                     </div>
+                    
+                    <div class="col-lg-7">
+                        <div class="card-body p-4">
+                            <div class="text-center mb-4">
+                                <h4 class="fw-bold" style="color: var(--color-taupe);">
+                                    <i class="fas fa-lock me-2"></i> Iniciar Sesión
+                                </h4>
+                                <p class="text-muted">Ingresá tus credenciales para continuar</p>
+                            </div>
 
-                    <form th:action="@{/validar-login}" method="POST" th:object="${datosLogin}">
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input th:field="*{email}" id="email" type="email" class="form-control" placeholder="ejemplo@mail.com" required>
+                            <form th:action="@{/validar-login}" method="POST" th:object="${datosLogin}">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label fw-bold">
+                                        <i class="fas fa-envelope me-1"></i> Email
+                                    </label>
+                                    <input th:field="*{email}" id="email" type="email" class="form-control" placeholder="ejemplo@mail.com" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="password" class="form-label fw-bold">
+                                        <i class="fas fa-key me-1"></i> Contraseña
+                                    </label>
+                                    <input th:field="*{password}" id="password" type="password" class="form-control" placeholder="********" required>
+                                </div>
+
+                                <button type="submit" id="btn-login" class="btn btn-unrumbo w-100 text-white fw-bold">
+                                    Iniciar sesión
+                                </button>
+
+                                <p th:if="${error != null}" class="alert alert-danger mt-3" th:text="${error}"></p>
+                            </form>
+
+                            <div class="text-center mt-3">
+                                <a th:href="@{/registrarme}" id="btn-register" class="text-unrumbo-link fw-bold">
+                                    ¿No tenés cuenta? Registrate
+                                </a>
+                            </div>
                         </div>
-
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Contraseña</label>
-                            <input th:field="*{password}" id="password" type="password" class="form-control" placeholder="********" required>
-                        </div>
-
-                        <button type="submit" class="btn btn-unrumbo w-100 text-white fw-bold">Iniciar sesión</button>
-
-                        <p th:if="${error != null}" class="alert alert-danger mt-3" th:text="${error}"></p>
-                    </form>
-
-                    <div class="text-center mt-3">
-                        <a th:href="@{/registrarme}" class="text-decoration-none text-unrumbo fw-bold" style="color:#E16A3D;">
-                            ¿No tenés cuenta? Registrate
-                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 </main>
 <div th:replace="fragments/fragments :: footer"></div>
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+<th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
 </body>
 </html>

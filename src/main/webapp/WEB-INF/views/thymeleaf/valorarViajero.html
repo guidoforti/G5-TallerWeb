@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/fragments :: head('UnRumbo - Seleccionar Viajero')">
+    <th:block th:fragment="extra">
+        <!-- Reutilizamos tus estilos -->
+        <style>
+            .card {
+                border: none;
+                border-radius: 10px;
+                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+                margin-bottom: 1.5rem;
+            }
+            .btn-unrumbo {
+                background-color: #E16A3D;
+                border: none;
+                color: white;
+                font-weight: 500;
+                padding: 0.75rem 2rem;
+                border-radius: 5px;
+            }
+            .btn-unrumbo:hover {
+                background-color: #cf5930;
+                color: white;
+            }
+            .list-group-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .text-unrumbo {
+                color: #E16A3D;
+            }
+            .avatar {
+                width: 50px;
+                height: 50px;
+                background-color: #E16A3D;
+                color: white;
+                border-radius: 50%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 1.2rem;
+                margin-right: 15px;
+            }
+        </style>
+        <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    </th:block>
+</head>
+
+<body>
+<nav th:replace="fragments/navbar_conductor :: navbar"></nav>
+
+<main role="main" class="container" style="margin-top: 120px; margin-bottom: 50px;">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <form th:action="@{/valoraciones/enviar}"
+                  th:object="${formularioValoracion}"
+                  method="post">
+
+                <input type="hidden" name="viajeId" th:value="${viajeId}" />
+
+                <div class="list-group">
+                    <div th:each="valoracion, stat : *{valoraciones}" class="list-group-item">
+
+                        <div class="d-flex align-items-start w-100">
+
+                            <div class="avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div style="flex-grow: 1;">
+                                <h5 class="mb-0 fw-bold" th:text="${viajeros[__${stat.index}__].nombre}">Nombre del Viajero</h5>
+                                <small class="text-muted" th:text="${viajeros[__${stat.index}__].email}">email@ejemplo.com</small>
+
+                                <input type="hidden"
+                                       th:field="*{valoraciones[__${stat.index}__].receptorId}"
+                                       th:value="${viajeros[__${stat.index}__].id}" />
+                            </div>
+
+                            <div style="width: 50%; max-width: 300px; margin-left: 20px;">
+                                <div class="rating d-flex justify-content-end mb-2">
+                                    <span class="text-muted small me-2">Puntuación:</span>
+                                    <input type="number"
+                                           th:id="'puntuacion-viajero-' + ${stat.index}"
+                                           th:field="*{valoraciones[__${stat.index}__].puntuacion}"
+                                           min="1" max="5"
+                                           class="form-control form-control-sm"
+                                           style="width: 60px;" required />
+                                </div>
+
+                                <textarea th:id="'comentario-viajero-' + ${stat.index}"
+                                          th:field="*{valoraciones[__${stat.index}__].comentario}"
+                                          placeholder="Comentario (opcional)"
+                                          rows="2"
+                                          class="form-control form-control-sm"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-5 text-center">
+                    <button type="submit" id="btn-enviar-valoraciones-viajeros" class="btn btn-unrumbo w-50 fw-bold">
+                        <i class="fas fa-paper-plane me-2"></i> Enviar Valoraciones
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+<th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
+</body>
+<script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+</html>

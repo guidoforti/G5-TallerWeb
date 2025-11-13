@@ -65,7 +65,7 @@
                                         <th>Viajero Involucrado</th>
                                         <th>Acción</th>
                                         <th>Estado (Anterior → Nuevo)</th>
-                                        <th>Conductor que Decidió</th>
+                                        <th>Usuario que Decidió</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -122,6 +122,7 @@
     </main>
 <div th:replace="fragments/fragments :: footer"></div>
     <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+<th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
 </body>
 
 </html>

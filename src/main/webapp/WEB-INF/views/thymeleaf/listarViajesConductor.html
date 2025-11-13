@@ -74,12 +74,14 @@
                                     <div class="d-flex justify-content-center gap-2">
 
                                         <a th:href="@{/viaje/detalle(id=${viaje.id})}"
-                                           class="btn btn-sm btn-info fw-bold flex-fill">
+                                           th:id="'btn-ver-detalle-viaje-' + ${viaje.id}"
+                                           class="btn btn-sm btn-info fw-bold flex-fill btn-ver-detalle-viaje">
                                             <i class="bi bi-eye"></i> Detalle
                                         </a>
 
                                         <th:block th:if="${viaje.estado == 'DISPONIBLE'}">
-                                            <a th:href="@{/viaje/editar/{id}(id=${viaje.id})}"
+                                            <a th:id="'btn-editar-viaje-' + ${viaje.id}"
+                                               th:href="@{/viaje/editar/{id}(id=${viaje.id})}"
                                                class="btn btn-sm btn-info fw-bold flex-fill">
                                                 <i class="bi bi-pencil-square"></i> Editar
                                             </a>
@@ -119,5 +121,6 @@
 </main>
 <div th:replace="fragments/fragments :: footer"></div>
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+<th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
 </body>
 </html>

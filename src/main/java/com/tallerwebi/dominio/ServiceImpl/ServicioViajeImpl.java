@@ -1,13 +1,16 @@
 package com.tallerwebi.dominio.ServiceImpl;
 
-import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.*;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
+import com.tallerwebi.dominio.Enums.EstadoPago;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
+import com.tallerwebi.dominio.Enums.TipoNotificacion;
+import com.tallerwebi.dominio.IRepository.RepositorioHistorialReserva;
 import com.tallerwebi.dominio.IRepository.RepositorioParada;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
+import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
 import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.excepcion.*;
@@ -16,7 +19,7 @@ import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -33,16 +36,20 @@ public class ServicioViajeImpl implements ServicioViaje {
     private ServicioVehiculo servicioVehiculo;
     private RepositorioParada repositorioParada;
     private ReservaRepository reservaRepository;
+    private ServicioNotificacion servicioNotificacion;
+    private RepositorioHistorialReserva repositorioHistorialReserva;
 
     @Autowired
     public ServicioViajeImpl(ViajeRepository viajeRepository, ServicioConductor servicioConductor,
                              ServicioVehiculo servicioVehiculo, RepositorioParada repositorioParada,
-                             ReservaRepository reservaRepository) {
+                             ReservaRepository reservaRepository, ServicioNotificacion servicioNotificacion, RepositorioHistorialReserva repositorioHistorialReserva) {
         this.viajeRepository = viajeRepository;
         this.servicioConductor = servicioConductor;
         this.servicioVehiculo = servicioVehiculo;
         this.repositorioParada = repositorioParada;
         this.reservaRepository = reservaRepository;
+        this.servicioNotificacion = servicioNotificacion;
+        this.repositorioHistorialReserva = repositorioHistorialReserva;
     }
 
     @Override
@@ -122,9 +129,26 @@ public class ServicioViajeImpl implements ServicioViaje {
             }
         }
 
+        Hibernate.initialize(viajeExistente.getReservas());
+        List<Reserva> reservasAfectadas = viajeExistente.getReservas();
+
         // 5. Guardar cambios
         viajeRepository.modificarViaje(viajeExistente);
 
+        for (Reserva reserva : reservasAfectadas) {
+            if (reserva.getEstado() == EstadoReserva.CONFIRMADA || reserva.getEstado() == EstadoReserva.PENDIENTE) {
+                Usuario viajero = reserva.getViajero();
+                String mensaje = String.format("El viaje a %s fue modificado. Revisá los cambios.",
+                        viajeExistente.getDestino().getNombre());
+                String url = "/viaje/detalle?id=" + viajeExistente.getId();
+
+                try {
+                    servicioNotificacion.crearYEnviar(viajero, TipoNotificacion.VIAJE_EDITADO, mensaje, url);
+                } catch (Exception e) {
+                    System.err.println("Fallo al notificar edición: " + e.getMessage());
+                }
+            }
+        }
     }
 
     @Override
@@ -350,11 +374,27 @@ public class ServicioViajeImpl implements ServicioViaje {
         // Calcular minutos de retraso (puede ser negativo si inicia antes)
         int minutosRetraso = (int) Duration.between(viaje.getFechaHoraDeSalida(), ahora).toMinutes();
 
+        Hibernate.initialize(viaje.getReservas());
+        List<Reserva> reservasAfectadas = viaje.getReservas();
         // Iniciar viaje
         viaje.setEstado(EstadoDeViaje.EN_CURSO);
         viaje.setFechaHoraInicioReal(ahora);
         viaje.setMinutosDeRetraso(minutosRetraso);
         viajeRepository.modificarViaje(viaje);
+        for (Reserva reserva : reservasAfectadas) {
+            if (reserva.getEstado() == EstadoReserva.CONFIRMADA) {
+                Usuario viajero = reserva.getViajero();
+                String mensaje = String.format("¡Tu viaje a %s ha comenzado!", viaje.getDestino().getNombre());
+                String url = "/reserva/misViajes";
+
+                try {
+                    servicioNotificacion.crearYEnviar(viajero, TipoNotificacion.VIAJE_INICIADO, mensaje, url);
+                } catch (Exception e) {
+                    //DEJAMOS ESTO ASI PARA DEBBUGEAR
+                    System.err.println("Fallo al notificar inicio al viajero: " + viajero.getId());
+                }
+            }
+        }
     }
 
     @Override
@@ -375,11 +415,27 @@ public class ServicioViajeImpl implements ServicioViaje {
             throw new ViajeYaFinalizadoException("El viaje no está en curso");
         }
 
+        Hibernate.initialize(viaje.getReservas());
+        List<Reserva> reservasAfectadas = viaje.getReservas();
+
         // Finalizar viaje
         viaje.setEstado(EstadoDeViaje.FINALIZADO);
         viaje.setFechaHoraFinReal(LocalDateTime.now());
         viaje.setCierreAutomatico(false);
         viajeRepository.modificarViaje(viaje);
+        for (Reserva reserva : reservasAfectadas) {
+            if (reserva.getEstado() == EstadoReserva.CONFIRMADA) {
+                Usuario viajero = reserva.getViajero();
+                String mensaje = String.format("El viaje a %s finalizó. ¡Dejanos tu valoración al conductor!", viaje.getDestino().getNombre());
+                String url = "/reserva/misViajes"; // El botón de valoración aparecerá aquí
+
+                try {
+                    servicioNotificacion.crearYEnviar(viajero, TipoNotificacion.VALORACION_PENDIENTE, mensaje, url);
+                } catch (Exception e) {
+                    System.err.println("Fallo al notificar valoración pendiente: " + e.getMessage());
+                }
+            }
+        }
     }
 
     @Override
@@ -441,5 +497,81 @@ public class ServicioViajeImpl implements ServicioViaje {
             }
         }
     }
+
+    @Override
+    public void cancelarViajeConReservasPagadas(Long id, Usuario usuarioEnSesion)
+        throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeNoCancelableException {
+    
+    // Valida que el usuario sea conductor
+    if (usuarioEnSesion.getRol() == null || !usuarioEnSesion.getRol().equalsIgnoreCase("CONDUCTOR")) {
+        throw new UsuarioNoAutorizadoException("Solo los conductores pueden cancelar viajes.");
+    }
+
+    // Buscar viaje
+    Optional<Viaje> viajeOpt = viajeRepository.findById(id);
+    if (viajeOpt.isEmpty()) {
+        throw new ViajeNoEncontradoException("No se encontró un viaje con ese ID.");
+    }
+
+    Viaje viaje = viajeOpt.get();
+
+    // valida que el viaje pertenezca al conductor
+    if (!viaje.getConductor().getId().equals(usuarioEnSesion.getId())) {
+        throw new UsuarioNoAutorizadoException("El viaje debe pertenecer al conductor.");
+    }
+
+    if (!(viaje.getEstado() == EstadoDeViaje.DISPONIBLE || viaje.getEstado() == EstadoDeViaje.COMPLETO)) {
+        throw new ViajeNoCancelableException("El viaje no puede cancelarse en este estado.");
+    }
+
+    // obitnen las reservas asociadas
+    List<Reserva> reservas = reservaRepository.findByViaje(viaje);
+
+    for (Reserva reserva : reservas) {
+        // Solo cancelar si está CONFIRMADA o PENDIENTE (y pagada o no)
+        if (reserva.getEstado() == EstadoReserva.CONFIRMADA || reserva.getEstado() == EstadoReserva.PENDIENTE) {
+            EstadoReserva estadoAnterior = reserva.getEstado();
+            reserva.setEstado(EstadoReserva.CANCELADA_POR_CONDUCTOR);
+
+            // Si estaba pagada, mantenemos el estado de pago o lo marcamos como “reembolso pendiente”
+            if (reserva.getEstadoPago() == EstadoPago.PAGADO) {
+                reserva.setEstadoPago(EstadoPago.REEMBOLSO_PENDIENTE);
+            }
+
+            // guardar cambios
+            reservaRepository.update(reserva);
+
+            // registrar historial
+            HistorialReserva historial = new HistorialReserva();
+            historial.setReserva(reserva);
+            historial.setViaje(viaje);
+            historial.setViajero(reserva.getViajero());
+            historial.setConductor(usuarioEnSesion);
+            historial.setFechaEvento(LocalDateTime.now());
+            historial.setEstadoAnterior(estadoAnterior);
+            historial.setEstadoNuevo(reserva.getEstado());
+            repositorioHistorialReserva.save(historial);
+
+            // Enviar notificación al viajero
+            try {
+                String mensaje = String.format(
+                        "El viaje a %s ha sido CANCELADO por el conductor. Tu reserva fue cancelada%s.",
+                        viaje.getDestino().getNombre(),
+                        (reserva.getEstadoPago() == EstadoPago.REEMBOLSO_PENDIENTE)
+                                ? " y el reembolso será procesado próximamente" : ""
+                );
+
+                String url = "/reserva/misReservasActivas";
+                servicioNotificacion.crearYEnviar(reserva.getViajero(), TipoNotificacion.VIAJE_CANCELADO, mensaje, url);
+            } catch (Exception e) {
+                System.err.println("Error al enviar notificación de cancelación: " + e.getMessage());
+            }
+        }
+    }
+
+    //cancela el viaje
+    viaje.setEstado(EstadoDeViaje.CANCELADO);
+    viajeRepository.modificarViaje(viaje);
+}
 
 }

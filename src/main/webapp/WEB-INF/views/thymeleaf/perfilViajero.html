@@ -1,62 +1,45 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
-<head>
+<head th:replace="fragments/fragments :: head('Perfil de Viajero')">
+    <th:block th:fragment="extra">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <link rel="stylesheet" th:href="@{/css/new-main.css}"/>
+    <style>
+        body{
+            background-color: #FBEFE6;
+        }
+        nav{
+            background-color: white;
+        }
+        .profile-photo {
+            width: 140px;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+        .star {
+            color: #f4c150;
+        }
+        .no-data {
+            color: #6c757d;
+        }
+    </style>
+    </th:block>
+
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>UnRumbo - Perfil del Viajero</title>
-
-    <!-- Bootstrap -->
-    <link rel="stylesheet" th:href="@{/webjars/bootstrap/5.2.0/css/bootstrap.min.css}" />
-
-    <!-- Pequeños estilos inline para no crear muchos archivos -->
-    <style>
-    :root {
-        --color-primary: #E16A3D;  /* Naranja Principal */
-        --color-taupe: #4E3D2F;  /* Marrón Oscuro */
-        --color-coffee: #734933; /* Marrón Medio */
-        --color-success-warm: #44806A; /* Verde Cálido (Éxito) - Color Viajero */
-    }
-    
-    /* 1. Estilos del Botón Principal (Naranja) */
-    .btn-unrumbo {
-        background-color: var(--color-primary) !important;
-        border-color: var(--color-primary) !important;
-        color: white !important;
-    }
-    .btn-unrumbo:hover {
-        background-color: #cf5930 !important;
-        border-color: #cf5930 !important;
-    }
-    
-    /* 2. Estilos para el Perfil del Viajero */
-    .profile-photo {
-        width: 140px;
-        height: 140px;
-        object-fit: cover;
-        border-radius: 10px;
-        border: 1px solid #e9ecef;
-    }
-    /* Estrellas: Usaremos el color principal naranja */
-    .star, .star-unrumbo {
-        color: var(--color-primary); /* Naranja Principal para todas las estrellas */
-    }
-    .no-data {
-        color: #6c757d;
-        font-style: italic;
-    }
-    
-    /* Clase de utilidad si quieres destacar algo en color Viajero */
-    .text-viajero {
-        color: var(--color-success-warm);
-    }
-</style>
 </head>
 <body>
-<nav class="navbar navbar-light bg-light">
-    <div class="container">
-        <a class="navbar-brand fw-bold" th:href="@{/}">UnRumbo</a>
-    </div>
-</nav>
+<th:block th:switch="${ROL_ACTUAL}">
+    <th:block th:case="'CONDUCTOR'">
+        <div th:replace="fragments/navbar_conductor :: navbar"></div>
+    </th:block>
+    <th:block th:case="'VIAJERO'">
+        <div th:replace="fragments/navbar_viajero :: navbar"></div>
+    </th:block>
+</th:block>
 
 <main class="container" style="margin-top: 80px; margin-bottom: 40px;">
     <div class="row">
@@ -64,10 +47,10 @@
         <div class="col-md-4">
             <div class="card shadow-sm mb-4">
                 <div class="card-body text-center">
-                    <img th:if="${perfil.fotoPerfilUrl != null}"
-                         th:src="${perfil.fotoPerfilUrl}"
-                         alt="Foto de perfil"
-                         class="profile-photo mb-3" />
+                    <img th:if="${perfil.fotoPerfilUrl != null and !#strings.isEmpty(perfil.fotoPerfilUrl)}"
+                          th:src="@{${perfil.fotoPerfilUrl}}"
+                          alt="Foto de perfil"
+                          class="profile-photo mb-3" />
 
                     <div th:if="${perfil.fotoPerfilUrl == null}" class="mb-3">
                         <svg width="140" height="140" viewBox="0 0 24 24" class="profile-photo bg-light d-inline-block"
@@ -84,7 +67,7 @@
                         <li><strong>Edad:</strong> <span th:text="${perfil.edad}">30</span></li>
                         <li><strong>Fumador:</strong> <span th:text="${perfil.fumador != null and perfil.fumador} ? 'Sí' : 'No'"></span></li>
                         <li><strong>Discapacidad:</strong>
-                            <span th:text="${#strings.isEmpty(perfil.discapacitado) ? 'No especificada' : perfil.discapacitado}">No especificada</span>
+                            <span th:text="${perfil.discapacitado != null ? perfil.discapacitado : 'No'}">No</span>
                         </li>
                     </ul>
 
@@ -112,9 +95,11 @@
                     </div>
 
                     <div class="d-grid gap-2">
-                        <a th:href="@{/viajero/home}" class="btn btn-outline-secondary btn-sm">Volver al home</a>
+                        <a th:href="@{${ROL_ACTUAL == 'CONDUCTOR' ? '/conductor/home' : '/viajero/home'}}"
+                           class="btn btn-outline-secondary btn-sm">
+                            Volver al home
+                        </a>
                         <!-- ejemplo de acción contextual -->
-                        <a th:href="@{'/reserva/solicitar?viajeroId=' + ${perfil.id}}" class="btn btn-unrumbo btn-sm">Solicitar reserva</a>
                     </div>
                 </div>
             </div>
@@ -193,5 +178,7 @@
 
 <!-- Bootstrap JS -->
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
+<th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
+<footer th:replace="fragments/fragments :: footer"></footer>
 </body>
 </html>
