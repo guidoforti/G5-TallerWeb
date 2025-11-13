@@ -74,7 +74,8 @@
                                     <div class="d-flex justify-content-center gap-2">
 
                                         <a th:href="@{/viaje/detalle(id=${viaje.id})}"
-                                           class="btn btn-sm btn-info fw-bold flex-fill">
+                                           th:id="'btn-ver-detalle-viaje-' + ${viaje.id}"
+                                           class="btn btn-sm btn-info fw-bold flex-fill btn-ver-detalle-viaje">
                                             <i class="bi bi-eye"></i> Detalle
                                         </a>
 
