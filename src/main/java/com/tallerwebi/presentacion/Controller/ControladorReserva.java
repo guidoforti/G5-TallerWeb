@@ -5,6 +5,7 @@ import com.mercadopago.exceptions.MPException;
 import com.mercadopago.resources.preference.Preference;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Reserva;
+import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
@@ -587,6 +588,9 @@ public class ControladorReserva {
             // Obtener todas las reservas confirmadas del viajero
             List<Reserva> reservas = servicioReserva.listarViajesConfirmadosPorViajero(viajeroId);
 
+            // Obtengo las reservas que fueron canceladas
+            List<Reserva> reservasCanceladas = servicioReserva.listarViajesCanceladosPorViajero(viajeroId);
+
             // Categorizar por estado del viaje: (SIN CAMBIOS)
             List<Reserva> viajesProximos = reservas.stream()
                     .filter(r -> r.getViaje().getEstado() == EstadoDeViaje.DISPONIBLE ||
@@ -600,8 +604,11 @@ public class ControladorReserva {
                     .collect(Collectors.toList());
 
             List<Reserva> viajesFinalizados = reservas.stream()
-                    .filter(r -> r.getViaje().getEstado() == EstadoDeViaje.FINALIZADO ||
-                            r.getViaje().getEstado() == EstadoDeViaje.CANCELADO)
+                    .filter(r -> r.getViaje().getEstado() == EstadoDeViaje.FINALIZADO)
+                    .sorted((r1, r2) -> r2.getViaje().getFechaHoraDeSalida().compareTo(r1.getViaje().getFechaHoraDeSalida()))
+                    .collect(Collectors.toList());
+
+            List<Reserva> viajesCancelados = reservasCanceladas.stream()
                     .sorted((r1, r2) -> r2.getViaje().getFechaHoraDeSalida().compareTo(r1.getViaje().getFechaHoraDeSalida()))
                     .collect(Collectors.toList());
 
@@ -631,9 +638,15 @@ public class ControladorReserva {
                     })
                     .collect(Collectors.toList());
 
+
+            List<ViajeConfirmadoViajeroDTO> canceladosDTO = viajesCancelados.stream()
+                    .map(ViajeConfirmadoViajeroDTO::new)
+                    .collect(Collectors.toList());
+
             model.put("viajesProximos", proximosDTO);
             model.put("viajesEnCurso", enCursoDTO);
             model.put("viajesFinalizados", finalizadosDTO);
+            model.put("viajesCancelados", canceladosDTO);
 
             return new ModelAndView("misViajes", model);
 
@@ -783,5 +796,54 @@ public class ControladorReserva {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return new ModelAndView("redirect:/reserva/misReservasActivas");
         }
+    }
+
+    @GetMapping("/cancelar/{idReserva}")
+    public ModelAndView irACancelarReserva(@PathVariable Long idReserva, HttpSession session) {
+        ModelMap model = new ModelMap();
+        Object usuarioIdObj = session.getAttribute("idUsuario");
+        String rol = (String) session.getAttribute("ROL");
+
+        if (usuarioIdObj == null || !"VIAJERO".equalsIgnoreCase(rol)) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        Long viajeroId = (Long) usuarioIdObj;
+        try {
+            Reserva reserva = servicioReserva.obtenerReservaPorId(idReserva);
+
+            if (!reserva.getViajero().getId().equals(viajeroId)) {
+                throw new UsuarioNoAutorizadoException("No puede acceder a esta reserva.");
+            }
+
+            model.put("reserva", reserva);
+            model.put("viaje", reserva.getViaje());
+            return new ModelAndView("cancelarReserva", model);
+
+        } catch (Exception e) {
+            model.put("error", "No se pudo acceder a la reserva.");
+            return new ModelAndView("errorCancelarReserva", model);
+        }
+    }
+
+    @PostMapping("/cancelar/{id}")
+    public ModelAndView cancelarReservaViajero(@PathVariable Long id, HttpSession session) {
+        Long viajeroId = (Long) session.getAttribute("idUsuario");
+        ModelAndView mav = new ModelAndView("cancelarReservaViajero");
+
+        try {
+            Usuario usuarioEnSesion = servicioViajero.obtenerViajero(viajeroId);
+            Reserva reserva = servicioReserva.cancelarReservaPorViajero(id, usuarioEnSesion);
+
+            mav.addObject("reserva", reserva);
+            mav.addObject("viaje", reserva.getViaje());
+            mav.addObject("exito", true);
+            mav.addObject("mensaje", "Tu reserva fue cancelada exitosamente.");
+        } catch (Exception e) {
+            mav.addObject("exito", false);
+            mav.addObject("mensaje", e.getMessage());
+        }
+
+        return mav;
     }
 }

@@ -1,10 +1,11 @@
 package com.tallerwebi.dominio.ServiceImpl;
 
-import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.*;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
+import com.tallerwebi.dominio.Enums.EstadoPago;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.Enums.TipoNotificacion;
+import com.tallerwebi.dominio.IRepository.RepositorioHistorialReserva;
 import com.tallerwebi.dominio.IRepository.RepositorioParada;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
@@ -36,17 +37,19 @@ public class ServicioViajeImpl implements ServicioViaje {
     private RepositorioParada repositorioParada;
     private ReservaRepository reservaRepository;
     private ServicioNotificacion servicioNotificacion;
+    private RepositorioHistorialReserva repositorioHistorialReserva;
 
     @Autowired
     public ServicioViajeImpl(ViajeRepository viajeRepository, ServicioConductor servicioConductor,
                              ServicioVehiculo servicioVehiculo, RepositorioParada repositorioParada,
-                             ReservaRepository reservaRepository, ServicioNotificacion servicioNotificacion) {
+                             ReservaRepository reservaRepository, ServicioNotificacion servicioNotificacion, RepositorioHistorialReserva repositorioHistorialReserva) {
         this.viajeRepository = viajeRepository;
         this.servicioConductor = servicioConductor;
         this.servicioVehiculo = servicioVehiculo;
         this.repositorioParada = repositorioParada;
         this.reservaRepository = reservaRepository;
         this.servicioNotificacion = servicioNotificacion;
+        this.repositorioHistorialReserva = repositorioHistorialReserva;
     }
 
     @Override
@@ -494,5 +497,81 @@ public class ServicioViajeImpl implements ServicioViaje {
             }
         }
     }
+
+    @Override
+    public void cancelarViajeConReservasPagadas(Long id, Usuario usuarioEnSesion)
+        throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeNoCancelableException {
+    
+    // Valida que el usuario sea conductor
+    if (usuarioEnSesion.getRol() == null || !usuarioEnSesion.getRol().equalsIgnoreCase("CONDUCTOR")) {
+        throw new UsuarioNoAutorizadoException("Solo los conductores pueden cancelar viajes.");
+    }
+
+    // Buscar viaje
+    Optional<Viaje> viajeOpt = viajeRepository.findById(id);
+    if (viajeOpt.isEmpty()) {
+        throw new ViajeNoEncontradoException("No se encontró un viaje con ese ID.");
+    }
+
+    Viaje viaje = viajeOpt.get();
+
+    // valida que el viaje pertenezca al conductor
+    if (!viaje.getConductor().getId().equals(usuarioEnSesion.getId())) {
+        throw new UsuarioNoAutorizadoException("El viaje debe pertenecer al conductor.");
+    }
+
+    if (!(viaje.getEstado() == EstadoDeViaje.DISPONIBLE || viaje.getEstado() == EstadoDeViaje.COMPLETO)) {
+        throw new ViajeNoCancelableException("El viaje no puede cancelarse en este estado.");
+    }
+
+    // obitnen las reservas asociadas
+    List<Reserva> reservas = reservaRepository.findByViaje(viaje);
+
+    for (Reserva reserva : reservas) {
+        // Solo cancelar si está CONFIRMADA o PENDIENTE (y pagada o no)
+        if (reserva.getEstado() == EstadoReserva.CONFIRMADA || reserva.getEstado() == EstadoReserva.PENDIENTE) {
+            EstadoReserva estadoAnterior = reserva.getEstado();
+            reserva.setEstado(EstadoReserva.CANCELADA_POR_CONDUCTOR);
+
+            // Si estaba pagada, mantenemos el estado de pago o lo marcamos como “reembolso pendiente”
+            if (reserva.getEstadoPago() == EstadoPago.PAGADO) {
+                reserva.setEstadoPago(EstadoPago.REEMBOLSO_PENDIENTE);
+            }
+
+            // guardar cambios
+            reservaRepository.update(reserva);
+
+            // registrar historial
+            HistorialReserva historial = new HistorialReserva();
+            historial.setReserva(reserva);
+            historial.setViaje(viaje);
+            historial.setViajero(reserva.getViajero());
+            historial.setConductor(usuarioEnSesion);
+            historial.setFechaEvento(LocalDateTime.now());
+            historial.setEstadoAnterior(estadoAnterior);
+            historial.setEstadoNuevo(reserva.getEstado());
+            repositorioHistorialReserva.save(historial);
+
+            // Enviar notificación al viajero
+            try {
+                String mensaje = String.format(
+                        "El viaje a %s ha sido CANCELADO por el conductor. Tu reserva fue cancelada%s.",
+                        viaje.getDestino().getNombre(),
+                        (reserva.getEstadoPago() == EstadoPago.REEMBOLSO_PENDIENTE)
+                                ? " y el reembolso será procesado próximamente" : ""
+                );
+
+                String url = "/reserva/misReservasActivas";
+                servicioNotificacion.crearYEnviar(reserva.getViajero(), TipoNotificacion.VIAJE_CANCELADO, mensaje, url);
+            } catch (Exception e) {
+                System.err.println("Error al enviar notificación de cancelación: " + e.getMessage());
+            }
+        }
+    }
+
+    //cancela el viaje
+    viaje.setEstado(EstadoDeViaje.CANCELADO);
+    viajeRepository.modificarViaje(viaje);
+}
 
 }
