@@ -36,6 +36,7 @@ public class ControladorViajeroTest {
     public void init() throws NotFoundException {
         servicioViajeroMock = mock(ServicioViajero.class);
         servicioNotificacionMock = mock(ServicioNotificacion.class);
+        servicioReservaMock = mock(ServicioReserva.class);
         controladorViajero = new ControladorViajero(servicioViajeroMock, servicioNotificacionMock, servicioReservaMock);
         sessionMock = mock(HttpSession.class);
         viajeroMock = mock(Viajero.class);
@@ -44,10 +45,6 @@ public class ControladorViajeroTest {
         when(viajeroMock.getNombre()).thenReturn("Juan Pérez");
         when(servicioNotificacionMock.contarNoLeidas(anyLong())).thenReturn(3L);
     }
-
-    // =================================================================================
-    // Tests: irAHome (GET /home)
-    // =================================================================================
 
     @Test
     void siUsuarioNoEstaEnSesionEnHomeDeberiaRedirigirALoginCentral() throws UsuarioInexistente{
