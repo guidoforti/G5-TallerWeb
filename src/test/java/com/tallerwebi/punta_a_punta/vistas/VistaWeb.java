@@ -26,6 +26,14 @@ public class VistaWeb {
         this.obtenerElemento(selectorCSS).click();
     }
 
+    protected void darClickEnPrimerElemento(String selectorCSS){
+        page.locator(selectorCSS).first().click();
+    }
+
+    protected void darClickEnUltimoElemento(String selectorCSS){
+        page.locator(selectorCSS).last().click();
+    }
+
     protected void escribirEnElElemento(String selectorCSS, String texto){
         this.obtenerElemento(selectorCSS).fill(texto);
     }

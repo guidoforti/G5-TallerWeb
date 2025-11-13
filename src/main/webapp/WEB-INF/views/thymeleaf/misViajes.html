@@ -279,6 +279,7 @@
 
                                 <div class="col-md-5 d-flex flex-column justify-content-center align-items-end">
                                     <a th:if="${viaje.valoracionPendiente}"
+                                       th:id="'btn-valorar-conductor-' + ${viaje.viajeId}"
                                        th:href="@{/valoraciones/conductor/form(viajeId=${viaje.viajeId})}"
                                        class="btn btn-unrumbo-detail fw-bold mb-2">
                                         <i class="fas fa-star me-1"></i> Valorar Conductor

@@ -17,4 +17,9 @@ public class VistaMisViajes extends VistaWeb {
         // Click on a specific trip's detail button using unique ID
         darClickEnElElemento("#btn-ver-detalle-viaje-" + viajeId);
     }
+
+    public void darClickEnValorarConductor(Long viajeId) {
+        // Click on the rate conductor button for a specific trip
+        darClickEnElElemento("#btn-valorar-conductor-" + viajeId);
+    }
 }

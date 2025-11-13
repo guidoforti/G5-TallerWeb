@@ -13,7 +13,7 @@ public class VistaMisReservas extends VistaWeb {
     }
 
     public void darClickEnAceptarReserva() {
-        darClickEnElElemento("#btn-aceptar-reserva");
+        darClickEnUltimoElemento("#btn-aceptar-reserva");
     }
 
     public void darClickEnRechazarReserva() {
@@ -25,7 +25,8 @@ public class VistaMisReservas extends VistaWeb {
     }
 
     public void darClickEnConfirmarAceptar() {
-        darClickEnElElemento("#btn-confirmar-aceptar");
+        // Click the confirm button inside the currently visible modal
+        darClickEnElElemento(".modal.show #btn-confirmar-aceptar");
     }
 
     public String obtenerMensajeExito() {
