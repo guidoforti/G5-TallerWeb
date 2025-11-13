@@ -62,7 +62,7 @@ public class WorkflowCompletoE2E {
 
         // WHEN - Conductor creates vehicle
         VistaHomeConductor conductorHome = new VistaHomeConductor(conductorPage);
-        cuandoElConductorNavegaARegistrarVehiculo();
+        cuandoElConductorNavegaARegistrarVehiculo(conductorHome);
 
         VistaRegistrarVehiculo vistaVehiculo = new VistaRegistrarVehiculo(conductorPage);
         cuandoElConductorRegistraVehiculo(vistaVehiculo, "Toyota Corolla", "2020", "XYZ789", "4");
@@ -113,17 +113,19 @@ public class WorkflowCompletoE2E {
         cuandoElConductorCambiaFechaDeViaje(vistaEditar, fechaAhora);
 
         // ==================== FASE 5: CONDUCTOR INICIA VIAJE ====================
-        // WHEN - Conductor navigates to trip detail and starts trip
-        conductorPage.navigate("localhost:8080/spring/viaje/detalle?id=4");
-        conductorPage.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
+        // WHEN - After editing, conductor is redirected to listar viajes page
+        // Conductor clicks "Ver Detalle" button to view trip details
+        VistaListarViajesConductor vistaListar = new VistaListarViajesConductor(conductorPage);
+        cuandoElConductorNavegaADetalleViaje(vistaListar, 4L);
 
         VistaDetalleViaje conductorDetalle = new VistaDetalleViaje(conductorPage);
         cuandoElConductorIniciaViaje(conductorDetalle);
 
         // ==================== FASE 6: CONDUCTOR FINALIZA VIAJE ====================
-        // WHEN - Conductor navigates back to trip detail and finishes trip
-        conductorPage.navigate("localhost:8080/spring/viaje/detalle?id=4");
-        conductorPage.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
+        // WHEN - After starting trip, conductor is on accionViajeCompletada page
+        // Conductor clicks "Ver Detalle del Viaje" button to return to trip details
+        VistaAccionViajeCompletada vistaAccionIniciada = new VistaAccionViajeCompletada(conductorPage);
+        cuandoElConductorNavegaADetalleViajeDesdeAccion(vistaAccionIniciada);
 
         conductorDetalle = new VistaDetalleViaje(conductorPage);
         cuandoElConductorFinalizaViaje(conductorDetalle);
@@ -164,8 +166,13 @@ public class WorkflowCompletoE2E {
         conductorPage.waitForURL("**/conductor/home**");
     }
 
-    private void cuandoElConductorNavegaARegistrarVehiculo() {
-        conductorPage.navigate("localhost:8080/spring/vehiculos/registrar");
+    private void cuandoElConductorNavegaARegistrarVehiculo(VistaHomeConductor home) {
+        home.darClickEnVerVehiculos();
+        conductorPage.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
+
+        VistaListarVehiculos vistaListar = new VistaListarVehiculos(conductorPage);
+        vistaListar.darClickEnRegistrarVehiculo();
+        conductorPage.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
     }
 
     private void cuandoElConductorRegistraVehiculo(VistaRegistrarVehiculo vista,
@@ -251,6 +258,16 @@ public class WorkflowCompletoE2E {
         // Wait for Tom Select and form to be fully initialized
         conductorPage.waitForSelector("#btn-guardar-cambios",
             new Page.WaitForSelectorOptions().setTimeout(10000));
+    }
+
+    private void cuandoElConductorNavegaADetalleViaje(VistaListarViajesConductor vista, Long viajeId) {
+        vista.darClickEnVerDetalleViaje(viajeId);
+        conductorPage.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
+    }
+
+    private void cuandoElConductorNavegaADetalleViajeDesdeAccion(VistaAccionViajeCompletada vista) {
+        vista.darClickEnVerDetalleViaje();
+        conductorPage.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
     }
 
     private void cuandoElConductorCambiaFechaDeViaje(VistaEditarViaje vista, String nuevaFecha) {

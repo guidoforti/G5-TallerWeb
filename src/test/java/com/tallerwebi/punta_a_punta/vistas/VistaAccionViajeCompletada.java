@@ -13,6 +13,6 @@ public class VistaAccionViajeCompletada extends VistaWeb {
     }
 
     public void darClickEnVerDetalleViaje() {
-        darClickEnElElemento(".btn-unrumbo");
+        darClickEnElElemento("#btn-ver-detalle-viaje");
     }
 }
