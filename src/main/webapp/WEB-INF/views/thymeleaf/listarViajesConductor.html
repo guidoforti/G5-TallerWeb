@@ -80,7 +80,8 @@
                                         </a>
 
                                         <th:block th:if="${viaje.estado == 'DISPONIBLE'}">
-                                            <a th:href="@{/viaje/editar/{id}(id=${viaje.id})}"
+                                            <a th:id="'btn-editar-viaje-' + ${viaje.id}"
+                                               th:href="@{/viaje/editar/{id}(id=${viaje.id})}"
                                                class="btn btn-sm btn-info fw-bold flex-fill">
                                                 <i class="bi bi-pencil-square"></i> Editar
                                             </a>

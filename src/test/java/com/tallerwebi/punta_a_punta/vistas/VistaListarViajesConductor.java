@@ -11,4 +11,8 @@ public class VistaListarViajesConductor extends VistaWeb {
     public void darClickEnVerDetalleViaje(Long viajeId) {
         darClickEnElElemento("#btn-ver-detalle-viaje-" + viajeId);
     }
+
+    public void darClickEnEditarViaje(Long viajeId) {
+        darClickEnElElemento("#btn-editar-viaje-" + viajeId);
+    }
 }

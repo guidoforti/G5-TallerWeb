@@ -105,8 +105,9 @@ public class WorkflowCompletoE2E {
         cuandoElConductorAceptaReserva(vistaReservas);
 
         // ==================== FASE 4: CONDUCTOR EDITA VIAJE A NOW ====================
-        // WHEN - Conductor edits trip to change departure time to NOW
-        cuandoElConductorNavegaAEditarViaje(4L); // Trip ID 4 (the one we created)
+        // WHEN - After accepting reservation, conductor navigates to "Mis Viajes" and edits trip
+        conductorHome = new VistaHomeConductor(conductorPage);
+        cuandoElConductorNavegaAEditarViaje(conductorHome, 4L); // Trip ID 4 (the one we created)
 
         VistaEditarViaje vistaEditar = new VistaEditarViaje(conductorPage);
         String fechaAhora = obtenerFechaAhoraFormateada();
@@ -252,8 +253,12 @@ public class WorkflowCompletoE2E {
         conductorPage.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
     }
 
-    private void cuandoElConductorNavegaAEditarViaje(Long viajeId) {
-        conductorPage.navigate("localhost:8080/spring/viaje/editar/" + viajeId);
+    private void cuandoElConductorNavegaAEditarViaje(VistaHomeConductor home, Long viajeId) {
+        home.darClickEnMisViajes();
+        conductorPage.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
+
+        VistaListarViajesConductor vistaListar = new VistaListarViajesConductor(conductorPage);
+        vistaListar.darClickEnEditarViaje(viajeId);
         conductorPage.waitForLoadState(com.microsoft.playwright.options.LoadState.NETWORKIDLE);
         // Wait for Tom Select and form to be fully initialized
         conductorPage.waitForSelector("#btn-guardar-cambios",
