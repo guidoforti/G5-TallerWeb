@@ -582,62 +582,116 @@ public class ServicioReservaImpl implements ServicioReserva {
     }
 
     @Override
-    public void generarReembolsoDeReservaTotal(Long reservaId, Long paymentId) throws MPException, MPApiException {
+    public void generarReembolsoDeReservaTotal(Long reservaId, Long paymentId) throws MPException, MPApiException, NotFoundException {
 
-        Optional<Reserva> reserva = reservaRepository.findById(reservaId);
-
-        if (reserva.isEmpty()) {
+        Optional<Reserva> reservaOpt = reservaRepository.findById(reservaId);
+        if (reservaOpt.isEmpty()) {
             throw new NotFoundException("no se encontro una reserva co nese id " + reservaId);
         }
-        if (!reserva.get().getEstadoPago().equals(EstadoPago.PAGADO)) {
+        Reserva reserva = reservaOpt.get();
+
+        if (!reserva.getEstadoPago().equals(EstadoPago.PAGADO)) {
+            System.err.println("[DEBUG] REEMBOLSO TOTAL: La reserva " + reservaId + " no está pagada. No se reembolsa.");
             return;
         }
 
-        paymentRefundClient.refund(paymentId);
-        reserva.get().setEstadoPago(EstadoPago.REEMBOLSADA);
-        reservaRepository.update(reserva.get());
+        // --- DEBUG CON TRY-CATCH ---
+        try {
+            System.out.println("[DEBUG] Intentando reembolso TOTAL para Payment ID: " + paymentId);
+            paymentRefundClient.refund(paymentId);
+
+            System.out.println("[DEBUG] Reembolso TOTAL exitoso.");
+            reserva.setEstadoPago(EstadoPago.REEMBOLSADA); // O REEMBOLSO_PENDIENTE
+
+        } catch (MPApiException e) {
+            // ¡ESTO IMPRIMIRÁ EL ERROR REAL!
+            System.err.println("************************************************************");
+            System.err.println("[DEBUG] CATCH: ¡FALLÓ REEMBOLSO TOTAL! MPApiException");
+            System.err.println("STATUS CODE: " + e.getStatusCode());
+            System.err.println("API RESPONSE: " + e.getApiResponse().getContent());
+            System.err.println("************************************************************");
+            // Lanzamos la excepción para que el controlador la maneje
+            throw e;
+
+        } catch (MPException e) {
+            System.err.println("************************************************************");
+            System.err.println("[DEBUG] CATCH: ¡FALLÓ REEMBOLSO TOTAL! MPException (SDK Error)");
+            System.err.println("MENSAJE: " + e.getMessage());
+            System.err.println("************************************************************");
+            throw e;
+        }
+        // --- FIN DEBUG ---
+
+        reservaRepository.update(reserva);
     }
 
     @Override
-    public void generarReembolsoDeReservaParcial(Long reservaId, Long paymentId) throws MPException, MPApiException {
-        Optional<Reserva> reserva = reservaRepository.findById(reservaId);
+    public void generarReembolsoDeReservaParcial(Long reservaId, Long paymentId) throws MPException, MPApiException, NotFoundException {
+        Optional<Reserva> reservaOpt = reservaRepository.findById(reservaId);
 
-        if (reserva.isEmpty()) {
+        if (reservaOpt.isEmpty()) {
             throw new NotFoundException("no se encontro una reserva co nese id " + reservaId);
         }
-        if (!reserva.get().getEstadoPago().equals(EstadoPago.PAGADO)) {
+        Reserva reserva = reservaOpt.get(); // Obtenemos la reserva
+
+        if (!reserva.getEstadoPago().equals(EstadoPago.PAGADO)) {
+            System.err.println("[DEBUG] REEMBOLSO PARCIAL: La reserva " + reservaId + " no está pagada. No se reembolsa.");
             return;
         }
-        LocalDateTime fechaYHoraDeCancelacion = LocalDateTime.now();
-        Long diasRestantesParaElViaje = Duration.between(fechaYHoraDeCancelacion, reserva.get().getViaje().getFechaHoraDeSalida()).toDays();
 
+        // 1. Lógica de Tiempo (Tu código está perfecto)
+        LocalDateTime fechaYHoraDeCancelacion = LocalDateTime.now();
+        Long diasRestantesParaElViaje = Duration.between(fechaYHoraDeCancelacion, reserva.getViaje().getFechaHoraDeSalida()).toDays();
 
         BigDecimal montoReembolso = null; // null = 100%
 
         if (diasRestantesParaElViaje >= 7) {
             montoReembolso = null;
-
-        } else if (diasRestantesParaElViaje >= 1) { // "mas de 1 dia y menos de 7" (1-6 dias)
-
-            BigDecimal precioTotal = new BigDecimal(reserva.get().getViaje().getPrecio());
+        } else if (diasRestantesParaElViaje >= 1) {
+            BigDecimal precioTotal = new BigDecimal(reserva.getViaje().getPrecio());
             montoReembolso = precioTotal.divide(new BigDecimal(2));
-
         } else {
             montoReembolso = BigDecimal.ZERO;
         }
 
-        if (montoReembolso == null) {
-            paymentRefundClient.refund(paymentId);
-        } else if (montoReembolso.compareTo(BigDecimal.ZERO) > 0) {
-            paymentRefundClient.refund(paymentId, montoReembolso);
-        }
+        // --- DEBUG CON TRY-CATCH ---
+        try {
+            if (montoReembolso == null) {
+                // 100%
+                System.out.println("[DEBUG] Reembolso 100%. Intentando reembolso TOTAL para Payment ID: " + paymentId);
+                paymentRefundClient.refund(paymentId);
+                reserva.setEstadoPago(EstadoPago.REEMBOLSADA); // O REEMBOLSO_PENDIENTE
 
-        if (montoReembolso != null && montoReembolso.equals(BigDecimal.ZERO)) {
-            reserva.get().setEstadoPago(EstadoPago.NO_CORRESPONDE_REMBOLSO);
-        } else  {
-            reserva.get().setEstadoPago(EstadoPago.REEMBOLSADA);
-        }
+            } else if (montoReembolso.compareTo(BigDecimal.ZERO) > 0) {
+                // 50% (Parcial)
+                System.out.println("[DEBUG] Reembolso 50%. Intentando reembolso PARCIAL de " + montoReembolso + " para Payment ID: " + paymentId);
+                paymentRefundClient.refund(paymentId, montoReembolso);
+                reserva.setEstadoPago(EstadoPago.REEMBOLSADA); // O REEMBOLSO_PENDIENTE
 
-        reservaRepository.update(reserva.get());
+            } else {
+                // 0% (montoReembolso es ZERO)
+                System.out.println("[DEBUG] Reembolso 0%. No se llama a la API de MP.");
+                reserva.setEstadoPago(EstadoPago.NO_CORRESPONDE_REMBOLSO);
+            }
+
+        } catch (MPApiException e) {
+            // ¡ESTO IMPRIMIRÁ EL ERROR REAL!
+            System.err.println("************************************************************");
+            System.err.println("[DEBUG] CATCH: ¡FALLÓ REEMBOLSO PARCIAL! MPApiException");
+            System.err.println("STATUS CODE: " + e.getStatusCode());
+            System.err.println("API RESPONSE: " + e.getApiResponse().getContent());
+            System.err.println("************************************************************");
+            throw e;
+
+        } catch (MPException e) {
+            System.err.println("************************************************************");
+            System.err.println("[DEBUG] CATCH: ¡FALLÓ REEMBOLSO PARCIAL! MPException (SDK Error)");
+            System.err.println("MENSAJE: " + e.getMessage());
+            System.err.println("************************************************************");
+            throw e;
+        }
+        // --- FIN DEBUG ---
+
+        reservaRepository.update(reserva);
     }
 }
