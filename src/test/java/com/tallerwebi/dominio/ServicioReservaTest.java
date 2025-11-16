@@ -10,6 +10,7 @@ import com.tallerwebi.dominio.Entity.*;
 import com.tallerwebi.dominio.Enums.*;
 import com.tallerwebi.dominio.IRepository.RepositorioHistorialReserva;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
+import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
 import com.tallerwebi.dominio.IServicio.ServicioViaje;
@@ -41,7 +42,7 @@ class ServicioReservaTest {
 
     private ReservaRepository repositorioReservaMock;
     private ServicioReserva servicioReserva;
-    private ServicioViaje servicioViaje;
+    private ViajeRepository viajeRepositoryMock;
     private ServicioViajero servicioViajero;
     private RepositorioHistorialReserva repositorioHistorialReserva;
     private PreferenceClient preferenceClient;
@@ -51,13 +52,13 @@ class ServicioReservaTest {
     @BeforeEach
     void setUp() {
         repositorioReservaMock = mock(ReservaRepository.class);
-        servicioViaje = mock(ServicioViaje.class);
+        viajeRepositoryMock = mock(ViajeRepository.class);
         servicioViajero = mock(ServicioViajero.class);
         repositorioHistorialReserva = mock(RepositorioHistorialReserva.class);
         preferenceClient = mock(PreferenceClient.class);
         servicioNotificacionMock = mock(ServicioNotificacion.class);
         reunfClientMock = mock(PaymentRefundClient.class);
-        servicioReserva = new ServicioReservaImpl(repositorioReservaMock, servicioViaje, servicioViajero, repositorioHistorialReserva,preferenceClient, servicioNotificacionMock, reunfClientMock);
+        servicioReserva = new ServicioReservaImpl(repositorioReservaMock, viajeRepositoryMock, servicioViajero, repositorioHistorialReserva,preferenceClient, servicioNotificacionMock, reunfClientMock);
     }
 
     // --- TESTS DE SOLICITAR RESERVA ---
@@ -69,7 +70,7 @@ class ServicioReservaTest {
         Viajero viajero = crearViajeroMock(1L);
 
         when(repositorioReservaMock.findByViajeAndViajero(viaje, viajero)).thenReturn(Optional.empty());
-        when(servicioViaje.obtenerViajePorId(viaje.getId())).thenReturn(viaje);
+        when(viajeRepositoryMock.findById(viaje.getId())).thenReturn(Optional.of(viaje));
         when(servicioViajero.obtenerViajero(viajero.getId())).thenReturn(viajero);
         when(repositorioReservaMock.save(any(Reserva.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -82,7 +83,7 @@ class ServicioReservaTest {
         assertThat(reserva.getEstado(), is(EstadoReserva.PENDIENTE));
         assertThat(reserva.getFechaSolicitud(), notNullValue());
         verify(repositorioReservaMock, times(1)).findByViajeAndViajero(viaje, viajero);
-        verify(servicioViaje, times(1)).obtenerViajePorId(viaje.getId());
+        verify(viajeRepositoryMock, times(1)).findById(viaje.getId());
         verify(servicioViajero, times(1)).obtenerViajero(viajero.getId());
         verify(repositorioReservaMock, times(1)).save(any(Reserva.class));
     }
@@ -273,7 +274,7 @@ class ServicioReservaTest {
 
         List<Reserva> reservasConfirmadas = Arrays.asList(reserva1, reserva2);
 
-        when(servicioViaje.obtenerViajePorId(viajeId)).thenReturn(viaje);
+        when(viajeRepositoryMock.findById(viajeId)).thenReturn(Optional.of(viaje));
         when(repositorioReservaMock.findConfirmadasByViaje(viaje)).thenReturn(reservasConfirmadas);
 
         // when
@@ -283,7 +284,7 @@ class ServicioReservaTest {
         assertThat(resultado, hasSize(2));
         assertThat(resultado.get(0).getViajero().getNombre(), is("Juan Perez"));
         assertThat(resultado.get(1).getViajero().getNombre(), is("Maria Lopez"));
-        verify(servicioViaje, times(1)).obtenerViajePorId(viajeId);
+        verify(viajeRepositoryMock, times(1)).findById(viajeId);
         verify(repositorioReservaMock, times(1)).findConfirmadasByViaje(viaje);
     }
 
@@ -300,7 +301,7 @@ class ServicioReservaTest {
         Viaje viaje = crearViajeMock(viajeId, 2, EstadoDeViaje.DISPONIBLE, LocalDateTime.now().plusDays(1));
         viaje.setConductor(otroConductor);
 
-        when(servicioViaje.obtenerViajePorId(viajeId)).thenReturn(viaje);
+        when(viajeRepositoryMock.findById(viajeId)).thenReturn(Optional.of(viaje));
 
         // when & then
         assertThrows(UsuarioNoAutorizadoException.class, () -> {
@@ -316,7 +317,7 @@ class ServicioReservaTest {
         Long viajeId = 999L;
         Long conductorId = 1L;
 
-        when(servicioViaje.obtenerViajePorId(viajeId)).thenThrow(new ViajeNoEncontradoException("No se encontró el viaje"));
+        when(viajeRepositoryMock.findById(viajeId)).thenReturn(Optional.empty());
 
         // when & then
         assertThrows(ViajeNoEncontradoException.class, () -> {
@@ -540,7 +541,7 @@ class ServicioReservaTest {
         reserva.setViajero(viajeroMock);
 
         when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
-        when(servicioViaje.obtenerViajePorId(viaje.getId())).thenReturn(viaje);
+        when(viajeRepositoryMock.findById(viaje.getId())).thenReturn(Optional.of(viaje));
 
         // when
         servicioReserva.confirmarReserva(reservaId, conductorId);
@@ -1246,7 +1247,7 @@ class ServicioReservaTest {
 
         // 3. Configurar Mocks para el flujo exitoso
         when(repositorioReservaMock.findByViajeAndViajero(viaje, viajero)).thenReturn(Optional.empty());
-        when(servicioViaje.obtenerViajePorId(viaje.getId())).thenReturn(viaje);
+        when(viajeRepositoryMock.findById(viaje.getId())).thenReturn(Optional.of(viaje));
         when(servicioViajero.obtenerViajero(viajero.getId())).thenReturn(viajero);
 
         // El save debe devolver la misma Reserva (ahora "Managed")

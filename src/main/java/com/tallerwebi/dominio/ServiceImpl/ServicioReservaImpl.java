@@ -16,24 +16,19 @@ import com.tallerwebi.dominio.Enums.EstadoPago;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.Enums.TipoNotificacion;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
+import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
-import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.dominio.IServicio.ServicioViajero;
 import com.tallerwebi.dominio.excepcion.*;
-import com.tallerwebi.presentacion.DTO.OutputsDTO.NotificacionOutputDTO;
-import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.tallerwebi.dominio.Entity.HistorialReserva;
 import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.IRepository.RepositorioHistorialReserva;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
-import java.rmi.server.RemoteServer;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -47,20 +42,20 @@ import java.util.stream.Collectors;
 public class ServicioReservaImpl implements ServicioReserva {
 
     private final ReservaRepository reservaRepository;
-    private final ServicioViaje servicioViaje;
     private final ServicioViajero servicioViajero;
     private final RepositorioHistorialReserva repositorioHistorialReserva;
     private final PreferenceClient preferenceClient;
     private final ServicioNotificacion servicioNotificacion;
     private final PaymentRefundClient paymentRefundClient;
+    private final ViajeRepository viajeRepository;
 
     @Autowired
-    public ServicioReservaImpl(ReservaRepository reservaRepository, ServicioViaje servicioViaje, ServicioViajero servicioViajero,
+    public ServicioReservaImpl(ReservaRepository reservaRepository, ViajeRepository viajeRepository, ServicioViajero servicioViajero,
                                RepositorioHistorialReserva repositorioHistorialReserva, PreferenceClient preferenceClient, ServicioNotificacion servicioNotificacion,
                                PaymentRefundClient paymentRefundClient) {
         this.reservaRepository = reservaRepository;
-        this.servicioViaje = servicioViaje;
         this.servicioViajero = servicioViajero;
+        this.viajeRepository = viajeRepository;
         this.repositorioHistorialReserva = repositorioHistorialReserva;
         this.preferenceClient = preferenceClient;
         this.servicioNotificacion = servicioNotificacion;
@@ -82,12 +77,12 @@ public class ServicioReservaImpl implements ServicioReserva {
         validarViajeNoIniciado(viaje);
 
         // Recargar entidades para asegurar que estén managed en la sesión actual
-        Viaje viajeManaged = servicioViaje.obtenerViajePorId(viaje.getId());
+        Optional<Viaje> viajeManaged = viajeRepository.findById(viaje.getId());
         Viajero viajeroManaged = servicioViajero.obtenerViajero(viajero.getId());
 
         // Crear y guardar la reserva con entidades managed
         Reserva reserva = new Reserva();
-        reserva.setViaje(viajeManaged);
+        reserva.setViaje(viajeManaged.get());
         reserva.setViajero(viajeroManaged);
         reserva.setEstado(EstadoReserva.PENDIENTE);
         reserva.setFechaSolicitud(LocalDateTime.now());
@@ -141,8 +136,8 @@ public class ServicioReservaImpl implements ServicioReserva {
 
     @Override
     public List<Viajero> obtenerViajerosConfirmados(Viaje viaje) throws ViajeNoEncontradoException, NotFoundException, UsuarioNoAutorizadoException {
-        Viaje viajeConfirmado = servicioViaje.obtenerViajePorId(viaje.getId());
-        List<Reserva> reservas = reservaRepository.findByViaje(viajeConfirmado);
+        Optional<Viaje> viajeConfirmado = viajeRepository.findById(viaje.getId());
+        List<Reserva> reservas = reservaRepository.findByViaje(viajeConfirmado.orElse(null));
 
         // Inicializar viajeros lazy para evitar LazyInitializationException
         reservas.forEach(reserva -> org.hibernate.Hibernate.initialize(reserva.getViajero()));
@@ -205,10 +200,10 @@ public class ServicioReservaImpl implements ServicioReserva {
         EstadoReserva estadoAnterior = reserva.getEstado();
 
         // Obtener el viaje completo para asegurar que tenga todos los campos (incluido version)
-        Viaje viaje = servicioViaje.obtenerViajePorId(reserva.getViaje().getId());
+        Optional<Viaje> viaje = viajeRepository.findById(reserva.getViaje().getId());
 
         // Decrementar asientos disponibles
-        viaje.setAsientosDisponibles(viaje.getAsientosDisponibles() - 1);
+        viaje.get().setAsientosDisponibles(viaje.get().getAsientosDisponibles() - 1);
 
         // Cambiar estado a CONFIRMADA
         reserva.setEstado(EstadoReserva.CONFIRMADA);
@@ -266,15 +261,19 @@ public class ServicioReservaImpl implements ServicioReserva {
     @Override
     public List<Reserva> listarViajerosConfirmados(Long viajeId, Long conductorId) throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, NotFoundException {
         // Obtener el viaje
-        Viaje viaje = servicioViaje.obtenerViajePorId(viajeId);
+        Optional<Viaje> viaje = viajeRepository.findById(viajeId);
+
+        if (viaje.isEmpty()) {
+            throw new ViajeNoEncontradoException("No se encontro el viaje");
+        }
 
         // Validar que el conductor sea el dueño del viaje
-        if (!viaje.getConductor().getId().equals(conductorId)) {
+        if (!viaje.get().getConductor().getId().equals(conductorId)) {
             throw new UsuarioNoAutorizadoException("No tienes permiso para ver los viajeros de este viaje");
         }
 
         // Obtener reservas confirmadas
-        List<Reserva> reservasConfirmadas = reservaRepository.findConfirmadasByViaje(viaje);
+        List<Reserva> reservasConfirmadas = reservaRepository.findConfirmadasByViaje(viaje.orElse(null));
 
         // Inicializar viajeros lazy para evitar LazyInitializationException en la capa de presentación
         reservasConfirmadas.forEach(reserva -> org.hibernate.Hibernate.initialize(reserva.getViajero()));
