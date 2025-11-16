@@ -1,6 +1,7 @@
 package com.tallerwebi.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mercadopago.client.payment.PaymentRefundClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -83,5 +84,9 @@ public class HibernateConfig {
     @Bean
     public PreferenceClient preferenceClient() {
         return new PreferenceClient();
+    }
+    @Bean
+    public PaymentRefundClient paymentRefundClient () {
+        return new PaymentRefundClient();
     }
 }

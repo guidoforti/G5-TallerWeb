@@ -1,5 +1,6 @@
 package com.tallerwebi.dominio.ServiceImpl;
 
+import com.mercadopago.client.payment.PaymentRefundClient;
 import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
 import com.mercadopago.client.preference.PreferenceClient;
 import com.mercadopago.client.preference.PreferenceItemRequest;
@@ -32,6 +33,8 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
+import java.rmi.server.RemoteServer;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,16 +52,19 @@ public class ServicioReservaImpl implements ServicioReserva {
     private final RepositorioHistorialReserva repositorioHistorialReserva;
     private final PreferenceClient preferenceClient;
     private final ServicioNotificacion servicioNotificacion;
+    private final PaymentRefundClient paymentRefundClient;
 
     @Autowired
     public ServicioReservaImpl(ReservaRepository reservaRepository, ServicioViaje servicioViaje, ServicioViajero servicioViajero,
-                               RepositorioHistorialReserva repositorioHistorialReserva, PreferenceClient preferenceClient, ServicioNotificacion servicioNotificacion) {
+                               RepositorioHistorialReserva repositorioHistorialReserva, PreferenceClient preferenceClient, ServicioNotificacion servicioNotificacion,
+                               PaymentRefundClient paymentRefundClient) {
         this.reservaRepository = reservaRepository;
         this.servicioViaje = servicioViaje;
         this.servicioViajero = servicioViajero;
         this.repositorioHistorialReserva = repositorioHistorialReserva;
         this.preferenceClient = preferenceClient;
         this.servicioNotificacion = servicioNotificacion;
+        this.paymentRefundClient = paymentRefundClient;
     }
 
     @Override
@@ -135,7 +141,7 @@ public class ServicioReservaImpl implements ServicioReserva {
 
     @Override
     public List<Viajero> obtenerViajerosConfirmados(Viaje viaje) throws ViajeNoEncontradoException, NotFoundException, UsuarioNoAutorizadoException {
-        Viaje viajeConfirmado  = servicioViaje.obtenerViajePorId(viaje.getId());
+        Viaje viajeConfirmado = servicioViaje.obtenerViajePorId(viaje.getId());
         List<Reserva> reservas = reservaRepository.findByViaje(viajeConfirmado);
 
         // Inicializar viajeros lazy para evitar LazyInitializationException
@@ -341,7 +347,7 @@ public class ServicioReservaImpl implements ServicioReserva {
         Viajero viajero = servicioViajero.obtenerViajero(viajeroId);
 
         // Definir los estados a buscar
-        List<EstadoReserva> estados = List.of(EstadoReserva.PENDIENTE, EstadoReserva.RECHAZADA , EstadoReserva.CONFIRMADA);
+        List<EstadoReserva> estados = List.of(EstadoReserva.PENDIENTE, EstadoReserva.RECHAZADA, EstadoReserva.CONFIRMADA);
 
         // Obtener las reservas filtradas y ordenadas por fecha de salida del viaje
         List<Reserva> reservas = reservaRepository.findByViajeroAndEstadoInOrderByViajesFechaSalidaAsc(viajero, estados);
@@ -397,8 +403,8 @@ public class ServicioReservaImpl implements ServicioReserva {
     public Preference crearPreferenciaDePago(Long reservaId, Long viajeroId) throws UsuarioInexistente, NotFoundException, UsuarioNoAutorizadoException, BadRequestException, MPException, MPApiException, AccionNoPermitidaException {
 
         Viajero viajero = servicioViajero.obtenerViajero(viajeroId);
-        Optional <Reserva> reservaOpt = reservaRepository.findById(reservaId);
-        if (reservaOpt.isEmpty()){
+        Optional<Reserva> reservaOpt = reservaRepository.findById(reservaId);
+        if (reservaOpt.isEmpty()) {
             throw new NotFoundException("la reserva con id : " + reservaId + " no existe");
         }
         if (reservaOpt.get().getViajero().getId() != viajero.getId()) {
@@ -444,7 +450,7 @@ public class ServicioReservaImpl implements ServicioReserva {
     }
 
     @Override
-    public Reserva confirmarPagoReserva(Long reservaId, Long viajeroId , String paymentId) throws NotFoundException, UsuarioNoAutorizadoException, AccionNoPermitidaException {
+    public Reserva confirmarPagoReserva(Long reservaId, Long viajeroId, Long paymentId) throws NotFoundException, UsuarioNoAutorizadoException, AccionNoPermitidaException {
 
         Reserva reserva = reservaRepository.findById(reservaId)
                 .orElseThrow(() -> new NotFoundException("La reserva " + reservaId + " no existe."));
@@ -472,6 +478,7 @@ public class ServicioReservaImpl implements ServicioReserva {
 
         return reserva;
     }
+
     @Override
     public Boolean tieneReservaActiva(Long viajeroId, Long viajeId) {
         // Definimos qué estados se consideran "activos"
@@ -482,96 +489,156 @@ public class ServicioReservaImpl implements ServicioReserva {
         return reservaRepository.findByViajeroIdAndViajeIdAndEstadoIn(viajeroId, viajeId, estadosActivos).isPresent();
     }
 
-     @Override
+    @Override
     public List<Reserva> listarViajesCanceladosPorViajero(Long viajeroId) throws UsuarioInexistente {
-        
-    Viajero viajero = servicioViajero.obtenerViajero(viajeroId);
 
-    List<Reserva> reservas = reservaRepository.findCanceladasByViajero(viajero);
+        Viajero viajero = servicioViajero.obtenerViajero(viajeroId);
 
-    reservas.forEach(reserva -> {
-        if (reserva.getViaje() != null) {
-            org.hibernate.Hibernate.initialize(reserva.getViaje().getOrigen());
-            org.hibernate.Hibernate.initialize(reserva.getViaje().getDestino());
-            org.hibernate.Hibernate.initialize(reserva.getViaje().getConductor());
-            org.hibernate.Hibernate.initialize(reserva.getViaje().getVehiculo());
-        }
-    });
+        List<Reserva> reservas = reservaRepository.findCanceladasByViajero(viajero);
 
-    return reservas;
+        reservas.forEach(reserva -> {
+            if (reserva.getViaje() != null) {
+                org.hibernate.Hibernate.initialize(reserva.getViaje().getOrigen());
+                org.hibernate.Hibernate.initialize(reserva.getViaje().getDestino());
+                org.hibernate.Hibernate.initialize(reserva.getViaje().getConductor());
+                org.hibernate.Hibernate.initialize(reserva.getViaje().getVehiculo());
+            }
+        });
+
+        return reservas;
     }
 
     @Override
-public Reserva cancelarReservaPorViajero(Long idReserva, Usuario usuarioEnSesion)
-        throws UsuarioNoAutorizadoException, ReservaNoEncontradaException {
+    public Reserva cancelarReservaPorViajero(Long idReserva, Usuario usuarioEnSesion)
+            throws UsuarioNoAutorizadoException, ReservaNoEncontradaException, MPException, MPApiException {
 
-    // Validar que sea viajero
-    if (usuarioEnSesion.getRol() == null || !usuarioEnSesion.getRol().equalsIgnoreCase("VIAJERO")) {
-        throw new UsuarioNoAutorizadoException("Solo los viajeros pueden cancelar sus reservas.");
+        // Validar que sea viajero
+        if (usuarioEnSesion.getRol() == null || !usuarioEnSesion.getRol().equalsIgnoreCase("VIAJERO")) {
+            throw new UsuarioNoAutorizadoException("Solo los viajeros pueden cancelar sus reservas.");
+        }
+
+        Optional<Reserva> reservaOpt = reservaRepository.findById(idReserva);
+        if (reservaOpt.isEmpty()) {
+            throw new ReservaNoEncontradaException("No se encontró la reserva especificada.");
+        }
+
+        Reserva reserva = reservaOpt.get();
+        Viaje viaje = reserva.getViaje();
+
+        // Verificar que la reserva pertenezca al viajero en sesión
+        if (!reserva.getViajero().getId().equals(usuarioEnSesion.getId())) {
+            throw new UsuarioNoAutorizadoException("No puede cancelar una reserva que no le pertenece.");
+        }
+
+        // Verificar estado cancelable
+        if (!(reserva.getEstado() == EstadoReserva.CONFIRMADA || reserva.getEstado() == EstadoReserva.PENDIENTE)) {
+            throw new IllegalStateException("La reserva no puede cancelarse en este estado.");
+        }
+
+        // Guardar estado anterior para el historial
+        EstadoReserva estadoAnterior = reserva.getEstado();
+
+        // Actualizar estado
+        reserva.setEstado(EstadoReserva.CANCELADA_POR_VIAJERO);
+
+        // Cambiar estado de pago
+        if (reserva.getEstadoPago().equals(EstadoPago.PAGADO)) {
+            generarReembolsoDeReservaParcial(reserva.getId() , reserva.getMpIdDePago());
+        }
+
+        reservaRepository.update(reserva);
+
+        // Crear historial
+        HistorialReserva historial = new HistorialReserva();
+        historial.setReserva(reserva);
+        historial.setViaje(viaje);
+        historial.setViajero((Viajero) usuarioEnSesion);
+        historial.setConductor(viaje.getConductor());
+        historial.setFechaEvento(LocalDateTime.now());
+        historial.setEstadoAnterior(estadoAnterior);
+        historial.setEstadoNuevo(reserva.getEstado());
+        repositorioHistorialReserva.save(historial);
+
+        // Enviar notificación al conductor
+        try {
+            String mensaje = String.format(
+                    "El viajero %s ha cancelado su reserva en el viaje hacia %s.",
+                    usuarioEnSesion.getNombre(),
+                    viaje.getDestino().getNombre()
+            );
+
+            String url = "/reserva/misReservas";
+            servicioNotificacion.crearYEnviar(
+                    viaje.getConductor(),
+                    TipoNotificacion.VIAJE_CANCELADO,
+                    mensaje,
+                    url
+            );
+        } catch (Exception e) {
+            System.err.println("Error al enviar notificación al conductor: " + e.getMessage());
+        }
+
+        //  Retornar la reserva actualizada
+        return reserva;
     }
 
-    Optional<Reserva> reservaOpt = reservaRepository.findById(idReserva);
-    if (reservaOpt.isEmpty()) {
-        throw new ReservaNoEncontradaException("No se encontró la reserva especificada.");
+    @Override
+    public void generarReembolsoDeReservaTotal(Long reservaId, Long paymentId) throws MPException, MPApiException {
+
+        Optional<Reserva> reserva = reservaRepository.findById(reservaId);
+
+        if (reserva.isEmpty()) {
+            throw new NotFoundException("no se encontro una reserva co nese id " + reservaId);
+        }
+        if (!reserva.get().getEstadoPago().equals(EstadoPago.PAGADO)) {
+            return;
+        }
+
+        paymentRefundClient.refund(paymentId);
+        reserva.get().setEstadoPago(EstadoPago.REEMBOLSADA);
+        reservaRepository.update(reserva.get());
     }
 
-    Reserva reserva = reservaOpt.get();
-    Viaje viaje = reserva.getViaje();
+    @Override
+    public void generarReembolsoDeReservaParcial(Long reservaId, Long paymentId) throws MPException, MPApiException {
+        Optional<Reserva> reserva = reservaRepository.findById(reservaId);
 
-    // Verificar que la reserva pertenezca al viajero en sesión
-    if (!reserva.getViajero().getId().equals(usuarioEnSesion.getId())) {
-        throw new UsuarioNoAutorizadoException("No puede cancelar una reserva que no le pertenece.");
+        if (reserva.isEmpty()) {
+            throw new NotFoundException("no se encontro una reserva co nese id " + reservaId);
+        }
+        if (!reserva.get().getEstadoPago().equals(EstadoPago.PAGADO)) {
+            return;
+        }
+        LocalDateTime fechaYHoraDeCancelacion = LocalDateTime.now();
+        Long diasRestantesParaElViaje = Duration.between(fechaYHoraDeCancelacion, reserva.get().getViaje().getFechaHoraDeSalida()).toDays();
+
+
+        BigDecimal montoReembolso = null; // null = 100%
+
+        if (diasRestantesParaElViaje >= 7) {
+            montoReembolso = null;
+
+        } else if (diasRestantesParaElViaje >= 1) { // "mas de 1 dia y menos de 7" (1-6 dias)
+
+            BigDecimal precioTotal = new BigDecimal(reserva.get().getViaje().getPrecio());
+            montoReembolso = precioTotal.divide(new BigDecimal(2));
+
+        } else {
+            montoReembolso = BigDecimal.ZERO;
+        }
+
+        if (montoReembolso == null) {
+            paymentRefundClient.refund(paymentId);
+        } else if (montoReembolso.compareTo(BigDecimal.ZERO) > 0) {
+            paymentRefundClient.refund(paymentId, montoReembolso);
+        }
+
+        if (montoReembolso != null && montoReembolso.equals(BigDecimal.ZERO)) {
+            reserva.get().setEstadoPago(EstadoPago.NO_CORRESPONDE_REMBOLSO);
+        } else  {
+            reserva.get().setEstadoPago(EstadoPago.REEMBOLSADA);
+        }
+
+        reservaRepository.update(reserva.get());
     }
-
-    // Verificar estado cancelable
-    if (!(reserva.getEstado() == EstadoReserva.CONFIRMADA || reserva.getEstado() == EstadoReserva.PENDIENTE)) {
-        throw new IllegalStateException("La reserva no puede cancelarse en este estado.");
-    }
-
-    // Guardar estado anterior para el historial
-    EstadoReserva estadoAnterior = reserva.getEstado();
-
-    // Actualizar estado
-    reserva.setEstado(EstadoReserva.CANCELADA_POR_VIAJERO);
-
-    // Cambiar estado de pago
-    if (reserva.getEstadoPago() == EstadoPago.PAGADO) {
-        reserva.setEstadoPago(EstadoPago.REEMBOLSO_PENDIENTE);
-    }
-
-    reservaRepository.update(reserva);
-
-    // Crear historial
-    HistorialReserva historial = new HistorialReserva();
-    historial.setReserva(reserva);
-    historial.setViaje(viaje);
-    historial.setViajero((Viajero) usuarioEnSesion);
-    historial.setConductor(viaje.getConductor());
-    historial.setFechaEvento(LocalDateTime.now());
-    historial.setEstadoAnterior(estadoAnterior);
-    historial.setEstadoNuevo(reserva.getEstado());
-    repositorioHistorialReserva.save(historial);
-
-    // Enviar notificación al conductor
-    try {
-        String mensaje = String.format(
-                "El viajero %s ha cancelado su reserva en el viaje hacia %s.",
-                usuarioEnSesion.getNombre(),
-                viaje.getDestino().getNombre()
-        );
-
-        String url = "/reserva/misReservas";
-        servicioNotificacion.crearYEnviar(
-                viaje.getConductor(),
-                TipoNotificacion.VIAJE_CANCELADO,
-                mensaje,
-                url
-        );
-    } catch (Exception e) {
-        System.err.println("Error al enviar notificación al conductor: " + e.getMessage());
-    }
-
-    // 🔹 Retornar la reserva actualizada
-    return reserva;
-}
 }

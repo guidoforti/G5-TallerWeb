@@ -1,7 +1,10 @@
 package com.tallerwebi.dominio;
 
+import com.mercadopago.client.payment.PaymentRefundClient;
 import com.mercadopago.client.preference.PreferenceClient;
 import com.mercadopago.client.preference.PreferenceRequest;
+import com.mercadopago.exceptions.MPApiException;
+import com.mercadopago.exceptions.MPException;
 import com.mercadopago.resources.preference.Preference;
 import com.tallerwebi.dominio.Entity.*;
 import com.tallerwebi.dominio.Enums.*;
@@ -18,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,6 +46,7 @@ class ServicioReservaTest {
     private RepositorioHistorialReserva repositorioHistorialReserva;
     private PreferenceClient preferenceClient;
     private ServicioNotificacion servicioNotificacionMock;
+    private PaymentRefundClient reunfClientMock;
 
     @BeforeEach
     void setUp() {
@@ -51,7 +56,8 @@ class ServicioReservaTest {
         repositorioHistorialReserva = mock(RepositorioHistorialReserva.class);
         preferenceClient = mock(PreferenceClient.class);
         servicioNotificacionMock = mock(ServicioNotificacion.class);
-        servicioReserva = new ServicioReservaImpl(repositorioReservaMock, servicioViaje, servicioViajero, repositorioHistorialReserva,preferenceClient, servicioNotificacionMock);
+        reunfClientMock = mock(PaymentRefundClient.class);
+        servicioReserva = new ServicioReservaImpl(repositorioReservaMock, servicioViaje, servicioViajero, repositorioHistorialReserva,preferenceClient, servicioNotificacionMock, reunfClientMock);
     }
 
     // --- TESTS DE SOLICITAR RESERVA ---
@@ -972,7 +978,7 @@ class ServicioReservaTest {
         Long reservaId = 1L;
         Long viajeroId = 10L;
         Long conductorId = 50L;
-        String paymentId = "1234";
+        Long paymentId = 1234L;
 
         // Configuración detallada para que la notificación no falle:
         Viajero viajero = mock(Viajero.class);
@@ -1082,7 +1088,7 @@ class ServicioReservaTest {
         // given
         Long reservaId = 1L;
         Long viajeroId = 10L;
-        String paymentId = "1234";
+        Long paymentId = 1234L;
         Reserva reserva = crearReservaCompletaParaPago(reservaId, viajeroId, EstadoReserva.CONFIRMADA, EstadoPago.NO_PAGADO);
 
         // when
@@ -1101,7 +1107,7 @@ class ServicioReservaTest {
         // given
         Long reservaId = 99L;
         Long viajeroId = 10L;
-        String paymentId = "1234";
+        Long paymentId = 1234L;
         when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.empty());
 
         // then
@@ -1116,7 +1122,7 @@ class ServicioReservaTest {
         // given
         Long reservaId = 1L;
         Long viajeroIdLogueado = 10L;
-        String paymentId = "1234";
+        Long paymentId = 1234L;
         Long viajeroIdDueno = 20L; // <-- IDs diferentes
         Reserva reserva = crearReservaCompletaParaPago(reservaId, viajeroIdDueno, EstadoReserva.CONFIRMADA, EstadoPago.NO_PAGADO);
 
@@ -1135,7 +1141,7 @@ class ServicioReservaTest {
         // given
         Long reservaId = 1L;
         Long viajeroId = 10L;
-        String paymentId = "1234";
+        Long paymentId = 1234L;
         // Estado PENDIENTE (incorrecto)
         Reserva reserva = crearReservaCompletaParaPago(reservaId, viajeroId, EstadoReserva.PENDIENTE, EstadoPago.NO_PAGADO);
 
@@ -1417,39 +1423,6 @@ class ServicioReservaTest {
         );
     }
 
-    // 🔹 Caso 2: Cancelación exitosa con reserva CONFIRMADA y PAGADA (debe cambiar estadoPago)
-    @Test
-    void deberiaCambiarEstadoPagoAReembolsoPendienteSiEstabaPagado() throws Exception {
-        // given
-        Viajero viajero = crearViajeroMock(1L, "Ana");
-        Conductor conductor = crearConductorMock(3L, "Pedro");
-        Ciudad destino = new Ciudad();
-        destino.setNombre("Córdoba");
-
-        Viaje viaje = new Viaje();
-        viaje.setConductor(conductor);
-        viaje.setDestino(destino);
-
-        Reserva reserva = new Reserva();
-        reserva.setId(20L);
-        reserva.setViajero(viajero);
-        reserva.setViaje(viaje);
-        reserva.setEstado(EstadoReserva.CONFIRMADA);
-        reserva.setEstadoPago(EstadoPago.PAGADO);
-
-        when(repositorioReservaMock.findById(20L)).thenReturn(Optional.of(reserva));
-
-        // when
-        Reserva resultado = servicioReserva.cancelarReservaPorViajero(20L, viajero);
-
-        // then
-        assertThat(resultado.getEstado(), is(EstadoReserva.CANCELADA_POR_VIAJERO));
-        assertThat(resultado.getEstadoPago(), is(EstadoPago.REEMBOLSO_PENDIENTE));
-        verify(repositorioReservaMock).update(reserva);
-        verify(repositorioHistorialReserva).save(any(HistorialReserva.class));
-        verify(servicioNotificacionMock).crearYEnviar(any(), any(), anyString(), anyString());
-    }
-
     // 🔹 Caso 3: Usuario no es VIAJERO
     @Test
     void deberiaLanzarExcepcionSiUsuarioNoEsViajero() {
@@ -1561,6 +1534,271 @@ class ServicioReservaTest {
         return v;
     }
 
+    @Test
+    public void generarReembolsoTotalDeberiaLlamarARefundYActualizarEstado() throws MPException, MPApiException {
+        // given
+        Long reservaId = 1L;
+        Long paymentId = 12345L;
+        Reserva reservaPagada = crearReservaPagada(reservaId, paymentId, LocalDateTime.now().plusDays(10));
+        reservaPagada.setEstadoPago(EstadoPago.PAGADO);
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reservaPagada));
+
+        // when
+        servicioReserva.generarReembolsoDeReservaTotal(reservaId, paymentId);
+
+        // then
+        // 1. Verifica que se llamó al reembolso TOTAL (sin monto)
+        verify(reunfClientMock, times(1)).refund(paymentId);
+        // 2. Verifica que NO se llamó al reembolso parcial
+        verify(reunfClientMock, never()).refund(eq(paymentId), any(BigDecimal.class));
+        // 3. Verifica que el estado se actualizó
+        assertThat(reservaPagada.getEstadoPago(), is(EstadoPago.REEMBOLSADA));
+        verify(repositorioReservaMock, times(1)).update(reservaPagada);
+    }
+
+    @Test
+    public void generarReembolsoTotalDeberiaLanzarNotFoundSiReservaNoExiste() throws MPException, MPApiException {
+        // given
+        when(repositorioReservaMock.findById(99L)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(NotFoundException.class, () -> {
+            servicioReserva.generarReembolsoDeReservaTotal(99L, 12345L);
+        });
+        verify(reunfClientMock, never()).refund(anyLong());
+    }
+
+    @Test
+    public void generarReembolsoTotalNoDeberiaHacerNadaSiReservaNoEstaPagada() throws MPException, MPApiException {
+        // given
+        Long reservaId = 1L;
+        Long paymentId = 12345L;
+        Reserva reservaNoPagada = crearReservaPagada(reservaId, paymentId, LocalDateTime.now().plusDays(10));
+        reservaNoPagada.setEstadoPago(EstadoPago.NO_PAGADO); // No está pagada
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reservaNoPagada));
+
+        // when
+        servicioReserva.generarReembolsoDeReservaTotal(reservaId, paymentId);
+
+        // then
+        // No debe llamar a MP ni actualizar la BD
+        verify(reunfClientMock, never()).refund(anyLong());
+        verify(repositorioReservaMock, never()).update(any(Reserva.class));
+    }
+
+
+    // ===============================================================
+    // TESTS PARA: generarReembolsoDeReservaParcial
+    // (Usado por el Viajero al cancelar su Reserva)
+    // ===============================================================
+
+    @Test
+    public void generarReembolsoParcialDeberiaReembolsar100PorCientoSiFaltan7DiasOMas() throws MPException, MPApiException, NotFoundException {
+        // given
+        Long reservaId = 1L;
+        Long paymentId = 12345L;
+        // Viaje es en 8 días
+        Reserva reservaPagada = crearReservaPagada(reservaId, paymentId, LocalDateTime.now().plusDays(8));
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reservaPagada));
+
+        // when
+        servicioReserva.generarReembolsoDeReservaParcial(reservaId, paymentId);
+
+        // then
+        // 1. Verifica reembolso TOTAL (montoReembolso == null)
+        verify(reunfClientMock, times(1)).refund(paymentId);
+        verify(reunfClientMock, never()).refund(eq(paymentId), any(BigDecimal.class));
+        // 2. Verifica estado final
+        assertThat(reservaPagada.getEstadoPago(), is(EstadoPago.REEMBOLSADA));
+        verify(repositorioReservaMock, times(1)).update(reservaPagada);
+    }
+
+    @Test
+    public void generarReembolsoParcialDeberiaReembolsar50PorCientoSiFaltanEntre1Y6Dias() throws MPException, MPApiException, NotFoundException {
+        // given
+        Long reservaId = 2L;
+        Long paymentId = 12346L;
+        // Viaje es en 3 días
+        Reserva reservaPagada = crearReservaPagada(reservaId, paymentId, LocalDateTime.now().plusDays(3));
+        // El precio del viaje es 1000.0 (ver helper)
+        BigDecimal reembolsoEsperado = new BigDecimal("500"); // 50% de 1000
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reservaPagada));
+
+        // when
+        servicioReserva.generarReembolsoDeReservaParcial(reservaId, paymentId);
+
+        // then
+        // 1. Verifica reembolso PARCIAL (con monto)
+        verify(reunfClientMock, times(1)).refund(paymentId, reembolsoEsperado);
+        verify(reunfClientMock, never()).refund(paymentId);
+        // 2. Verifica estado final
+        assertThat(reservaPagada.getEstadoPago(), is(EstadoPago.REEMBOLSADA));
+        verify(repositorioReservaMock, times(1)).update(reservaPagada);
+    }
+
+    @Test
+    public void generarReembolsoParcialDeberiaReembolsar0PorCientoSiFaltaMenosDe1Dia() throws MPException, MPApiException, NotFoundException {
+        // given
+        Long reservaId = 3L;
+        Long paymentId = 12347L;
+        // Viaje es en 12 horas
+        Reserva reservaPagada = crearReservaPagada(reservaId, paymentId, LocalDateTime.now().plusHours(12));
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reservaPagada));
+
+        // when
+        servicioReserva.generarReembolsoDeReservaParcial(reservaId, paymentId);
+
+        // then
+        // 1. Verifica que NUNCA se llamó a la API de Mercado Pago
+        verify(reunfClientMock, never()).refund(anyLong());
+        verify(reunfClientMock, never()).refund(anyLong(), any(BigDecimal.class));
+        // 2. Verifica estado final
+        assertThat(reservaPagada.getEstadoPago(), is(EstadoPago.NO_CORRESPONDE_REMBOLSO));
+        verify(repositorioReservaMock, times(1)).update(reservaPagada);
+    }
+
+    @Test
+    public void generarReembolsoParcialNoDeberiaHacerNadaSiReservaNoEstaPagada() throws MPException, MPApiException, NotFoundException, MPException, MPApiException {
+        // given
+        Long reservaId = 4L;
+        Long paymentId = 12348L;
+        Reserva reservaNoPagada = crearReservaPagada(reservaId, paymentId, LocalDateTime.now().plusDays(10));
+        reservaNoPagada.setEstadoPago(EstadoPago.NO_PAGADO); // No está pagada
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reservaNoPagada));
+
+        // when
+        servicioReserva.generarReembolsoDeReservaParcial(reservaId, paymentId);
+
+        // then
+        // No debe llamar a MP ni actualizar la BD
+        verify(reunfClientMock, never()).refund(anyLong());
+        verify(repositorioReservaMock, never()).update(any(Reserva.class));
+    }
+
+
+    // ===============================================================
+    // TESTS PARA: cancelarReservaPorViajero (MODIFICADO)
+    // ===============================================================
+
+    @Test
+    public void cancelarReservaPorViajeroDeberiaLlamarAReembolsoSiEstabaPagada() throws Exception {
+        // given
+        Long reservaId = 5L;
+        Long viajeroId = 10L;
+        Long paymentId = 12349L;
+
+        Viajero viajero = crearViajeroMock(viajeroId);
+        viajero.setRol("VIAJERO");
+
+        // Creamos una reserva pagada, viaje en 10 días (debería dar 100% reembolso)
+        Reserva reservaPagada = crearReservaPagada(reservaId, paymentId, LocalDateTime.now().plusDays(10));
+        reservaPagada.setViajero(viajero);
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reservaPagada));
+        // Mockeamos la notificación para que no falle
+        doNothing().when(servicioNotificacionMock).crearYEnviar(any(), any(), any(), any());
+
+        // when
+        servicioReserva.cancelarReservaPorViajero(reservaId, viajero);
+
+        // then
+        // 1. Verifica que el estado de la reserva cambió
+        assertThat(reservaPagada.getEstado(), is(EstadoReserva.CANCELADA_POR_VIAJERO));
+
+        // 2. Verifica que se llamó al reembolso (con la lógica de 100%)
+        verify(reunfClientMock, times(1)).refund(paymentId);
+
+        // 3. Verifica que el estado de pago cambió
+        assertThat(reservaPagada.getEstadoPago(), is(EstadoPago.REEMBOLSADA));
+
+        // 4. Verifica que se guardó en la BD (una vez en 'generarReembolso' y otra en 'cancelar')
+        // (Refactor): Tu código ahora solo guarda 1 vez al final de 'cancelar',
+        // y 1 vez al final de 'generarReembolso'. Total = 2.
+        verify(repositorioReservaMock, times(2)).update(reservaPagada);
+    }
+
+    @Test
+    public void cancelarReservaPorViajeroNoDeberiaLlamarAReembolsoSiNoEstabaPagada() throws Exception {
+        // given
+        Long reservaId = 6L;
+        Long viajeroId = 10L;
+
+        Viajero viajero = crearViajeroMock(viajeroId);
+        viajero.setRol("VIAJERO");
+
+        // Creamos una reserva NO pagada
+        Reserva reservaNoPagada = crearReservaPagada(reservaId, null, LocalDateTime.now().plusDays(10));
+        reservaNoPagada.setEstadoPago(EstadoPago.NO_PAGADO);
+        reservaNoPagada.setViajero(viajero);
+
+        when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reservaNoPagada));
+        doNothing().when(servicioNotificacionMock).crearYEnviar(any(), any(), any(), any());
+
+        // when
+        servicioReserva.cancelarReservaPorViajero(reservaId, viajero);
+
+        // then
+        // 1. Verifica que NUNCA se llamó a la API de MP
+        verify(reunfClientMock, never()).refund(anyLong());
+        verify(reunfClientMock, never()).refund(anyLong(), any(BigDecimal.class));
+
+        // 2. El estado de la reserva SÍ cambió
+        assertThat(reservaNoPagada.getEstado(), is(EstadoReserva.CANCELADA_POR_VIAJERO));
+        assertThat(reservaNoPagada.getEstadoPago(), is(EstadoPago.NO_PAGADO)); // Sigue igual
+
+        // 3. Se actualizó la BD solo 1 vez (en 'cancelarReservaPorViajero')
+        verify(repositorioReservaMock, times(1)).update(reservaNoPagada);
+    }
+
+    // ===============================================================
+    // MÉTODO HELPER (Copiar y pegar en tu ServicioReservaTest.java)
+    // ===============================================================
+
+    /**
+     * Helper para crear una Reserva PAGADA con mocks anidados necesarios
+     * para probar 'generarReembolsoDeReservaParcial'.
+     */
+    private Reserva crearReservaPagada(Long reservaId, Long paymentId, LocalDateTime fechaHoraViaje) {
+        // 1. Mocks de Ciudades
+        Ciudad origen = mock(Ciudad.class);
+        when(origen.getNombre()).thenReturn("Buenos Aires");
+
+        Ciudad destino = mock(Ciudad.class);
+        when(destino.getNombre()).thenReturn("Córdoba");
+
+        // 2. Mock de Conductor (necesario para la notificación)
+        Conductor conductor = mock(Conductor.class);
+        when(conductor.getId()).thenReturn(50L);
+
+        // 3. Mock de Viaje
+        Viaje viaje = mock(Viaje.class);
+        when(viaje.getOrigen()).thenReturn(origen);
+        when(viaje.getDestino()).thenReturn(destino);
+        when(viaje.getFechaHoraDeSalida()).thenReturn(fechaHoraViaje);
+        when(viaje.getPrecio()).thenReturn(1000.0); // Precio base para calcular 50%
+        when(viaje.getConductor()).thenReturn(conductor);
+
+        // 4. Mock de Viajero
+        Viajero viajero = mock(Viajero.class);
+        when(viajero.getId()).thenReturn(10L); // Asumimos un ID de viajero
+
+        // 5. Crear Reserva
+        Reserva reserva = new Reserva();
+        reserva.setId(reservaId);
+        reserva.setViajero(viajero);
+        reserva.setViaje(viaje);
+        reserva.setEstado(EstadoReserva.CONFIRMADA);
+        reserva.setEstadoPago(EstadoPago.PAGADO); // <-- Pagada
+        reserva.setMpIdDePago(paymentId); // <-- Con ID de MP (usando tu getter)
+
+        return reserva;
+    }
     private Conductor crearConductorMock(Long id, String nombre) {
         Conductor c = new Conductor();
         c.setId(id);

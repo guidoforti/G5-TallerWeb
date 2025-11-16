@@ -12,10 +12,7 @@ import com.tallerwebi.dominio.Enums.TipoNotificacion;
 import com.tallerwebi.dominio.IRepository.RepositorioParada;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
-import com.tallerwebi.dominio.IServicio.ServicioConductor;
-import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
-import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
-import com.tallerwebi.dominio.IServicio.ServicioViaje;
+import com.tallerwebi.dominio.IServicio.*;
 import com.tallerwebi.dominio.ServiceImpl.ServicioViajeImpl;
 import com.tallerwebi.dominio.excepcion.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,6 +54,7 @@ class ServicioViajeTest {
     private ReservaRepository reservaRepositoryMock;
     private ServicioNotificacion servicioNotificacionMock;
     private RepositorioHistorialReserva repositorioHistorialReservaMock;
+    private ServicioReserva servicioReservaMock;
 
     @BeforeEach
     void setUp() {
@@ -67,7 +65,11 @@ class ServicioViajeTest {
         reservaRepositoryMock = mock(ReservaRepository.class);
         servicioNotificacionMock = mock(ServicioNotificacion.class);
         repositorioHistorialReservaMock = mock(RepositorioHistorialReserva.class);
-        servicioViaje = new ServicioViajeImpl(viajeRepositoryMock, servicioConductorMock, servicioVehiculoMock, repositorioParada, reservaRepositoryMock, servicioNotificacionMock, repositorioHistorialReservaMock);
+        servicioReservaMock = mock(ServicioReserva.class);
+
+        servicioViaje = new ServicioViajeImpl(viajeRepositoryMock, servicioConductorMock,
+                servicioVehiculoMock, repositorioParada, reservaRepositoryMock,
+                servicioNotificacionMock, repositorioHistorialReservaMock, servicioReservaMock);
     }
 
     private Viaje crearViajeDeTest() {
@@ -1416,38 +1418,99 @@ conductor.setRol("CONDUCTOR");
 }
 
 
+
     @Test
     void seDebeCancelarReservaConfirmadaPagadaYMarcarReembolso() throws Exception {
+        // Given
+        Long conductorId = 1L;
+        Long viajeId = 20L;
+        Long reservaId = 1L;
+        Long paymentId = 12345L;
+
         Conductor conductor = new Conductor();
-        conductor.setId(1L);
+        conductor.setId(conductorId);
         conductor.setRol("CONDUCTOR");
 
-        Conductor usuarioEnSesion = new Conductor();
-        usuarioEnSesion.setId(1L);
-        usuarioEnSesion.setRol("CONDUCTOR");
-
         Viaje viaje = new Viaje();
-        viaje.setId(20L);
+        viaje.setId(viajeId);
         viaje.setConductor(conductor);
         viaje.setEstado(EstadoDeViaje.DISPONIBLE);
-        viaje.setDestino(new Ciudad(null, "Buenos Aires", 0, 0));
+        viaje.setDestino(new Ciudad(null, "Buenos Aires", 0.0f, 0.0f));
 
         Reserva reserva = new Reserva();
-        reserva.setId(1L);
+        reserva.setId(reservaId);
         reserva.setEstado(EstadoReserva.CONFIRMADA);
         reserva.setEstadoPago(EstadoPago.PAGADO);
-        reserva.setViajero(new Viajero());
+        reserva.setMpIdDePago(paymentId); // <-- Asignamos el ID de pago
+        reserva.setViajero(new Viajero()); // Importante que no sea null
+        reserva.setViaje(viaje); // Importante para la notificación
 
-        when(viajeRepositoryMock.findById(20L)).thenReturn(Optional.of(viaje));
+        when(viajeRepositoryMock.findById(viajeId)).thenReturn(Optional.of(viaje));
         when(reservaRepositoryMock.findByViaje(viaje)).thenReturn(List.of(reserva));
+        // Mockeamos la llamada a generarReembolsoDeReservaTotal para que no haga nada (void)
+        doNothing().when(servicioReservaMock).generarReembolsoDeReservaTotal(reservaId, paymentId);
 
-        servicioViaje.cancelarViajeConReservasPagadas(20L, usuarioEnSesion);
+        // When
+        servicioViaje.cancelarViajeConReservasPagadas(viajeId, conductor);
 
+        // Then
+        // 1. ¡Verificamos la nueva responsabilidad!
+        // Que ServicioViaje llame a ServicioReserva para el reembolso.
+        verify(servicioReservaMock, times(1)).generarReembolsoDeReservaTotal(reservaId, paymentId);
+
+        // 2. Verificamos las responsabilidades antiguas (que siguen siendo válidas)
         assertEquals(EstadoReserva.CANCELADA_POR_CONDUCTOR, reserva.getEstado());
-        assertEquals(EstadoPago.REEMBOLSO_PENDIENTE, reserva.getEstadoPago());
+        // (El estado del pago ya no lo actualiza ServicioViaje, lo hace ServicioReserva)
+        // assertEquals(EstadoPago.REEMBOLSO_PENDIENTE, reserva.getEstadoPago()); // <-- Este assert ya no va aquí
+
         verify(reservaRepositoryMock).update(reserva);
         verify(repositorioHistorialReservaMock).save(any(HistorialReserva.class));
-        verify(servicioNotificacionMock).crearYEnviar(any(), eq(TipoNotificacion.VIAJE_CANCELADO), contains("reembolso"), anyString());
+        verify(servicioNotificacionMock).crearYEnviar(any(), eq(TipoNotificacion.VIAJE_CANCELADO), anyString(), anyString());
+        verify(viajeRepositoryMock).modificarViaje(viaje);
+    }
+
+    @Test
+    void seDebeCancelarReservaPendienteNoPagadaSinLlamarAReembolso() throws Exception {
+        // Given
+        Long conductorId = 1L;
+        Long viajeId = 20L;
+        Long reservaId = 1L;
+
+        Conductor conductor = new Conductor();
+        conductor.setId(conductorId);
+        conductor.setRol("CONDUCTOR");
+
+        Viaje viaje = new Viaje();
+        viaje.setId(viajeId);
+        viaje.setConductor(conductor);
+        viaje.setEstado(EstadoDeViaje.DISPONIBLE);
+        viaje.setDestino(new Ciudad(null, "Buenos Aires", 0.0f, 0.0f));
+
+        Reserva reserva = new Reserva();
+        reserva.setId(reservaId);
+        reserva.setEstado(EstadoReserva.PENDIENTE);
+        reserva.setEstadoPago(EstadoPago.NO_PAGADO); // <-- NO PAGADA
+        reserva.setMpIdDePago(null);
+        reserva.setViajero(new Viajero());
+        reserva.setViaje(viaje);
+
+        when(viajeRepositoryMock.findById(viajeId)).thenReturn(Optional.of(viaje));
+        when(reservaRepositoryMock.findByViaje(viaje)).thenReturn(List.of(reserva));
+
+        // When
+        servicioViaje.cancelarViajeConReservasPagadas(viajeId, conductor);
+
+        // Then
+        // 1. ¡Verificamos que NUNCA se llamó al reembolso!
+        verify(servicioReservaMock, never()).generarReembolsoDeReservaTotal(anyLong(), anyLong());
+
+        // 2. Verificamos que el resto de la lógica (cancelación) SÍ se ejecutó
+        assertEquals(EstadoReserva.CANCELADA_POR_CONDUCTOR, reserva.getEstado());
+        assertEquals(EstadoPago.NO_PAGADO, reserva.getEstadoPago()); // Se mantiene NO_PAGADO
+
+        verify(reservaRepositoryMock).update(reserva);
+        verify(repositorioHistorialReservaMock).save(any(HistorialReserva.class));
+        verify(servicioNotificacionMock).crearYEnviar(any(), eq(TipoNotificacion.VIAJE_CANCELADO), anyString(), anyString());
         verify(viajeRepositoryMock).modificarViaje(viaje);
     }
 

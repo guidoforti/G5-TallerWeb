@@ -50,5 +50,5 @@ public class Reserva {
     private EstadoAsistencia asistencia = EstadoAsistencia.NO_MARCADO;
 
     @Column(name = "mp_pago_id")
-    private String mpIdDePago;
+    private Long mpIdDePago;
 }

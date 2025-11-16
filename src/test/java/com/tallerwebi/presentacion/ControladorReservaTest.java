@@ -785,7 +785,7 @@ public class ControladorReservaTest {
         // Given
         Long reservaId = 1L;
         Long viajeroId = 10L;
-        String paymentId = "1234";
+        Long paymentId = 1234L;
         when(sessionMock.getAttribute("idUsuario")).thenReturn(viajeroId);
         when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
 
@@ -808,7 +808,7 @@ public class ControladorReservaTest {
         // Given
         Long reservaId = 1L;
         Long viajeroId = 10L;
-        String paymentId = "1234";
+        Long paymentId = 1234L;
         when(sessionMock.getAttribute("idUsuario")).thenReturn(viajeroId);
         when(sessionMock.getAttribute("ROL")).thenReturn("VIAJERO");
 

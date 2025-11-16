@@ -6,5 +6,8 @@ public enum EstadoPago {
     PAGADO,    // El viajero ha completado el pago
     // Futuros estados para integración con MercadoPago:
     // PENDIENTE, EN_PROCESO, ERROR, REEMBOLSADO, etc.
-    REEMBOLSO_PENDIENTE
+    REEMBOLSO_PENDIENTE,
+    REEMBOLSADA,
+    NO_CORRESPONDE_REMBOLSO
 }
+

@@ -721,7 +721,7 @@ public class ControladorReserva {
 
     @GetMapping("/pago/exitoso")
     public ModelAndView devolverPagoExitoso(HttpSession session,
-                                            @RequestParam("payment_id") String paymentId,
+                                            @RequestParam("payment_id") Long paymentId,
                                             @RequestParam Long reservaId,
                                             RedirectAttributes redirectAttributes) {
         ModelMap model = new ModelMap();

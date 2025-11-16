@@ -1,5 +1,8 @@
 package com.tallerwebi.dominio.ServiceImpl;
 
+import com.mercadopago.client.payment.PaymentRefundClient;
+import com.mercadopago.exceptions.MPApiException;
+import com.mercadopago.exceptions.MPException;
 import com.tallerwebi.dominio.Entity.*;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
 import com.tallerwebi.dominio.Enums.EstadoPago;
@@ -9,10 +12,7 @@ import com.tallerwebi.dominio.IRepository.RepositorioHistorialReserva;
 import com.tallerwebi.dominio.IRepository.RepositorioParada;
 import com.tallerwebi.dominio.IRepository.ReservaRepository;
 import com.tallerwebi.dominio.IRepository.ViajeRepository;
-import com.tallerwebi.dominio.IServicio.ServicioConductor;
-import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
-import com.tallerwebi.dominio.IServicio.ServicioVehiculo;
-import com.tallerwebi.dominio.IServicio.ServicioViaje;
+import com.tallerwebi.dominio.IServicio.*;
 import com.tallerwebi.dominio.excepcion.*;
 import com.tallerwebi.dominio.util.CalculadoraDistancia;
 import org.hibernate.Hibernate;
@@ -38,11 +38,13 @@ public class ServicioViajeImpl implements ServicioViaje {
     private ReservaRepository reservaRepository;
     private ServicioNotificacion servicioNotificacion;
     private RepositorioHistorialReserva repositorioHistorialReserva;
+    private ServicioReserva servicioReserva;
 
     @Autowired
     public ServicioViajeImpl(ViajeRepository viajeRepository, ServicioConductor servicioConductor,
                              ServicioVehiculo servicioVehiculo, RepositorioParada repositorioParada,
-                             ReservaRepository reservaRepository, ServicioNotificacion servicioNotificacion, RepositorioHistorialReserva repositorioHistorialReserva) {
+                             ReservaRepository reservaRepository, ServicioNotificacion servicioNotificacion, RepositorioHistorialReserva repositorioHistorialReserva
+                             , ServicioReserva servicioReserva) {
         this.viajeRepository = viajeRepository;
         this.servicioConductor = servicioConductor;
         this.servicioVehiculo = servicioVehiculo;
@@ -50,6 +52,7 @@ public class ServicioViajeImpl implements ServicioViaje {
         this.reservaRepository = reservaRepository;
         this.servicioNotificacion = servicioNotificacion;
         this.repositorioHistorialReserva = repositorioHistorialReserva;
+        this.servicioReserva = servicioReserva;
     }
 
     @Override
@@ -500,7 +503,7 @@ public class ServicioViajeImpl implements ServicioViaje {
 
     @Override
     public void cancelarViajeConReservasPagadas(Long id, Usuario usuarioEnSesion)
-        throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeNoCancelableException {
+            throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeNoCancelableException, MPException, MPApiException {
     
     // Valida que el usuario sea conductor
     if (usuarioEnSesion.getRol() == null || !usuarioEnSesion.getRol().equalsIgnoreCase("CONDUCTOR")) {
@@ -534,8 +537,8 @@ public class ServicioViajeImpl implements ServicioViaje {
             reserva.setEstado(EstadoReserva.CANCELADA_POR_CONDUCTOR);
 
             // Si estaba pagada, mantenemos el estado de pago o lo marcamos como “reembolso pendiente”
-            if (reserva.getEstadoPago() == EstadoPago.PAGADO) {
-                reserva.setEstadoPago(EstadoPago.REEMBOLSO_PENDIENTE);
+            if (reserva.getEstadoPago().equals(EstadoPago.PAGADO)) {
+                servicioReserva.generarReembolsoDeReservaTotal(reserva.getId(), reserva.getMpIdDePago());
             }
 
             // guardar cambios

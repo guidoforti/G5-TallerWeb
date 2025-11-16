@@ -1,5 +1,7 @@
 package com.tallerwebi.dominio.IServicio;
 
+import com.mercadopago.exceptions.MPApiException;
+import com.mercadopago.exceptions.MPException;
 import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Parada;
@@ -26,5 +28,5 @@ public interface ServicioViaje {
     void cerrarViajesOlvidados();
     void iniciarViajesAtrasados();
     void cancelarViajeConReservasPagadas(Long id, Usuario usuarioEnSesion)
-            throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeNoCancelableException;
+            throws ViajeNoEncontradoException, UsuarioNoAutorizadoException, ViajeNoCancelableException, MPException, MPApiException;
 }
