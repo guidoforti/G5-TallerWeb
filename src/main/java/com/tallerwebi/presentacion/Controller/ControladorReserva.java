@@ -720,7 +720,10 @@ public class ControladorReserva {
     }
 
     @GetMapping("/pago/exitoso")
-    public ModelAndView devolverPagoExitoso(HttpSession session, @RequestParam Long reservaId, RedirectAttributes redirectAttributes) {
+    public ModelAndView devolverPagoExitoso(HttpSession session,
+                                            @RequestParam("payment_id") String paymentId,
+                                            @RequestParam Long reservaId,
+                                            RedirectAttributes redirectAttributes) {
         ModelMap model = new ModelMap();
         // Validar sesión
         Object usuarioIdObj = session.getAttribute("idUsuario");
@@ -730,7 +733,7 @@ public class ControladorReserva {
             return new ModelAndView("redirect:/login");
         }
         try {
-            Reserva reserva = servicioReserva.confirmarPagoReserva(reservaId, (Long)usuarioIdObj);
+            Reserva reserva = servicioReserva.confirmarPagoReserva(reservaId, (Long)usuarioIdObj, paymentId);
             ReservaActivaDTO reservaActivaDTO = new ReservaActivaDTO(reserva);
             model.put("idUsuario", usuarioIdObj);
             model.put("ROL", rol);

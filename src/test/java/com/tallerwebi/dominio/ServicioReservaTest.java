@@ -972,6 +972,7 @@ class ServicioReservaTest {
         Long reservaId = 1L;
         Long viajeroId = 10L;
         Long conductorId = 50L;
+        String paymentId = "1234";
 
         // Configuración detallada para que la notificación no falle:
         Viajero viajero = mock(Viajero.class);
@@ -994,7 +995,7 @@ class ServicioReservaTest {
         reserva.setViajero(viajero);
         reserva.setViaje(viaje);
         when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
-        servicioReserva.confirmarPagoReserva(reservaId, viajeroId);
+        servicioReserva.confirmarPagoReserva(reservaId, viajeroId, paymentId);
         verify(repositorioReservaMock, times(1)).update(reserva);
         verify(servicioNotificacionMock, times(1)).crearYEnviar(
                 eq(conductor), // Debe ir al conductor
@@ -1081,13 +1082,14 @@ class ServicioReservaTest {
         // given
         Long reservaId = 1L;
         Long viajeroId = 10L;
+        String paymentId = "1234";
         Reserva reserva = crearReservaCompletaParaPago(reservaId, viajeroId, EstadoReserva.CONFIRMADA, EstadoPago.NO_PAGADO);
 
         // when
         when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.of(reserva));
 
         // then
-        Reserva resultado = servicioReserva.confirmarPagoReserva(reservaId, viajeroId);
+        Reserva resultado = servicioReserva.confirmarPagoReserva(reservaId, viajeroId, paymentId);
 
         // assert
         assertThat(resultado.getEstadoPago(), is(EstadoPago.PAGADO));
@@ -1099,11 +1101,12 @@ class ServicioReservaTest {
         // given
         Long reservaId = 99L;
         Long viajeroId = 10L;
+        String paymentId = "1234";
         when(repositorioReservaMock.findById(reservaId)).thenReturn(Optional.empty());
 
         // then
         assertThrows(NotFoundException.class, () -> {
-            servicioReserva.confirmarPagoReserva(reservaId, viajeroId);
+            servicioReserva.confirmarPagoReserva(reservaId, viajeroId, paymentId);
         });
         verify(repositorioReservaMock, never()).update(any());
     }
@@ -1113,6 +1116,7 @@ class ServicioReservaTest {
         // given
         Long reservaId = 1L;
         Long viajeroIdLogueado = 10L;
+        String paymentId = "1234";
         Long viajeroIdDueno = 20L; // <-- IDs diferentes
         Reserva reserva = crearReservaCompletaParaPago(reservaId, viajeroIdDueno, EstadoReserva.CONFIRMADA, EstadoPago.NO_PAGADO);
 
@@ -1121,7 +1125,7 @@ class ServicioReservaTest {
 
         // then
         assertThrows(UsuarioNoAutorizadoException.class, () -> {
-            servicioReserva.confirmarPagoReserva(reservaId, viajeroIdLogueado);
+            servicioReserva.confirmarPagoReserva(reservaId, viajeroIdLogueado, paymentId);
         });
         verify(repositorioReservaMock, never()).update(any());
     }
@@ -1131,6 +1135,7 @@ class ServicioReservaTest {
         // given
         Long reservaId = 1L;
         Long viajeroId = 10L;
+        String paymentId = "1234";
         // Estado PENDIENTE (incorrecto)
         Reserva reserva = crearReservaCompletaParaPago(reservaId, viajeroId, EstadoReserva.PENDIENTE, EstadoPago.NO_PAGADO);
 
@@ -1139,7 +1144,7 @@ class ServicioReservaTest {
 
         // then
         assertThrows(AccionNoPermitidaException.class, () -> {
-            servicioReserva.confirmarPagoReserva(reservaId, viajeroId);
+            servicioReserva.confirmarPagoReserva(reservaId, viajeroId, paymentId);
         });
         verify(repositorioReservaMock, never()).update(any());
     }

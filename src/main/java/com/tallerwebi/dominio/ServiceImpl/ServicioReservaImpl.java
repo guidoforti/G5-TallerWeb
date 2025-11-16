@@ -444,7 +444,7 @@ public class ServicioReservaImpl implements ServicioReserva {
     }
 
     @Override
-    public Reserva confirmarPagoReserva(Long reservaId, Long viajeroId) throws NotFoundException, UsuarioNoAutorizadoException, AccionNoPermitidaException {
+    public Reserva confirmarPagoReserva(Long reservaId, Long viajeroId , String paymentId) throws NotFoundException, UsuarioNoAutorizadoException, AccionNoPermitidaException {
 
         Reserva reserva = reservaRepository.findById(reservaId)
                 .orElseThrow(() -> new NotFoundException("La reserva " + reservaId + " no existe."));
@@ -458,6 +458,7 @@ public class ServicioReservaImpl implements ServicioReserva {
             throw new AccionNoPermitidaException("El pago solo puede confirmarse para reservas APROBADAS.");
         }
         reserva.setEstadoPago(EstadoPago.PAGADO);
+        reserva.setMpIdDePago(paymentId);
         reservaRepository.update(reserva);
         Usuario conductor = reserva.getViaje().getConductor();
         String nombreViajero = reserva.getViajero().getNombre();

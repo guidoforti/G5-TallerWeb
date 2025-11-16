@@ -149,7 +149,7 @@ public interface ServicioReserva {
 
     Preference crearPreferenciaDePago (Long reservaId, Long viajeroId) throws UsuarioInexistente, NotFoundException, UsuarioNoAutorizadoException, BadRequestException, MPException, MPApiException, AccionNoPermitidaException;
 
-    Reserva confirmarPagoReserva (Long reservaId, Long usuarioIdObj) throws NotFoundException, UsuarioNoAutorizadoException, AccionNoPermitidaException;
+    Reserva confirmarPagoReserva (Long reservaId, Long usuarioIdObj, String paymentId) throws NotFoundException, UsuarioNoAutorizadoException, AccionNoPermitidaException;
     Boolean tieneReservaActiva(Long viajeroId, Long viajeId);
 
     Reserva cancelarReservaPorViajero(Long idReserva, Usuario usuarioEnSesion)
