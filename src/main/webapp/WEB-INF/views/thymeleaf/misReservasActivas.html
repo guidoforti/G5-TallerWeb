@@ -72,6 +72,20 @@
                                     <div class="d-flex align-items-center mb-2"> <i class="bi bi-person me-2 text-info"></i> <span class="ms-1" th:text="${reserva.conductorNombre}">Conductor</span> </div>
                                 </div>
 
+                                <form th:action="@{/reserva/cancelar/{id}(id=${reserva.reservaId})}"
+                                      method="post"
+                                      th:id="'cancelarReservaForm' + ${reserva.reservaId}"
+                                      style="display: none;">
+                                    <input type="hidden" name="idReserva" th:value="${reserva.reservaId}" />
+                                </form>
+
+                                <button type="button"
+                                        class="btn btn-outline-danger fw-bold btn-accion"
+                                        data-bs-toggle="modal"
+                                        th:data-bs-target="'#confirmarCancelarModal' + ${reserva.reservaId}">
+                                    <i class="bi bi-x-lg"></i> Cancelar
+                                </button>
+
                                 <div class="col-md-3 text-center d-flex flex-column justify-content-center">
                                     <strong class="text-muted small mb-1">Precio Total:</strong>
                                     <span class="fs-4 fw-bold text-unrumbo-primary" th:text="'$' + ${reserva.precio}">$0</span>
@@ -200,6 +214,35 @@
         </div>
     </div>
 </main>
+<div th:each="reserva : ${reservasConfirmadas}">
+    <div class="modal fade" th:id="'confirmarCancelarModal' + ${reserva.reservaId}" tabindex="-1" aria-labelledby="confirmarCancelarModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" th:id="'confirmarCancelarModalLabel' + ${reserva.reservaId}"><i class="bi bi-exclamation-triangle me-2"></i> Confirmar Cancelación</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Estás seguro de que deseas <strong>CANCELAR</strong> tu reserva para el viaje a <strong th:text="${reserva.destinoNombre}"></strong>?</p>
+                    <div class="alert alert-warning mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <small>Si ya pagaste, se iniciará el proceso de reembolso (reembolso pendiente).</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary fw-bold" data-bs-dismiss="modal">
+                        Volver
+                    </button>
+                    <button type="button"
+                            class="btn btn-danger fw-bold"
+                            th:onclick="'document.getElementById(\'cancelarReservaForm' + ${reserva.reservaId} + '\').submit();'">
+                        <i class="bi bi-x-lg me-1"></i> Sí, Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <div th:replace="fragments/fragments :: footer"></div>
 <script th:src="@{/webjars/bootstrap/5.2.0/js/bootstrap.bundle.min.js}"></script>
 <th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
