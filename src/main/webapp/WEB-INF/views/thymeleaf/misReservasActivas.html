@@ -50,19 +50,92 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
+            <div class="row mb-5">
+                <div class="col-12">
+                    <h4 class="section-title" style="color: var(--color-success-warm);">
+                        <i class="bi bi-calendar-check me-2"></i>Reservas Confirmadas (<span th:text="${#lists.size(reservasConfirmadas)}">0</span> Pendientes de Pago)
+                    </h4>
+
+                    <div class="row" th:if="${not #lists.isEmpty(reservasConfirmadas)}">
+                        <div class="col-12 mb-4" th:each="reserva : ${reservasConfirmadas}">
+                            <div class="card reserva-card">
+                                <div class="card-body position-relative">
+                                    <span class="badge badge-confirmada estado-badge">
+                                        <i class="bi bi-check-circle me-1"></i> Confirmada
+                                    </span>
+
+                                    <div class="row align-items-center g-3">
+                                        <div class="col-md-5 ruta-info">
+                                            <p class="mb-1 fw-bold text-unrumbo-primary"><i class="bi bi-geo-alt-fill me-1"></i> <span th:text="${reserva.origenNombre}"></span> → <span th:text="${reserva.destinoNombre}"></span></p>
+
+                                            <div class="d-flex align-items-center mb-2"> <i class="bi bi-calendar3 me-2 text-unrumbo-primary"></i> <span class="ms-1" th:text="${reserva.fechaSalida}">Fecha</span> </div>
+                                            <div class="d-flex align-items-center mb-2"> <i class="bi bi-person me-2 text-info"></i> <span class="ms-1" th:text="${reserva.conductorNombre}">Conductor</span> </div>
+                                        </div>
+
+                                        <div class="col-md-7 d-flex align-items-center justify-content-end">
+
+                                            <div class="text-center d-flex flex-column justify-content-center me-4">
+                                                <strong class="text-muted small mb-1">Precio Total:</strong>
+                                                <span class="fs-4 fw-bold text-unrumbo-primary" th:text="'$' + ${reserva.precio}">$0</span>
+                                            </div>
+
+                                            <div class="text-end d-flex flex-column justify-content-center me-2">
+                                                <form th:action="@{/reserva/cancelar/{id}(id=${reserva.reservaId})}"
+                                                      method="post"
+                                                      th:id="'cancelarReservaForm' + ${reserva.reservaId}"
+                                                      style="display: none;">
+                                                    <input type="hidden" name="idReserva" th:value="${reserva.reservaId}" />
+                                                </form>
+
+                                                <button type="button"
+                                                        class="btn btn-outline-danger **btn-lg** fw-bold btn-accion w-100 mb-1"
+                                                        data-bs-toggle="modal"
+                                                        th:data-bs-target="'#confirmarCancelarModal' + ${reserva.reservaId}">
+                                                    <i class="bi bi-x-lg"></i> Cancelar
+                                                </button>
+                                                <small class="text-muted mt-0 opacity-0 user-select-none">Placeholder</small>
+                                            </div>
+
+                                            <div class="text-end d-flex flex-column justify-content-center">
+                                                <a th:href="@{/reserva/pagar(reservaId=${reserva.reservaId})}"
+                                                   class="btn btn-primary btn-lg fw-bold w-100 mb-1">
+                                                    <i class="bi bi-credit-card-fill me-1"></i> Pagar Ahora
+                                                </a>
+                                                <small class="text-muted mt-0">Usando Mercado Pago</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row" th:if="${#lists.isEmpty(reservasConfirmadas)}">
+                        <div class="col-12 text-center py-4">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <i class="bi bi-check-lg display-4 text-muted mb-3"></i>
+                                    <h5 class="text-muted">No tenés reservas confirmadas pendientes de pago.</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
     <div class="row mb-5">
         <div class="col-12">
             <h4 class="section-title" style="color: var(--color-success-warm);">
-                <i class="bi bi-calendar-check me-2"></i>Reservas Confirmadas (<span th:text="${#lists.size(reservasConfirmadas)}">0</span> Pendientes de Pago)
+                <i class="bi bi-wallet-fill me-2"></i>Reservas Pagadas (<span th:text="${#lists.size(reservasPagadas)}">0</span>)
             </h4>
 
-            <div class="row" th:if="${not #lists.isEmpty(reservasConfirmadas)}">
-                <div class="col-12 mb-4" th:each="reserva : ${reservasConfirmadas}">
-                    <div class="card reserva-card">
+            <div class="row" th:if="${not #lists.isEmpty(reservasPagadas)}">
+                <div class="col-12 mb-4" th:each="reserva : ${reservasPagadas}">
+                    <div class="card reserva-card" style="border-left: 3px solid var(--color-success-warm);">
                         <div class="card-body position-relative">
-<span class="badge badge-confirmada estado-badge">
-    <i class="bi bi-check-circle me-1"></i> Confirmada
-</span>
+                            <span class="badge badge-confirmada estado-badge">
+                                <i class="bi bi-currency-dollar me-1"></i> Pagada
+                            </span>
 
                             <div class="row align-items-center g-3">
                                 <div class="col-md-5 ruta-info">
@@ -77,18 +150,19 @@
                                     <div class="text-center d-flex flex-column justify-content-center me-4">
                                         <strong class="text-muted small mb-1">Precio Total:</strong>
                                         <span class="fs-4 fw-bold text-unrumbo-primary" th:text="'$' + ${reserva.precio}">$0</span>
+                                        <small class="text-success small fw-bold mt-0">¡Pago Confirmado!</small>
                                     </div>
 
                                     <div class="text-end d-flex flex-column justify-content-center me-2">
                                         <form th:action="@{/reserva/cancelar/{id}(id=${reserva.reservaId})}"
                                               method="post"
-                                              th:id="'cancelarReservaForm' + ${reserva.reservaId}"
+                                              th:id="'cancelarReservaFormPagada' + ${reserva.reservaId}"
                                               style="display: none;">
                                             <input type="hidden" name="idReserva" th:value="${reserva.reservaId}" />
                                         </form>
 
                                         <button type="button"
-                                                class="btn btn-outline-danger **btn-lg** fw-bold btn-accion w-100 mb-1"
+                                                class="btn btn-outline-danger btn-lg fw-bold btn-accion w-100 mb-1"
                                                 data-bs-toggle="modal"
                                                 th:data-bs-target="'#confirmarCancelarModal' + ${reserva.reservaId}">
                                             <i class="bi bi-x-lg"></i> Cancelar
@@ -97,11 +171,11 @@
                                     </div>
 
                                     <div class="text-end d-flex flex-column justify-content-center">
-                                        <a th:href="@{/reserva/pagar(reservaId=${reserva.reservaId})}"
-                                           class="btn btn-primary btn-lg fw-bold w-100 mb-1">
-                                            <i class="bi bi-credit-card-fill me-1"></i> Pagar Ahora
+                                        <a th:href="@{/viaje/detalle(id=${reserva.viajeId})}"
+                                           class="btn btn-dark btn-lg fw-bold w-100 mb-1">
+                                            <i class="bi bi-eye me-1"></i> Ver Viaje
                                         </a>
-                                        <small class="text-muted mt-0">Usando Mercado Pago</small>
+                                        <small class="text-muted mt-0">Tu asiento está reservado</small>
                                     </div>
                                 </div>
                             </div>
@@ -110,18 +184,19 @@
                 </div>
             </div>
 
-            <div class="row" th:if="${#lists.isEmpty(reservasConfirmadas)}">
+            <div class="row" th:if="${#lists.isEmpty(reservasPagadas)}">
                 <div class="col-12 text-center py-4">
                     <div class="card border-0 bg-light">
                         <div class="card-body">
-                            <i class="bi bi-check-lg display-4 text-muted mb-3"></i>
-                            <h5 class="text-muted">No tenés reservas confirmadas pendientes de pago.</h5>
+                            <i class="bi bi-wallet display-4 text-muted mb-3"></i>
+                            <h5 class="text-muted">No tenés reservas pagadas pendientes de viaje.</h5>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
 
     <div class="row mb-5">
         <div class="col-12">
@@ -246,6 +321,34 @@
                             class="btn btn-danger fw-bold"
                             th:onclick="'document.getElementById(\'cancelarReservaForm' + ${reserva.reservaId} + '\').submit();'">
                         <i class="bi bi-x-lg me-1"></i> Sí, Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div th:each="reserva : ${reservasPagadas}">
+    <div class="modal fade" th:id="'confirmarCancelarModal' + ${reserva.reservaId}" tabindex="-1" aria-labelledby="confirmarCancelarModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" th:id="'confirmarCancelarModalLabel' + ${reserva.reservaId}"><i class="bi bi-exclamation-triangle me-2"></i> Confirmar Cancelación</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Estás seguro de que deseas <strong>CANCELAR</strong> tu reserva para el viaje a <strong th:text="${reserva.destinoNombre}"></strong>?</p>
+                    <div class="alert alert-warning mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <small>Si ya pagaste, se iniciará el proceso de reembolso (reembolso pendiente).</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary fw-bold" data-bs-dismiss="modal">
+                        Volver
+                    </button>
+                    <button type="button"
+                            class="btn btn-danger fw-bold"
+                            th:onclick="'document.getElementById(\'cancelarReservaFormPagada' + ${reserva.reservaId} + '\').submit();'"> <i class="bi bi-x-lg me-1"></i> Sí, Cancelar
                     </button>
                 </div>
             </div>
