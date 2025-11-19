@@ -66,6 +66,10 @@
                 background-color: var(--color-danger) !important; /* Rojo Persa */
                 color: white;
             }
+            .badge-cancelada {
+                background-color: var(--color-danger) !important; /* Rojo Persa */
+                color: white !important;
+            }
             /* [🟢 Mapeo de Botones Outline a la Paleta] */
             .btn-outline-success {
                 border-color: var(--color-secondary) !important;
@@ -137,14 +141,29 @@
                     <span th:if="${reserva.estado == 'RECHAZADA'}" class="badge badge-rechazada estado-badge">
                         <i class="bi bi-x-circle me-1"></i> Rechazada
                     </span>
+                    <span th:if="${reserva.estado == 'CANCELADA_POR_VIAJERO'}" class="badge badge-rechazada estado-badge">
+                        <i class="fas fa-ban me-1"></i> Cancelada
+                    </span>
 
                     <div class="row align-items-center">
                         <div class="col-md-4">
                             <div class="d-flex align-items-center">
                                 <div class="me-3">
-                                    <img th:src="@{/img/avatar-default.png}"
-                                         alt="Foto de perfil"
-                                         class="pasajero-avatar">
+                                    <img th:if="${reserva.viajeroFotoUrl != null and !#strings.isEmpty(reserva.viajeroFotoUrl)}"
+                                         th:src="@{__${reserva.viajeroFotoUrl}__}"
+                                         alt="Foto de perfil del viajero"
+                                         class="pasajero-avatar" />
+
+                                    <div th:if="${reserva.viajeroFotoUrl == null or #strings.isEmpty(reserva.viajeroFotoUrl)}"
+                                         class="d-flex justify-content-center align-items-center"
+                                         style="width: 60px; height: 60px;">
+
+                                        <svg width="60" height="60" viewBox="0 0 24 24" class="rounded-circle bg-light d-inline-block"
+                                             xmlns="http://www.w3.org/2000/svg" fill="#ced4da">
+                                            <rect width="24" height="24" rx="4" fill="#E9ECEF"></rect>
+                                            <path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 20a8 8 0 0 1 16 0H4z" fill="#ADB5BD"/>
+                                        </svg>
+                                    </div>
                                 </div>
                                 <div>
                                     <h5 class="mb-1 fw-bold" th:text="${reserva.viajeroNombre}">Nombre del Pasajero</h5>

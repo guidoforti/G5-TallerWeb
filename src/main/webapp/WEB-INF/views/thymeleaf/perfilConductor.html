@@ -73,8 +73,14 @@
         </div>
 
         <div class="row mt-3 datos-secundarios">
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <p class="mb-1"><strong>Edad:</strong> <span th:text="${perfil.edad != null ? perfil.edad : 'No especificada'}"></span> años</p>
+
+                <p class="mb-1"><strong>Es Fumador:</strong>
+                    <span th:text="${perfil.fumador != null ? (perfil.fumador ? 'Sí' : 'No') : 'No informado'}"></span>
+                </p>
+            </div>
+            <div class="col-md-6">
                 <p class="mb-1"><strong>Licencia válida hasta:</strong>
                     <span th:text="${perfil.fechaVencimientoLicencia != null ? perfil.fechaVencimientoLicencia : 'No registrada'}"></span>
                 </p>
@@ -116,5 +122,6 @@
 </main>
 
 <footer th:replace="fragments/fragments :: footer"></footer>
+<th:block th:replace="fragments/fragments :: scripts-websocket"></th:block>
 </body>
 </html>

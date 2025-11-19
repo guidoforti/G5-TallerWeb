@@ -26,6 +26,7 @@ public class ReservaVistaDTO {
     private String fechaSalidaViaje;
     private String viajeroNombre;
     private String viajeroEmail;
+    private String viajeroFotoUrl;
     private String fechaSolicitud;
     private String estado;
     private String motivoRechazo;
@@ -49,11 +50,13 @@ public class ReservaVistaDTO {
             this.fechaSalidaViaje = reserva.getViaje().getFechaHoraDeSalida() != null
                     ? reserva.getViaje().getFechaHoraDeSalida().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
                     : "Sin fecha";
+            this.viajeroFotoUrl = reserva.getViajero().getFotoPerfilUrl();
         } else {
             this.viajeId = null;
             this.origenViaje = "Sin origen";
             this.destinoViaje = "Sin destino";
             this.fechaSalidaViaje = "Sin fecha";
+            this.viajeroFotoUrl = null;
         }
 
         // Información del viajero
