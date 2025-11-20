@@ -66,9 +66,16 @@ public class ControladorViajero {
                     .sorted((r1, r2) -> r1.getViaje().getFechaHoraDeSalida().compareTo(r2.getViaje().getFechaHoraDeSalida()))
                     .limit(3) 
                     .collect(Collectors.toList());
+            List<Reserva> viajesEnCurso = reservasConfirmadas.stream()
+                    .filter(r -> r.getViaje().getEstado() == EstadoDeViaje.EN_CURSO)
+                    .collect(Collectors.toList());
+            List<ViajeConfirmadoViajeroDTO> enCursoDTO = viajesEnCurso.stream()
+                    .map(ViajeConfirmadoViajeroDTO::new)
+                    .collect(Collectors.toList());
             List<ViajeConfirmadoViajeroDTO> proximosDTO = viajesProximos.stream()
                     .map(ViajeConfirmadoViajeroDTO::new)
                     .collect(Collectors.toList());
+            model.put("viajesEnCurso", enCursoDTO);
             model.put("viajesProximos", proximosDTO);
             model.put("idUsuario", viajeroId);
             model.put("ROL", rol);

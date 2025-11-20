@@ -69,9 +69,36 @@
             </div>
 
             <div class="row g-4">
-                <div class="col-12"> <div class="card shadow-sm border-0 rounded-4">
+
+                <div class="col-lg-6 col-md-12">
+                    <div class="card shadow-sm border-0 rounded-4">
+                        <div class="card-header fw-bold" style="background-color: #E16A3D; color: white;">
+                            <i class="fas fa-route me-2"></i> Viaje Activo (En Curso)
+                        </div>
+                        <div class="card-body p-3">
+                            <div th:if="${viajesEnCurso != null and !viajesEnCurso.isEmpty()}" th:with="viaje=${viajesEnCurso[0]}">
+                                <div class="alert alert-warning p-3">
+                                    <h5 class="fw-bold mb-1 text-dark">
+                                        <i class="fas fa-arrow-right me-1"></i> Viajando a <span th:text="${viaje.destinoNombre}"></span>
+                                    </h5>
+                                    <p class="small mb-2">Salida: <span th:text="${viaje.fechaSalida}"></span></p>
+                                    <a th:href="@{/viaje/detalle(id=${viaje.viajeId})}" class="btn btn-sm btn-primary">
+                                        Seguir Viaje
+                                    </a>
+                                </div>
+                            </div>
+                            <div th:unless="${viajesEnCurso != null and !viajesEnCurso.isEmpty()}" class="text-center py-2">
+                                <i class="fas fa-info-circle me-1 text-muted"></i>
+                                <p class="small mb-0 text-muted">No tienes viajes activos en este momento.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 col-md-12">
+                    <div class="card shadow-sm border-0 rounded-4">
                         <div class="card-header fw-bold" style="background-color: #4E3D2F; color: white;">
-                             <i class="fas fa-road me-2"></i> Tus Próximos Viajes Confirmados
+                            <i class="fas fa-calendar-alt me-2"></i> Tus Próximos Viajes Confirmados
                         </div>
                         <div class="card-body p-3">
                             <div th:if="${viajesProximos != null and !viajesProximos.isEmpty()}">
@@ -90,14 +117,12 @@
                             </div>
                             <div th:unless="${viajesProximos != null and !viajesProximos.isEmpty()}" class="text-center py-2">
                                 <i class="fas fa-info-circle me-1 text-muted"></i>
-                                <p class="small mb-0 text-muted">No tienes viajes confirmados próximamente.</p>
+                                <p class="small mb-0 text-muted">No tienes viajes programados próximamente.</p>
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
-            
         </div>
     </div>
 </main>
