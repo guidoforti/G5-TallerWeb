@@ -9,6 +9,7 @@ import com.tallerwebi.dominio.Entity.Usuario;
 import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.Entity.Viajero;
 import com.tallerwebi.dominio.Enums.EstadoDeViaje;
+import com.tallerwebi.dominio.Enums.EstadoPago;
 import com.tallerwebi.dominio.Enums.EstadoReserva;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioReserva;
@@ -535,8 +536,11 @@ public class ControladorReserva {
                     .filter(r -> r.getEstado() == EstadoReserva.RECHAZADA)
                     .collect(Collectors.toList());
 
-            List<Reserva> reservasConfirmadas = reservas.stream()
+            List<Reserva> reservasConfirmadasPendientesPago = reservas.stream()
                     .filter(r -> r.getEstado() == EstadoReserva.CONFIRMADA)
+                    .collect(Collectors.toList());
+            List<Reserva> reservasPagadas = servicioReserva.listarViajesConfirmadosPorViajero(viajeroId).stream()
+                    .filter(r -> r.getEstadoPago() == EstadoPago.PAGADO)
                     .collect(Collectors.toList());
             // Convertir a DTOs
             List<ReservaActivaDTO> pendientesDTO = reservasPendientes.stream()
@@ -547,13 +551,17 @@ public class ControladorReserva {
                     .map(ReservaActivaDTO::new)
                     .collect(Collectors.toList());
 
-            List<ReservaActivaDTO> confirmadasDTO = reservasConfirmadas.stream()
+            List<ReservaActivaDTO> confirmadasDTO = reservasConfirmadasPendientesPago.stream()
+                    .map(ReservaActivaDTO::new)
+                    .collect(Collectors.toList());
+            List<ReservaActivaDTO> pagadasDTO = reservasPagadas.stream()
                     .map(ReservaActivaDTO::new)
                     .collect(Collectors.toList());
 
             model.put("reservasPendientes", pendientesDTO);
             model.put("reservasRechazadas", rechazadasDTO);
             model.put("reservasConfirmadas", confirmadasDTO);
+            model.put("reservasPagadas", pagadasDTO);
 
             return new ModelAndView("misReservasActivas", model);
 

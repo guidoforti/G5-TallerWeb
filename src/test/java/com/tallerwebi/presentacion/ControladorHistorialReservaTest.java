@@ -1,10 +1,13 @@
 package com.tallerwebi.presentacion;
 
+import com.tallerwebi.dominio.Entity.Ciudad;
 import com.tallerwebi.dominio.Entity.Conductor;
 import com.tallerwebi.dominio.Entity.Usuario;
+import com.tallerwebi.dominio.Entity.Viaje;
 import com.tallerwebi.dominio.IServicio.ServicioConductor;
 import com.tallerwebi.dominio.IServicio.ServicioHistorialReserva;
 import com.tallerwebi.dominio.IServicio.ServicioNotificacion;
+import com.tallerwebi.dominio.IServicio.ServicioViaje;
 import com.tallerwebi.presentacion.DTO.OutputsDTO.HistorialReservaDTO;
 import com.tallerwebi.dominio.excepcion.UsuarioInexistente;
 import com.tallerwebi.dominio.excepcion.UsuarioNoAutorizadoException;
@@ -24,6 +27,7 @@ import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 
 public class ControladorHistorialReservaTest {
 
@@ -31,6 +35,7 @@ public class ControladorHistorialReservaTest {
     private ServicioHistorialReserva servicioHistorialReservaMock;
     private ServicioNotificacion servicioNotificacionMock;
     private ServicioConductor servicioConductorMock;
+    private ServicioViaje servicioViajeMock;
     private HttpSession sessionMock;
 
     private final Long ID_VIAJE = 10L;
@@ -41,9 +46,10 @@ public class ControladorHistorialReservaTest {
         servicioHistorialReservaMock = mock(ServicioHistorialReserva.class);
         servicioConductorMock = mock(ServicioConductor.class);
         servicioNotificacionMock = mock(ServicioNotificacion.class);
+        servicioViajeMock = mock(ServicioViaje.class);
         sessionMock = mock(HttpSession.class);
 
-        historialReservaController = new ControladorHistorialReserva(servicioHistorialReservaMock, servicioConductorMock, servicioNotificacionMock);
+        historialReservaController = new ControladorHistorialReserva(servicioHistorialReservaMock, servicioConductorMock, servicioNotificacionMock, servicioViajeMock);
     }
 
     private Conductor setupConductorSession(Long conductorId) throws UsuarioInexistente {
@@ -62,6 +68,16 @@ public class ControladorHistorialReservaTest {
         // given
         Conductor conductor = setupConductorSession(ID_CONDUCTOR);
 
+        Viaje viajeMock = mock(Viaje.class);
+        Ciudad origenMock = mock(Ciudad.class);
+        Ciudad destinoMock = mock(Ciudad.class);
+
+        when(servicioViajeMock.obtenerViajePorId(ID_VIAJE)).thenReturn(viajeMock);
+        when(viajeMock.getOrigen()).thenReturn(origenMock);
+        when(viajeMock.getDestino()).thenReturn(destinoMock);
+        when(origenMock.getNombre()).thenReturn("Buenos Aires"); 
+        when(destinoMock.getNombre()).thenReturn("Córdoba");
+
         List<HistorialReservaDTO> historialEsperado = Arrays.asList(
                 new HistorialReservaDTO(), new HistorialReservaDTO()
         );
@@ -73,6 +89,8 @@ public class ControladorHistorialReservaTest {
         ModelAndView mav = historialReservaController.verHistorialPorViaje(ID_VIAJE, sessionMock);
 
         // then
+        assertThat(mav.getModel().get("origenNombre"), is("Buenos Aires")); 
+        assertThat(mav.getModel().get("destinoNombre"), is("Córdoba"));
         assertThat(mav.getViewName(), is("historialReservas"));
         assertThat(mav.getModel().get("historialReservas"), is(historialEsperado));
         verify(servicioHistorialReservaMock, times(1)).obtenerHistorialPorViaje(eq(ID_VIAJE), any(Usuario.class));
@@ -97,6 +115,15 @@ public class ControladorHistorialReservaTest {
         // given
         Conductor usuarioNoAutorizado = setupConductorSession(99L);
 
+        Viaje viajeMock = mock(Viaje.class);
+        Ciudad origenMock = mock(Ciudad.class);
+        Ciudad destinoMock = mock(Ciudad.class);
+        when(servicioViajeMock.obtenerViajePorId(ID_VIAJE)).thenReturn(viajeMock);
+        when(viajeMock.getOrigen()).thenReturn(origenMock);
+        when(viajeMock.getDestino()).thenReturn(destinoMock);
+        when(origenMock.getNombre()).thenReturn("A"); 
+        when(destinoMock.getNombre()).thenReturn("B");
+
         doThrow(new UsuarioNoAutorizadoException("No tenés permisos para ver el historial de este viaje."))
                 .when(servicioHistorialReservaMock).obtenerHistorialPorViaje(eq(ID_VIAJE), any(Usuario.class));
 
@@ -115,7 +142,7 @@ public class ControladorHistorialReservaTest {
         Conductor conductor = setupConductorSession(ID_CONDUCTOR);
 
         doThrow(new ViajeNoEncontradoException("No se encontró el viaje con ID " + ID_VIAJE))
-                .when(servicioHistorialReservaMock).obtenerHistorialPorViaje(eq(ID_VIAJE), any(Usuario.class));
+            .when(servicioViajeMock).obtenerViajePorId(ID_VIAJE);
 
         // when
         ModelAndView mav = historialReservaController.verHistorialPorViaje(ID_VIAJE, sessionMock);
@@ -123,7 +150,8 @@ public class ControladorHistorialReservaTest {
         // then
         assertThat(mav.getViewName(), is("error"));
         assertThat(mav.getModel().get("error").toString(), containsString("No se encontró el viaje"));
-        verify(servicioHistorialReservaMock, times(1)).obtenerHistorialPorViaje(eq(ID_VIAJE), any(Usuario.class));
+        verify(servicioViajeMock, times(1)).obtenerViajePorId(ID_VIAJE);
+        verify(servicioHistorialReservaMock, never()).obtenerHistorialPorViaje(anyLong(), any(Usuario.class));
     }
 
     @Test
@@ -146,6 +174,15 @@ public class ControladorHistorialReservaTest {
         // given
         Conductor conductor = setupConductorSession(ID_CONDUCTOR);
 
+        Viaje viajeMock = mock(Viaje.class);
+        Ciudad origenMock = mock(Ciudad.class);
+        Ciudad destinoMock = mock(Ciudad.class);
+        when(servicioViajeMock.obtenerViajePorId(ID_VIAJE)).thenReturn(viajeMock);
+        when(viajeMock.getOrigen()).thenReturn(origenMock);
+        when(viajeMock.getDestino()).thenReturn(destinoMock);
+        when(origenMock.getNombre()).thenReturn("A"); 
+        when(destinoMock.getNombre()).thenReturn("B");
+
         doThrow(new RuntimeException("Error de base de datos desconocido"))
                 .when(servicioHistorialReservaMock).obtenerHistorialPorViaje(eq(ID_VIAJE), any(Usuario.class));
 
@@ -163,6 +200,15 @@ public class ControladorHistorialReservaTest {
         // given
         Conductor conductor = setupConductorSession(ID_CONDUCTOR);
 
+        Viaje viajeMock = mock(Viaje.class);
+        Ciudad origenMock = mock(Ciudad.class);
+        Ciudad destinoMock = mock(Ciudad.class);
+        when(servicioViajeMock.obtenerViajePorId(ID_VIAJE)).thenReturn(viajeMock);
+        when(viajeMock.getOrigen()).thenReturn(origenMock);
+        when(viajeMock.getDestino()).thenReturn(destinoMock);
+        when(origenMock.getNombre()).thenReturn("Salta");
+        when(destinoMock.getNombre()).thenReturn("Jujuy"); 
+
         List<HistorialReservaDTO> historialVacio = List.of();
 
         when(servicioHistorialReservaMock.obtenerHistorialPorViaje(eq(ID_VIAJE), any(Usuario.class)))
@@ -172,6 +218,8 @@ public class ControladorHistorialReservaTest {
         ModelAndView mav = historialReservaController.verHistorialPorViaje(ID_VIAJE, sessionMock);
 
         // then
+        assertThat(mav.getModel().get("origenNombre"), is("Salta"));
+        assertThat(mav.getModel().get("destinoNombre"), is("Jujuy"));
         assertThat(mav.getViewName(), is("historialReservas"));
         assertThat((List<HistorialReservaDTO>) mav.getModel().get("historialReservas"), is(empty()));
         assertThat(mav.getModel().get("mensajeExito").toString(), containsString("Historial cargado correctamente"));

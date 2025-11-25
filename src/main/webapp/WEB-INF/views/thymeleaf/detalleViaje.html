@@ -260,6 +260,20 @@
 
                             </th:block>
 
+                            <a th:if="${userRole == 'VIAJERO'}"
+                               th:href="@{/reserva/misViajes}"
+                               id="btn-volver-mis-viajes"
+                               class="btn btn-outline-secondary fw-bold">
+                                <i class="fas fa-list-alt me-2"></i> Volver a Mis Viajes
+                            </a>
+
+                            <a th:if="${userRole == 'CONDUCTOR'}"
+                               th:href="@{/viaje/listar}"
+                               id="btn-volver-listar-viajes"
+                               class="btn btn-outline-secondary fw-bold">
+                                <i class="fas fa-list-alt me-2"></i> Volver a Mis Viajes
+                            </a>
+
                             <a th:if="${userRole != null && userRole == 'VIAJERO'}"
                                th:href="@{/viajero/home}"
                                id="btn-volver-home-viajero"

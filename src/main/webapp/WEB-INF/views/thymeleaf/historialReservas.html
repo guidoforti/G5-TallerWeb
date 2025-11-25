@@ -33,8 +33,7 @@
 
                 <div class="mb-4 d-flex justify-content-between align-items-center">
                     <h3 class="fw-bold text-dark">
-                        <i class="bi bi-clock-history me-2"></i> Historial de Decisiones (Viaje ID: <span
-                            th:text="${idViaje}"></span>)
+                        <i class="bi bi-clock-history me-2"></i> Historial de Decisiones <span class="text-secondary d-block d-md-inline small">(Viaje de <span th:text="${origenNombre}">Ciudad Origen</span> a <span th:text="${destinoNombre}">Ciudad Destino</span>)</span>
                     </h3>
                     <a th:href="@{/viaje/detalle(id=${idViaje})}" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-left"></i> Volver al Detalle del Viaje
